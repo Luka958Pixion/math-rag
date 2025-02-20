@@ -171,4 +171,5 @@ cython_debug/
 .pypirc
 
 # custom
-**/.ruff_cache
+.ruff_cache
+volumes
