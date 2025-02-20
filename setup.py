@@ -19,7 +19,7 @@ def poetry_install(dir: str):
         subprocess.run(cmd, cwd=dir, check=True)
 
     except subprocess.CalledProcessError:
-        print(f'Poetry install failed', file=sys.stderr)
+        print(f'poetry install failed', file=sys.stderr)
         sys.exit(1)
 
 
@@ -30,7 +30,29 @@ def pre_commit_install(dir: str):
         subprocess.run(cmd, cwd=dir, check=True)
 
     except subprocess.CalledProcessError:
-        print(f'Pre-commit install failed', file=sys.stderr)
+        print(f'pre-commit install failed', file=sys.stderr)
+        sys.exit(1)
+
+
+def ipykernel_install(dir: str):
+    cmd = [
+        'poetry',
+        'run',
+        'python',
+        '-m',
+        'ipykernel',
+        'install',
+        '--user',
+        '--name=math_rag',
+        '--display-name',
+        '"Python (math_rag)"',
+    ]
+
+    try:
+        subprocess.run(cmd, cwd=dir, check=True)
+
+    except subprocess.CalledProcessError:
+        print(f'ipykernel install failed', file=sys.stderr)
         sys.exit(1)
 
 
@@ -39,6 +61,7 @@ def main():
 
     poetry_install(root_dir)
     pre_commit_install(root_dir)
+    ipykernel_install(root_dir)
 
 
 if __name__ == '__main__':
