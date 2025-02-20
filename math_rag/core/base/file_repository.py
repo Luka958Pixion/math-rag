@@ -1,7 +1,7 @@
 from abc import ABC, abstractmethod
 
 
-class FileRepository(ABC):
+class BaseFileRepository(ABC):
     @abstractmethod
     def create_bucket(self, name: str):
         pass

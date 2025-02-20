@@ -1,1 +1,1 @@
-from .qdrant import QdrantRepository
+from .embedding_repository import EmbeddingRepository

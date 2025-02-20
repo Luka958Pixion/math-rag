@@ -1,14 +1,15 @@
 from minio import Minio
 
-from math_rag.core.base import FileRepository
+from math_rag.core.base import BaseFileRepository
 
 
-class MinioRepository(FileRepository):
-    def __init__(self):
+class FileRepository(BaseFileRepository):
+    def __init__(self, endpoint: str, access_key: str, secret_key: str):
         self.client = Minio(
-            endpoint=...,
-            access_key=...,
-            secret_key=...,
+            endpoint=endpoint,
+            access_key=access_key,
+            secret_key=secret_key,
+            secure=False,
         )
 
     def create_bucket(self, name: str):

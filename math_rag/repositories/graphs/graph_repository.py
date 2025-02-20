@@ -1,9 +1,9 @@
 from neo4j import AsyncGraphDatabase, AsyncManagedTransaction
 
-from math_rag.core.base import GraphRepository
+from math_rag.core.base import BaseGraphRepository
 
 
-class Neo4jRepository(GraphRepository):
+class GraphRepository(BaseGraphRepository):
     def __init__(self):
         self.driver = AsyncGraphDatabase.driver(uri=..., auth=...)
 
@@ -33,3 +33,6 @@ class Neo4jRepository(GraphRepository):
         parameters = {'name': name}
 
         return await self._execute_read(query, parameters)
+
+    async def delete_node(self, name: str):
+        pass
