@@ -6,7 +6,7 @@ from math_rag.core.base import EmbeddingRepository
 
 class QdrantRepository(EmbeddingRepository):
     def __init__(self):
-        self.client = AsyncQdrantClient(host='localhost', port=6333)
+        self.client = AsyncQdrantClient(host=..., port=...)
 
     async def create_collection(self, name: str):
         if await self.client.collection_exists(name):

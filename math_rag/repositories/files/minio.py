@@ -6,9 +6,9 @@ from math_rag.core.base import FileRepository
 class MinioRepository(FileRepository):
     def __init__(self):
         self.client = Minio(
-            endpoint='play.min.io',
-            access_key='Q3AM3UQ867SPQQA43P2F',
-            secret_key='zuf+tfteSlswRu7BJ86wekitnifILbZam1KYY3TG',
+            endpoint=...,
+            access_key=...,
+            secret_key=...,
         )
 
     def create_bucket(self, name: str):
