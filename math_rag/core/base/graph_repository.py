@@ -1,7 +1,7 @@
 from abc import ABC, abstractmethod
 
 
-class BaseGraphRepository(ABC):
+class GraphBaseRepository(ABC):
     @abstractmethod
     async def create_node(self, name: str):
         pass

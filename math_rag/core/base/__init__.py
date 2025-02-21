@@ -1,3 +1,4 @@
-from .embedding_repository import BaseEmbeddingRepository
-from .file_repository import BaseFileRepository
-from .graph_repository import BaseGraphRepository
+from .embedding_repository import EmbeddingBaseRepository
+from .file_repository import FileBaseRepository
+from .graph_repository import GraphBaseRepository
+from .object_repository import ObjectBaseRepository

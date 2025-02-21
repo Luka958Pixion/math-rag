@@ -1,0 +1,1 @@
+from .object_repository import MongoObjectRepository

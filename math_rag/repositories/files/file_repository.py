@@ -1,9 +1,9 @@
 from minio import Minio
 
-from math_rag.core.base import BaseFileRepository
+from math_rag.core.base import FileBaseRepository
 
 
-class FileRepository(BaseFileRepository):
+class MinioFileRepository(FileBaseRepository):
     def __init__(self, endpoint: str, access_key: str, secret_key: str):
         self.client = Minio(
             endpoint=endpoint,

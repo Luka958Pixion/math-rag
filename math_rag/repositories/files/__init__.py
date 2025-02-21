@@ -1,1 +1,1 @@
-from .file_repository import FileRepository
+from .file_repository import MinioFileRepository

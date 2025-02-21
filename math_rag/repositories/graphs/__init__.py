@@ -1,1 +1,1 @@
-from .graph_repository import GraphRepository
+from .graph_repository import Neo4jGraphRepository
