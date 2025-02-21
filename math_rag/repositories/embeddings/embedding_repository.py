@@ -1,7 +1,7 @@
 from qdrant_client import AsyncQdrantClient
 from qdrant_client.models import Distance, VectorParams
 
-from math_rag.core.base import EmbeddingBaseRepository
+from math_rag.application.base.repositories import EmbeddingBaseRepository
 
 
 class QdrantEmbeddingRepository(EmbeddingBaseRepository):

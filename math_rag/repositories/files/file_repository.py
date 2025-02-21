@@ -1,6 +1,6 @@
 from minio import Minio
 
-from math_rag.core.base import FileBaseRepository
+from math_rag.application.base.repositories import FileBaseRepository
 
 
 class MinioFileRepository(FileBaseRepository):

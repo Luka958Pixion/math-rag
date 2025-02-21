@@ -1,6 +1,6 @@
 from pymongo import AsyncMongoClient
 
-from math_rag.core.base import ObjectBaseRepository
+from math_rag.application.base.repositories import ObjectBaseRepository
 
 
 class MongoObjectRepository(ObjectBaseRepository):
