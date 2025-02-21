@@ -15,6 +15,7 @@ neo4j = "^5.28.1"
 python-decouple = "^3.8"
 openai = "^1.63.2"
 pymongo = "^4.11.1"
+pylatexenc = "^2.10"
 
 
 [tool.poetry.group.dev.dependencies]

@@ -2346,6 +2346,17 @@ files = [
 windows-terminal = ["colorama (>=0.4.6)"]
 
 [[package]]
+name = "pylatexenc"
+version = "2.10"
+description = "Simple LaTeX parser providing latex-to-unicode and unicode-to-latex conversion"
+optional = false
+python-versions = "*"
+groups = ["main"]
+files = [
+    {file = "pylatexenc-2.10.tar.gz", hash = "sha256:3dd8fd84eb46dc30bee1e23eaab8d8fb5a7f507347b23e5f38ad9675c84f40d3"},
+]
+
+[[package]]
 name = "pymongo"
 version = "4.11.1"
 description = "Python driver for MongoDB <http://www.mongodb.org>"
@@ -3325,4 +3336,4 @@ files = [
 [metadata]
 lock-version = "2.1"
 python-versions = ">=3.12"
-content-hash = "0d4b851b64b00ae0f092cd09f07a5ba2a7e7ab19b260942e27599f23ebae4a1d"
+content-hash = "a3715465099b93369d7e0309857f74052d41ba7756939c5546c150b0be3f1dfc"
