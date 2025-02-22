@@ -16,6 +16,9 @@ python-decouple = "^3.8"
 openai = "^1.63.2"
 pymongo = "^4.11.1"
 pylatexenc = "^2.10"
+google-api-python-client = "^2.161.0"
+google-auth-httplib2 = "^0.2.0"
+google-auth-oauthlib = "^1.2.1"
 
 
 [tool.poetry.group.dev.dependencies]
