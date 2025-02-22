@@ -16,6 +16,9 @@ class LLM:
             model=self.model,
             messages=[{'role': 'user', 'content': prompt}],
             response_format={'type': 'json_object'} if use_json else NOT_GIVEN,
+            logprobs=True,
+            temperature=0.0,
+            top_logprobs=5,
         )
 
         return completion.choices[0].message.content
