@@ -1,6 +1,9 @@
+import logging
+
 from io import BytesIO
 
 from minio import Minio
+from minio.deleteobjects import DeleteObject
 
 from math_rag.application.base.repositories.objects import ObjectBaseRepository
 
@@ -53,7 +56,8 @@ class MinioObjectRepository(ObjectBaseRepository):
         ]
 
     def clear_bucket(self, bucket_name: str):
-        object_names = self.list_object_names(bucket_name)
+        objects = self.client.list_objects(bucket_name, recursive=True)
+        delete_objects = [DeleteObject(object.object_name) for object in objects]
 
-        if object_names:
-            self.client.remove_objects(bucket_name, object_names)
+        for delete_error in self.client.remove_objects(bucket_name, delete_objects):
+            logging.error(f'Deleting object raised: {delete_error.message}')

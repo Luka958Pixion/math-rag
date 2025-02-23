@@ -36,7 +36,9 @@ class GoogleFileRepository(FileBaseRepository):
 
         return build('drive', 'v3', credentials=credentials)
 
-    def get_file_id(resource: Resource, file_name: str, folder_name: str) -> str | None:
+    def get_file_id(
+        self, resource: Resource, file_name: str, folder_name: str
+    ) -> str | None:
         folder_query = (
             f"name='{folder_name}' and mimeType='application/vnd.google-apps.folder'"
         )
@@ -65,7 +67,7 @@ class GoogleFileRepository(FileBaseRepository):
 
         return files[0]['id']
 
-    def get_file_by_id(resource: Resource, file_id: str) -> BytesIO:
+    def get_file_by_id(self, resource: Resource, file_id: str) -> BytesIO:
         request = resource.files().get_media(fileId=file_id)
         file_bytes = BytesIO()
 
@@ -73,6 +75,6 @@ class GoogleFileRepository(FileBaseRepository):
         done = False
 
         while not done:
-            _, done = downloader.next_chunk()
+            _, done = downloader.next_chunk(num_retries=3)
 
         return file_bytes
