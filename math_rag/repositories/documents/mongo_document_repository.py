@@ -17,3 +17,9 @@ class MongoDocumentRepository(DocumentBaseRepository):
     async def delete_collection(self, name: str):
         if name in self.db.list_collection_names():
             return self.db[name].drop()
+
+    async def insert_documents(self, collection_name: str, documents: list[dict]):
+        for document in documents:
+            document['_id'] = document.pop('id')
+
+        await self.db[collection_name].insert_many(documents)
