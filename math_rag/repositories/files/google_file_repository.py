@@ -49,7 +49,7 @@ class GoogleFileRepository(FileBaseRepository):
         folders = folder_results.get('files', [])
 
         if not folders:
-            logging.info(f'Folder {folder_name} not found.')
+            logging.info(f'Folder {folder_name} not found')
             return None
 
         folder_id = folders[0]['id']
@@ -62,7 +62,7 @@ class GoogleFileRepository(FileBaseRepository):
         files = file_results.get('files', [])
 
         if not files:
-            logging.info(f'File {file_name} not found in directory {folder_name}.')
+            logging.info(f'File {file_name} not found in directory {folder_name}')
             return None
 
         return files[0]['id']

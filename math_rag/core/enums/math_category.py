@@ -1,0 +1,44 @@
+from enum import Enum
+
+
+class MathCategory(str, Enum):
+    AC = 'commutative_algebra'
+    AG = 'algebraic_geometry'
+    AP = 'analysis_of_pdes'
+    AT = 'algebraic_topology'
+    CA = 'classical_analysis_and_odes'
+    CO = 'combinatorics'
+    CT = 'category_theory'
+    CV = 'complex_variables'
+    DG = 'differential_geometry'
+    DS = 'dynamical_systems'
+    FA = 'functional_analysis'
+    GM = 'general_mathematics'
+    GN = 'general_topology'
+    GR = 'group_theory'
+    GT = 'geometric_topology'
+    HO = 'history_and_overview'
+    IT = 'information_theory'
+    KT = 'k_theory_and_homology'
+    LO = 'logic'
+    MG = 'metric_geometry'
+    MP = 'mathematical_physics'
+    NA = 'numerical_analysis'
+    NT = 'number_theory'
+    OA = 'operator_algebras'
+    OC = 'optimization_and_control'
+    PR = 'probability'
+    QA = 'quantum_algebra'
+    RA = 'rings_and_algebras'
+    RT = 'representation_theory'
+    SG = 'symplectic_geometry'
+    SP = 'spectral_theory'
+    ST = 'statistics_theory'
+
+    @classmethod
+    def from_str(cls, category_slug: str) -> 'MathCategory':
+        try:
+            return MathCategory[category_slug.upper()]
+
+        except KeyError:
+            raise ValueError(f'Category {category_slug} not found in ArXivMathCategory')
