@@ -5,17 +5,21 @@ from math_rag.application.base.repositories.documents import DocumentBaseReposit
 
 class MongoDocumentRepository(DocumentBaseRepository):
     def __init__(self, host: str, deployment: str):
-        self.client = AsyncMongoClient(host)
+        self.client = AsyncMongoClient(host, uuidRepresentation='standard')
         self.db = self.client[deployment]
 
     async def create_collection(self, name: str):
-        if name in self.db.list_collection_names():
+        collection_names = await self.db.list_collection_names()
+
+        if name in collection_names:
             return self.db[name]
 
         return self.db.create_collection(name)
 
     async def delete_collection(self, name: str):
-        if name in self.db.list_collection_names():
+        collection_names = await self.db.list_collection_names()
+
+        if name in collection_names:
             return self.db[name].drop()
 
     async def insert_documents(self, collection_name: str, documents: list[dict]):
