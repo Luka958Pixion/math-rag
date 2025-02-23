@@ -1,1 +1,1 @@
-from .object_repository import MongoObjectRepository
+from .mongo_document_repository import MongoDocumentRepository

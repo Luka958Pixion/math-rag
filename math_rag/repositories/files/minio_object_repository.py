@@ -2,10 +2,10 @@ from io import BytesIO
 
 from minio import Minio
 
-from math_rag.application.base.repositories import FileBaseRepository
+from math_rag.application.base.repositories import ObjectBaseRepository
 
 
-class MinioFileRepository(FileBaseRepository):
+class MinioObjectRepository(ObjectBaseRepository):
     def __init__(self, endpoint: str, access_key: str, secret_key: str):
         self.client = Minio(
             endpoint=endpoint,
@@ -23,31 +23,37 @@ class MinioFileRepository(FileBaseRepository):
     def delete_bucket(self, name: str):
         objects = self.client.list_objects(name, recursive=True)
 
-        for obj in objects:
-            self.client.remove_object(name, obj.object_name)
+        for object in objects:
+            self.client.remove_object(name, object.object_name)
 
         self.client.remove_bucket(name)
 
-    def insert_file(self, bucket_name: str, file_name: str, file_bytes: BytesIO):
+    def insert_object(self, bucket_name: str, object_name: str, object_bytes: BytesIO):
         self.client.put_object(
             bucket_name=bucket_name,
-            object_name=file_name,
-            data=file_bytes,
-            length=file_bytes.getbuffer().nbytes,
+            object_name=object_name,
+            data=object_bytes,
+            length=object_bytes.getbuffer().nbytes,
             content_type='application/octet-stream',
         )
 
-    def get_file(self, bucket_name: str, file_name: str) -> BytesIO:
-        response = self.client.get_object(bucket_name, file_name)
-        file_bytes = BytesIO(response.read())
+    def get_object(self, bucket_name: str, object_name: str) -> BytesIO:
+        response = self.client.get_object(bucket_name, object_name)
+        object_bytes = BytesIO(response.read())
         response.close()
         response.release_conn()
 
-        return file_bytes
+        return object_bytes
 
-    def list_files(self, bucket_name: str) -> list[str]:
+    def list_object_names(self, bucket_name: str) -> list[str]:
         objects = self.client.list_objects(bucket_name, recursive=True)
 
         return [
             object.object_name for object in objects if object.object_name is not None
         ]
+
+    def clear_bucket(self, bucket_name: str):
+        object_names = self.list_object_names(bucket_name)
+
+        if object_names:
+            self.client.remove_objects(bucket_name, object_names)

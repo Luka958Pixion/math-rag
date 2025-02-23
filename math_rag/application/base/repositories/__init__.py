@@ -1,4 +1,4 @@
+from .document_repository import DocumentBaseRepository
 from .embedding_repository import EmbeddingBaseRepository
-from .file_repository import FileBaseRepository
 from .graph_repository import GraphBaseRepository
 from .object_repository import ObjectBaseRepository

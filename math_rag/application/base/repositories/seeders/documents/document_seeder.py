@@ -1,7 +1,7 @@
 from abc import ABC, abstractmethod
 
 
-class FileBaseSeeder(ABC):
+class DocumentBaseSeeder(ABC):
     @abstractmethod
     async def seed(self, name: str):
         pass

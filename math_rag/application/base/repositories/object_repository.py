@@ -3,9 +3,9 @@ from abc import ABC, abstractmethod
 
 class ObjectBaseRepository(ABC):
     @abstractmethod
-    async def create_collection(self, name: str):
+    def create_bucket(self, name: str):
         pass
 
     @abstractmethod
-    async def delete_collection(self, name: str):
+    def delete_bucket(self, name: str):
         pass

@@ -1,9 +1,9 @@
 from pymongo import AsyncMongoClient
 
-from math_rag.application.base.repositories import ObjectBaseRepository
+from math_rag.application.base.repositories import DocumentBaseRepository
 
 
-class MongoObjectRepository(ObjectBaseRepository):
+class MongoDocumentRepository(DocumentBaseRepository):
     def __init__(self, host: str, deployment: str):
         self.client = AsyncMongoClient(host)
         self.db = self.client[deployment]
