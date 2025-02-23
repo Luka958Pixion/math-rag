@@ -28,7 +28,6 @@ class LatexService:
 
     def parse(self, file: Path | BytesIO) -> list[LatexNode]:
         latex = self.read(file)
-
         walker = LatexWalker(latex)
         nodes, _, _ = walker.get_latex_nodes()
 
@@ -53,7 +52,5 @@ class LatexService:
             if node_type in callbacks:
                 callbacks[node_type](node)
 
-            if isinstance(node, LatexEnvironmentNode) or isinstance(
-                node, LatexGroupNode
-            ):
+            if isinstance(node, (LatexEnvironmentNode, LatexGroupNode)):
                 stack.append(iter(node.nodelist))
