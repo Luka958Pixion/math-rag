@@ -36,3 +36,18 @@ class MinioFileRepository(FileBaseRepository):
             length=file_bytes.getbuffer().nbytes,
             content_type='application/octet-stream',
         )
+
+    def get_file(self, bucket_name: str, file_name: str) -> BytesIO:
+        response = self.client.get_object(bucket_name, file_name)
+        file_bytes = BytesIO(response.read())
+        response.close()
+        response.release_conn()
+
+        return file_bytes
+
+    def list_files(self, bucket_name: str) -> list[str]:
+        objects = self.client.list_objects(bucket_name, recursive=True)
+
+        return [
+            object.object_name for object in objects if object.object_name is not None
+        ]
