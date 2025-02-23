@@ -1,6 +1,6 @@
 from neo4j import AsyncGraphDatabase, AsyncManagedTransaction
 
-from math_rag.application.base.repositories import GraphBaseRepository
+from math_rag.application.base.repositories.graphs import GraphBaseRepository
 
 
 class Neo4jGraphRepository(GraphBaseRepository):

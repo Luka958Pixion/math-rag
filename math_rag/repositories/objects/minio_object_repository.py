@@ -2,7 +2,7 @@ from io import BytesIO
 
 from minio import Minio
 
-from math_rag.application.base.repositories import ObjectBaseRepository
+from math_rag.application.base.repositories.objects import ObjectBaseRepository
 
 
 class MinioObjectRepository(ObjectBaseRepository):

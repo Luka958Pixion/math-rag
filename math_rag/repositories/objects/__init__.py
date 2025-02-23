@@ -1,1 +1,1 @@
-from .mongo_document_repository import MongoDocumentRepository
+from .minio_object_repository import MinioObjectRepository

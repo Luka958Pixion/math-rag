@@ -1,6 +1,6 @@
 from pymongo import AsyncMongoClient
 
-from math_rag.application.base.repositories import DocumentBaseRepository
+from math_rag.application.base.repositories.documents import DocumentBaseRepository
 
 
 class MongoDocumentRepository(DocumentBaseRepository):

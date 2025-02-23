@@ -1,4 +1,4 @@
-from math_rag.application.base.repositories.seeders import GraphBaseSeeder
+from math_rag.application.base.repositories.seeders.graphs import GraphBaseSeeder
 
 
 class Neo4jGraphSeeder(GraphBaseSeeder):

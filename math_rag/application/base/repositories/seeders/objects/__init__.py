@@ -1,1 +1,1 @@
-from .object_seeder import ObjectBaseSeeder
+from .object_base_seeder import ObjectBaseSeeder

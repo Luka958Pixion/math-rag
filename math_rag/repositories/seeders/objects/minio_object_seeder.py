@@ -1,4 +1,4 @@
-from math_rag.application.base.repositories.seeders import ObjectBaseSeeder
+from math_rag.application.base.repositories.seeders.objects import ObjectBaseSeeder
 
 
 class MinioObjectSeeder(ObjectBaseSeeder):

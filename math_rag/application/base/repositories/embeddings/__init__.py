@@ -1,0 +1,1 @@
+from .embedding_base_repository import EmbeddingBaseRepository

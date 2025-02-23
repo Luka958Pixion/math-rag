@@ -1,4 +1,6 @@
-from math_rag.application.base.repositories.seeders import EmbeddingBaseSeeder
+from math_rag.application.base.repositories.seeders.embeddings import (
+    EmbeddingBaseSeeder,
+)
 
 
 class QdrantEmbeddingSeeder(EmbeddingBaseSeeder):

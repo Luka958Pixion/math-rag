@@ -1,1 +1,0 @@
-from .minio_object_repository import MinioObjectRepository

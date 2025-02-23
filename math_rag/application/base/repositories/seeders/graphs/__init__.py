@@ -1,1 +1,1 @@
-from .graph_seeder import GraphBaseSeeder
+from .graph_base_seeder import GraphBaseSeeder

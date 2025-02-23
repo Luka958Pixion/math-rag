@@ -1,1 +1,1 @@
-from .document_seeder import DocumentBaseSeeder
+from .document_base_seeder import DocumentBaseSeeder
