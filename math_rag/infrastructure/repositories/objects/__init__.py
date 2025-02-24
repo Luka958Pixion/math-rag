@@ -1,2 +1,1 @@
 from .math_article_repository import MathArticleRepository
-from .minio_object_repository import MinioObjectRepository

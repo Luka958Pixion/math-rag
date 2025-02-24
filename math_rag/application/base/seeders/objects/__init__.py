@@ -1,2 +1,1 @@
 from .article_base_seeder import ArticleBaseSeeder
-from .object_base_seeder import ObjectBaseSeeder

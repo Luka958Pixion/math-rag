@@ -3,6 +3,7 @@ from dependency_injector.providers import Configuration, Factory, Singleton
 from minio import Minio
 
 from math_rag.infrastructure.repositories.objects import MathArticleRepository
+from math_rag.infrastructure.seeders.objects import MathArticleSeeder
 
 
 class InfrastructureContainer(DeclarativeContainer):
@@ -20,6 +21,8 @@ class InfrastructureContainer(DeclarativeContainer):
         secret_key=config.minio.secret_key,
         secure=False,
     )
+
+    math_article_seeder = Factory(MathArticleSeeder, client=minio_client)
 
     math_article_repository = Factory(
         MathArticleRepository,

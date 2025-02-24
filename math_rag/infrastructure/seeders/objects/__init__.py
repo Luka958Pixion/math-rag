@@ -1,1 +1,1 @@
-from .minio_object_seeder import MinioObjectSeeder
+from .math_article_seeder import MathArticleSeeder

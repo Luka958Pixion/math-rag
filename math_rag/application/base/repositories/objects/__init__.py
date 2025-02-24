@@ -1,2 +1,1 @@
 from .article_base_repository import ArticleBaseRepository
-from .object_base_repository import ObjectBaseRepository
