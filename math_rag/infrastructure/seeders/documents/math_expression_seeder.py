@@ -10,7 +10,7 @@ class MathExpressionSeeder(MathExpressionBaseSeeder):
         self.db = self.client[deployment]
         self.collection_name = MathExpression.__name__.lower()
 
-    async def seed(self, reset=True):
+    async def seed(self, reset=False):
         if reset:
             self._delete_collection()
 

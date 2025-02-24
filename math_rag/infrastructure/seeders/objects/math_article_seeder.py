@@ -9,7 +9,7 @@ class MathArticleSeeder(ArticleBaseSeeder):
         self.client = client
         self.bucket_name = MathArticle.__name__.lower()
 
-    def seed(self, reset=True):
+    def seed(self, reset=False):
         if reset:
             self._delete_bucket()
 
