@@ -1,7 +1,14 @@
+import asyncio
+import logging
+
 from math_rag.infrastructure.containers import InfrastructureContainer
 
 
 async def main():
+    logging.basicConfig(
+        level=logging.INFO, format='%(asctime)s - %(levelname)s - %(message)s'
+    )
+
     infrastructure_container = InfrastructureContainer()
     infrastructure_container.init_resources()
     infrastructure_container.wire(modules=[__name__])
@@ -20,4 +27,4 @@ async def main():
 
 
 if __name__ == '__main__':
-    main()
+    asyncio.run(main())
