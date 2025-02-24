@@ -1,1 +1,1 @@
-from .mongo_document_repository import MongoDocumentRepository
+from .math_expression_repository import MathExpressionRepository

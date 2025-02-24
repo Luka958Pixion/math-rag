@@ -1,1 +1,1 @@
-from .document_seeder import MongoDocumentSeeder
+from .math_expression_seeder import MathExpressionSeeder

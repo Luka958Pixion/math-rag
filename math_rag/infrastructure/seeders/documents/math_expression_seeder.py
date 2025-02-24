@@ -5,8 +5,8 @@ from math_rag.core.models import MathExpression
 
 
 class MathExpressionSeeder(MathExpressionBaseSeeder):
-    def __init__(self, host: str, deployment: str):
-        self.client = AsyncMongoClient(host, uuidRepresentation='standard')
+    def __init__(self, client: AsyncMongoClient, deployment: str):
+        self.client = client
         self.db = self.client[deployment]
         self.collection_name = MathExpression.__name__.lower()
 
