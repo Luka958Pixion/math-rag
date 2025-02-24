@@ -8,13 +8,8 @@ from math_rag.core.models import MathArticle
 
 
 class MathArticleRepository(ArticleBaseRepository):
-    def __init__(self, endpoint: str, access_key: str, secret_key: str):
-        self.client = Minio(
-            endpoint=endpoint,
-            access_key=access_key,
-            secret_key=secret_key,
-            secure=False,
-        )
+    def __init__(self, client: Minio):
+        self.client = client
         self.bucket_name = MathArticle.__name__.lower()
 
     def insert_math_articles(self, math_articles: list[MathArticle]):

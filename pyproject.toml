@@ -19,6 +19,7 @@ pylatexenc = "^2.10"
 google-api-python-client = "^2.161.0"
 google-auth-httplib2 = "^0.2.0"
 google-auth-oauthlib = "^1.2.1"
+dependency-injector = "^4.45.0"
 
 
 [tool.poetry.group.dev.dependencies]
