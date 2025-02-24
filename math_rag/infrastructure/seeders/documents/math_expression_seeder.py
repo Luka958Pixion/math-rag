@@ -10,8 +10,22 @@ class MathExpressionSeeder(MathExpressionBaseSeeder):
         self.db = self.client[deployment]
         self.collection_name = MathExpression.__name__.lower()
 
-    async def seed(self):
+    async def seed(self, reset=True):
+        if reset:
+            self._delete_collection()
+
+        self._create_collection()
+
+    async def _create_collection(self):
         collection_names = await self.db.list_collection_names()
 
-        if self.collection_name not in collection_names:
-            await self.db.create_collection(self.collection_name)
+        if self.collection_name in collection_names:
+            return
+
+        await self.db.create_collection(self.collection_name)
+
+    async def _delete_collection(self):
+        collection_names = await self.db.list_collection_names()
+
+        if self.collection_name in collection_names:
+            await self.db[self.collection_name].drop()
