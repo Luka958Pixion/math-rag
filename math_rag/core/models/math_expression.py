@@ -5,7 +5,7 @@ from pydantic import BaseModel, Field
 from math_rag.core.enums import MathCategory
 
 
-class MathExpressionModel(BaseModel):
+class MathExpression(BaseModel):
     id: UUID = Field(default_factory=uuid4)
     latex: str
     position: int

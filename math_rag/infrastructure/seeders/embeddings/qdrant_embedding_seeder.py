@@ -1,4 +1,4 @@
-from math_rag.application.base.repositories.seeders.embeddings import (
+from math_rag.application.base.seeders.embeddings import (
     EmbeddingBaseSeeder,
 )
 

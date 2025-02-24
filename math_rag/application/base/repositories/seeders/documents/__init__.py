@@ -1,1 +1,0 @@
-from .document_base_seeder import DocumentBaseSeeder

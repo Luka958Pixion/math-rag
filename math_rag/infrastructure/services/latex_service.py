@@ -26,8 +26,7 @@ class LatexService:
             except UnicodeDecodeError:
                 continue
 
-    def parse(self, file: Path | BytesIO) -> list[LatexNode]:
-        latex = self.read(file)
+    def parse(latex: str) -> list[LatexNode]:
         walker = LatexWalker(latex)
         nodes, _, _ = walker.get_latex_nodes()
 

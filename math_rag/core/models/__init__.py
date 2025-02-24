@@ -1,1 +1,1 @@
-from .math_expression_model import MathExpressionModel
+from .math_expression import MathExpression
