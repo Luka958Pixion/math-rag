@@ -54,6 +54,20 @@ services:
     volumes:
       - ./volumes/qdrant:/qdrant/storage
 
+  isolated-jupyter-kernel:
+    build:
+      context: .
+      dockerfile: Dockerfile
+      secrets:
+        - git_token
+    environment:
+      - JUPYTER_SESSIONS_DIR=/mnt/jupyter_sessions
+    volumes:
+      - ./jupyter_sessions:/mnt/jupyter_sessions
+    ports:
+      - 5200:5000
+    restart: unless-stopped
+
 configs:
   qdrant_config:
     content: |

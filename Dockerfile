@@ -1,0 +1,23 @@
+FROM python:3.12.7
+
+RUN apt-get update && apt-get install -y --no-install-recommends \
+    build-essential \
+    python3-pip \
+    git \
+    && apt-get clean && rm -rf /var/lib/apt/lists/* \
+    && curl -sSL https://install.python-poetry.org | python3 - \
+    && echo "export PATH=$HOME/.local/bin:$PATH" >> /etc/profile \
+    && ln -s $HOME/.local/bin/poetry /usr/local/bin/poetry
+
+RUN --mount=type=secret,id=git_token \
+    git clone https://Luka958Pixion:$(cat /run/secrets/git_token)@github.com/Luka958Pixion/isolated-jupyter-kernel.git isolated-jupyter-kernel
+
+WORKDIR /isolated-jupyter-kernel
+
+RUN mkdir -p /mnt/data /mnt/jupyter_sessions /workspace
+RUN poetry install
+
+
+ENV JUPYTER_SESSIONS_DIR=/mnt/jupyter_sessions
+
+CMD ["poetry", "run", "python", "isolated_jupyter_kernel/main.py"]
