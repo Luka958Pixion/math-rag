@@ -1,9 +1,12 @@
+from pathlib import Path
+
 from dependency_injector.containers import DeclarativeContainer
 from dependency_injector.providers import Configuration, Factory, Singleton
 from minio import Minio
 from pymongo import AsyncMongoClient
 
 from math_rag.infrastructure.repositories.documents import MathExpressionRepository
+from math_rag.infrastructure.repositories.files import GoogleFileRepository
 from math_rag.infrastructure.repositories.objects import MathArticleRepository
 from math_rag.infrastructure.seeders.documents import MathExpressionSeeder
 from math_rag.infrastructure.seeders.objects import MathArticleSeeder
@@ -55,3 +58,12 @@ class InfrastructureContainer(DeclarativeContainer):
     # Neo4j
 
     # Qdrant
+
+    # Google
+    resource = Singleton(
+        GoogleFileRepository.get_resource,
+        credentials_path=Path('../google/credentials.json'),
+        token_path=Path('../google/token.json'),
+    )
+
+    google_file_repository = Factory(GoogleFileRepository, resource=resource)
