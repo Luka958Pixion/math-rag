@@ -11,22 +11,20 @@ from pylatexenc.latexwalker import (
 
 
 class LatexService:
-    def read(self, file: Path | BytesIO) -> str:
+    def read(self, file: Path | bytes) -> str:
         for encoding in ('utf-8', 'latin1', 'cp1252'):
             try:
                 if isinstance(file, Path):
                     with open(file, 'r', encoding=encoding) as f:
                         return f.read()
 
-                elif isinstance(file, BytesIO):
-                    file.seek(0)
-
-                    return file.read().decode(encoding)
+                elif isinstance(file, bytes):
+                    return file.decode(encoding)
 
             except UnicodeDecodeError:
                 continue
 
-    def parse(latex: str) -> list[LatexNode]:
+    def parse(self, latex: str) -> list[LatexNode]:
         walker = LatexWalker(latex)
         nodes, _, _ = walker.get_latex_nodes()
 

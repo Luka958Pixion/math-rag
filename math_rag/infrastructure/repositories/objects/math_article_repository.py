@@ -25,7 +25,7 @@ class MathArticleRepository(ArticleBaseRepository):
                 num_parallel_uploads=1,
             )
 
-    def get_math_article_by_name(self, name: str) -> BytesIO:
+    def get_math_article_by_name(self, name: str) -> MathArticle:
         object_response = self.client.get_object(self.bucket_name, name)
         object_bytes = BytesIO(object_response.read())
         object_response.close()
@@ -34,7 +34,7 @@ class MathArticleRepository(ArticleBaseRepository):
         stat_response = self.client.stat_object(self.bucket_name, name)
         id = stat_response.metadata.get('X-Amz-Meta-id')
 
-        return MathArticle(id=UUID(id), name=name, bytes=object_bytes)
+        return MathArticle(id=UUID(id), name=name, bytes=object_bytes.getvalue())
 
     def list_math_article_names(self) -> list[str]:
         objects = self.client.list_objects(self.bucket_name, recursive=True)
