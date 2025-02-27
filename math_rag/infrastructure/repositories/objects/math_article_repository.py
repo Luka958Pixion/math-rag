@@ -14,11 +14,12 @@ class MathArticleRepository(ArticleBaseRepository):
 
     def insert_math_articles(self, math_articles: list[MathArticle]):
         for math_article in math_articles:
+            data = BytesIO(math_article.bytes)
             self.client.put_object(
                 bucket_name=self.bucket_name,
                 object_name=math_article.name,
-                data=math_article.bytes,
-                length=math_article.bytes.getbuffer().nbytes,
+                data=data,
+                length=data.getbuffer().nbytes,
                 content_type='application/octet-stream',
                 metadata={'X-Amz-Meta-id': str(math_article.id)},
             )

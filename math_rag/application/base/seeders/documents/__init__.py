@@ -1,2 +1,1 @@
-from .document_base_seeder import DocumentBaseSeeder
 from .math_expression_base_seeder import MathExpressionBaseSeeder

@@ -12,9 +12,9 @@ class MathExpressionSeeder(MathExpressionBaseSeeder):
 
     async def seed(self, reset=False):
         if reset:
-            self._delete_collection()
+            await self._delete_collection()
 
-        self._create_collection()
+        await self._create_collection()
 
     async def _create_collection(self):
         collection_names = await self.db.list_collection_names()
