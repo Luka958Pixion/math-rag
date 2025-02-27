@@ -22,6 +22,7 @@ class MathArticleRepository(ArticleBaseRepository):
                 length=data.getbuffer().nbytes,
                 content_type='application/octet-stream',
                 metadata={'X-Amz-Meta-id': str(math_article.id)},
+                num_parallel_uploads=1,
             )
 
     def get_math_article_by_name(self, name: str) -> BytesIO:
