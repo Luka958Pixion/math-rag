@@ -30,23 +30,26 @@ class MathExpressionRepository(MathExpressionBaseRepository):
         pipeline = [
             {'$sort': {'position': 1}},
             {'$group': {'_id': '$math_category', 'expressions': {'$push': '$$ROOT'}}},
-            {
-                '$project': {
-                    '_id': 1,
-                    'expressions': {'$slice': ['$expressions', limit]},
-                }
-            },
+            {'$project': {'expressions': {'$slice': ['$expressions', limit]}}},
         ]
 
-        cursor = self.collection.aggregate(pipeline)
-        category_map = defaultdict(list)
+        cursor = await self.collection.aggregate(pipeline)
+        result = {}
 
         async for item in cursor:
-            category = MathCategory(item['_id'])
-            expressions = [
-                MathExpression(**{**expr, 'id': expr.pop('_id')})
-                for expr in item['expressions']
-            ]
-            category_map[category] = expressions
+            math_category_value = item['_id']
+            expressions = item['expressions']
 
-        return category_map
+            for expr in expressions:
+                if '_id' in expr:
+                    expr['id'] = expr.pop('_id')
+
+            result[MathCategory(math_category_value)] = [
+                MathExpression(**expr) for expr in expressions
+            ]
+
+        for category in MathCategory:
+            if category not in result:
+                result[category] = []
+
+        return result
