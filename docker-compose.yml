@@ -71,4 +71,8 @@ services:
 configs:
   qdrant_config:
     content: |
-      log_level: INFO      
+      log_level: INFO
+
+secrets:
+  git_token:
+    file: ./git_token.txt 
