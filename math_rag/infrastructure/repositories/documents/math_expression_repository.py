@@ -1,5 +1,3 @@
-from collections import defaultdict
-
 from pymongo import AsyncMongoClient
 
 from math_rag.application.base.repositories.documents import (

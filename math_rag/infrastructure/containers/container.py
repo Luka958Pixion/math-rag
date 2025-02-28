@@ -5,10 +5,16 @@ from dependency_injector.providers import Configuration, Factory, Singleton
 from minio import Minio
 from pymongo import AsyncMongoClient
 
-from math_rag.infrastructure.repositories.documents import MathExpressionRepository
+from math_rag.infrastructure.repositories.documents import (
+    MathExpressionPredictionRepository,
+    MathExpressionRepository,
+)
 from math_rag.infrastructure.repositories.files import GoogleFileRepository
 from math_rag.infrastructure.repositories.objects import MathArticleRepository
-from math_rag.infrastructure.seeders.documents import MathExpressionSeeder
+from math_rag.infrastructure.seeders.documents import (
+    MathExpressionPredictionSeeder,
+    MathExpressionSeeder,
+)
 from math_rag.infrastructure.seeders.objects import MathArticleSeeder
 
 
@@ -51,6 +57,17 @@ class InfrastructureContainer(DeclarativeContainer):
     )
     math_expression_repository = Factory(
         MathExpressionRepository,
+        client=mongo_client,
+        deployment=config.mongo.deployment,
+    )
+
+    math_expression_prediction_seeder = Factory(
+        MathExpressionPredictionSeeder,
+        client=mongo_client,
+        deployment=config.mongo.deployment,
+    )
+    math_expression_prediction_repository = Factory(
+        MathExpressionPredictionRepository,
         client=mongo_client,
         deployment=config.mongo.deployment,
     )

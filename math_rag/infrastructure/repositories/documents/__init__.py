@@ -1,1 +1,2 @@
+from .math_expression_prediction_repository import MathExpressionPredictionRepository
 from .math_expression_repository import MathExpressionRepository
