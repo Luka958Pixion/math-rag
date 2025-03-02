@@ -13,9 +13,20 @@ class MathExpressionPredictionRepository:
     async def insert_math_expression_predictions(
         self, items: list[MathExpressionPrediction]
     ):
-        item_dicts = [item.model_dump() for item in items]
+        docs = [item.model_dump() for item in items]
 
-        for item_dict in item_dicts:
-            item_dict['_id'] = item_dict.pop('id')
+        for doc in docs:
+            doc['_id'] = doc.pop('id')
 
-        await self.collection.insert_many(item_dicts)
+        await self.collection.insert_many(docs)
+
+    async def get_math_expression_predictions(
+        self, limit: int
+    ) -> list[MathExpressionPrediction]:
+        cursor = self.collection.find().limit(limit)
+        docs = await cursor.to_list(length=limit)
+
+        for doc in docs:
+            doc['id'] = doc.pop('_id')
+
+        return [MathExpressionPrediction(**doc) for doc in docs]
