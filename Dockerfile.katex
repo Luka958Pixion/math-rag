@@ -1,0 +1,10 @@
+FROM node:latest
+
+RUN npm install
+
+RUN --mount=type=secret,id=git_token \
+    git clone https://Luka958Pixion:$(cat /run/secrets/git_token)@github.com/Luka958Pixion/katex-validator.git katex-validator
+
+WORKDIR /katex-validator
+
+ENTRYPOINT ["node", "main.js"]

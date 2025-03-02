@@ -57,7 +57,7 @@ services:
   isolated-jupyter-kernel:
     build:
       context: .
-      dockerfile: Dockerfile
+      dockerfile: Dockerfile.jupyter
       secrets:
         - git_token
     environment:
