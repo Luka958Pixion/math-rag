@@ -1,3 +1,5 @@
+from uuid import UUID
+
 from pymongo import AsyncMongoClient
 
 from math_rag.application.base.repositories.documents import (
@@ -21,6 +23,14 @@ class MathExpressionRepository(MathExpressionBaseRepository):
             item_dict['_id'] = item_dict.pop('id')
 
         await self.collection.insert_many(item_dicts)
+
+    async def get_math_expression_by_id(self, id: UUID) -> MathExpression | None:
+        doc = await self.collection.find_one({'_id': id})
+
+        if doc:
+            return MathExpression(**doc)
+
+        return None
 
     async def get_math_expressions_by_category(
         self, limit: int
