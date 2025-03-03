@@ -2,7 +2,7 @@ from requests import RequestException, post
 
 
 class KatexService:
-    def validate(latex: str) -> bool:
+    def validate(self, latex: str) -> bool:
         try:
             response = post(
                 'http://localhost:3000/validate',
@@ -15,7 +15,7 @@ class KatexService:
         except RequestException:
             raise
 
-    def validate_many(latexes: list[str]) -> list[bool]:
+    def validate_many(self, latexes: list[str]) -> list[bool]:
         try:
             response = post(
                 'http://localhost:3000/validate-many',
