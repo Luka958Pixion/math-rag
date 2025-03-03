@@ -68,6 +68,16 @@ services:
       - 5200:5000
     restart: unless-stopped
 
+  katex-validator:
+    build:
+      context: .
+      dockerfile: Dockerfile.katex
+      secrets:
+        - git_token
+    ports:
+      - 3000:3000
+    restart: unless-stopped
+
 configs:
   qdrant_config:
     content: |
