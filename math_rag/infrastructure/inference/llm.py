@@ -1,21 +1,18 @@
-from openai import NOT_GIVEN, AsyncOpenAI
+from openai import AsyncOpenAI
 from openai.types import (
     ResponseFormatJSONObject,
     ResponseFormatJSONSchema,
     ResponseFormatText,
 )
 
-from math_rag.infrastructure.enums import LLMResponseFormat
-from math_rag.infrastructure.models import LLMParams
+from math_rag.application.base.inference import BaseLLM
+from math_rag.application.enums import LLMResponseFormat
+from math_rag.application.models import LLMParams
 
 
-class LLM:
-    def __init__(self, model: str, base_url: str = None, api_key: str = None):
-        self.model = model
-        self.client = AsyncOpenAI(
-            base_url=base_url,
-            api_key=api_key,
-        )
+class LLM(BaseLLM):
+    def __init__(self, client: AsyncOpenAI):
+        self.client = client
 
     async def generate(self, prompt: str, params: LLMParams) -> str:
         match params.response_format:
@@ -34,7 +31,7 @@ class LLM:
                 raise ValueError(f'Response format ${other} is not supported')
 
         completion = await self.client.chat.completions.create(
-            model=self.model,
+            model=params.model,
             messages=[{'role': 'user', 'content': prompt}],
             response_format=response_format,
             logprobs=params.logprobs,

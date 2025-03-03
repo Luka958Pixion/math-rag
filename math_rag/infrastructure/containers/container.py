@@ -3,8 +3,11 @@ from pathlib import Path
 from dependency_injector.containers import DeclarativeContainer
 from dependency_injector.providers import Configuration, Factory, Singleton
 from minio import Minio
+from openai import AsyncOpenAI
 from pymongo import AsyncMongoClient
 
+from math_rag.application.assistants import KatexCorrectionAssistant
+from math_rag.infrastructure.inference import LLM
 from math_rag.infrastructure.repositories.documents import (
     MathExpressionPredictionRepository,
     MathExpressionRepository,
@@ -20,6 +23,10 @@ from math_rag.infrastructure.seeders.objects import MathArticleSeeder
 
 class InfrastructureContainer(DeclarativeContainer):
     config = Configuration()
+
+    # --------------
+    # Infrastructure
+    # --------------
 
     # Minio
     config.minio.endpoint.from_env('MINIO_ENDPOINT')
@@ -84,3 +91,22 @@ class InfrastructureContainer(DeclarativeContainer):
     )
 
     google_file_repository = Factory(GoogleFileRepository, resource=resource)
+
+    # OpenAI
+    config.openai.base_url.from_env('OPENAI_BASE_URL')
+    config.openai.api_key.from_env('OPENAI_API_KEY')
+
+    async_openai_client = Singleton(
+        AsyncOpenAI,
+        base_url=config.openai.base_url,
+        api_key=config.openai.api_key,
+    )
+
+    llm = Factory(LLM, client=async_openai_client)
+
+    # -----------
+    # Application
+    # -----------
+
+    # KaTeX
+    katex_correction_assistant = Factory(KatexCorrectionAssistant, llm=llm)

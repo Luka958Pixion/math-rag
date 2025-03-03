@@ -1,18 +1,15 @@
 from pydantic import BaseModel
 from requests import RequestException, post
 
-
-class KatexValidationResult(BaseModel):
-    valid: bool
-    error: str | None = None
+from math_rag.application.models import KatexValidationResult
 
 
-class KatexService:
-    def validate(self, latex: str) -> KatexValidationResult:
+class KatexValidationService:
+    def validate(self, katex: str) -> KatexValidationResult:
         try:
             response = post(
                 'http://localhost:3000/validate',
-                data=latex.encode('utf-8'),
+                data=katex.encode('utf-8'),
                 headers={'Content-Type': 'text/plain'},
             )
             result = response.json()
@@ -22,11 +19,11 @@ class KatexService:
         except RequestException:
             raise
 
-    def validate_many(self, latexes: list[str]) -> list[KatexValidationResult]:
+    def validate_many(self, katexes: list[str]) -> list[KatexValidationResult]:
         try:
             response = post(
                 'http://localhost:3000/validate-many',
-                json=latexes,  # json automatically encodes to utf-8
+                json=katexes,  # json automatically encodes to utf-8
                 headers={'Content-Type': 'application/json'},
             )
             results = response.json()

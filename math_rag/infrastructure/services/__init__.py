@@ -1,2 +1,2 @@
-from .katex_service import KatexService
+from .katex_validation_service import KatexValidationService
 from .latex_service import LatexService

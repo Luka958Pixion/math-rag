@@ -1,9 +1,10 @@
 from pydantic import BaseModel, model_validator
 
-from math_rag.infrastructure.enums import LLMResponseFormat
+from math_rag.application.enums import LLMResponseFormat
 
 
 class LLMParams(BaseModel):
+    model: str
     response_format: LLMResponseFormat
     temperature: float
     logprobs: bool | None = None

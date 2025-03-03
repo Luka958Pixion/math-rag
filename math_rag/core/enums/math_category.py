@@ -41,4 +41,4 @@ class MathCategory(str, Enum):
             return MathCategory[category_slug.upper()]
 
         except KeyError:
-            raise ValueError(f'Category {category_slug} not found in ArXivMathCategory')
+            raise ValueError(f'Category {category_slug} not found in MathCategory')
