@@ -8,6 +8,7 @@ from math_rag.core.enums import MathCategory
 class MathExpression(BaseModel):
     id: UUID = Field(default_factory=uuid4)
     latex: str
+    katex: str
     position: int
     is_inline: bool
     math_category: MathCategory
