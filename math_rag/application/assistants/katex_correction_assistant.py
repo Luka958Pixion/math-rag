@@ -31,7 +31,7 @@ class KatexCorrectionAssistant:
                 'strict': True,
             },
         )
-        katex = await self.llm.generate(KATEX_CORRECTION_PROMPT, params)
+        katex = await self.llm.generate_text(KATEX_CORRECTION_PROMPT, params)
         result = await self.katex_validation_service.validate(katex)
 
         if not result.valid:
