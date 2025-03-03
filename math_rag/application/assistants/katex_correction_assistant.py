@@ -22,16 +22,13 @@ class KatexCorrectionAssistant:
 
         params = LLMParams(
             model='gpt-4o-mini',
-            response_format=LLMResponseFormat.JSON_SCHEMA,
             temperature=0.0,
-            json_schema={
-                'name': KatexCorrectionResponse.__name__,
-                'description': None,
-                'schema': KatexCorrectionResponse.model_json_schema(),
-                'strict': True,
-            },
         )
-        katex = await self.llm.generate_text(KATEX_CORRECTION_PROMPT, params)
+        katex = await self.llm.generate_json(
+            prompt=KATEX_CORRECTION_PROMPT,
+            params=params,
+            response_model_type=KatexCorrectionResponse,
+        )
         result = await self.katex_validation_service.validate(katex)
 
         if not result.valid:

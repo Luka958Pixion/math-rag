@@ -14,6 +14,7 @@ class BaseLLM(ABC):
     async def generate_text(self, prompt: str, params: LLMParams) -> str:
         pass
 
+    @abstractmethod
     async def generate_json(
         self,
         prompt: str,
