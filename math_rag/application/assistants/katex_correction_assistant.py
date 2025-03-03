@@ -11,7 +11,7 @@ class KatexCorrectionAssistant:
         self.katex_validation_service = katex_validation_service
 
     async def correct(self, katex: str) -> str:
-        result = self.katex_validation_service.validate(katex)
+        result = await self.katex_validation_service.validate(katex)
 
         if result.valid:
             return katex
@@ -20,7 +20,7 @@ class KatexCorrectionAssistant:
         params = LLMParams(...)
 
         katex = await self.llm.generate(prompt, params)
-        result = self.katex_validation_service.validate(katex)
+        result = await self.katex_validation_service.validate(katex)
 
         if not result.valid:
             raise Exception('KaTeX correction failed')

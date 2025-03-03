@@ -19,6 +19,7 @@ from math_rag.infrastructure.seeders.documents import (
     MathExpressionSeeder,
 )
 from math_rag.infrastructure.seeders.objects import MathArticleSeeder
+from math_rag.infrastructure.services import KatexValidationService
 
 
 class InfrastructureContainer(DeclarativeContainer):
@@ -104,9 +105,16 @@ class InfrastructureContainer(DeclarativeContainer):
 
     llm = Factory(LLM, client=async_openai_client)
 
+    # KaTeX
+    katex_validation_service = Factory(KatexValidationService)
+
     # -----------
     # Application
     # -----------
 
     # KaTeX
-    katex_correction_assistant = Factory(KatexCorrectionAssistant, llm=llm)
+    katex_correction_assistant = Factory(
+        KatexCorrectionAssistant,
+        llm=llm,
+        katex_validation_service=katex_validation_service,
+    )
