@@ -1,5 +1,5 @@
 from abc import ABC, abstractmethod
 
 
-class MathExpressionBaseRepository(ABC):
+class BaseMathExpressionSeeder(ABC):
     pass

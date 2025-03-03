@@ -1,1 +1,1 @@
-from .article_base_repository import ArticleBaseRepository
+from .base_article_repository import BaseArticleRepository

@@ -1,1 +1,1 @@
-from .article_base_seeder import ArticleBaseSeeder
+from .base_article_seeder import BaseArticleSeeder

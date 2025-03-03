@@ -3,19 +3,19 @@ import logging
 from io import BytesIO
 from pathlib import Path
 
-from google.auth.transport.requests import Request
-from google.oauth2.credentials import Credentials
 from google_auth_oauthlib.flow import InstalledAppFlow
 from googleapiclient.discovery import Resource, build
 from googleapiclient.http import MediaIoBaseDownload
 
-from math_rag.application.base.repositories.files import FileBaseRepository
+from google.auth.transport.requests import Request
+from google.oauth2.credentials import Credentials
+from math_rag.application.base.repositories.files import BaseFileRepository
 
 
 SCOPES = ['https://www.googleapis.com/auth/drive']
 
 
-class GoogleFileRepository(FileBaseRepository):
+class GoogleFileRepository(BaseFileRepository):
     def __init__(self, resource: Resource):
         self.resource = resource
 

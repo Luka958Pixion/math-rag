@@ -1,10 +1,10 @@
 from pymongo import AsyncMongoClient
 
-from math_rag.application.base.seeders.documents import MathExpressionBaseSeeder
+from math_rag.application.base.seeders.documents import BaseMathExpressionSeeder
 from math_rag.core.models import MathExpression
 
 
-class MathExpressionSeeder(MathExpressionBaseSeeder):
+class MathExpressionSeeder(BaseMathExpressionSeeder):
     def __init__(self, client: AsyncMongoClient, deployment: str):
         self.client = client
         self.db = self.client[deployment]

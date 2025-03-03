@@ -1,1 +1,1 @@
-from .embedding_base_repository import EmbeddingBaseRepository
+from .base_embedding_repository import BaseEmbeddingRepository

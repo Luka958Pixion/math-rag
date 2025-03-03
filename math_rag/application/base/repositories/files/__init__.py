@@ -1,1 +1,1 @@
-from .file_base_repository import FileBaseRepository
+from .base_file_repository import BaseFileRepository

@@ -1,1 +1,1 @@
-from .math_expression_base_seeder import MathExpressionBaseSeeder
+from .base_math_expression_seeder import BaseMathExpressionSeeder

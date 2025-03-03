@@ -1,1 +1,1 @@
-from .embedding_base_seeder import EmbeddingBaseSeeder
+from .base_embedding_seeder import BaseEmbeddingSeeder

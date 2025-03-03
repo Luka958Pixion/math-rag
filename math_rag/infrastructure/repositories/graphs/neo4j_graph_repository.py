@@ -1,9 +1,9 @@
 from neo4j import AsyncGraphDatabase, AsyncManagedTransaction
 
-from math_rag.application.base.repositories.graphs import GraphBaseRepository
+from math_rag.application.base.repositories.graphs import BaseGraphRepository
 
 
-class Neo4jGraphRepository(GraphBaseRepository):
+class Neo4jGraphRepository(BaseGraphRepository):
     def __init__(self, uri: str, username: str, password: str):
         self.driver = AsyncGraphDatabase.driver(uri=uri, auth=(username, password))
 

@@ -1,10 +1,10 @@
 from minio import Minio
 
-from math_rag.application.base.seeders.objects import ArticleBaseSeeder
+from math_rag.application.base.seeders.objects import BaseArticleSeeder
 from math_rag.core.models import MathArticle
 
 
-class MathArticleSeeder(ArticleBaseSeeder):
+class MathArticleSeeder(BaseArticleSeeder):
     def __init__(self, client: Minio):
         self.client = client
         self.bucket_name = MathArticle.__name__.lower()

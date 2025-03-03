@@ -1,1 +1,1 @@
-from .math_expression_base_repository import MathExpressionBaseRepository
+from .base_math_expression_repository import BaseMathExpressionRepository

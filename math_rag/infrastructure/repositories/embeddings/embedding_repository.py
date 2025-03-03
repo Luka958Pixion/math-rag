@@ -1,10 +1,10 @@
 from qdrant_client import AsyncQdrantClient
 from qdrant_client.models import Distance, VectorParams
 
-from math_rag.application.base.repositories.embeddings import EmbeddingBaseRepository
+from math_rag.application.base.repositories.embeddings import BaseEmbeddingRepository
 
 
-class QdrantEmbeddingRepository(EmbeddingBaseRepository):
+class QdrantEmbeddingRepository(BaseEmbeddingRepository):
     def __init__(self, url: str):
         self.client = AsyncQdrantClient(url=url)
 

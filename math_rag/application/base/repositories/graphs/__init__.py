@@ -1,1 +1,1 @@
-from .graph_base_repository import GraphBaseRepository
+from .base_graph_repository import BaseGraphRepository

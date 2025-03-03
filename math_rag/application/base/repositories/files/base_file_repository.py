@@ -1,5 +1,5 @@
 from abc import ABC, abstractmethod
 
 
-class FileBaseRepository(ABC):
+class BaseFileRepository(ABC):
     pass

@@ -1,5 +1,5 @@
 from abc import ABC, abstractmethod
 
 
-class ArticleBaseRepository(ABC):
+class BaseArticleRepository(ABC):
     pass

@@ -1,7 +1,7 @@
 from abc import ABC, abstractmethod
 
 
-class GraphBaseSeeder(ABC):
+class BaseGraphSeeder(ABC):
     @abstractmethod
     async def seed(self, name: str):
         pass

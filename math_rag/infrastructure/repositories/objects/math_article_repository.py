@@ -3,11 +3,11 @@ from uuid import UUID
 
 from minio import Minio
 
-from math_rag.application.base.repositories.objects import ArticleBaseRepository
+from math_rag.application.base.repositories.objects import BaseArticleRepository
 from math_rag.core.models import MathArticle
 
 
-class MathArticleRepository(ArticleBaseRepository):
+class MathArticleRepository(BaseArticleRepository):
     def __init__(self, client: Minio):
         self.client = client
         self.bucket_name = MathArticle.__name__.lower()

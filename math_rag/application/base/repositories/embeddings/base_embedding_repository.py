@@ -1,7 +1,7 @@
 from abc import ABC, abstractmethod
 
 
-class EmbeddingBaseRepository(ABC):
+class BaseEmbeddingRepository(ABC):
     @abstractmethod
     async def create_collection(self, name: str):
         pass

@@ -1,8 +1,8 @@
 from math_rag.application.base.seeders.embeddings import (
-    EmbeddingBaseSeeder,
+    BaseEmbeddingSeeder,
 )
 
 
-class QdrantEmbeddingSeeder(EmbeddingBaseSeeder):
+class QdrantEmbeddingSeeder(BaseEmbeddingSeeder):
     async def seed(self, name: str):
         pass
