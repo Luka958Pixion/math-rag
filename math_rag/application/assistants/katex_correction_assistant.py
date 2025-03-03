@@ -1,6 +1,10 @@
 from math_rag.application.base.inference import BaseLLM
 from math_rag.application.base.services import BaseKatexValidationService
+from math_rag.application.enums import LLMResponseFormat
 from math_rag.application.models import LLMParams
+
+from .models import KatexCorrectionResponse
+from .prompts import KATEX_CORRECTION_PROMPT
 
 
 class KatexCorrectionAssistant:
@@ -16,10 +20,18 @@ class KatexCorrectionAssistant:
         if result.valid:
             return katex
 
-        prompt = ...
-        params = LLMParams(...)
-
-        katex = await self.llm.generate(prompt, params)
+        params = LLMParams(
+            model='gpt-4o-mini',
+            response_format=LLMResponseFormat.JSON_SCHEMA,
+            temperature=0.0,
+            json_schema={
+                'name': KatexCorrectionResponse.__name__,
+                'description': None,
+                'schema': KatexCorrectionResponse.model_json_schema(),
+                'strict': True,
+            },
+        )
+        katex = await self.llm.generate(KATEX_CORRECTION_PROMPT, params)
         result = await self.katex_validation_service.validate(katex)
 
         if not result.valid:

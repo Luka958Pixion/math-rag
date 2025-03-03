@@ -1,0 +1,3 @@
+KATEX_CORRECTION_PROMPT = """
+TODO
+"""
