@@ -1,6 +1,5 @@
 from math_rag.application.base.inference import BaseLLM
 from math_rag.application.base.services import BaseKatexValidationService
-from math_rag.application.enums import LLMResponseFormat
 from math_rag.application.models import LLMParams
 
 from .models import KatexCorrectionResponse
@@ -14,7 +13,7 @@ class KatexCorrectionAssistant:
         self.llm = llm
         self.katex_validation_service = katex_validation_service
 
-    async def correct(self, katex: str) -> str:
+    async def correct(self, katex: str, error: str) -> str:
         result = await self.katex_validation_service.validate(katex)
 
         if result.valid:
@@ -24,11 +23,13 @@ class KatexCorrectionAssistant:
             model='gpt-4o-mini',
             temperature=0.0,
         )
-        katex = await self.llm.generate_json(
-            prompt=KATEX_CORRECTION_PROMPT,
+        prompt = KATEX_CORRECTION_PROMPT.format(katex=katex, error=error)
+        katex_correction_response = await self.llm.generate_json(
+            prompt=prompt,
             params=params,
             response_model_type=KatexCorrectionResponse,
         )
+        katex = katex_correction_response.katex
         result = await self.katex_validation_service.validate(katex)
 
         if not result.valid:

@@ -34,30 +34,20 @@ class MathExpressionRepository(BaseMathExpressionRepository):
 
     async def get_math_expressions_by_category(
         self, limit: int
-    ) -> dict[MathCategory, list[MathExpression]]:
+    ) -> list[MathExpression]:
         pipeline = [
-            {'$sort': {'position': 1}},
+            {'$sort': {'position': 0}},
             {'$group': {'_id': '$math_category', 'expressions': {'$push': '$$ROOT'}}},
             {'$project': {'expressions': {'$slice': ['$expressions', limit]}}},
         ]
 
         cursor = await self.collection.aggregate(pipeline)
-        result = {}
+        results = []
 
         async for item in cursor:
-            math_category_value = item['_id']
-            expressions = item['expressions']
+            for expr in item['expressions']:
+                expr['id'] = expr.pop('_id')
 
-            for expr in expressions:
-                if '_id' in expr:
-                    expr['id'] = expr.pop('_id')
+                results.append(MathExpression(**expr))
 
-            result[MathCategory(math_category_value)] = [
-                MathExpression(**expr) for expr in expressions
-            ]
-
-        for category in MathCategory:
-            if category not in result:
-                result[category] = []
-
-        return result
+        return results
