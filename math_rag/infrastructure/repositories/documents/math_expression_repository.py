@@ -5,7 +5,6 @@ from pymongo import AsyncMongoClient
 from math_rag.application.base.repositories.documents import (
     BaseMathExpressionRepository,
 )
-from math_rag.core.enums import MathCategory
 from math_rag.core.models import MathExpression
 
 
