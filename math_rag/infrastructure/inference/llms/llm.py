@@ -1,5 +1,3 @@
-from enum import Enum
-
 from openai import NOT_GIVEN, AsyncOpenAI
 from openai.types import (
     ResponseFormatJSONObject,
@@ -7,11 +5,8 @@ from openai.types import (
     ResponseFormatText,
 )
 
-
-class ResponseFormat(str, Enum):
-    TEXT = 'text'
-    JSON_OBJECT = 'json_object'
-    JSON_SCHEMA = 'json_schema'
+from math_rag.infrastructure.enums import LLMResponseFormat
+from math_rag.infrastructure.models import LLMParams
 
 
 class LLM:
@@ -22,24 +17,29 @@ class LLM:
             api_key=api_key,
         )
 
-    async def generate(self, prompt: str) -> str:
-        # NOTE for json schema:
-        response_format = ResponseFormatJSONSchema(
-            json_schema={
-                'name': ...,
-                'description': ...,  # optional
-                'schema': ...,  # optional
-                'strict': ...,  # optional
-            }
-        )
+    async def generate(self, prompt: str, params: LLMParams) -> str:
+        match params.response_format:
+            case LLMResponseFormat.TEXT:
+                response_format = ResponseFormatText(type='text')
+
+            case LLMResponseFormat.JSON_OBJECT:
+                response_format = ResponseFormatJSONObject(type='json_object')
+
+            case LLMResponseFormat.JSON_SCHEMA:
+                response_format = ResponseFormatJSONSchema(
+                    type='json_schema', json_schema=params.json_schema
+                )
+
+            case other:
+                raise ValueError(f'Response format ${other} is not supported')
 
         completion = await self.client.chat.completions.create(
             model=self.model,
             messages=[{'role': 'user', 'content': prompt}],
             response_format=response_format,
-            logprobs=True,
-            temperature=0.0,
-            top_logprobs=5,
+            logprobs=params.logprobs,
+            temperature=params.temperature,
+            top_logprobs=params.top_logprobs,
         )
 
         return completion.choices[0].message.content
