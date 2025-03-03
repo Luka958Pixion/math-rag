@@ -1,2 +1,4 @@
 from .katex_validation_service import KatexValidationService
-from .latex_service import LatexService
+from .latex_parser_service import LatexParserService
+from .latex_reader_service import LatexReaderService
+from .latex_visitor_service import LatexVisitorService

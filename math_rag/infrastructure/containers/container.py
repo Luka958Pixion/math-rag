@@ -19,7 +19,12 @@ from math_rag.infrastructure.seeders.documents import (
     MathExpressionSeeder,
 )
 from math_rag.infrastructure.seeders.objects import MathArticleSeeder
-from math_rag.infrastructure.services import KatexValidationService
+from math_rag.infrastructure.services import (
+    KatexValidationService,
+    LatexParserService,
+    LatexReaderService,
+    LatexVisitorService,
+)
 
 
 class InfrastructureContainer(DeclarativeContainer):
@@ -104,6 +109,11 @@ class InfrastructureContainer(DeclarativeContainer):
     )
 
     llm = Factory(LLM, client=async_openai_client)
+
+    # LaTeX
+    latex_parser_service = Factory(LatexParserService)
+    latex_reader_service = Factory(LatexReaderService)
+    latex_visitor_service = Factory(LatexVisitorService)
 
     # KaTeX
     katex_validation_service = Factory(KatexValidationService)
