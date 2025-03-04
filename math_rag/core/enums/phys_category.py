@@ -1,7 +1,7 @@
-from enum import Enum
+from math_rag.core.base import BaseCategory
 
 
-class PhysCategory(str, Enum):
+class PhysCategory(BaseCategory):
     ACC_PH = 'accelerator_physics'
     AO_PH = 'atmospheric_and_oceanic_physics'
     APP_PH = 'applied_physics'

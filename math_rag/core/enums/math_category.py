@@ -1,7 +1,7 @@
-from enum import Enum
+from math_rag.core.base import BaseCategory
 
 
-class MathCategory(str, Enum):
+class MathCategory(BaseCategory):
     AC = 'commutative_algebra'
     AG = 'algebraic_geometry'
     AP = 'analysis_of_pdes'
@@ -34,11 +34,3 @@ class MathCategory(str, Enum):
     SG = 'symplectic_geometry'
     SP = 'spectral_theory'
     ST = 'statistics_theory'
-
-    @classmethod
-    def from_str(cls, category_slug: str) -> 'MathCategory':
-        try:
-            return MathCategory[category_slug.upper()]
-
-        except KeyError:
-            raise ValueError(f'Category {category_slug} not found in MathCategory')

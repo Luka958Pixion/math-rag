@@ -1,7 +1,7 @@
-from enum import Enum
+from math_rag.core.base import BaseCategory
 
 
-class ComputerScienceCategory(str, Enum):
+class ComputerScienceCategory(BaseCategory):
     AI = 'artificial_intelligence'
     AR = 'hardware_architecture'
     CC = 'computational_complexity'

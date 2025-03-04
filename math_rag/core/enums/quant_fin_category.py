@@ -1,7 +1,7 @@
-from enum import Enum
+from math_rag.core.base import BaseCategory
 
 
-class QuantitativeFinanceCategory(str, Enum):
+class QuantitativeFinanceCategory(BaseCategory):
     CP = 'computational_finance'
     EC = 'economics'
     GN = 'general_finance'

@@ -1,7 +1,7 @@
-from enum import Enum
+from math_rag.core.base import BaseCategory
 
 
-class QuantitativeBiologyCategory(str, Enum):
+class QuantitativeBiologyCategory(BaseCategory):
     BM = 'biomolecules'
     CB = 'cell_behavior'
     GN = 'genomics'
