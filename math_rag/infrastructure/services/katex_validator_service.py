@@ -1,10 +1,10 @@
 from httpx import AsyncClient, RequestError
 
-from math_rag.application.base.services import BaseKatexValidationService
+from math_rag.application.base.services import BaseKatexValidatorService
 from math_rag.application.models import KatexValidationResult
 
 
-class KatexValidationService(BaseKatexValidationService):
+class KatexValidatorService(BaseKatexValidatorService):
     async def validate(self, katex: str) -> KatexValidationResult:
         try:
             async with AsyncClient() as client:

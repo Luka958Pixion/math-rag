@@ -1,5 +1,5 @@
 from math_rag.application.base.inference import BaseLLM
-from math_rag.application.base.services import BaseKatexValidationService
+from math_rag.application.base.services import BaseKatexValidatorService
 from math_rag.application.models import LLMParams
 
 from .models import KatexCorrectionResponse
@@ -8,7 +8,7 @@ from .prompts import KATEX_CORRECTION_PROMPT
 
 class KatexCorrectionAssistant:
     def __init__(
-        self, llm: BaseLLM, katex_validation_service: BaseKatexValidationService
+        self, llm: BaseLLM, katex_validation_service: BaseKatexValidatorService
     ):
         self.llm = llm
         self.katex_validation_service = katex_validation_service

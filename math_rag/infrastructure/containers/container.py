@@ -20,7 +20,7 @@ from math_rag.infrastructure.seeders.documents import (
 )
 from math_rag.infrastructure.seeders.objects import MathArticleSeeder
 from math_rag.infrastructure.services import (
-    KatexValidationService,
+    KatexValidatorService,
     LatexParserService,
     LatexReaderService,
     LatexVisitorService,
@@ -116,7 +116,7 @@ class InfrastructureContainer(DeclarativeContainer):
     latex_visitor_service = Factory(LatexVisitorService)
 
     # KaTeX
-    katex_validation_service = Factory(KatexValidationService)
+    katex_validator_service = Factory(KatexValidatorService)
 
     # -----------
     # Application
@@ -126,5 +126,5 @@ class InfrastructureContainer(DeclarativeContainer):
     katex_correction_assistant = Factory(
         KatexCorrectionAssistant,
         llm=llm,
-        katex_validation_service=katex_validation_service,
+        katex_validation_service=katex_validator_service,
     )

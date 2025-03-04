@@ -1,1 +1,1 @@
-from .base_katex_validation_service import BaseKatexValidationService
+from .base_katex_validation_service import BaseKatexValidatorService
