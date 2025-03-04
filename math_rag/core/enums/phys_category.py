@@ -1,0 +1,26 @@
+from enum import Enum
+
+
+class PhysCategory(str, Enum):
+    ACC_PH = 'accelerator_physics'
+    AO_PH = 'atmospheric_and_oceanic_physics'
+    APP_PH = 'applied_physics'
+    ATM_CLUS = 'atomic_and_molecular_clusters'
+    ATOM_PH = 'atomic_physics'
+    BIO_PH = 'biological_physics'
+    CHEM_PH = 'chemical_physics'
+    CLASS_PH = 'classical_physics'
+    COMP_PH = 'computational_physics'
+    DATA_AN = 'data_analysis_statistics_and_probability'
+    ED_PH = 'physics_education'
+    FLUID_DYN = 'fluid_dynamics'
+    GEN_PH = 'general_physics'
+    GEOPH = 'geophysics'
+    HIST_PH = 'history_and_philosophy_of_physics'
+    INSTR_DET = 'instrumentation_and_detectors'
+    MED_PH = 'medical_physics'
+    OPTICS = 'optics'
+    PLASM_PH = 'plasma_physics'
+    POP_PH = 'popular_physics'
+    SOC_PH = 'physics_and_society'
+    SPACE_PH = 'space_physics'
