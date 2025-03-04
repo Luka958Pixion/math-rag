@@ -1,9 +1,9 @@
 from enum import Enum
 
 
-class BaseCategory(str, Enum):
+class BaseArxivCategory(str, Enum):
     @classmethod
-    def from_str(cls, category_str: str) -> 'BaseCategory':
+    def from_str(cls, category_str: str) -> 'BaseArxivCategory':
         try:
             return cls[category_str.upper()]
 

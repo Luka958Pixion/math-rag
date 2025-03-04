@@ -6,10 +6,12 @@ from math_rag.application.models import KatexValidationResult
 
 class KatexValidatorService(BaseKatexValidatorService):
     async def validate(self, katex: str) -> KatexValidationResult:
+        url = 'http://localhost:3000/validate'
+
         try:
             async with AsyncClient() as client:
                 response = await client.post(
-                    'http://localhost:3000/validate',
+                    url,
                     content=katex.encode('utf-8'),
                     headers={'Content-Type': 'text/plain'},
                 )
@@ -21,10 +23,12 @@ class KatexValidatorService(BaseKatexValidatorService):
             raise
 
     async def validate_many(self, katexes: list[str]) -> list[KatexValidationResult]:
+        url = 'http://localhost:3000/validate-many'
+
         try:
             async with AsyncClient() as client:
                 response = await client.post(
-                    'http://localhost:3000/validate-many',
+                    url,
                     json=katexes,  # json automatically encodes to utf-8
                     headers={'Content-Type': 'application/json'},
                 )
