@@ -1,7 +1,7 @@
 from math_rag.core.base import BaseCategory
 
 
-class QuantitativeBiologyCategory(BaseCategory):
+class QuantBioCategory(BaseCategory):
     BM = 'biomolecules'
     CB = 'cell_behavior'
     GN = 'genomics'

@@ -1,7 +1,7 @@
 from math_rag.core.base import BaseCategory
 
 
-class StatisticsCategory(BaseCategory):
+class StatsCategory(BaseCategory):
     AP = 'applications'
     CO = 'computation'
     ME = 'methodology'

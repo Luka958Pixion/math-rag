@@ -1,7 +1,7 @@
 from math_rag.core.base import BaseCategory
 
 
-class ComputerScienceCategory(BaseCategory):
+class CompSciCategory(BaseCategory):
     AI = 'artificial_intelligence'
     AR = 'hardware_architecture'
     CC = 'computational_complexity'
