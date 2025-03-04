@@ -1,7 +1,7 @@
-from math_rag.core.enums.categories import PhysCategory
+from math_rag.core.base import BaseCategory
 
 
-class NlinPhysSubCategory(PhysCategory):
+class NlinCategory(BaseCategory):
     AO = 'adaptation_and_self_organizing_systems'
     CD = 'chaotic_dynamics'
     CG = 'cellular_automata_and_lattice_gases'

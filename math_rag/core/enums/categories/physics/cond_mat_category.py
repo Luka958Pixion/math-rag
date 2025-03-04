@@ -1,7 +1,7 @@
-from math_rag.core.enums.categories import PhysCategory
+from math_rag.core.base import BaseCategory
 
 
-class CondMatPhysSubCategory(PhysCategory):
+class CondMatCategory(BaseCategory):
     DIS_NN = 'disordered_systems_and_neural_networks'
     MES_HALL = 'mesoscale_and_nanoscale_physics'
     MTRL_SCI = 'materials_science'
