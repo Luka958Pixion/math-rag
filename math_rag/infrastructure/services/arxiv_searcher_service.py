@@ -47,18 +47,18 @@ class ArxivSearcherService:
 
         return await self._fetch_file(url)
 
-    async def get_source(self, entry_id: str) -> tuple[str, bytes] | None:
+    async def get_src(self, entry_id: str) -> tuple[str, bytes] | None:
         url = f'https://arxiv.org/src/{entry_id}'
 
         return await self._fetch_file(url)
 
-    def _get_category_name(category: BaseArxivCategory) -> str:
-        if type[category] == PhysCategory:
+    def _get_category_name(self, category: BaseArxivCategory) -> str:
+        if type(category) == PhysCategory:
             return category.name.lower()
 
-        return CATEGORY_TYPE_TO_PREFIX[type[category]]
+        return CATEGORY_TYPE_TO_PREFIX[type(category)]
 
-    def _get_subcategory_name(category: BaseArxivCategory) -> str | None:
+    def _get_subcategory_name(self, category: BaseArxivCategory) -> str | None:
         if category in [
             PhysCategory.GR_QC,
             PhysCategory.HEP_EX,

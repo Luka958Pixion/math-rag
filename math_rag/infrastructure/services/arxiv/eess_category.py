@@ -1,7 +1,7 @@
-from math_rag.core.base import BaseCategory
+from math_rag.infrastructure.services.arxiv import BaseArxivCategory
 
 
-class EESSCategory(BaseCategory):
+class EESSCategory(BaseArxivCategory):
     AS = 'audio_and_speech_processing'
     IV = 'image_and_video_processing'
     SP = 'signal_processing'

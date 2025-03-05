@@ -1,7 +1,7 @@
-from math_rag.core.base import BaseCategory
+from math_rag.infrastructure.services.arxiv import BaseArxivCategory
 
 
-class PhysicsCategory(BaseCategory):
+class PhysicsCategory(BaseArxivCategory):
     ACC_PH = 'accelerator_physics'
     AO_PH = 'atmospheric_and_oceanic_physics'
     APP_PH = 'applied_physics'

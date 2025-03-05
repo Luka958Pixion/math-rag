@@ -1,7 +1,7 @@
-from math_rag.core.base import BaseCategory
+from math_rag.infrastructure.services.arxiv import BaseArxivCategory
 
 
-class CompSciCategory(BaseCategory):
+class CompSciCategory(BaseArxivCategory):
     AI = 'artificial_intelligence'
     AR = 'hardware_architecture'
     CC = 'computational_complexity'

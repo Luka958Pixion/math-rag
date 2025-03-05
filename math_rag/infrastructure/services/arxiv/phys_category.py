@@ -1,7 +1,7 @@
-from math_rag.core.base import BaseCategory
+from math_rag.infrastructure.services.arxiv import BaseArxivCategory
 
 
-class PhysCategory(BaseCategory):
+class PhysCategory(BaseArxivCategory):
     ASTRO_PH = 'astrophysics'
     COND_MAT = 'condensed_matter'
     GR_QC = 'general_relativity_and_quantum_cosmology'

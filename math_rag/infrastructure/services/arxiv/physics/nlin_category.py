@@ -1,7 +1,7 @@
-from math_rag.core.base import BaseCategory
+from math_rag.infrastructure.services.arxiv import BaseArxivCategory
 
 
-class NlinCategory(BaseCategory):
+class NlinCategory(BaseArxivCategory):
     AO = 'adaptation_and_self_organizing_systems'
     CD = 'chaotic_dynamics'
     CG = 'cellular_automata_and_lattice_gases'

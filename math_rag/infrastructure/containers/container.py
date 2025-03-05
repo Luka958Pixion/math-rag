@@ -20,6 +20,7 @@ from math_rag.infrastructure.seeders.documents import (
 )
 from math_rag.infrastructure.seeders.objects import MathArticleSeeder
 from math_rag.infrastructure.services import (
+    ArxivSearcherService,
     KatexValidatorService,
     LatexParserService,
     LatexReaderService,
@@ -109,6 +110,9 @@ class InfrastructureContainer(DeclarativeContainer):
     )
 
     llm = Factory(LLM, client=async_openai_client)
+
+    # arXiv
+    arxiv_searcher_service = Factory(ArxivSearcherService)
 
     # LaTeX
     latex_parser_service = Factory(LatexParserService)

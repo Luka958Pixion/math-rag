@@ -1,7 +1,7 @@
-from math_rag.core.base import BaseCategory
+from math_rag.infrastructure.services.arxiv import BaseArxivCategory
 
 
-class QuantFinCategory(BaseCategory):
+class QuantFinCategory(BaseArxivCategory):
     CP = 'computational_finance'
     EC = 'economics'
     GN = 'general_finance'

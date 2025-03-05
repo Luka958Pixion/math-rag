@@ -1,7 +1,7 @@
-from math_rag.core.base import BaseCategory
+from math_rag.infrastructure.services.arxiv import BaseArxivCategory
 
 
-class MathCategory(BaseCategory):
+class MathCategory(BaseArxivCategory):
     AC = 'commutative_algebra'
     AG = 'algebraic_geometry'
     AP = 'analysis_of_pdes'

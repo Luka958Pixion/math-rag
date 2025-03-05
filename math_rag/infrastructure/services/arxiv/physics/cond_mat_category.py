@@ -1,7 +1,7 @@
-from math_rag.core.base import BaseCategory
+from math_rag.infrastructure.services.arxiv import BaseArxivCategory
 
 
-class CondMatCategory(BaseCategory):
+class CondMatCategory(BaseArxivCategory):
     DIS_NN = 'disordered_systems_and_neural_networks'
     MES_HALL = 'mesoscale_and_nanoscale_physics'
     MTRL_SCI = 'materials_science'

@@ -1,7 +1,7 @@
-from math_rag.core.base import BaseCategory
+from math_rag.infrastructure.services.arxiv import BaseArxivCategory
 
 
-class StatsCategory(BaseCategory):
+class StatsCategory(BaseArxivCategory):
     AP = 'applications'
     CO = 'computation'
     ME = 'methodology'

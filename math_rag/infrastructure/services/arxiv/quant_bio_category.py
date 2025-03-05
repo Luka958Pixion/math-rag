@@ -1,7 +1,7 @@
-from math_rag.core.base import BaseCategory
+from math_rag.infrastructure.services.arxiv import BaseArxivCategory
 
 
-class QuantBioCategory(BaseCategory):
+class QuantBioCategory(BaseArxivCategory):
     BM = 'biomolecules'
     CB = 'cell_behavior'
     GN = 'genomics'

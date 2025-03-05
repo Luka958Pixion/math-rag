@@ -1,7 +1,7 @@
-from math_rag.core.base import BaseCategory
+from math_rag.infrastructure.services.arxiv import BaseArxivCategory
 
 
-class AstroPhCategory(BaseCategory):
+class AstroPhCategory(BaseArxivCategory):
     CO = 'cosmology_and_nongalactic_astrophysics'
     EP = 'earth_and_planetary_astrophysics'
     GA = 'astrophysics_of_galaxies'
