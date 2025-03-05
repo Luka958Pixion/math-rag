@@ -23,7 +23,6 @@ from math_rag.infrastructure.services import (
     ArxivSearcherService,
     KatexValidatorService,
     LatexParserService,
-    LatexReaderService,
     LatexVisitorService,
 )
 
@@ -116,7 +115,6 @@ class InfrastructureContainer(DeclarativeContainer):
 
     # LaTeX
     latex_parser_service = Factory(LatexParserService)
-    latex_reader_service = Factory(LatexReaderService)
     latex_visitor_service = Factory(LatexVisitorService)
 
     # KaTeX

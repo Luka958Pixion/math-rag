@@ -1,8 +1,9 @@
 from pathlib import Path
 
 
-class LatexReaderService:
-    def read(self, file: Path | bytes) -> str:
+class FileReaderUtil:
+    @staticmethod
+    def read(file: Path | bytes) -> str:
         for encoding in ('utf-8', 'latin1', 'cp1252'):
             try:
                 if isinstance(file, Path):
