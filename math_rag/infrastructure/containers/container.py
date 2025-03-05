@@ -9,7 +9,7 @@ from pymongo import AsyncMongoClient
 from math_rag.application.assistants import KatexCorrectionAssistant
 from math_rag.infrastructure.inference import LLM
 from math_rag.infrastructure.repositories.documents import (
-    MathExpressionPredictionRepository,
+    MathExpressionClassificationRepository,
     MathExpressionRepository,
 )
 from math_rag.infrastructure.repositories.files import GoogleFileRepository
@@ -80,7 +80,7 @@ class InfrastructureContainer(DeclarativeContainer):
         deployment=config.mongo.deployment,
     )
     math_expression_prediction_repository = Factory(
-        MathExpressionPredictionRepository,
+        MathExpressionClassificationRepository,
         client=mongo_client,
         deployment=config.mongo.deployment,
     )

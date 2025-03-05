@@ -1,1 +1,2 @@
 from .katex_correction_prompt import KATEX_CORRECTION_PROMPT
+from .math_expression_classification_prompt import MATH_EXPRESSION_CLASSIFICATION_PROMPT

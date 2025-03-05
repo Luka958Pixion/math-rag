@@ -1,17 +1,17 @@
 from pymongo import AsyncMongoClient
 
-from math_rag.core.models import MathExpressionPrediction
+from math_rag.core.models import MathExpressionClassification
 
 
-class MathExpressionPredictionRepository:
+class MathExpressionClassificationRepository:
     def __init__(self, client: AsyncMongoClient, deployment: str):
         self.client = client
         self.db = self.client[deployment]
-        self.collection_name = MathExpressionPrediction.__name__.lower()
+        self.collection_name = MathExpressionClassification.__name__.lower()
         self.collection = self.db[self.collection_name]
 
     async def insert_math_expression_predictions(
-        self, items: list[MathExpressionPrediction]
+        self, items: list[MathExpressionClassification]
     ):
         docs = [item.model_dump() for item in items]
 
@@ -22,11 +22,11 @@ class MathExpressionPredictionRepository:
 
     async def get_math_expression_predictions(
         self, limit: int
-    ) -> list[MathExpressionPrediction]:
+    ) -> list[MathExpressionClassification]:
         cursor = self.collection.find().limit(limit)
         docs = await cursor.to_list(length=limit)
 
         for doc in docs:
             doc['id'] = doc.pop('_id')
 
-        return [MathExpressionPrediction(**doc) for doc in docs]
+        return [MathExpressionClassification(**doc) for doc in docs]

@@ -1,13 +1,13 @@
 from pymongo import AsyncMongoClient
 
-from math_rag.core.models import MathExpressionPrediction
+from math_rag.core.models import MathExpressionClassification
 
 
 class MathExpressionPredictionSeeder:
     def __init__(self, client: AsyncMongoClient, deployment: str):
         self.client = client
         self.db = self.client[deployment]
-        self.collection_name = MathExpressionPrediction.__name__.lower()
+        self.collection_name = MathExpressionClassification.__name__.lower()
 
     async def seed(self, reset=False):
         if reset:
