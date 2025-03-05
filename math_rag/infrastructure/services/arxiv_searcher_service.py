@@ -42,13 +42,13 @@ class ArxivSearcherService:
 
         return list(results)
 
-    async def get_pdf(self, entry_id: str) -> tuple[str, bytes] | None:
-        url = f'https://arxiv.org/pdf/{entry_id}.pdf'
+    async def get_pdf(self, arxiv_id: str) -> tuple[str, bytes] | None:
+        url = f'https://arxiv.org/pdf/{arxiv_id}.pdf'
 
         return await self._fetch_file(url)
 
-    async def get_src(self, entry_id: str) -> tuple[str, bytes] | None:
-        url = f'https://arxiv.org/src/{entry_id}'
+    async def get_src(self, arxiv_id: str) -> tuple[str, bytes] | None:
+        url = f'https://arxiv.org/src/{arxiv_id}'
 
         return await self._fetch_file(url)
 
