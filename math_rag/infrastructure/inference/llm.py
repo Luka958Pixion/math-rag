@@ -76,7 +76,7 @@ class LLM(BaseLLM):
         self,
         request_batch: LLMRequestBatch[LLMResponseType],
         response_type: Type[LLMResponseType],
-    ) -> LLMResponseBatch | None:
+    ) -> LLMResponseBatch[LLMResponseType] | None:
         batch_id = await self.batch_generate_init(request_batch)
 
         while True:
@@ -128,7 +128,7 @@ class LLM(BaseLLM):
 
     async def batch_generate_result(
         self, batch_id: str, response_type: Type[LLMResponseType]
-    ) -> LLMResponseBatch | None:
+    ) -> LLMResponseBatch[LLMResponseType] | None:
         batch = await self.client.batches.retrieve(batch_id)
         logging.info(f'Batch {batch.id} status updated to {batch.status}')
 
