@@ -25,7 +25,7 @@ class LLM(BaseLLM):
         self.client = client
 
     @retry
-    async def generate_text(self, request: LLMRequest) -> list[LLMResponse[str]]:
+    async def generate_text(self, request: LLMRequest[str]) -> list[LLMResponse[str]]:
         params = request.params
         messages = request.conversation.messages
         completion = await self.client.chat.completions.create(
@@ -46,7 +46,7 @@ class LLM(BaseLLM):
     @retry
     async def generate_json(
         self,
-        request: LLMRequest,
+        request: LLMRequest[LLMResponseType],
     ) -> list[LLMResponse[LLMResponseType]]:
         params = request.params
         messages = request.conversation.messages
@@ -146,9 +146,10 @@ class LLM(BaseLLM):
                 response = LLMResponse(content=content)
                 responses.append(response)
 
-        await self.client.files.delete(input_file.id), responses
+        incomplete_request_batch = LLMRequestBatch(requests=incomplete_requests)
+        await self.client.files.delete(input_file.id)
 
-        return LLMRequestBatch(requests=incomplete_requests)
+        return incomplete_request_batch, responses
 
     async def batch_generate_text_init(self, prompts: list[str], params: LLMParams):
         # TODO create batch
