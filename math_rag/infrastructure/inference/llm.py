@@ -39,9 +39,11 @@ class LLM(BaseLLM):
             logprobs=params.logprobs,
             top_logprobs=params.top_logprobs,
         )
-        content = completion.choices[0].message.content
+        responses = [
+            LLMResponse(content=choice.message.content) for choice in completion.choices
+        ]
 
-        return LLMResponse(content=content)
+        return responses
 
     @retry
     async def generate_json(
@@ -61,9 +63,11 @@ class LLM(BaseLLM):
             logprobs=params.logprobs,
             top_logprobs=params.top_logprobs,
         )
-        content = completion.choices[0].message.parsed
+        responses = [
+            LLMResponse(content=choice.message.parsed) for choice in completion.choices
+        ]
 
-        return LLMResponse(content=content)
+        return responses
 
     async def batch_generate_text(
         self, request_batch: LLMRequestBatch

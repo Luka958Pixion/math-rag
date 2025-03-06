@@ -11,6 +11,7 @@ class LLMParams(BaseModel, Generic[LLMResponseType]):
     logprobs: bool | None = None
     top_logprobs: int | None = None
     response_type: LLMResponseType
+    n: int = 1
 
     @model_validator(mode='after')
     def check_dependencies(self):
