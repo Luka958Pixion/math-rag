@@ -6,8 +6,15 @@ from backoff import expo, on_exception
 from openai import AsyncOpenAI, RateLimitError
 from openai.types.chat import ChatCompletion
 
-from math_rag.application.base.inference import BaseLLM, T
-from math_rag.application.models import LLMMessage, LLMParams, LLMResponse
+from math_rag.application.base.inference import BaseLLM
+from math_rag.application.models import (
+    LLMMessage,
+    LLMParams,
+    LLMRequest,
+    LLMRequestBatch,
+    LLMResponse,
+)
+from math_rag.application.types import LLMResponseType
 
 
 retry = on_exception(expo, RateLimitError, max_time=60, max_tries=6)
@@ -18,9 +25,9 @@ class LLM(BaseLLM):
         self.client = client
 
     @retry
-    async def generate_text(
-        self, messages: list[LLMMessage], params: LLMParams
-    ) -> list[LLMResponse[str]]:
+    async def generate_text(self, request: LLMRequest) -> list[LLMResponse[str]]:
+        params = request.params
+        messages = request.conversation.messages
         completion = await self.client.chat.completions.create(
             model=params.model,
             messages=[
@@ -39,17 +46,17 @@ class LLM(BaseLLM):
     @retry
     async def generate_json(
         self,
-        messages: list[LLMMessage],
-        params: LLMParams,
-        response_model_type: type[T],
-    ) -> list[LLMResponse[T]]:
+        request: LLMRequest,
+    ) -> list[LLMResponse[LLMResponseType]]:
+        params = request.params
+        messages = request.conversation.messages
         completion = await self.client.beta.chat.completions.parse(
             model=params.model,
             messages=[
                 {'role': message.role, 'content': message.content}
                 for message in messages
             ],
-            response_format=response_model_type,
+            response_format=params.response_type,
             temperature=params.temperature,
             logprobs=params.logprobs,
             top_logprobs=params.top_logprobs,
@@ -59,32 +66,37 @@ class LLM(BaseLLM):
         return LLMResponse(content=content)
 
     async def batch_generate_text(
-        self, prompts: list[str], params: LLMParams
-    ) -> tuple[list[str], list[str]]:
+        self, request_batch: LLMRequestBatch
+    ) -> tuple[LLMRequestBatch, list[LLMResponse[str]]]:
         url = '/v1/chat/completions'
-        custom_id_to_prompt: dict[str, str] = {}
-        requests = []
+        custom_id_to_request: dict[str, LLMRequest] = {}
+        openai_requests = []
 
-        for i, prompt in enumerate(prompts):
+        for i, request in enumerate(request_batch.requests):
             custom_id = str(i)
-            custom_id_to_prompt[custom_id] = prompt
-            request = {
+            custom_id_to_request[custom_id] = request
+            params = request.params
+            openai_request = {
                 'custom_id': custom_id,
                 'method': 'POST',
                 'url': url,
                 'body': {
                     'model': params.model,
-                    'messages': [{'role': 'user', 'content': prompt}],
+                    'messages': [
+                        {'role': message.role, 'content': message.content}
+                        for message in request.conversation.messages
+                    ],
                     'response_format': {'type': 'text'},
                     'temperature': params.temperature,
                     'logprobs': params.logprobs,
                     'top_logprobs': params.top_logprobs,
                 },
             }
-            requests.append(request)
+            openai_requests.append(openai_request)
 
         jsonl_str = '\n'.join(
-            json.dumps(request, separators=(',', ':')) for request in requests
+            json.dumps(openai_request, separators=(',', ':'))
+            for openai_request in openai_requests
         )
         jsonl_bytes = jsonl_str.encode('utf-8')
 
@@ -117,7 +129,7 @@ class LLM(BaseLLM):
 
         response_content = await self.client.files.content(batch.output_file_id)
         lines = response_content.text.strip().splitlines()
-        results, prompts = [], []
+        incomplete_requests, responses = [], []
 
         for line in lines:
             data = json.loads(line)
@@ -125,17 +137,18 @@ class LLM(BaseLLM):
 
             if response is None:
                 custom_id = data['custom_id']
-                prompt = custom_id_to_prompt[custom_id]
-                prompts.append(prompt)
+                incomplete_request = custom_id_to_request[custom_id]
+                incomplete_requests.append(incomplete_request)
 
             else:
                 completion = ChatCompletion(**response['body'])
-                result = completion.choices[0].message.content
-                results.append(result)
+                content = completion.choices[0].message.content
+                response = LLMResponse(content=content)
+                responses.append(response)
 
-        await self.client.files.delete(input_file.id)
+        await self.client.files.delete(input_file.id), responses
 
-        return results, prompts
+        return LLMRequestBatch(requests=incomplete_requests)
 
     async def batch_generate_text_init(self, prompts: list[str], params: LLMParams):
         # TODO create batch

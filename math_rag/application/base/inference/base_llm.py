@@ -1,26 +1,16 @@
 from abc import ABC, abstractmethod
-from typing import TypeVar
 
-from pydantic import BaseModel
-
-from math_rag.application.models import LLMMessage, LLMParams, LLMResponse
-
-
-T = TypeVar('T', bound=BaseModel)
+from math_rag.application.models import LLMRequest, LLMResponse
+from math_rag.application.types import LLMResponseType
 
 
 class BaseLLM(ABC):
     @abstractmethod
-    async def generate_text(
-        self, messages: list[LLMMessage], params: LLMParams
-    ) -> list[LLMResponse[str]]:
+    async def generate_text(self, request: LLMRequest) -> list[LLMResponse[str]]:
         pass
 
     @abstractmethod
     async def generate_json(
-        self,
-        messages: list[LLMMessage],
-        params: LLMParams,
-        response_model_type: type[T],
-    ) -> list[LLMResponse[T]]:
+        self, request: LLMRequest
+    ) -> list[LLMResponse[LLMResponseType]]:
         pass
