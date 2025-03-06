@@ -2,12 +2,15 @@ import asyncio
 import json
 import logging
 
+from typing import Type
+
 from backoff import expo, on_exception
 from openai import AsyncOpenAI, RateLimitError
 from openai.types.chat import ChatCompletion
 
 from math_rag.application.base.inference import BaseLLM
 from math_rag.application.models import (
+    LLMConversation,
     LLMMessage,
     LLMParams,
     LLMRequest,
@@ -25,167 +28,90 @@ class LLM(BaseLLM):
         self.client = client
 
     @retry
-    async def generate_text(self, request: LLMRequest[str]) -> list[LLMResponse[str]]:
-        params = request.params
-        messages = request.conversation.messages
-        completion = await self.client.chat.completions.create(
-            model=params.model,
-            messages=[
-                {'role': message.role, 'content': message.content}
-                for message in messages
-            ],
-            response_format={'type': 'text'},
-            temperature=params.temperature,
-            logprobs=params.logprobs,
-            top_logprobs=params.top_logprobs,
-        )
-        responses = [
-            LLMResponse(content=choice.message.content) for choice in completion.choices
-        ]
-
-        return responses
-
-    @retry
-    async def generate_json(
+    async def generate(
         self,
         request: LLMRequest[LLMResponseType],
     ) -> list[LLMResponse[LLMResponseType]]:
         params = request.params
         messages = request.conversation.messages
-        completion = await self.client.beta.chat.completions.parse(
-            model=params.model,
-            messages=[
-                {'role': message.role, 'content': message.content}
-                for message in messages
-            ],
-            response_format=params.response_type,
-            temperature=params.temperature,
-            logprobs=params.logprobs,
-            top_logprobs=params.top_logprobs,
-        )
-        responses = [
-            LLMResponse(content=choice.message.parsed) for choice in completion.choices
-        ]
+
+        if params.response_type is str:
+            completion = await self.client.chat.completions.create(
+                model=params.model,
+                messages=[
+                    {'role': message.role, 'content': message.content}
+                    for message in messages
+                ],
+                response_format={'type': 'text'},
+                temperature=params.temperature,
+                logprobs=params.logprobs,
+                top_logprobs=params.top_logprobs,
+            )
+            responses = [
+                LLMResponse(content=choice.message.content)
+                for choice in completion.choices
+            ]
+
+        else:
+            completion = await self.client.beta.chat.completions.parse(
+                model=params.model,
+                messages=[
+                    {'role': message.role, 'content': message.content}
+                    for message in messages
+                ],
+                response_format=params.response_type,
+                temperature=params.temperature,
+                logprobs=params.logprobs,
+                top_logprobs=params.top_logprobs,
+            )
+            responses = [
+                LLMResponse(content=choice.message.parsed)
+                for choice in completion.choices
+            ]
 
         return responses
 
-    async def batch_generate_text(
-        self, request_batch: LLMRequestBatch
-    ) -> tuple[LLMRequestBatch, list[LLMResponse[str]]]:
-        url = '/v1/chat/completions'
-        custom_id_to_request: dict[str, LLMRequest] = {}
-        openai_requests = []
-
-        for i, request in enumerate(request_batch.requests):
-            custom_id = str(i)
-            custom_id_to_request[custom_id] = request
-            params = request.params
-            openai_request = {
-                'custom_id': custom_id,
-                'method': 'POST',
-                'url': url,
-                'body': {
-                    'model': params.model,
-                    'messages': [
-                        {'role': message.role, 'content': message.content}
-                        for message in request.conversation.messages
-                    ],
-                    'response_format': {'type': 'text'},
-                    'temperature': params.temperature,
-                    'logprobs': params.logprobs,
-                    'top_logprobs': params.top_logprobs,
-                },
-            }
-            openai_requests.append(openai_request)
-
-        jsonl_str = '\n'.join(
-            json.dumps(openai_request, separators=(',', ':'))
-            for openai_request in openai_requests
-        )
-        jsonl_bytes = jsonl_str.encode('utf-8')
-
-        input_file = await self.client.files.create(file=jsonl_bytes, purpose='batch')
-        batch = await self.client.batches.create(
-            input_file_id=input_file.id,
-            endpoint=url,
-            completion_window='24h',
-            metadata=None,
-        )
-        prev_status = batch.status
-        logging.info(f'Batch {batch.id} created with status {batch.status}')
+    async def batch_generate(
+        self,
+        request_batch: LLMRequestBatch[LLMResponseType],
+        response_type: Type[LLMResponseType],
+    ) -> tuple[list[LLMResponse[LLMResponseType]], LLMRequestBatch[LLMResponseType]]:
+        batch_id = await self.batch_generate_init(request_batch)
 
         while True:
-            batch = await self.client.batches.retrieve(batch.id)
+            result = await self.batch_generate_result(batch_id, response_type)
 
-            if batch.status != prev_status:
-                prev_status = batch.status
-                logging.info(f'Batch {batch.id} status updated to {batch.status}')
+            if result is not None:
+                return result
 
-            match batch.status:
-                case 'validating' | 'in_progress' | 'finalizing' | 'cancelling':
-                    await asyncio.sleep(5 * 60)
+            await asyncio.sleep(5 * 60)
 
-                case 'failed':
-                    raise ValueError(f'File {input_file.id} validation failed')
-
-                case 'completed' | 'expired' | 'cancelled':
-                    break
-
-        response_content = await self.client.files.content(batch.output_file_id)
-        lines = response_content.text.strip().splitlines()
-        incomplete_requests, responses = [], []
-
-        for line in lines:
-            data = json.loads(line)
-            response = data['response']
-
-            if response is None:
-                custom_id = data['custom_id']
-                incomplete_request = custom_id_to_request[custom_id]
-                incomplete_requests.append(incomplete_request)
-
-            else:
-                completion = ChatCompletion(**response['body'])
-                content = completion.choices[0].message.content
-                response = LLMResponse(content=content)
-                responses.append(response)
-
-        incomplete_request_batch = LLMRequestBatch(requests=incomplete_requests)
-        await self.client.files.delete(input_file.id)
-
-        return incomplete_request_batch, responses
-
-    async def batch_generate_text_init(self, request_batch: LLMRequestBatch) -> str:
+    async def batch_generate_init(
+        self, request_batch: LLMRequestBatch[LLMResponseType]
+    ) -> str:
         url = '/v1/chat/completions'
-        custom_id_to_request: dict[str, LLMRequest] = {}
-        openai_requests = []
-
-        for i, request in enumerate(request_batch.requests):
-            custom_id = str(i)
-            custom_id_to_request[custom_id] = request
-            params = request.params
-            openai_request = {
-                'custom_id': custom_id,
+        requests = [
+            {
+                'custom_id': str(i),
                 'method': 'POST',
                 'url': url,
                 'body': {
-                    'model': params.model,
+                    'model': request.params.model,
                     'messages': [
                         {'role': message.role, 'content': message.content}
                         for message in request.conversation.messages
                     ],
                     'response_format': {'type': 'text'},
-                    'temperature': params.temperature,
-                    'logprobs': params.logprobs,
-                    'top_logprobs': params.top_logprobs,
+                    'temperature': request.params.temperature,
+                    'logprobs': request.params.logprobs,
+                    'top_logprobs': request.params.top_logprobs,
                 },
             }
-            openai_requests.append(openai_request)
+            for i, request in enumerate(request_batch.requests)
+        ]
 
-        jsonl_str = '\n'.join(
-            json.dumps(openai_request, separators=(',', ':'))
-            for openai_request in openai_requests
-        )
+        lines = [json.dumps(request, separators=(',', ':')) for request in requests]
+        jsonl_str = '\n'.join(lines)
         jsonl_bytes = jsonl_str.encode('utf-8')
 
         input_file = await self.client.files.create(file=jsonl_bytes, purpose='batch')
@@ -199,8 +125,84 @@ class LLM(BaseLLM):
 
         return batch.id
 
-    async def batch_generate_text_result(
-        self, batch_id: str
-    ) -> tuple[list[str], list[str]] | None:
-        # TODO check if everything is completed, return None if its not
-        pass
+    async def batch_generate_result(
+        self, batch_id: str, response_type: Type[LLMResponseType]
+    ) -> (
+        tuple[list[LLMResponse[LLMResponseType]], LLMRequestBatch[LLMResponseType]]
+        | None
+    ):
+        batch = await self.client.batches.retrieve(batch_id)
+
+        if batch.status != prev_status:
+            prev_status = batch.status
+            logging.info(f'Batch {batch.id} status updated to {batch.status}')
+
+        match batch.status:
+            case 'validating' | 'in_progress' | 'finalizing' | 'cancelling':
+                return None
+
+            case 'failed':
+                raise ValueError(f'File {batch.input_file_id} validation failed')
+
+            case 'completed' | 'expired' | 'cancelled':
+                pass
+
+        output_file_content = await self.client.files.content(batch.output_file_id)
+        lines = output_file_content.text.strip().splitlines()
+        incomplete_request_ids = []
+        responses = []
+
+        for line in lines:
+            data = json.loads(line)
+            response = data['response']
+
+            if response is None:
+                custom_id = data['custom_id']
+                incomplete_request_ids.append(custom_id)
+
+            else:
+                completion = ChatCompletion(**response['body'])
+                content = completion.choices[0].message.content
+                response = LLMResponse[response_type](content=content)
+                responses.append(response)
+
+        input_file_content = await self.client.files.content(batch.input_file_id)
+        lines = input_file_content.text.strip().splitlines()
+        incomplete_requests = []
+
+        for line in lines:
+            data = json.loads(line)
+            request_id = data['custom_id']
+
+            if request_id not in incomplete_request_ids:
+                continue
+
+            body = data['body']
+            messages = body['messages']
+
+            request = LLMRequest[response_type](
+                conversation=LLMConversation(
+                    messages=[
+                        LLMMessage(role=message['role'], content=message['content'])
+                        for message in messages
+                    ]
+                ),
+                params=LLMParams[response_type](
+                    model=body['messages'],
+                    temperature=body['messages'],
+                    logprobs=body['messages'],
+                    top_logprobs=body['messages'],
+                    response_type=response_type,
+                    n=body['messages'],
+                ),
+            )
+            incomplete_requests.append(request)
+
+        incomplete_request_batch = LLMRequestBatch[response_type](
+            requests=incomplete_requests
+        )
+
+        await self.client.files.delete(batch.input_file_id)
+        await self.client.files.delete(batch.output_file_id)
+
+        return responses, incomplete_request_batch

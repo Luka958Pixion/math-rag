@@ -6,11 +6,7 @@ from math_rag.application.types import LLMResponseType
 
 class BaseLLM(ABC):
     @abstractmethod
-    async def generate_text(self, request: LLMRequest[str]) -> list[LLMResponse[str]]:
-        pass
-
-    @abstractmethod
-    async def generate_json(
+    async def generate(
         self, request: LLMRequest[LLMResponseType]
     ) -> list[LLMResponse[LLMResponseType]]:
         pass
