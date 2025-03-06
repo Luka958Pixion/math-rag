@@ -34,7 +34,7 @@ class KatexCorrectionAssistant:
                 model='gpt-4o-mini', temperature=0.0, response_type=response_type
             ),
         )
-        responses = await self.llm.generate_json(request)
+        responses = await self.llm.generate(request)
         katex = responses[0].content.katex
         result = await self.katex_validation_service.validate(katex)
 

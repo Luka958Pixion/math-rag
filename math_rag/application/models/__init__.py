@@ -5,3 +5,4 @@ from .llm_params import LLMParams
 from .llm_request import LLMRequest
 from .llm_request_batch import LLMRequestBatch
 from .llm_response import LLMResponse
+from .llm_response_batch import LLMResponseBatch

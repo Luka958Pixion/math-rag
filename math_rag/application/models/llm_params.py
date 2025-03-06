@@ -1,6 +1,6 @@
-from typing import Generic
+from typing import Generic, Type
 
-from pydantic import BaseModel, model_validator
+from pydantic import BaseModel, field_validator, model_validator
 
 from math_rag.application.types import LLMResponseType
 
@@ -10,8 +10,12 @@ class LLMParams(BaseModel, Generic[LLMResponseType]):
     temperature: float
     logprobs: bool | None = None
     top_logprobs: int | None = None
-    response_type: LLMResponseType
+    response_type: LLMResponseType | Type[str]
     n: int = 1
+
+    @field_validator('response_type', mode='before')
+    def allow_python_types(cls, value):
+        return value
 
     @model_validator(mode='after')
     def check_dependencies(self):

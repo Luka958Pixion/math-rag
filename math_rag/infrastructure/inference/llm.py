@@ -16,6 +16,7 @@ from math_rag.application.models import (
     LLMRequest,
     LLMRequestBatch,
     LLMResponse,
+    LLMResponseBatch,
 )
 from math_rag.application.types import LLMResponseType
 
@@ -75,7 +76,7 @@ class LLM(BaseLLM):
         self,
         request_batch: LLMRequestBatch[LLMResponseType],
         response_type: Type[LLMResponseType],
-    ) -> tuple[list[LLMResponse[LLMResponseType]], LLMRequestBatch[LLMResponseType]]:
+    ) -> LLMResponseBatch | None:
         batch_id = await self.batch_generate_init(request_batch)
 
         while True:
@@ -127,15 +128,9 @@ class LLM(BaseLLM):
 
     async def batch_generate_result(
         self, batch_id: str, response_type: Type[LLMResponseType]
-    ) -> (
-        tuple[list[LLMResponse[LLMResponseType]], LLMRequestBatch[LLMResponseType]]
-        | None
-    ):
+    ) -> LLMResponseBatch | None:
         batch = await self.client.batches.retrieve(batch_id)
-
-        if batch.status != prev_status:
-            prev_status = batch.status
-            logging.info(f'Batch {batch.id} status updated to {batch.status}')
+        logging.info(f'Batch {batch.id} status updated to {batch.status}')
 
         match batch.status:
             case 'validating' | 'in_progress' | 'finalizing' | 'cancelling':
@@ -198,11 +193,14 @@ class LLM(BaseLLM):
             )
             incomplete_requests.append(request)
 
-        incomplete_request_batch = LLMRequestBatch[response_type](
-            requests=incomplete_requests
-        )
-
         await self.client.files.delete(batch.input_file_id)
         await self.client.files.delete(batch.output_file_id)
 
-        return responses, incomplete_request_batch
+        incomplete_request_batch = LLMRequestBatch[response_type](
+            requests=incomplete_requests
+        )
+        reponse_batch = LLMResponseBatch[response_type](
+            request_batch=incomplete_request_batch, responses=responses
+        )
+
+        return reponse_batch

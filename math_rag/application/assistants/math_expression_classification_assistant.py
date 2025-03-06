@@ -25,7 +25,7 @@ class MathExpressionClassificationAssistant:
                 model='gpt-4o-mini', temperature=0.0, response_type=response_type
             ),
         )
-        responses = await self.llm.generate_json(request)
+        responses = await self.llm.generate(request)
         label = responses[0].content.label
 
         return label
