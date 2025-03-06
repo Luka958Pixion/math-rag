@@ -7,5 +7,4 @@ T = TypeVar('T')
 
 
 class LLMResponse(BaseModel, Generic[T]):
-    value: T
-    logprobs: dict[str, float] | None = None
+    content: T

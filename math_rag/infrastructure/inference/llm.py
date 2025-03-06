@@ -2,13 +2,17 @@ import asyncio
 import json
 import logging
 
+from typing import TypeVar
+
 from backoff import expo, on_exception
 from openai import AsyncOpenAI, RateLimitError
 from openai.types.chat import ChatCompletion
 
-from math_rag.application.base.inference import BaseLLM, TBaseLLMResponseModel
-from math_rag.application.models import LLMParams
+from math_rag.application.base.inference import BaseLLM
+from math_rag.application.models import LLMMessage, LLMParams, LLMResponse
 
+
+T = TypeVar('T')
 
 retry = on_exception(expo, RateLimitError, max_time=60, max_tries=6)
 
@@ -18,35 +22,45 @@ class LLM(BaseLLM):
         self.client = client
 
     @retry
-    async def generate_text(self, prompt: str, params: LLMParams) -> str:
+    async def generate_text(
+        self, messages: list[LLMMessage], params: LLMParams
+    ) -> list[LLMResponse[str]]:
         completion = await self.client.chat.completions.create(
             model=params.model,
-            messages=[{'role': 'user', 'content': prompt}],
+            messages=[
+                {'role': message.role, 'content': message.content}
+                for message in messages
+            ],
             response_format={'type': 'text'},
             temperature=params.temperature,
             logprobs=params.logprobs,
             top_logprobs=params.top_logprobs,
         )
+        content = completion.choices[0].message.content
 
-        return completion.choices[0].message.content
+        return LLMResponse(content=content)
 
     @retry
     async def generate_json(
         self,
-        prompt: str,
+        messages: list[LLMMessage],
         params: LLMParams,
-        response_model_type: type[TBaseLLMResponseModel],
-    ) -> TBaseLLMResponseModel:
+        response_model_type: type[T],
+    ) -> list[LLMResponse[T]]:
         completion = await self.client.beta.chat.completions.parse(
             model=params.model,
-            messages=[{'role': 'user', 'content': prompt}],
+            messages=[
+                {'role': message.role, 'content': message.content}
+                for message in messages
+            ],
             response_format=response_model_type,
             temperature=params.temperature,
             logprobs=params.logprobs,
             top_logprobs=params.top_logprobs,
         )
+        content = completion.choices[0].message.parsed
 
-        return completion.choices[0].message.parsed
+        return LLMResponse(content=content)
 
     async def batch_generate_text(
         self, prompts: list[str], params: LLMParams

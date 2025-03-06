@@ -6,7 +6,7 @@ from pydantic import BaseModel
 from math_rag.application.models import LLMParams
 
 
-TBaseLLMResponseModel = TypeVar('T', bound=BaseModel)
+TResponseModel = TypeVar('T', bound=BaseModel)
 
 
 class BaseLLM(ABC):
@@ -19,6 +19,6 @@ class BaseLLM(ABC):
         self,
         prompt: str,
         params: LLMParams,
-        response_model_type: type[TBaseLLMResponseModel],
-    ) -> TBaseLLMResponseModel:
+        response_model_type: type[TResponseModel],
+    ) -> TResponseModel:
         pass
