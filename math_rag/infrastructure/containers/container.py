@@ -6,7 +6,10 @@ from minio import Minio
 from openai import AsyncOpenAI
 from pymongo import AsyncMongoClient
 
-from math_rag.application.assistants import KatexCorrectionAssistant
+from math_rag.application.assistants import (
+    KatexCorrectionAssistant,
+    MathExpressionClassificationAssistant,
+)
 from math_rag.infrastructure.inference import LLM
 from math_rag.infrastructure.repositories.documents import (
     MathExpressionClassificationRepository,
@@ -129,4 +132,7 @@ class InfrastructureContainer(DeclarativeContainer):
         KatexCorrectionAssistant,
         llm=llm,
         katex_validation_service=katex_validator_service,
+    )
+    math_expression_classification_assistant = Factory(
+        MathExpressionClassificationAssistant, llm=llm
     )

@@ -1,9 +1,15 @@
 MATH_EXPRESSION_CLASSIFICATION_PROMPT = """
-You are an expert LaTeX classification assistant.
+You are an expert LaTeX expression classification assistant.
+Given a LaTeX expression, classify it into one of five classes:
+1. equality
+2. inequality
+3. constant
+4. variable
+5. other
 
-Your task is... TODO
+Return the class number only (no symbols or extra text)!
 
-### Input LaTeX:
+### LaTeX:
 {latex}
 
 ### Class:
