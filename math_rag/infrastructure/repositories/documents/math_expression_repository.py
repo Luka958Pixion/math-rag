@@ -31,22 +31,11 @@ class MathExpressionRepository(BaseMathExpressionRepository):
 
         return None
 
-    async def get_math_expressions_by_category(
-        self, limit: int
-    ) -> list[MathExpression]:
-        pipeline = [
-            {'$sort': {'position': 0}},
-            {'$group': {'_id': '$math_category', 'expressions': {'$push': '$$ROOT'}}},
-            {'$project': {'expressions': {'$slice': ['$expressions', limit]}}},
-        ]
+    async def get_math_expressions(self, limit: int) -> list[MathExpression]:
+        cursor = self.collection.find().limit(limit)
+        docs = await cursor.to_list(length=limit)
 
-        cursor = await self.collection.aggregate(pipeline)
-        results = []
+        for doc in docs:
+            doc['id'] = doc.pop('_id')
 
-        async for item in cursor:
-            for expr in item['expressions']:
-                expr['id'] = expr.pop('_id')
-
-                results.append(MathExpression(**expr))
-
-        return results
+        return [MathExpression(**doc) for doc in docs]

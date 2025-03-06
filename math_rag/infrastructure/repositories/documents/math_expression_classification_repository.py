@@ -10,7 +10,7 @@ class MathExpressionClassificationRepository:
         self.collection_name = MathExpressionClassification.__name__.lower()
         self.collection = self.db[self.collection_name]
 
-    async def insert_math_expression_predictions(
+    async def insert_math_expression_classifications(
         self, items: list[MathExpressionClassification]
     ):
         docs = [item.model_dump() for item in items]
@@ -20,7 +20,7 @@ class MathExpressionClassificationRepository:
 
         await self.collection.insert_many(docs)
 
-    async def get_math_expression_predictions(
+    async def get_math_expression_classifications(
         self, limit: int
     ) -> list[MathExpressionClassification]:
         cursor = self.collection.find().limit(limit)
