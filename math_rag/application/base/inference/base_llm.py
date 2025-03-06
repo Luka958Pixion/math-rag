@@ -3,22 +3,24 @@ from typing import TypeVar
 
 from pydantic import BaseModel
 
-from math_rag.application.models import LLMParams
+from math_rag.application.models import LLMMessage, LLMParams, LLMResponse
 
 
-TResponseModel = TypeVar('T', bound=BaseModel)
+T = TypeVar('T', bound=BaseModel)
 
 
 class BaseLLM(ABC):
     @abstractmethod
-    async def generate_text(self, prompt: str, params: LLMParams) -> str:
+    async def generate_text(
+        self, messages: list[LLMMessage], params: LLMParams
+    ) -> list[LLMResponse[str]]:
         pass
 
     @abstractmethod
     async def generate_json(
         self,
-        prompt: str,
+        messages: list[LLMMessage],
         params: LLMParams,
-        response_model_type: type[TResponseModel],
-    ) -> TResponseModel:
+        response_model_type: type[T],
+    ) -> list[LLMResponse[T]]:
         pass

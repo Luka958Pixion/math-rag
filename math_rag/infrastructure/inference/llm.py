@@ -2,17 +2,13 @@ import asyncio
 import json
 import logging
 
-from typing import TypeVar
-
 from backoff import expo, on_exception
 from openai import AsyncOpenAI, RateLimitError
 from openai.types.chat import ChatCompletion
 
-from math_rag.application.base.inference import BaseLLM
+from math_rag.application.base.inference import BaseLLM, T
 from math_rag.application.models import LLMMessage, LLMParams, LLMResponse
 
-
-T = TypeVar('T')
 
 retry = on_exception(expo, RateLimitError, max_time=60, max_tries=6)
 
