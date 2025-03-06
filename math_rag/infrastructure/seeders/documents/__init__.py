@@ -1,2 +1,2 @@
-from .math_expression_prediction_seeder import MathExpressionPredictionSeeder
+from .math_expression_classification_seeder import MathExpressionClassificationSeeder
 from .math_expression_seeder import MathExpressionSeeder

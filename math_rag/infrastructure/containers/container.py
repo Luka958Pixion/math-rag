@@ -15,7 +15,7 @@ from math_rag.infrastructure.repositories.documents import (
 from math_rag.infrastructure.repositories.files import GoogleFileRepository
 from math_rag.infrastructure.repositories.objects import MathArticleRepository
 from math_rag.infrastructure.seeders.documents import (
-    MathExpressionPredictionSeeder,
+    MathExpressionClassificationSeeder,
     MathExpressionSeeder,
 )
 from math_rag.infrastructure.seeders.objects import MathArticleSeeder
@@ -74,12 +74,12 @@ class InfrastructureContainer(DeclarativeContainer):
         deployment=config.mongo.deployment,
     )
 
-    math_expression_prediction_seeder = Factory(
-        MathExpressionPredictionSeeder,
+    math_expression_classification_seeder = Factory(
+        MathExpressionClassificationSeeder,
         client=mongo_client,
         deployment=config.mongo.deployment,
     )
-    math_expression_prediction_repository = Factory(
+    math_expression_classification_repository = Factory(
         MathExpressionClassificationRepository,
         client=mongo_client,
         deployment=config.mongo.deployment,

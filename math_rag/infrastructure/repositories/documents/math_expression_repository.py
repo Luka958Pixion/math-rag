@@ -31,8 +31,14 @@ class MathExpressionRepository(BaseMathExpressionRepository):
 
         return None
 
-    async def get_math_expressions(self, limit: int) -> list[MathExpression]:
-        cursor = self.collection.find().limit(limit)
+    async def get_math_expressions(
+        self, limit: int | None = None
+    ) -> list[MathExpression]:
+        cursor = self.collection.find()
+
+        if limit:
+            cursor = cursor.limit(limit)
+
         docs = await cursor.to_list(length=limit)
 
         for doc in docs:

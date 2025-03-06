@@ -3,7 +3,7 @@ from pymongo import AsyncMongoClient
 from math_rag.core.models import MathExpressionClassification
 
 
-class MathExpressionPredictionSeeder:
+class MathExpressionClassificationSeeder:
     def __init__(self, client: AsyncMongoClient, deployment: str):
         self.client = client
         self.db = self.client[deployment]
