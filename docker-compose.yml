@@ -9,7 +9,7 @@ services:
       MINIO_ROOT_USER: admin
       MINIO_ROOT_PASSWORD: password
     volumes:
-      - minio:/data  # causes deadlock errors when using put_object if mapped to local
+      - minio_data:/data  # causes deadlock errors when using put_object if mapped to local
     command: server /data
 
   mongo:
@@ -21,7 +21,7 @@ services:
     ports:
       - 27017:27017
     volumes:
-      - ./volumes/mongo:/data/db
+      - mongo_data:/data/db
 
   neo4j:
     image: neo4j:latest
@@ -33,10 +33,10 @@ services:
       NEO4J_AUTH: neo4j/password
       JAVA_TOOL_OPTIONS: "-XX:UseSVE=0" # https://medium.com/%40luketn/java-on-docker-sigill-exception-on-mac-os-sequoia-15-2-9311e4775442
     volumes:
-      - ./volumes/neo4j/data:/data
-      - ./volumes/neo4j/logs:/logs
-      - ./volumes/neo4j/import:/var/lib/neo4j/import
-      - ./volumes/neo4j/plugins:/plugins
+      - neo4j_data:/data
+      - neo4j_logs:/logs
+      - neo4j_import:/var/lib/neo4j/import
+      - neo4j_plugins:/plugins
 
   qdrant:
     image: qdrant/qdrant:latest
@@ -52,7 +52,7 @@ services:
       - source: qdrant_config
         target: /qdrant/config/production.yaml
     volumes:
-      - ./volumes/qdrant:/qdrant/storage
+      - qdrant_storage:/qdrant/storage
 
   isolated-jupyter-kernel:
     build:
@@ -63,7 +63,7 @@ services:
     environment:
       - JUPYTER_SESSIONS_DIR=/mnt/jupyter_sessions
     volumes:
-      - ./jupyter_sessions:/mnt/jupyter_sessions
+      - jupyter_sessions:/mnt/jupyter_sessions
     ports:
       - 5200:5000
     restart: unless-stopped
@@ -79,7 +79,14 @@ services:
     restart: unless-stopped
 
 volumes:
-  minio:
+  minio_data:
+  mongo_data:
+  neo4j_data:
+  neo4j_logs:
+  neo4j_import:
+  neo4j_plugins:
+  qdrant_storage:
+  jupyter_sessions:
 
 configs:
   qdrant_config:

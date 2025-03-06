@@ -130,7 +130,7 @@ class LLM(BaseLLM):
         self, batch_id: str, response_type: Type[LLMResponseType]
     ) -> LLMResponseBatch[LLMResponseType] | None:
         batch = await self.client.batches.retrieve(batch_id)
-        logging.info(f'Batch {batch.id} status updated to {batch.status}')
+        logging.info(f'Batch {batch.id} status {batch.status}')
 
         match batch.status:
             case 'validating' | 'in_progress' | 'finalizing' | 'cancelling':
