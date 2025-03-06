@@ -155,12 +155,52 @@ class LLM(BaseLLM):
 
         return incomplete_request_batch, responses
 
-    async def batch_generate_text_init(self, prompts: list[str], params: LLMParams):
-        # TODO create batch
-        pass
+    async def batch_generate_text_init(self, request_batch: LLMRequestBatch) -> str:
+        url = '/v1/chat/completions'
+        custom_id_to_request: dict[str, LLMRequest] = {}
+        openai_requests = []
+
+        for i, request in enumerate(request_batch.requests):
+            custom_id = str(i)
+            custom_id_to_request[custom_id] = request
+            params = request.params
+            openai_request = {
+                'custom_id': custom_id,
+                'method': 'POST',
+                'url': url,
+                'body': {
+                    'model': params.model,
+                    'messages': [
+                        {'role': message.role, 'content': message.content}
+                        for message in request.conversation.messages
+                    ],
+                    'response_format': {'type': 'text'},
+                    'temperature': params.temperature,
+                    'logprobs': params.logprobs,
+                    'top_logprobs': params.top_logprobs,
+                },
+            }
+            openai_requests.append(openai_request)
+
+        jsonl_str = '\n'.join(
+            json.dumps(openai_request, separators=(',', ':'))
+            for openai_request in openai_requests
+        )
+        jsonl_bytes = jsonl_str.encode('utf-8')
+
+        input_file = await self.client.files.create(file=jsonl_bytes, purpose='batch')
+        batch = await self.client.batches.create(
+            input_file_id=input_file.id,
+            endpoint=url,
+            completion_window='24h',
+            metadata=None,
+        )
+        logging.info(f'Batch {batch.id} created with status {batch.status}')
+
+        return batch.id
 
     async def batch_generate_text_result(
-        self, prompts: list[str], params: LLMParams
+        self, batch_id: str
     ) -> tuple[list[str], list[str]] | None:
         # TODO check if everything is completed, return None if its not
         pass

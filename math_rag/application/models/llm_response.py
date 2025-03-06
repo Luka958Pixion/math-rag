@@ -2,9 +2,8 @@ from typing import Generic, TypeVar
 
 from pydantic import BaseModel
 
+from math_rag.application.types import LLMResponseType
 
-T = TypeVar('T')
 
-
-class LLMResponse(BaseModel, Generic[T]):
-    content: T
+class LLMResponse(BaseModel, Generic[LLMResponseType]):
+    content: LLMResponseType
