@@ -1,5 +1,3 @@
-import logging
-
 from math_rag.application.base.inference import BaseLLM
 from math_rag.application.models import (
     LLMConversation,
@@ -17,7 +15,7 @@ class MathExpressionClassificationAssistant:
     def __init__(self, llm: BaseLLM):
         self.llm = llm
 
-    def _get_request(
+    def create_request(
         self, latex: str
     ) -> LLMRequest[MathExpressionClassificationResponse]:
         prompt = MATH_EXPRESSION_CLASSIFICATION_PROMPT.format(latex=latex)
@@ -34,17 +32,17 @@ class MathExpressionClassificationAssistant:
 
         return request
 
-    def _get_request_batch(
+    def create_request_batch(
         self, latexes: list[str]
     ) -> LLMRequestBatch[MathExpressionClassificationResponse]:
         request_batch = LLMRequestBatch(
-            requests=[self._get_request(latex) for latex in latexes]
+            requests=[self.create_request(latex) for latex in latexes]
         )
 
         return request_batch
 
     async def classify(self, latex: str) -> str:
-        request = self._get_request(latex)
+        request = self.create_request(latex)
         responses = await self.llm.generate(request)
         label = responses[0].content.label
 
@@ -53,7 +51,7 @@ class MathExpressionClassificationAssistant:
     async def batch_classify(
         self, latexes: list[str], delay: float, num_retries: int
     ) -> tuple[list[str], list[str]]:
-        request_batch = self._get_request_batch(latexes)
+        request_batch = self.create_request_batch(latexes)
         response_batch = await self.llm.batch_generate_retry(
             request_batch, MathExpressionClassificationResponse, delay, num_retries
         )
@@ -68,7 +66,7 @@ class MathExpressionClassificationAssistant:
         return remaining_latexes, labels
 
     async def batch_classify_init(self, latexes: list[str]) -> str:
-        request_batch = self._get_request_batch(latexes)
+        request_batch = self.create_request_batch(latexes)
         batch_id = await self.llm.batch_generate_init(request_batch)
 
         return batch_id
