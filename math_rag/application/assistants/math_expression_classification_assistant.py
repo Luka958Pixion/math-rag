@@ -34,6 +34,15 @@ class MathExpressionClassificationAssistant:
 
         return request
 
+    def _get_request_batch(
+        self, latexes: list[str]
+    ) -> LLMRequestBatch[MathExpressionClassificationResponse]:
+        request_batch = LLMRequestBatch(
+            requests=[self._get_request(latex) for latex in latexes]
+        )
+
+        return request_batch
+
     async def classify(self, latex: str) -> str:
         request = self._get_request(latex)
         responses = await self.llm.generate(request)
@@ -41,38 +50,45 @@ class MathExpressionClassificationAssistant:
 
         return label
 
-    async def batch_classify(self, latexes: list[str]) -> list[str]:
-        request_batch = LLMRequestBatch(
-            requests=[self._get_request(latex) for latex in latexes]
-        )
-        response_batch = await self.llm.batch_generate(
-            request_batch, MathExpressionClassificationResponse
-        )
-        # TODO response_batch.incomplete_request_batch
-
-        if response_batch is None:
+    async def batch_classify(self, latexes: list[str], retries: int) -> list[str]:
+        if retries < 0:
             raise ValueError()
 
-        labels = [
-            response.content.label for response in response_batch.nested_responses[0]
-        ]
+        request_batch = self._get_request_batch(latexes)
+        labels: list[str] = []
+
+        for _ in range(retries + 1):
+            response_batch = await self.llm.batch_generate(
+                request_batch, MathExpressionClassificationResponse
+            )
+
+            if response_batch is None:
+                raise ValueError()
+
+            labels_batch = [
+                response.content.label
+                for response in response_batch.nested_responses[0]
+            ]
+            labels.extend(labels_batch)
+
+            if not response_batch.incomplete_request_batch.requests:
+                break
+
+            request_batch = response_batch.incomplete_request_batch
 
         return labels
 
     async def batch_classify_init(self, latexes: list[str]) -> str:
-        request_batch = LLMRequestBatch(
-            requests=[self._get_request(latex) for latex in latexes]
-        )
+        request_batch = self._get_request_batch(latexes)
         batch_id = await self.llm.batch_generate_init(request_batch)
 
         return batch_id
 
     async def batch_classify_result(self, batch_id: str) -> list[str]:
+        # NOTE: doesn't guarantee all results
         response_batch = await self.llm.batch_generate_result(
             batch_id, MathExpressionClassificationResponse
         )
-
-        # TODO response_batch.incomplete_request_batch
 
         if response_batch is None:
             raise ValueError()
