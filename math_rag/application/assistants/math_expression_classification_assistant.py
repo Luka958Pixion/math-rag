@@ -56,9 +56,9 @@ class MathExpressionClassificationAssistant:
             request_batch, MathExpressionClassificationResponse, delay, num_retries
         )
         labels = [
-            response.content.label for response in response_batch.nested_responses[0]
+            response.content.label for response in response_batch.response_lists[0]
         ]
-        num_completed = len(response_batch.nested_responses)
+        num_completed = len(response_batch.response_lists)
         num_total = len(latexes)
         num_remaining = num_total - num_completed
         remaining_latexes = latexes[-num_remaining:]
@@ -80,7 +80,7 @@ class MathExpressionClassificationAssistant:
             return
 
         labels = [
-            response.content.label for response in response_batch.nested_responses[0]
+            response.content.label for response in response_batch.response_lists[0]
         ]
 
         return labels

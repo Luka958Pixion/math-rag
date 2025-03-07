@@ -6,10 +6,10 @@ from pydantic import BaseModel, Field
 from math_rag.application.types import LLMResponseType
 
 from .llm_request_batch import LLMRequestBatch
-from .llm_response import LLMResponse
+from .llm_response_list import LLMResponseList
 
 
 class LLMResponseBatch(BaseModel, Generic[LLMResponseType]):
     id: UUID = Field(default_factory=uuid4)
     incomplete_request_batch: LLMRequestBatch[LLMResponseType]
-    nested_responses: list[list[LLMResponse[LLMResponseType]]]
+    response_lists: list[LLMResponseList[LLMResponseType]]

@@ -18,6 +18,7 @@ from math_rag.application.models import (
     LLMRequestBatch,
     LLMResponse,
     LLMResponseBatch,
+    LLMResponseList,
 )
 from math_rag.application.types import LLMResponseType
 
@@ -102,21 +103,21 @@ class LLM(BaseLLM):
             raise ValueError()
 
         num_total = len(request_batch.requests)
-        nested_responses: list[list[LLMResponse[LLMResponseType]]] = []
+        response_lists: list[LLMResponseList[LLMResponseType]] = []
 
         for _ in range(num_retries + 1):
             response_batch = await self.batch_generate(
                 request_batch, response_type, delay
             )
-            nested_responses.extend(response_batch.nested_responses)
+            response_lists.extend(response_batch.response_lists)
 
             if not response_batch.incomplete_request_batch.requests:
                 break
 
             request_batch = response_batch.incomplete_request_batch
 
-        response_batch.nested_responses = nested_responses
-        num_completed = len(nested_responses)
+        response_batch.response_lists = response_lists
+        num_completed = len(response_lists)
 
         logging.info(
             f'{self.batch_generate_retry.__name__} completed {num_completed}/{num_total} requests within {num_retries} retries'
@@ -182,7 +183,7 @@ class LLM(BaseLLM):
         output_file_content = await self.client.files.content(batch.output_file_id)
         lines = output_file_content.text.strip().splitlines()
         incomplete_request_ids = []
-        nested_responses: list[list[LLMResponse[LLMResponseType]]] = []
+        response_lists: list[LLMResponseList[LLMResponseType]] = []
 
         for line in lines:
             data = json.loads(line)
@@ -194,11 +195,13 @@ class LLM(BaseLLM):
 
             else:
                 completion = ChatCompletion(**response['body'])
-                responses = [
-                    LLMResponse[LLMResponseType](content=choice.message.content)
-                    for choice in completion.choices
-                ]
-                nested_responses.append(responses)
+                response_list = LLMResponseList(
+                    responses=[
+                        LLMResponse[LLMResponseType](content=choice.message.content)
+                        for choice in completion.choices
+                    ]
+                )
+                response_lists.append(response_list)
 
         input_file_content = await self.client.files.content(batch.input_file_id)
         lines = input_file_content.text.strip().splitlines()
@@ -238,11 +241,11 @@ class LLM(BaseLLM):
         incomplete_request_batch = LLMRequestBatch(requests=incomplete_requests)
         response_batch = LLMResponseBatch(
             incomplete_request_batch=incomplete_request_batch,
-            nested_responses=nested_responses,
+            response_lists=response_lists,
         )
 
         if response_batch.incomplete_request_batch.requests:
-            completed = len(response_batch.nested_responses)
+            completed = len(response_batch.response_lists)
             total = completed + len(response_batch.incomplete_request_batch.requests)
 
             logging.info(
