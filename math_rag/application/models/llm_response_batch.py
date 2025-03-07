@@ -12,4 +12,4 @@ from .llm_response import LLMResponse
 class LLMResponseBatch(BaseModel, Generic[LLMResponseType]):
     id: UUID = Field(default_factory=uuid4)
     incomplete_request_batch: LLMRequestBatch[LLMResponseType]
-    nested_responses: list[LLMResponse[LLMResponseType]]
+    nested_responses: list[list[LLMResponse[LLMResponseType]]]
