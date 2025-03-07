@@ -11,6 +11,7 @@ from openai.types.chat import ChatCompletion
 from math_rag.application.base.inference import BaseLLM
 from math_rag.application.models import (
     LLMConversation,
+    LLMDefaultResponse,
     LLMMessage,
     LLMParams,
     LLMRequest,
@@ -36,7 +37,7 @@ class LLM(BaseLLM):
         params = request.params
         messages = request.conversation.messages
 
-        if params.response_type is str:
+        if params.response_type is LLMDefaultResponse:
             completion = await self.client.chat.completions.create(
                 model=params.model,
                 messages=[
@@ -93,7 +94,7 @@ class LLM(BaseLLM):
         url = '/v1/chat/completions'
         requests = [
             {
-                'custom_id': str(i),
+                'custom_id': str(request.id),
                 'method': 'POST',
                 'url': url,
                 'body': {
@@ -108,7 +109,7 @@ class LLM(BaseLLM):
                     'top_logprobs': request.params.top_logprobs,
                 },
             }
-            for i, request in enumerate(request_batch.requests)
+            for request in request_batch.requests
         ]
 
         lines = [json.dumps(request, separators=(',', ':')) for request in requests]
@@ -200,7 +201,7 @@ class LLM(BaseLLM):
             requests=incomplete_requests
         )
         reponse_batch = LLMResponseBatch[response_type](
-            request_batch=incomplete_request_batch, responses=responses
+            incomplete_request_batch=incomplete_request_batch, responses=responses
         )
 
         return reponse_batch

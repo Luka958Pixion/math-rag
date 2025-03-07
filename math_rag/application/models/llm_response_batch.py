@@ -1,6 +1,7 @@
 from typing import Generic
+from uuid import UUID, uuid4
 
-from pydantic import BaseModel
+from pydantic import BaseModel, Field
 
 from math_rag.application.types import LLMResponseType
 
@@ -9,8 +10,6 @@ from .llm_response import LLMResponse
 
 
 class LLMResponseBatch(BaseModel, Generic[LLMResponseType]):
-    request_batch: LLMRequestBatch[LLMResponseType]
-    responses: list[
-        LLMResponse[LLMResponseType]
-    ]  # TODO: responses for multiple choices, which request did you asnwer to
-    # TODO how will assistant use batch api
+    id: UUID = Field(default_factory=uuid4)
+    incomplete_request_batch: LLMRequestBatch[LLMResponseType]
+    nested_responses: list[LLMResponse[LLMResponseType]]
