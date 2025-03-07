@@ -101,4 +101,10 @@ class MathExpressionClassificationAssistant:
             response.content.label for response in response_batch.nested_responses[0]
         ]
 
+        if response_batch.incomplete_request_batch.requests:
+            total = len(labels) + len(response_batch.incomplete_request_batch.requests)
+            logging.info(
+                f'{self.batch_classify.__name__} completed {len(labels)}/{total} requests'
+            )
+
         return labels
