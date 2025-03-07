@@ -4,8 +4,8 @@ from typing import Type
 from math_rag.application.models import (
     LLMRequest,
     LLMRequestBatch,
-    LLMResponse,
     LLMResponseBatch,
+    LLMResponseList,
 )
 from math_rag.application.types import LLMResponseType
 
@@ -14,7 +14,7 @@ class BaseLLM(ABC):
     @abstractmethod
     async def generate(
         self, request: LLMRequest[LLMResponseType]
-    ) -> list[LLMResponse[LLMResponseType]]:
+    ) -> LLMResponseList[LLMResponseType]:
         pass
 
     @abstractmethod

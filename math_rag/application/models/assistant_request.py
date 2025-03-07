@@ -3,9 +3,9 @@ from uuid import UUID, uuid4
 
 from pydantic import BaseModel, Field
 
-from math_rag.application.types import AssistantRequestType
+from math_rag.application.types import AssistantInputType
 
 
-class AssistantRequest(BaseModel, Generic[AssistantRequestType]):
+class AssistantRequest(BaseModel, Generic[AssistantInputType]):
     id: UUID = Field(default_factory=uuid4)
-    content: AssistantRequestType
+    content: AssistantInputType

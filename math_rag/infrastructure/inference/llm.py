@@ -34,7 +34,7 @@ class LLM(BaseLLM):
     async def generate(
         self,
         request: LLMRequest[LLMResponseType],
-    ) -> list[LLMResponse[LLMResponseType]]:
+    ) -> LLMResponseList[LLMResponseType]:
         params = request.params
         messages = request.conversation.messages
 
@@ -51,10 +51,12 @@ class LLM(BaseLLM):
                 top_logprobs=params.top_logprobs,
                 reasoning_effort=params.reasoning_effort,
             )
-            responses = [
-                LLMResponse[LLMResponseType](content=choice.message.content)
-                for choice in completion.choices
-            ]
+            response_list = LLMResponseList(
+                [
+                    LLMResponse[LLMResponseType](content=choice.message.content)
+                    for choice in completion.choices
+                ]
+            )
 
         else:
             completion = await self.client.beta.chat.completions.parse(
@@ -69,12 +71,14 @@ class LLM(BaseLLM):
                 top_logprobs=params.top_logprobs,
                 reasoning_effort=params.reasoning_effort,
             )
-            responses = [
-                LLMResponse[LLMResponseType](content=choice.message.parsed)
-                for choice in completion.choices
-            ]
+            response_list = response_list = LLMResponseList(
+                [
+                    LLMResponse[LLMResponseType](content=choice.message.parsed)
+                    for choice in completion.choices
+                ]
+            )
 
-        return responses
+        return response_list
 
     async def batch_generate(
         self,
