@@ -19,11 +19,6 @@ class KatexCorrectionAssistant:
         self.katex_validation_service = katex_validation_service
 
     async def correct(self, katex: str, error: str) -> str | None:
-        result = await self.katex_validation_service.validate(katex)
-
-        if result.valid:
-            return katex
-
         prompt = KATEX_CORRECTION_PROMPT.format(katex=katex, error=error)
         request = LLMRequest(
             conversation=LLMConversation(
