@@ -16,13 +16,14 @@ class MathExpressionClassificationAssistant:
 
     async def classify(self, latex: str) -> str:
         prompt = MATH_EXPRESSION_CLASSIFICATION_PROMPT.format(latex=latex)
-        response_type = MathExpressionClassificationResponse
         request = LLMRequest(
             conversation=LLMConversation(
                 messages=[LLMMessage(role='user', content=prompt)]
             ),
-            params=LLMParams[response_type](
-                model='gpt-4o-mini', temperature=0.0, response_type=response_type
+            params=LLMParams[MathExpressionClassificationResponse](
+                model='gpt-4o-mini',
+                temperature=0.0,
+                response_type=MathExpressionClassificationResponse,
             ),
         )
         responses = await self.llm.generate(request)

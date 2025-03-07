@@ -50,7 +50,7 @@ class LLM(BaseLLM):
                 top_logprobs=params.top_logprobs,
             )
             responses = [
-                LLMResponse(content=choice.message.content)
+                LLMResponse[LLMResponseType](content=choice.message.content)
                 for choice in completion.choices
             ]
 
@@ -67,7 +67,7 @@ class LLM(BaseLLM):
                 top_logprobs=params.top_logprobs,
             )
             responses = [
-                LLMResponse(content=choice.message.parsed)
+                LLMResponse[LLMResponseType](content=choice.message.parsed)
                 for choice in completion.choices
             ]
 
@@ -146,7 +146,7 @@ class LLM(BaseLLM):
         output_file_content = await self.client.files.content(batch.output_file_id)
         lines = output_file_content.text.strip().splitlines()
         incomplete_request_ids = []
-        responses = []
+        nested_responses: list[list[LLMResponse[LLMResponseType]]] = []
 
         for line in lines:
             data = json.loads(line)
@@ -158,13 +158,15 @@ class LLM(BaseLLM):
 
             else:
                 completion = ChatCompletion(**response['body'])
-                content = completion.choices[0].message.content
-                response = LLMResponse[response_type](content=content)
-                responses.append(response)
+                responses = [
+                    LLMResponse[LLMResponseType](content=choice.message.content)
+                    for choice in completion.choices
+                ]
+                nested_responses.append(responses)
 
         input_file_content = await self.client.files.content(batch.input_file_id)
         lines = input_file_content.text.strip().splitlines()
-        incomplete_requests = []
+        incomplete_requests: list[LLMRequest[LLMResponseType]] = []
 
         for line in lines:
             data = json.loads(line)
@@ -176,14 +178,14 @@ class LLM(BaseLLM):
             body = data['body']
             messages = body['messages']
 
-            request = LLMRequest[response_type](
+            request = LLMRequest(
                 conversation=LLMConversation(
                     messages=[
                         LLMMessage(role=message['role'], content=message['content'])
                         for message in messages
                     ]
                 ),
-                params=LLMParams[response_type](
+                params=LLMParams[LLMResponseType](
                     model=body['messages'],
                     temperature=body['messages'],
                     logprobs=body['messages'],
@@ -197,11 +199,10 @@ class LLM(BaseLLM):
         await self.client.files.delete(batch.input_file_id)
         await self.client.files.delete(batch.output_file_id)
 
-        incomplete_request_batch = LLMRequestBatch[response_type](
-            requests=incomplete_requests
-        )
-        reponse_batch = LLMResponseBatch[response_type](
-            incomplete_request_batch=incomplete_request_batch, responses=responses
+        incomplete_request_batch = LLMRequestBatch(requests=incomplete_requests)
+        reponse_batch = LLMResponseBatch(
+            incomplete_request_batch=incomplete_request_batch,
+            nested_responses=nested_responses,
         )
 
         return reponse_batch

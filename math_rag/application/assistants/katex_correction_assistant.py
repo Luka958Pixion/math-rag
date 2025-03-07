@@ -25,13 +25,14 @@ class KatexCorrectionAssistant:
             return katex
 
         prompt = KATEX_CORRECTION_PROMPT.format(katex=katex, error=error)
-        response_type = KatexCorrectionResponse
         request = LLMRequest(
             conversation=LLMConversation(
                 messages=[LLMMessage(role='user', content=prompt)]
             ),
-            params=LLMParams[response_type](
-                model='gpt-4o-mini', temperature=0.0, response_type=response_type
+            params=LLMParams[KatexCorrectionResponse](
+                model='gpt-4o-mini',
+                temperature=0.0,
+                response_type=KatexCorrectionResponse,
             ),
         )
         responses = await self.llm.generate(request)
