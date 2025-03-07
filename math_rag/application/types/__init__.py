@@ -1,1 +1,3 @@
+from .assistant_request_type import AssistantRequestType
+from .assistant_response_type import AssistantResponseType
 from .llm_response_type import LLMResponseType

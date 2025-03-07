@@ -10,6 +10,7 @@ class LLMParams(BaseModel, Generic[LLMResponseType]):
     temperature: float
     logprobs: bool | None = None
     top_logprobs: int | None = None
+    reasoning_effort: str | None = None
     response_type: Type[LLMResponseType]
     n: int = 1
 

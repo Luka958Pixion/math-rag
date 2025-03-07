@@ -89,13 +89,13 @@ class MathExpressionClassificationAssistant:
 
         return batch_id
 
-    async def batch_classify_result(self, batch_id: str) -> list[str]:
+    async def batch_classify_result(self, batch_id: str) -> list[str] | None:
         response_batch = await self.llm.batch_generate_result(
             batch_id, MathExpressionClassificationResponse
         )
 
         if response_batch is None:
-            raise ValueError()
+            return
 
         labels = [
             response.content.label for response in response_batch.nested_responses[0]

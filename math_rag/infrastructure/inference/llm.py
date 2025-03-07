@@ -48,6 +48,7 @@ class LLM(BaseLLM):
                 temperature=params.temperature,
                 logprobs=params.logprobs,
                 top_logprobs=params.top_logprobs,
+                reasoning_effort=params.reasoning_effort,
             )
             responses = [
                 LLMResponse[LLMResponseType](content=choice.message.content)
@@ -65,6 +66,7 @@ class LLM(BaseLLM):
                 temperature=params.temperature,
                 logprobs=params.logprobs,
                 top_logprobs=params.top_logprobs,
+                reasoning_effort=params.reasoning_effort,
             )
             responses = [
                 LLMResponse[LLMResponseType](content=choice.message.parsed)
@@ -77,7 +79,7 @@ class LLM(BaseLLM):
         self,
         request_batch: LLMRequestBatch[LLMResponseType],
         response_type: Type[LLMResponseType],
-    ) -> LLMResponseBatch[LLMResponseType] | None:
+    ) -> LLMResponseBatch[LLMResponseType]:
         batch_id = await self.batch_generate_init(request_batch)
 
         while True:
@@ -87,6 +89,35 @@ class LLM(BaseLLM):
                 return result
 
             await asyncio.sleep(5 * 60)
+
+    async def batch_generate_retry(
+        self,
+        request_batch: LLMRequestBatch[LLMResponseType],
+        response_type: type[LLMResponseType],
+        retries: int,
+    ) -> LLMResponseBatch[LLMResponseType]:
+        if retries < 0:
+            raise ValueError()
+
+        total = len(request_batch.requests)
+        nested_responses: list[list[LLMResponse[LLMResponseType]]] = []
+
+        for _ in range(retries + 1):
+            response_batch = await self.batch_generate(request_batch, response_type)
+            nested_responses.extend(response_batch.nested_responses)
+
+            if not response_batch.incomplete_request_batch.requests:
+                break
+
+            request_batch = response_batch.incomplete_request_batch
+
+        response_batch.nested_responses = nested_responses
+        completed = len(nested_responses)
+        logging.info(
+            f'{self.batch_generate_retry.__name__} completed {completed}/{total} requests within {retries} retries'
+        )
+
+        return response_batch
 
     async def batch_generate_init(
         self, request_batch: LLMRequestBatch[LLMResponseType]

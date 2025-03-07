@@ -22,7 +22,16 @@ class BaseLLM(ABC):
         self,
         request_batch: LLMRequestBatch[LLMResponseType],
         response_type: Type[LLMResponseType],
-    ) -> LLMResponseBatch[LLMResponseType] | None:
+    ) -> LLMResponseBatch[LLMResponseType]:
+        pass
+
+    @abstractmethod
+    async def batch_generate_retry(
+        self,
+        request_batch: LLMRequestBatch[LLMResponseType],
+        response_type: type[LLMResponseType],
+        retries: int,
+    ) -> LLMResponseBatch[LLMResponseType]:
         pass
 
     @abstractmethod

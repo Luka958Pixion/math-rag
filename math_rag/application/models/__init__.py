@@ -1,3 +1,5 @@
+from .assistant_request import AssistantRequest
+from .assistant_response import AssistantResponse
 from .katex_validation_result import KatexValidationResult
 from .llm_conversation import LLMConversation
 from .llm_default_response import LLMDefaultResponse
