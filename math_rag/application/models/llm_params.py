@@ -1,4 +1,4 @@
-from typing import Generic, Type
+from typing import Generic
 
 from pydantic import BaseModel, field_validator, model_validator
 
@@ -10,7 +10,7 @@ class LLMParams(BaseModel, Generic[LLMResponseType]):
     temperature: float
     logprobs: bool | None = None
     top_logprobs: int | None = None
-    response_type: LLMResponseType | Type[str]
+    response_type: LLMResponseType
     n: int = 1
 
     @field_validator('response_type', mode='before')
