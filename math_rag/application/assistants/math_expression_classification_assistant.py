@@ -1,3 +1,5 @@
+import logging
+
 from math_rag.application.base.inference import BaseLLM
 from math_rag.application.models import (
     LLMConversation,
@@ -49,7 +51,6 @@ class MathExpressionClassificationAssistant:
         return label
 
     async def batch_classify(self, latexes: list[str], retries: int) -> list[str]:
-        # NOTE: doesn't guarantee all results
         if retries < 0:
             raise ValueError()
 
@@ -75,6 +76,11 @@ class MathExpressionClassificationAssistant:
 
             request_batch = response_batch.incomplete_request_batch
 
+        if response_batch.incomplete_request_batch.requests:
+            logging.info(
+                f'{self.batch_classify.__name__} completed {len(labels)}/{len(latexes)} requests within {retries} retries'
+            )
+
         return labels
 
     async def batch_classify_init(self, latexes: list[str]) -> str:
@@ -84,7 +90,6 @@ class MathExpressionClassificationAssistant:
         return batch_id
 
     async def batch_classify_result(self, batch_id: str) -> list[str]:
-        # NOTE: doesn't guarantee all results
         response_batch = await self.llm.batch_generate_result(
             batch_id, MathExpressionClassificationResponse
         )
