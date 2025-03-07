@@ -1,5 +1,3 @@
-from typing import Type
-
 from math_rag.application.base.inference import BaseLLM
 from math_rag.application.models import (
     LLMConversation,
