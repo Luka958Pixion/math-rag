@@ -1,5 +1,5 @@
 from pydantic import BaseModel, Field
 
 
-class MathExpressionClassificationResponse(BaseModel):
+class MECAndLLMResponse(BaseModel):
     label: str = Field(alias='class')

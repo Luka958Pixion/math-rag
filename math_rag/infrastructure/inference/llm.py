@@ -47,7 +47,7 @@ class LLM(BaseLLM):
                 ],
                 response_format={'type': 'text'},
                 temperature=params.temperature,
-                logprobs=params.logprobs,
+                logprobs=params.top_logprobs is not None,
                 top_logprobs=params.top_logprobs,
                 reasoning_effort=params.reasoning_effort,
             )
@@ -67,7 +67,7 @@ class LLM(BaseLLM):
                 ],
                 response_format=params.response_type,
                 temperature=params.temperature,
-                logprobs=params.logprobs,
+                logprobs=params.top_logprobs is not None,
                 top_logprobs=params.top_logprobs,
                 reasoning_effort=params.reasoning_effort,
             )

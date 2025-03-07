@@ -1,4 +1,4 @@
 from .katex_correction_response import KatexCorrectionResponse
-from .math_expression_classification_response import (
-    MathExpressionClassificationResponse,
+from .mec_and_llm_response import (
+    MECAndLLMResponse,
 )

@@ -4,83 +4,41 @@ from math_rag.application.models import (
     LLMMessage,
     LLMParams,
     LLMRequest,
-    LLMRequestBatch,
+    LLMResponseList,
+    MECAssistantInput,
+    MECAssistantOutput,
 )
 
-from .models import MathExpressionClassificationResponse
+from .models import MECAndLLMResponse
+from .partials import PartialAssistant
 from .prompts import MATH_EXPRESSION_CLASSIFICATION_PROMPT
 
 
-class MathExpressionClassificationAssistant:
+class MathExpressionClassificationAssistant(
+    PartialAssistant[MECAssistantInput, MECAssistantOutput, MECAndLLMResponse]
+):
     def __init__(self, llm: BaseLLM):
         self.llm = llm
 
-    def create_request(
-        self, latex: str
-    ) -> LLMRequest[MathExpressionClassificationResponse]:
-        prompt = MATH_EXPRESSION_CLASSIFICATION_PROMPT.format(latex=latex)
+    def to_request(self, input: MECAssistantInput) -> LLMRequest[MECAndLLMResponse]:
+        prompt = MATH_EXPRESSION_CLASSIFICATION_PROMPT.format(latex=input.latex)
         request = LLMRequest(
             conversation=LLMConversation(
                 messages=[LLMMessage(role='user', content=prompt)]
             ),
-            params=LLMParams[MathExpressionClassificationResponse](
+            params=LLMParams[MECAndLLMResponse](
                 model='gpt-4o-mini',
                 temperature=0.0,
-                response_type=MathExpressionClassificationResponse,
+                response_type=MECAndLLMResponse,
             ),
         )
 
         return request
 
-    def create_request_batch(
-        self, latexes: list[str]
-    ) -> LLMRequestBatch[MathExpressionClassificationResponse]:
-        request_batch = LLMRequestBatch(
-            requests=[self.create_request(latex) for latex in latexes]
-        )
+    def from_response_list(
+        self, response_list: LLMResponseList[MECAndLLMResponse]
+    ) -> MECAssistantOutput:
+        label = response_list.responses[0].content.label
+        output = MECAssistantOutput(label=label)
 
-        return request_batch
-
-    async def classify(self, latex: str) -> str:
-        request = self.create_request(latex)
-        responses = await self.llm.generate(request)
-        label = responses[0].content.label
-
-        return label
-
-    async def batch_classify(
-        self, latexes: list[str], delay: float, num_retries: int
-    ) -> tuple[list[str], list[str]]:
-        request_batch = self.create_request_batch(latexes)
-        response_batch = await self.llm.batch_generate_retry(
-            request_batch, MathExpressionClassificationResponse, delay, num_retries
-        )
-        labels = [
-            response.content.label for response in response_batch.response_lists[0]
-        ]
-        num_completed = len(response_batch.response_lists)
-        num_total = len(latexes)
-        num_remaining = num_total - num_completed
-        remaining_latexes = latexes[-num_remaining:]
-
-        return remaining_latexes, labels
-
-    async def batch_classify_init(self, latexes: list[str]) -> str:
-        request_batch = self.create_request_batch(latexes)
-        batch_id = await self.llm.batch_generate_init(request_batch)
-
-        return batch_id
-
-    async def batch_classify_result(self, batch_id: str) -> list[str] | None:
-        response_batch = await self.llm.batch_generate_result(
-            batch_id, MathExpressionClassificationResponse
-        )
-
-        if response_batch is None:
-            return
-
-        labels = [
-            response.content.label for response in response_batch.response_lists[0]
-        ]
-
-        return labels
+        return output
