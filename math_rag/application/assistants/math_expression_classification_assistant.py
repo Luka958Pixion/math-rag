@@ -49,6 +49,7 @@ class MathExpressionClassificationAssistant:
         return label
 
     async def batch_classify(self, latexes: list[str], retries: int) -> list[str]:
+        # NOTE: doesn't guarantee all results
         if retries < 0:
             raise ValueError()
 

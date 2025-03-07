@@ -1,6 +1,7 @@
 from .katex_validation_result import KatexValidationResult
 from .llm_conversation import LLMConversation
 from .llm_default_response import LLMDefaultResponse
+from .llm_logprob import LLMLogprob
 from .llm_message import LLMMessage
 from .llm_params import LLMParams
 from .llm_request import LLMRequest
