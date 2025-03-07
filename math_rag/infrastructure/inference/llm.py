@@ -96,15 +96,15 @@ class LLM(BaseLLM):
         request_batch: LLMRequestBatch[LLMResponseType],
         response_type: type[LLMResponseType],
         delay: float,
-        retries: int,
+        num_retries: int,
     ) -> LLMResponseBatch[LLMResponseType]:
-        if retries < 0:
+        if num_retries < 0:
             raise ValueError()
 
-        total = len(request_batch.requests)
+        num_total = len(request_batch.requests)
         nested_responses: list[list[LLMResponse[LLMResponseType]]] = []
 
-        for _ in range(retries + 1):
+        for _ in range(num_retries + 1):
             response_batch = await self.batch_generate(
                 request_batch, response_type, delay
             )
@@ -116,9 +116,10 @@ class LLM(BaseLLM):
             request_batch = response_batch.incomplete_request_batch
 
         response_batch.nested_responses = nested_responses
-        completed = len(nested_responses)
+        num_completed = len(nested_responses)
+
         logging.info(
-            f'{self.batch_generate_retry.__name__} completed {completed}/{total} requests within {retries} retries'
+            f'{self.batch_generate_retry.__name__} completed {num_completed}/{num_total} requests within {num_retries} retries'
         )
 
         return response_batch
@@ -235,9 +236,17 @@ class LLM(BaseLLM):
         await self.client.files.delete(batch.output_file_id)
 
         incomplete_request_batch = LLMRequestBatch(requests=incomplete_requests)
-        reponse_batch = LLMResponseBatch(
+        response_batch = LLMResponseBatch(
             incomplete_request_batch=incomplete_request_batch,
             nested_responses=nested_responses,
         )
 
-        return reponse_batch
+        if response_batch.incomplete_request_batch.requests:
+            completed = len(response_batch.nested_responses)
+            total = completed + len(response_batch.incomplete_request_batch.requests)
+
+            logging.info(
+                f'{self.batch_generate_result.__name__} completed {completed}/{total} requests'
+            )
+
+        return response_batch

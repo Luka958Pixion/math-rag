@@ -50,15 +50,22 @@ class MathExpressionClassificationAssistant:
 
         return label
 
-    async def batch_classify(self, latexes: list[str], retries: int = 0) -> list[str]:
+    async def batch_classify(
+        self, latexes: list[str], delay: float, num_retries: int
+    ) -> tuple[list[str], list[str]]:
         request_batch = self._get_request_batch(latexes)
-
-        response_batch = await self.llm.batch_generate(
-            request_batch, MathExpressionClassificationResponse
+        response_batch = await self.llm.batch_generate_retry(
+            request_batch, MathExpressionClassificationResponse, delay, num_retries
         )
-        # TODO count number of items, then return "n" last items from inputs
+        labels = [
+            response.content.label for response in response_batch.nested_responses[0]
+        ]
+        num_completed = len(response_batch.nested_responses)
+        num_total = len(latexes)
+        num_remaining = num_total - num_completed
+        remaining_latexes = latexes[-num_remaining:]
 
-        return labels  # TODO
+        return remaining_latexes, labels
 
     async def batch_classify_init(self, latexes: list[str]) -> str:
         request_batch = self._get_request_batch(latexes)
@@ -77,11 +84,5 @@ class MathExpressionClassificationAssistant:
         labels = [
             response.content.label for response in response_batch.nested_responses[0]
         ]
-
-        if response_batch.incomplete_request_batch.requests:
-            total = len(labels) + len(response_batch.incomplete_request_batch.requests)
-            logging.info(
-                f'{self.batch_classify.__name__} completed {len(labels)}/{total} requests'
-            )
 
         return labels

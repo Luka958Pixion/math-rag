@@ -32,7 +32,7 @@ class BaseLLM(ABC):
         request_batch: LLMRequestBatch[LLMResponseType],
         response_type: type[LLMResponseType],
         delay: float,
-        retries: int,
+        num_retries: int,
     ) -> LLMResponseBatch[LLMResponseType]:
         pass
 
