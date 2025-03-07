@@ -1,5 +1,5 @@
 from pydantic import BaseModel
 
 
-class KatexCorrectionResponse(BaseModel):
+class KCAndLLMResponse(BaseModel):
     katex: str

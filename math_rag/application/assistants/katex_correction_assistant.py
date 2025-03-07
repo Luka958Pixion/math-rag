@@ -1,37 +1,48 @@
 from math_rag.application.base.inference import BaseLLM
 from math_rag.application.base.services import BaseKatexValidatorService
 from math_rag.application.models import (
+    KCAssistantInput,
+    KCAssistantOutput,
     LLMConversation,
     LLMMessage,
     LLMParams,
     LLMRequest,
+    LLMResponseList,
 )
 
-from .models import KatexCorrectionResponse
+from .models import KCAndLLMResponse
+from .partials import PartialAssistant
 from .prompts import KATEX_CORRECTION_PROMPT
 
 
-class KatexCorrectionAssistant:
+class KatexCorrectionAssistant(
+    PartialAssistant[KCAssistantInput, KCAssistantOutput, KCAndLLMResponse]
+):
     def __init__(
         self, llm: BaseLLM, katex_validation_service: BaseKatexValidatorService
     ):
         self.llm = llm
         self.katex_validation_service = katex_validation_service
 
-    async def correct(self, katex: str, error: str) -> str | None:
-        prompt = KATEX_CORRECTION_PROMPT.format(katex=katex, error=error)
+    def to_request(self, input: KCAssistantInput) -> LLMRequest[KCAndLLMResponse]:
+        prompt = KATEX_CORRECTION_PROMPT.format(katex=input.katex, error=input.error)
         request = LLMRequest(
             conversation=LLMConversation(
                 messages=[LLMMessage(role='user', content=prompt)]
             ),
-            params=LLMParams[KatexCorrectionResponse](
+            params=LLMParams[KCAndLLMResponse](
                 model='gpt-4o-mini',
                 temperature=0.0,
-                response_type=KatexCorrectionResponse,
+                response_type=KCAndLLMResponse,
             ),
         )
-        responses = await self.llm.generate(request)
-        katex = responses[0].content.katex
-        result = await self.katex_validation_service.validate(katex)
 
-        return katex if result.valid else None
+        return request
+
+    def from_response_list(
+        self, response_list: LLMResponseList[KCAndLLMResponse]
+    ) -> KCAssistantOutput:
+        katex = response_list.responses[0].content.label
+        output = KCAssistantOutput(label=katex)
+
+        return output
