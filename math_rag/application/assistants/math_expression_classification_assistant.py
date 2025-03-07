@@ -50,38 +50,15 @@ class MathExpressionClassificationAssistant:
 
         return label
 
-    async def batch_classify(self, latexes: list[str], retries: int) -> list[str]:
-        if retries < 0:
-            raise ValueError()
-
+    async def batch_classify(self, latexes: list[str], retries: int = 0) -> list[str]:
         request_batch = self._get_request_batch(latexes)
-        labels: list[str] = []
 
-        for _ in range(retries + 1):
-            response_batch = await self.llm.batch_generate(
-                request_batch, MathExpressionClassificationResponse
-            )
+        response_batch = await self.llm.batch_generate(
+            request_batch, MathExpressionClassificationResponse
+        )
+        # TODO count number of items, then return "n" last items from inputs
 
-            if response_batch is None:
-                raise ValueError()
-
-            labels_batch = [
-                response.content.label
-                for response in response_batch.nested_responses[0]
-            ]
-            labels.extend(labels_batch)
-
-            if not response_batch.incomplete_request_batch.requests:
-                break
-
-            request_batch = response_batch.incomplete_request_batch
-
-        if response_batch.incomplete_request_batch.requests:
-            logging.info(
-                f'{self.batch_classify.__name__} completed {len(labels)}/{len(latexes)} requests within {retries} retries'
-            )
-
-        return labels
+        return labels  # TODO
 
     async def batch_classify_init(self, latexes: list[str]) -> str:
         request_batch = self._get_request_batch(latexes)

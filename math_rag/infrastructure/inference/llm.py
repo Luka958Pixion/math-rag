@@ -79,6 +79,7 @@ class LLM(BaseLLM):
         self,
         request_batch: LLMRequestBatch[LLMResponseType],
         response_type: Type[LLMResponseType],
+        delay: float,
     ) -> LLMResponseBatch[LLMResponseType]:
         batch_id = await self.batch_generate_init(request_batch)
 
@@ -88,12 +89,13 @@ class LLM(BaseLLM):
             if result is not None:
                 return result
 
-            await asyncio.sleep(5 * 60)
+            await asyncio.sleep(delay)
 
     async def batch_generate_retry(
         self,
         request_batch: LLMRequestBatch[LLMResponseType],
         response_type: type[LLMResponseType],
+        delay: float,
         retries: int,
     ) -> LLMResponseBatch[LLMResponseType]:
         if retries < 0:
@@ -103,7 +105,9 @@ class LLM(BaseLLM):
         nested_responses: list[list[LLMResponse[LLMResponseType]]] = []
 
         for _ in range(retries + 1):
-            response_batch = await self.batch_generate(request_batch, response_type)
+            response_batch = await self.batch_generate(
+                request_batch, response_type, delay
+            )
             nested_responses.extend(response_batch.nested_responses)
 
             if not response_batch.incomplete_request_batch.requests:
