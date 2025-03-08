@@ -8,7 +8,7 @@ from math_rag.infrastructure.types import MappingType, SourceType, TargetType
 
 class CommonRepository(Generic[SourceType, TargetType, MappingType]):
     def __init__(self, client: AsyncMongoClient, deployment: str):
-        args = get_args(self.__orig_class__)
+        args = get_args(self.__class__.__orig_bases__[0])
 
         if len(args) != 3:
             raise TypeError(f'Expected three type arguments, got {len(args)}: {args}')

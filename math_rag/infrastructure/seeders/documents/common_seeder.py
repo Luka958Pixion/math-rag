@@ -7,7 +7,7 @@ from math_rag.infrastructure.types import SourceType
 
 class CommonSeeder(Generic[SourceType]):
     def __init__(self, client: AsyncMongoClient, deployment: str):
-        args = get_args(self.__orig_class__)
+        args = get_args(self.__class__.__orig_bases__[0])
 
         if len(args) != 1:
             raise TypeError(f'Expected one type argument, got {len(args)}: {args}')

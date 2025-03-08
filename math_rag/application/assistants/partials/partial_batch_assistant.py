@@ -1,4 +1,4 @@
-from typing import get_args
+from typing import cast, get_args
 
 from math_rag.application.base.assistants import BaseBatchAssistant
 from math_rag.application.base.inference import BaseLLM
@@ -59,7 +59,8 @@ class PartialBatchAssistant(
         self,
         batch_id: str,
     ) -> list[AssistantOutputType] | None:
-        response_type: type[AssistantOutputType] = get_args(self.__orig_class__)[2]
+        args = get_args(self.__class__.__orig_bases__[0])
+        response_type = cast(type[AssistantOutputType], args[2])
         response_batch = await self.llm.batch_generate_result(batch_id, response_type)
 
         if response_batch is None:
