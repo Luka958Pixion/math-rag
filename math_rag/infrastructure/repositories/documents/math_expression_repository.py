@@ -3,13 +3,14 @@ from uuid import UUID
 from pymongo import AsyncMongoClient, UpdateOne
 
 from math_rag.core.models import MathExpression
+from math_rag.infrastructure.mappings.documents import MathExpressionMapping
 from math_rag.infrastructure.models.documents import MathExpressionDocument
 
 from .common_repository import CommonRepository
 
 
 class MathExpressionRepository(
-    CommonRepository[MathExpressionDocument, MathExpression]
+    CommonRepository[MathExpression, MathExpressionDocument, MathExpressionMapping]
 ):
     def __init__(self, client: AsyncMongoClient, deployment: str):
         super().__init__(client, deployment)
