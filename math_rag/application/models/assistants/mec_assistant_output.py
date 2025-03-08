@@ -1,5 +1,5 @@
-from pydantic import BaseModel
+from pydantic import BaseModel, Field
 
 
 class MECAssistantOutput(BaseModel):
-    label: str
+    label: str = Field(alias='class')

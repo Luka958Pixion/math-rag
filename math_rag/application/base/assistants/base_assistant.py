@@ -10,22 +10,19 @@ from math_rag.application.types.assistants import (
     AssistantInputType,
     AssistantOutputType,
 )
-from math_rag.application.types.inference import LLMResponseType
 
 
-class BaseAssistant(
-    ABC, Generic[AssistantInputType, AssistantOutputType, LLMResponseType]
-):
+class BaseAssistant(ABC, Generic[AssistantInputType, AssistantOutputType]):
     def __init__(self, llm: BaseLLM):
         self.llm = llm
 
     @abstractmethod
-    def to_request(self, input: AssistantInputType) -> LLMRequest[LLMResponseType]:
+    def to_request(self, input: AssistantInputType) -> LLMRequest[AssistantOutputType]:
         pass
 
     @abstractmethod
     def from_response_list(
-        self, response_list: LLMResponseList[LLMResponseType]
+        self, response_list: LLMResponseList[AssistantOutputType]
     ) -> AssistantOutputType:
         pass
 
@@ -37,7 +34,7 @@ class BaseAssistant(
     async def batch_assist(
         self,
         inputs: list[AssistantInputType],
-        response_type: Type[LLMResponseType],
+        response_type: Type[AssistantOutputType],
         delay: float,
         num_retries: int,
     ) -> tuple[list[AssistantInputType], list[AssistantOutputType]]:
@@ -51,6 +48,6 @@ class BaseAssistant(
     async def batch_assist_result(
         self,
         batch_id: str,
-        response_type: Type[LLMResponseType],
+        response_type: Type[AssistantOutputType],
     ) -> list[AssistantOutputType] | None:
         pass

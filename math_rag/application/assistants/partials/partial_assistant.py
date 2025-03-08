@@ -7,18 +7,15 @@ from math_rag.application.types.assistants import (
     AssistantInputType,
     AssistantOutputType,
 )
-from math_rag.application.types.inference import LLMResponseType
 
 
-class PartialAssistant(
-    BaseAssistant[AssistantInputType, AssistantOutputType, LLMResponseType]
-):
+class PartialAssistant(BaseAssistant[AssistantInputType, AssistantOutputType]):
     def __init__(self, llm: BaseLLM):
         self.llm = llm
 
     def _to_request_batch(
         self, inputs: list[AssistantInputType]
-    ) -> LLMRequestBatch[LLMResponseType]:
+    ) -> LLMRequestBatch[AssistantOutputType]:
         request_batch = LLMRequestBatch(
             requests=[self.to_request(input) for input in inputs]
         )
@@ -35,7 +32,7 @@ class PartialAssistant(
     async def batch_assist(
         self,
         inputs: list[AssistantInputType],
-        response_type: Type[LLMResponseType],
+        response_type: Type[AssistantOutputType],
         delay: float,
         num_retries: int,
     ) -> tuple[list[AssistantInputType], list[AssistantOutputType]]:
@@ -64,7 +61,7 @@ class PartialAssistant(
         self,
         batch_id: str,
     ) -> list[AssistantOutputType] | None:
-        response_type: Type[LLMResponseType] = get_args(self.__orig_class__)[2]
+        response_type: Type[AssistantOutputType] = get_args(self.__orig_class__)[2]
         response_batch = await self.llm.batch_generate_result(batch_id, response_type)
 
         if response_batch is None:
