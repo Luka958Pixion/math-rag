@@ -1,13 +1,13 @@
 from minio import Minio
 
 from math_rag.application.base.seeders.objects import BaseArticleSeeder
-from math_rag.core.models import MathArticle
+from math_rag.infrastructure.models.objects import MathArticleObject
 
 
 class MathArticleSeeder(BaseArticleSeeder):
     def __init__(self, client: Minio):
         self.client = client
-        self.bucket_name = MathArticle.__name__.lower()
+        self.bucket_name = MathArticleObject.__name__.lower()
 
     def seed(self, reset=False):
         if reset:

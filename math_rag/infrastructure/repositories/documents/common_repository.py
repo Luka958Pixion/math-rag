@@ -19,7 +19,7 @@ class CommonRepository(Generic[SourceType, TargetType, MappingType]):
 
         self.client = client
         self.db = self.client[deployment]
-        self.collection_name = self.source_cls.__name__.lower()
+        self.collection_name = self.target_cls.__name__.lower()
         self.collection = self.db[self.collection_name]
 
     async def insert_many(self, items: list[SourceType]):
