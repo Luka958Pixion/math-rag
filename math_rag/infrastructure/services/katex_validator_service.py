@@ -1,3 +1,5 @@
+from asyncio import gather
+
 from httpx import AsyncClient, RequestError
 
 from math_rag.application.base.services import BaseKatexValidatorService
@@ -38,3 +40,15 @@ class KatexValidatorService(BaseKatexValidatorService):
 
         except RequestError:
             raise
+
+    async def batch_validate_many(
+        self, katexes: list[str], batch_size: int
+    ) -> list[KatexValidationResult]:
+        tasks = [
+            self.validate_many(katexes[i : i + batch_size])
+            for i in range(0, len(katexes), batch_size)
+        ]
+        batch_results = await gather(*tasks)
+        results = [result for batch in batch_results for result in batch]
+
+        return results
