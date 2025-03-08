@@ -1,2 +1,2 @@
-from .document_type import DocumentType
-from .internal_type import InternalType
+from .source_type import SourceType
+from .target_type import TargetType

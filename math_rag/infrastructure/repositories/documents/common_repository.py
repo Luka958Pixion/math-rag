@@ -3,17 +3,19 @@ from uuid import UUID
 
 from pymongo import AsyncMongoClient, InsertOne
 
-from math_rag.infrastructure.types import DocumentType, InternalType
+from math_rag.infrastructure.types import SourceType, TargetType
 
 
-class CommonRepository(Generic[DocumentType, InternalType]):
+class CommonRepository(
+    Generic[TargetType, InternalType]
+):  # TODO switch places -> updated all repos
     def __init__(self, client: AsyncMongoClient, deployment: str):
         args = get_args(self.__orig_class__)
 
         if len(args) != 2:
             raise TypeError(f'Expected two type arguments, got {len(args)}: {args}')
 
-        self.document_cls = cast(type[DocumentType], args[0])
+        self.document_cls = cast(type[TargetType], args[0])
         self.internal_cls = cast(type[InternalType], args[1])
 
         self.client = client
