@@ -13,6 +13,4 @@ class KCAssistantOutputRepository(
         super().__init__(
             client=client,
             deployment=deployment,
-            document_cls=KCAssistantOutputDocument,
-            internal_cls=KCAssistantOutput,
         )

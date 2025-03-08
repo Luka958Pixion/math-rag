@@ -15,6 +15,4 @@ class MathExpressionClassificationRepository(
         super().__init__(
             client=client,
             deployment=deployment,
-            document_cls=MathExpressionClassificationDocument,
-            internal_cls=MathExpressionClassification,
         )

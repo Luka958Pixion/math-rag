@@ -15,8 +15,6 @@ class MathExpressionRepository(
         super().__init__(
             client=client,
             deployment=deployment,
-            document_cls=MathExpressionDocument,
-            internal_cls=MathExpression,
         )
 
     async def update_katex(self, id: UUID, katex: str):

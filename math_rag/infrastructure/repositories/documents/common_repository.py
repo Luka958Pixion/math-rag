@@ -1,4 +1,4 @@
-from typing import Generic
+from typing import Generic, cast, get_args
 from uuid import UUID
 
 from pymongo import AsyncMongoClient, InsertOne
@@ -7,20 +7,19 @@ from math_rag.infrastructure.types import DocumentType, InternalType
 
 
 class CommonRepository(Generic[DocumentType, InternalType]):
-    document_cls: type[DocumentType]
+    def __init__(self, client: AsyncMongoClient, deployment: str):
+        args = get_args(self.__orig_class__)
 
-    def __init__(
-        self,
-        client: AsyncMongoClient,
-        deployment: str,
-        document_cls: type[DocumentType],
-        internal_cls: type[InternalType],
-    ):
+        if len(args) != 2:
+            raise TypeError(f'Expected two type arguments, got {len(args)}: {args}')
+
+        self.document_cls = cast(type[DocumentType], args[0])
+        self.internal_cls = cast(type[InternalType], args[1])
+
         self.client = client
         self.db = self.client[deployment]
-        self.collection_name = internal_cls.__name__.lower()
+        self.collection_name = self.internal_cls.__name__.lower()
         self.collection = self.db[self.collection_name]
-        self.document_cls = document_cls
 
     async def insert_many(self, items: list[InternalType]):
         docs = [self.document_cls.from_internal(item) for item in items]

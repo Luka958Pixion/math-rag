@@ -13,6 +13,4 @@ class KCAssistantInputRepository(
         super().__init__(
             client=client,
             deployment=deployment,
-            document_cls=KCAssistantInputDocument,
-            internal_cls=KCAssistantInput,
         )
