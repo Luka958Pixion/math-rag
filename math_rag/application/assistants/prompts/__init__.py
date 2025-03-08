@@ -1,2 +1,3 @@
-from .katex_correction_prompt import KATEX_CORRECTION_PROMPT
-from .math_expression_classification_prompt import MATH_EXPRESSION_CLASSIFICATION_PROMPT
+from .kc_prompt import KATEX_CORRECTION_PROMPT
+from .kc_retry_prompt import KATEX_CORRECTION_RETRY_PROMPT
+from .mec_prompt import MATH_EXPRESSION_CLASSIFICATION_PROMPT
