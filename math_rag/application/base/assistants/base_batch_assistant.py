@@ -1,5 +1,4 @@
 from abc import abstractmethod
-from typing import Type
 
 from math_rag.application.models.inference import LLMRequestBatch
 from math_rag.application.types.assistants import (
@@ -21,7 +20,7 @@ class BaseBatchAssistant(BaseAssistant[AssistantInputType, AssistantOutputType])
     async def batch_assist(
         self,
         inputs: list[AssistantInputType],
-        response_type: Type[AssistantOutputType],
+        response_type: type[AssistantOutputType],
         delay: float,
         num_retries: int,
     ) -> tuple[list[AssistantInputType], list[AssistantOutputType]]:
@@ -35,6 +34,6 @@ class BaseBatchAssistant(BaseAssistant[AssistantInputType, AssistantOutputType])
     async def batch_assist_result(
         self,
         batch_id: str,
-        response_type: Type[AssistantOutputType],
+        response_type: type[AssistantOutputType],
     ) -> list[AssistantOutputType] | None:
         pass

@@ -1,4 +1,4 @@
-from typing import Type, get_args
+from typing import get_args
 
 from math_rag.application.base.assistants import BaseBatchAssistant
 from math_rag.application.base.inference import BaseLLM
@@ -30,7 +30,7 @@ class PartialBatchAssistant(
     async def batch_assist(
         self,
         inputs: list[AssistantInputType],
-        response_type: Type[AssistantOutputType],
+        response_type: type[AssistantOutputType],
         delay: float,
         num_retries: int,
     ) -> tuple[list[AssistantInputType], list[AssistantOutputType]]:
@@ -59,7 +59,7 @@ class PartialBatchAssistant(
         self,
         batch_id: str,
     ) -> list[AssistantOutputType] | None:
-        response_type: Type[AssistantOutputType] = get_args(self.__orig_class__)[2]
+        response_type: type[AssistantOutputType] = get_args(self.__orig_class__)[2]
         response_batch = await self.llm.batch_generate_result(batch_id, response_type)
 
         if response_batch is None:

@@ -2,8 +2,6 @@ import asyncio
 import json
 import logging
 
-from typing import Type
-
 from backoff import expo, on_exception
 from openai import AsyncOpenAI, RateLimitError
 from openai.types.chat import ChatCompletion
@@ -83,7 +81,7 @@ class OpenAILLM(BaseLLM):
     async def batch_generate(
         self,
         request_batch: LLMRequestBatch[LLMResponseType],
-        response_type: Type[LLMResponseType],
+        response_type: type[LLMResponseType],
         delay: float,
     ) -> LLMResponseBatch[LLMResponseType]:
         batch_id = await self.batch_generate_init(request_batch)
@@ -169,7 +167,7 @@ class OpenAILLM(BaseLLM):
         return batch.id
 
     async def batch_generate_result(
-        self, batch_id: str, response_type: Type[LLMResponseType]
+        self, batch_id: str, response_type: type[LLMResponseType]
     ) -> LLMResponseBatch[LLMResponseType] | None:
         batch = await self.client.batches.retrieve(batch_id)
         logging.info(f'Batch {batch.id} status {batch.status}')
