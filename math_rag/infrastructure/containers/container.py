@@ -133,7 +133,6 @@ class InfrastructureContainer(DeclarativeContainer):
     katex_correction_assistant = Factory(
         KatexCorrectionAssistant,
         llm=openai_llm,
-        katex_validation_service=katex_validator_service,
     )
     math_expression_classification_assistant = Factory(
         MathExpressionClassificationAssistant, llm=openai_llm

@@ -4,6 +4,7 @@ from minio import Minio
 
 from math_rag.application.base.repositories.objects import BaseArticleRepository
 from math_rag.core.models import MathArticle
+from math_rag.infrastructure.mappings.objects import MathArticleMapping
 from math_rag.infrastructure.models.objects import MathArticleObject
 
 
@@ -12,8 +13,8 @@ class MathArticleRepository(BaseArticleRepository):
         self.client = client
         self.bucket_name = MathArticle.__name__.lower()
 
-    def insert_math_articles(self, items: list[MathArticle]):
-        objs = [MathArticleObject.from_internal(item) for item in items]
+    def insert_many(self, items: list[MathArticle]):
+        objs = [MathArticleMapping.to_target(item) for item in items]
 
         for obj in objs:
             data = BytesIO(obj.bytes)
@@ -27,7 +28,7 @@ class MathArticleRepository(BaseArticleRepository):
                 num_parallel_uploads=1,
             )
 
-    def get_math_article_by_name(self, name: str) -> MathArticle:
+    def find_by_name(self, name: str) -> MathArticle:
         object_response = self.client.get_object(self.bucket_name, name)
         object_bytes = BytesIO(object_response.read())
         object_response.close()
@@ -37,11 +38,11 @@ class MathArticleRepository(BaseArticleRepository):
         id = stat_response.metadata.get('X-Amz-Meta-id')
 
         obj = MathArticleObject(id=id, name=name, bytes=object_bytes.getvalue())
-        item = MathArticleObject.to_internal(obj)
+        item = MathArticleMapping.to_source(obj)
 
         return item
 
-    def list_math_article_names(self) -> list[str]:
+    def list_names(self) -> list[str]:
         objects = self.client.list_objects(self.bucket_name, recursive=True)
 
         return [
