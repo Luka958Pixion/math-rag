@@ -1,6 +1,6 @@
 from uuid import UUID
 
-from pymongo import AsyncMongoClient
+from pymongo import AsyncMongoClient, InsertOne, UpdateOne
 
 from math_rag.application.base.repositories.documents import (
     BaseMathExpressionRepository,
@@ -26,9 +26,16 @@ class MathExpressionRepository(BaseMathExpressionRepository):
     async def batch_insert_math_expressions(
         self, items: list[MathExpression], batch_size: int
     ):
-        for i in range(0, len(items), batch_size):
-            items_batch = items[i : i + batch_size]
-            await self.insert_math_expressions(items_batch)
+        operations = []
+
+        for item in items:
+            doc = item.model_dump()
+            doc['_id'] = doc.pop('id')
+            operations.append(InsertOne(doc))
+
+        for i in range(0, len(operations), batch_size):
+            batch = operations[i : i + batch_size]
+            await self.collection.bulk_write(batch)
 
     async def get_math_expression_by_id(self, id: UUID) -> MathExpression | None:
         doc = await self.collection.find_one({'_id': id})
@@ -52,3 +59,12 @@ class MathExpressionRepository(BaseMathExpressionRepository):
             doc['id'] = doc.pop('_id')
 
         return [MathExpression(**doc) for doc in docs]
+
+    async def update_katex(self, id: UUID, katex: str):
+        await self.collection.update_one({'_id': id}, {'$set': {'katex': katex}})
+
+    async def batch_update_katex(self, updates: list[tuple[UUID, str]]):
+        operations = [
+            UpdateOne({'_id': id}, {'$set': {'katex': katex}}) for id, katex in updates
+        ]
+        await self.collection.bulk_write(operations)
