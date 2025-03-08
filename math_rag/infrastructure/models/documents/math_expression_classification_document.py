@@ -6,8 +6,8 @@ from math_rag.core.models import MathExpressionClassification
 
 
 class MathExpressionClassificationDocument(BaseModel):
-    _id: str
-    math_expression_id: str
+    _id: UUID
+    math_expression_id: UUID
     value: str
 
     @classmethod
@@ -15,8 +15,8 @@ class MathExpressionClassificationDocument(BaseModel):
         cls, inter: MathExpressionClassification
     ) -> 'MathExpressionClassificationDocument':
         return cls(
-            _id=str(inter.id),
-            math_expression_id=str(inter.math_expression_id),
+            _id=inter.id,
+            math_expression_id=inter.math_expression_id,
             value=inter.value,
         )
 
@@ -25,7 +25,7 @@ class MathExpressionClassificationDocument(BaseModel):
         cls, doc: 'MathExpressionClassificationDocument'
     ) -> MathExpressionClassification:
         return cls(
-            id=UUID(doc._id),
-            math_expression_id=UUID(doc.math_expression_id),
+            id=doc._id,
+            math_expression_id=doc.math_expression_id,
             value=doc.value,
         )

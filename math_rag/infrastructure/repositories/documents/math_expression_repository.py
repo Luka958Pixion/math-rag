@@ -6,6 +6,7 @@ from math_rag.application.base.repositories.documents import (
     BaseMathExpressionRepository,
 )
 from math_rag.core.models import MathExpression
+from math_rag.infrastructure.models.documents import MathExpressionDocument
 
 
 class MathExpressionRepository(BaseMathExpressionRepository):
@@ -16,12 +17,10 @@ class MathExpressionRepository(BaseMathExpressionRepository):
         self.collection = self.db[self.collection_name]
 
     async def insert_math_expressions(self, items: list[MathExpression]):
-        item_dicts = [item.model_dump() for item in items]
+        docs = [MathExpressionDocument.from_internal(item) for item in items]
+        bson_docs = [doc.model_dump() for doc in docs]
 
-        for item_dict in item_dicts:
-            item_dict['_id'] = item_dict.pop('id')
-
-        await self.collection.insert_many(item_dicts)
+        await self.collection.insert_many(bson_docs)
 
     async def batch_insert_math_expressions(
         self, items: list[MathExpression], batch_size: int
@@ -29,19 +28,22 @@ class MathExpressionRepository(BaseMathExpressionRepository):
         operations = []
 
         for item in items:
-            doc = item.model_dump()
-            doc['_id'] = doc.pop('id')
-            operations.append(InsertOne(doc))
+            doc = MathExpressionDocument.from_internal(item)
+            bson_doc = doc.model_dump()
+            operations.append(InsertOne(bson_doc))
 
         for i in range(0, len(operations), batch_size):
             batch = operations[i : i + batch_size]
             await self.collection.bulk_write(batch)
 
     async def get_math_expression_by_id(self, id: UUID) -> MathExpression | None:
-        doc = await self.collection.find_one({'_id': id})
+        bson_doc = await self.collection.find_one({'_id': id})
 
-        if doc:
-            return MathExpression(**doc)
+        if bson_doc:
+            doc = MathExpressionDocument(**bson_doc)
+            item = MathExpressionDocument.to_internal(doc)
+
+            return item
 
         return None
 
@@ -53,12 +55,11 @@ class MathExpressionRepository(BaseMathExpressionRepository):
         if limit:
             cursor = cursor.limit(limit)
 
-        docs = await cursor.to_list(length=limit)
+        bson_docs = await cursor.to_list(length=limit)
+        docs = [MathExpressionDocument(**bson_doc) for bson_doc in bson_docs]
+        items = [MathExpressionDocument.to_internal(doc) for doc in docs]
 
-        for doc in docs:
-            doc['id'] = doc.pop('_id')
-
-        return [MathExpression(**doc) for doc in docs]
+        return items
 
     async def update_katex(self, id: UUID, katex: str):
         await self.collection.update_one({'_id': id}, {'$set': {'katex': katex}})

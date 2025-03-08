@@ -6,7 +6,7 @@ from math_rag.core.models import MathExpression
 
 
 class MathExpressionDocument(BaseModel):
-    _id: str
+    _id: UUID
     latex: str
     katex: str | None
     position: int
@@ -15,7 +15,7 @@ class MathExpressionDocument(BaseModel):
     @classmethod
     def from_internal(cls, inter: MathExpression) -> 'MathExpressionDocument':
         return cls(
-            _id=str(inter.id),
+            _id=inter.id,
             latex=inter.latex,
             katex=inter.katex,
             position=inter.position,
@@ -25,7 +25,7 @@ class MathExpressionDocument(BaseModel):
     @classmethod
     def to_internal(cls, doc: 'MathExpressionDocument') -> MathExpression:
         return cls(
-            id=UUID(doc._id),
+            id=doc._id,
             latex=doc.latex,
             katex=doc.katex,
             position=doc.position,

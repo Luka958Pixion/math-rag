@@ -1,10 +1,10 @@
 from io import BytesIO
-from uuid import UUID
 
 from minio import Minio
 
 from math_rag.application.base.repositories.objects import BaseArticleRepository
 from math_rag.core.models import MathArticle
+from math_rag.infrastructure.models.objects import MathArticleObject
 
 
 class MathArticleRepository(BaseArticleRepository):
@@ -12,16 +12,18 @@ class MathArticleRepository(BaseArticleRepository):
         self.client = client
         self.bucket_name = MathArticle.__name__.lower()
 
-    def insert_math_articles(self, math_articles: list[MathArticle]):
-        for math_article in math_articles:
-            data = BytesIO(math_article.bytes)
+    def insert_math_articles(self, items: list[MathArticle]):
+        objs = [MathArticleObject.from_internal(item) for item in items]
+
+        for obj in objs:
+            data = BytesIO(obj.bytes)
             self.client.put_object(
                 bucket_name=self.bucket_name,
-                object_name=math_article.name,
+                object_name=obj.name,
                 data=data,
                 length=data.getbuffer().nbytes,
                 content_type='application/octet-stream',
-                metadata={'X-Amz-Meta-id': str(math_article.id)},
+                metadata={'X-Amz-Meta-id': obj.id},
                 num_parallel_uploads=1,
             )
 
@@ -34,7 +36,10 @@ class MathArticleRepository(BaseArticleRepository):
         stat_response = self.client.stat_object(self.bucket_name, name)
         id = stat_response.metadata.get('X-Amz-Meta-id')
 
-        return MathArticle(id=UUID(id), name=name, bytes=object_bytes.getvalue())
+        obj = MathArticleObject(id=id, name=name, bytes=object_bytes.getvalue())
+        item = MathArticleObject.to_internal(obj)
+
+        return item
 
     def list_math_article_names(self) -> list[str]:
         objects = self.client.list_objects(self.bucket_name, recursive=True)

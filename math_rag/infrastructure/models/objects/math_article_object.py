@@ -19,9 +19,9 @@ class MathArticleObject(BaseModel):
         )
 
     @classmethod
-    def to_internal(cls, doc: 'MathArticleObject') -> MathArticle:
+    def to_internal(cls, obj: 'MathArticleObject') -> MathArticle:
         return cls(
-            id=UUID(doc.id),
-            name=doc.name,
-            bytes=doc.bytes,
+            id=UUID(obj.id),
+            name=obj.name,
+            bytes=obj.bytes,
         )
