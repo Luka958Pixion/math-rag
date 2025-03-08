@@ -1,4 +1,3 @@
 from .kc_assistant import KatexCorrectionAssistant
-from .mec_assistant import (
-    MathExpressionClassificationAssistant,
-)
+from .kc_retry_assistant import KatexCorrectionRetryAssistant
+from .mec_assistant import MathExpressionClassificationAssistant

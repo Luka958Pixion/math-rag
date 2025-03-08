@@ -39,7 +39,6 @@ class MathExpressionClassificationAssistant(
     def from_response_list(
         self, response_list: LLMResponseList[MECAssistantOutput]
     ) -> MECAssistantOutput:
-        label = response_list.responses[0].content.label
-        output = MECAssistantOutput(label=label)
+        output = response_list.responses[0].content
 
         return output
