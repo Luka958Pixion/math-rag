@@ -23,6 +23,13 @@ class MathExpressionRepository(BaseMathExpressionRepository):
 
         await self.collection.insert_many(item_dicts)
 
+    async def batch_insert_math_expressions(
+        self, items: list[MathExpression], batch_size: int
+    ):
+        for i in range(0, len(items), batch_size):
+            items_batch = items[i : i + batch_size]
+            await self.insert_math_expressions(items_batch)
+
     async def get_math_expression_by_id(self, id: UUID) -> MathExpression | None:
         doc = await self.collection.find_one({'_id': id})
 
