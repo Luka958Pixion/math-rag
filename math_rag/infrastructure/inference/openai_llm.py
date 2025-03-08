@@ -146,7 +146,7 @@ class OpenAILLM(BaseLLM):
                     ],
                     'response_format': {'type': 'text'},
                     'temperature': request.params.temperature,
-                    'logprobs': request.params.logprobs,
+                    'logprobs': request.params.top_logprobs is not None,
                     'top_logprobs': request.params.top_logprobs,
                 },
             }
