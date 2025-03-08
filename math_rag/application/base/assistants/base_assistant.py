@@ -1,5 +1,5 @@
 from abc import ABC, abstractmethod
-from typing import Generic, Type
+from typing import Generic
 
 from math_rag.application.base.inference import BaseLLM
 from math_rag.application.models.inference import (
@@ -28,26 +28,4 @@ class BaseAssistant(ABC, Generic[AssistantInputType, AssistantOutputType]):
 
     @abstractmethod
     async def assist(self, input: AssistantInputType) -> AssistantOutputType:
-        pass
-
-    @abstractmethod
-    async def batch_assist(
-        self,
-        inputs: list[AssistantInputType],
-        response_type: Type[AssistantOutputType],
-        delay: float,
-        num_retries: int,
-    ) -> tuple[list[AssistantInputType], list[AssistantOutputType]]:
-        pass
-
-    @abstractmethod
-    async def batch_assist_init(self, inputs: list[AssistantInputType]) -> str:
-        pass
-
-    @abstractmethod
-    async def batch_assist_result(
-        self,
-        batch_id: str,
-        response_type: Type[AssistantOutputType],
-    ) -> list[AssistantOutputType] | None:
         pass

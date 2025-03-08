@@ -11,12 +11,12 @@ from math_rag.application.models.inference import (
     LLMResponseList,
 )
 
-from .partials import PartialAssistant
+from .partials import PartialBatchAssistant
 from .prompts import MATH_EXPRESSION_CLASSIFICATION_PROMPT
 
 
 class MathExpressionClassificationAssistant(
-    PartialAssistant[MECAssistantInput, MECAssistantOutput]
+    PartialBatchAssistant[MECAssistantInput, MECAssistantOutput]
 ):
     def __init__(self, llm: BaseLLM):
         super().__init__(llm)

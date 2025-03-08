@@ -11,11 +11,13 @@ from math_rag.application.models.inference import (
     LLMResponseList,
 )
 
-from .partials import PartialAssistant
+from .partials import PartialBatchAssistant
 from .prompts import KATEX_CORRECTION_PROMPT
 
 
-class KatexCorrectionAssistant(PartialAssistant[KCAssistantInput, KCAssistantOutput]):
+class KatexCorrectionAssistant(
+    PartialBatchAssistant[KCAssistantInput, KCAssistantOutput]
+):
     def __init__(self, llm: BaseLLM):
         super().__init__(llm)
 
