@@ -26,6 +26,9 @@ CATEGORY_TYPE_TO_PREFIX: dict[type[BaseArxivCategory], str] = {
 
 
 class ArxivSearcherService:
+    def __init__(self, client: Client):
+        self.client = client
+
     def search(self, category: BaseArxivCategory, limit: int) -> list[Result]:
         category_name = self._get_category_name(category)
         subcategory_name = self._get_subcategory_name(category)
@@ -37,8 +40,7 @@ class ArxivSearcherService:
             sort_by=SortCriterion.SubmittedDate,
             sort_order=SortOrder.Descending,
         )
-        client = Client()
-        results = client.results(search)
+        results = self.client.results(search)
 
         return list(results)
 

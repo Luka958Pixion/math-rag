@@ -1,5 +1,6 @@
 from pathlib import Path
 
+from arxiv import Client
 from dependency_injector.containers import DeclarativeContainer
 from dependency_injector.providers import Configuration, Factory, Singleton
 from minio import Minio
@@ -114,7 +115,8 @@ class InfrastructureContainer(DeclarativeContainer):
     llm = Factory(LLM, client=async_openai_client)
 
     # arXiv
-    arxiv_searcher_service = Factory(ArxivSearcherService)
+    arxiv_client = Singleton(Client)
+    arxiv_searcher_service = Factory(ArxivSearcherService, client=arxiv_client)
 
     # LaTeX
     latex_parser_service = Factory(LatexParserService)
