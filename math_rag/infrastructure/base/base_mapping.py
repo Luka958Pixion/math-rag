@@ -1,7 +1,9 @@
 from abc import ABC, abstractmethod
-from typing import Generic
+from typing import Generic, TypeVar
 
-from math_rag.infrastructure.types import SourceType, TargetType
+
+SourceType = TypeVar('SourceType')
+TargetType = TypeVar('TargetType')
 
 
 class BaseMapping(ABC, Generic[SourceType, TargetType]):
