@@ -1,4 +1,4 @@
-from .katex_correction_assistant import KatexCorrectionAssistant
-from .math_expression_classification_assistant import (
+from .kc_assistant import KatexCorrectionAssistant
+from .mec_assistant import (
     MathExpressionClassificationAssistant,
 )
