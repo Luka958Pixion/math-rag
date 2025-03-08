@@ -1,4 +1,3 @@
-from .katex_validation_result import KatexValidationResult
 from .kc_assistant_input import KCAssistantInput
 from .kc_assistant_output import KCAssistantOutput
 from .mec_assistant_input import MECAssistantInput
