@@ -11,7 +11,7 @@ from math_rag.application.assistants import (
     KatexCorrectionAssistant,
     MathExpressionClassificationAssistant,
 )
-from math_rag.infrastructure.inference import LLM
+from math_rag.infrastructure.inference import OpenAILLM
 from math_rag.infrastructure.repositories.documents import (
     MathExpressionClassificationRepository,
     MathExpressionRepository,
@@ -112,7 +112,7 @@ class InfrastructureContainer(DeclarativeContainer):
         api_key=config.openai.api_key,
     )
 
-    llm = Factory(LLM, client=async_openai_client)
+    openai_llm = Factory(OpenAILLM, client=async_openai_client)
 
     # arXiv
     arxiv_client = Singleton(Client)
@@ -132,9 +132,9 @@ class InfrastructureContainer(DeclarativeContainer):
     # KaTeX
     katex_correction_assistant = Factory(
         KatexCorrectionAssistant,
-        llm=llm,
+        llm=openai_llm,
         katex_validation_service=katex_validator_service,
     )
     math_expression_classification_assistant = Factory(
-        MathExpressionClassificationAssistant, llm=llm
+        MathExpressionClassificationAssistant, llm=openai_llm
     )

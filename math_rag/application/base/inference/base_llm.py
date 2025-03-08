@@ -7,7 +7,7 @@ from math_rag.application.models.inference import (
     LLMResponseBatch,
     LLMResponseList,
 )
-from math_rag.application.types import LLMResponseType
+from math_rag.application.types.inference import LLMResponseType
 
 
 class BaseLLM(ABC):

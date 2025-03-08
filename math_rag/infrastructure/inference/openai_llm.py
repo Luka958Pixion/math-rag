@@ -26,7 +26,7 @@ from math_rag.application.types.inference import LLMResponseType
 retry = on_exception(expo, RateLimitError, max_time=60, max_tries=6)
 
 
-class LLM(BaseLLM):
+class OpenAILLM(BaseLLM):
     def __init__(self, client: AsyncOpenAI):
         self.client = client
 
