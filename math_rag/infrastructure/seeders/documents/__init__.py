@@ -1,2 +1,3 @@
+from .common_seeder import CommonSeeder
 from .math_expression_classification_seeder import MathExpressionClassificationSeeder
 from .math_expression_seeder import MathExpressionSeeder

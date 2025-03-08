@@ -1,14 +1,22 @@
+from typing import Generic, cast, get_args
+
 from pymongo import AsyncMongoClient
 
-from math_rag.application.base.seeders.documents import BaseMathExpressionSeeder
-from math_rag.core.models import MathExpression
+from math_rag.infrastructure.types import SourceType
 
 
-class MathExpressionSeeder(BaseMathExpressionSeeder):
+class CommonSeeder(Generic[SourceType]):
     def __init__(self, client: AsyncMongoClient, deployment: str):
+        args = get_args(self.__orig_class__)
+
+        if len(args) != 1:
+            raise TypeError(f'Expected one type argument, got {len(args)}: {args}')
+
+        self.source_cls = cast(type[SourceType], args[0])
+
         self.client = client
         self.db = self.client[deployment]
-        self.collection_name = MathExpression.__name__.lower()
+        self.collection_name = self.source_cls.__name__.lower()
 
     async def seed(self, reset=False):
         if reset:
