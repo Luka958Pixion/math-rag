@@ -190,15 +190,16 @@ class OpenAILLM(BaseLLM):
 
         output_file_content = await self.client.files.content(batch.output_file_id)
         lines = output_file_content.text.strip().splitlines()
+        complete_request_ids = []
         incomplete_request_ids = []
-        response_lists: list[LLMResponseList[LLMResponseType]] = []
+        request_id_to_response_list: dict[str, LLMResponseList[LLMResponseType]] = {}
 
         for line in lines:
             data = json.loads(line)
             response = data['response']
+            custom_id = str(data['custom_id'])
 
             if response is None:
-                custom_id = data['custom_id']
                 incomplete_request_ids.append(custom_id)
 
             else:
@@ -209,7 +210,13 @@ class OpenAILLM(BaseLLM):
                         for choice in completion.choices
                     ]
                 )
-                response_lists.append(response_list)
+                request_id_to_response_list[custom_id] = response_list
+                complete_request_ids.append(custom_id)
+
+        response_lists = [
+            request_id_to_response_list[request_id]
+            for request_id in complete_request_ids
+        ]
 
         input_file_content = await self.client.files.content(batch.input_file_id)
         lines = input_file_content.text.strip().splitlines()
@@ -217,7 +224,7 @@ class OpenAILLM(BaseLLM):
 
         for line in lines:
             data = json.loads(line)
-            request_id = data['custom_id']
+            request_id = str(data['custom_id'])
 
             if request_id not in incomplete_request_ids:
                 continue
