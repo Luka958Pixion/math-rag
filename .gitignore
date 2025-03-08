@@ -172,8 +172,5 @@ cython_debug/
 
 # custom
 .ruff_cache
-volumes
-tmp
-google/
-git_token.txt
 .VSCodeCounter
+secrets/

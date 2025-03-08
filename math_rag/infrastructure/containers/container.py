@@ -96,8 +96,8 @@ class InfrastructureContainer(DeclarativeContainer):
     # Google
     resource = Singleton(
         GoogleFileRepository.get_resource,
-        credentials_path=Path('../google/credentials.json'),
-        token_path=Path('../google/token.json'),
+        credentials_path=Path('../secrets/google/credentials.json'),
+        token_path=Path('../secrets/google/token.json'),
     )
 
     google_file_repository = Factory(GoogleFileRepository, resource=resource)

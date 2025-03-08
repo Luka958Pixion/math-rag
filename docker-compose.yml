@@ -95,4 +95,4 @@ configs:
 
 secrets:
   git_token:
-    file: ./git_token.txt 
+    file: ./secrets/git_token.txt 
