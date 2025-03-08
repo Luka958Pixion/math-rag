@@ -2,7 +2,7 @@ from typing import Generic
 
 from pydantic import BaseModel
 
-from math_rag.application.types import LLMResponseType
+from math_rag.application.types.inference import LLMResponseType
 
 from .llm_response import LLMResponse
 

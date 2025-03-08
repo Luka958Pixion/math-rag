@@ -1,12 +1,14 @@
 from math_rag.application.base.inference import BaseLLM
-from math_rag.application.models import (
+from math_rag.application.models.assistants import (
+    MECAssistantInput,
+    MECAssistantOutput,
+)
+from math_rag.application.models.inference import (
     LLMConversation,
     LLMMessage,
     LLMParams,
     LLMRequest,
     LLMResponseList,
-    MECAssistantInput,
-    MECAssistantOutput,
 )
 
 from .models import MECAndLLMResponse

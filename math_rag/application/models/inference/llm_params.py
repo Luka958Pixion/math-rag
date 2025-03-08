@@ -2,7 +2,7 @@ from typing import Generic, Type
 
 from pydantic import BaseModel, field_validator
 
-from math_rag.application.types import LLMResponseType
+from math_rag.application.types.inference import LLMResponseType
 
 
 class LLMParams(BaseModel, Generic[LLMResponseType]):

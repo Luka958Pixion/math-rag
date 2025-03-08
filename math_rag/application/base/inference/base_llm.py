@@ -1,7 +1,7 @@
 from abc import ABC, abstractmethod
 from typing import Type
 
-from math_rag.application.models import (
+from math_rag.application.models.inference import (
     LLMRequest,
     LLMRequestBatch,
     LLMResponseBatch,

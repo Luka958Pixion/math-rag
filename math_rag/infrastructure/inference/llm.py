@@ -9,7 +9,7 @@ from openai import AsyncOpenAI, RateLimitError
 from openai.types.chat import ChatCompletion
 
 from math_rag.application.base.inference import BaseLLM
-from math_rag.application.models import (
+from math_rag.application.models.inference import (
     LLMConversation,
     LLMDefaultResponse,
     LLMMessage,
@@ -20,7 +20,7 @@ from math_rag.application.models import (
     LLMResponseBatch,
     LLMResponseList,
 )
-from math_rag.application.types import LLMResponseType
+from math_rag.application.types.inference import LLMResponseType
 
 
 retry = on_exception(expo, RateLimitError, max_time=60, max_tries=6)

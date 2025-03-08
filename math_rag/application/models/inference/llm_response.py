@@ -3,7 +3,7 @@ from uuid import UUID, uuid4
 
 from pydantic import BaseModel, Field
 
-from math_rag.application.types import LLMResponseType
+from math_rag.application.types.inference import LLMResponseType
 
 from .llm_logprob import LLMLogprob
 

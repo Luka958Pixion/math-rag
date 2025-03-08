@@ -2,16 +2,16 @@ from abc import ABC, abstractmethod
 from typing import Generic, Type
 
 from math_rag.application.base.inference import BaseLLM
-from math_rag.application.models import (
+from math_rag.application.models.inference import (
     LLMRequest,
     LLMRequestBatch,
     LLMResponseList,
 )
-from math_rag.application.types import (
+from math_rag.application.types.assistants import (
     AssistantInputType,
     AssistantOutputType,
-    LLMResponseType,
 )
+from math_rag.application.types.inference import LLMResponseType
 
 
 class PartialAssistant(

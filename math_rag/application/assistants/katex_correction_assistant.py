@@ -1,8 +1,10 @@
 from math_rag.application.base.inference import BaseLLM
 from math_rag.application.base.services import BaseKatexValidatorService
-from math_rag.application.models import (
+from math_rag.application.models.assistants import (
     KCAssistantInput,
     KCAssistantOutput,
+)
+from math_rag.application.models.inference import (
     LLMConversation,
     LLMMessage,
     LLMParams,
