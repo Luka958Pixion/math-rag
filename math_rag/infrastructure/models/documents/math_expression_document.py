@@ -4,7 +4,7 @@ from math_rag.core.models import MathExpression
 from math_rag.infrastructure.base import BaseDocument
 
 
-class MathExpressionDocument(BaseDocument[MathExpression]):
+class MathExpressionDocument(BaseDocument):
     _id: UUID
     latex: str
     katex: str | None

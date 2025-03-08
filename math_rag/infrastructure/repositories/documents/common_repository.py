@@ -7,14 +7,23 @@ from math_rag.infrastructure.types import DocumentType, InternalType
 
 
 class CommonRepository(Generic[DocumentType, InternalType]):
-    def __init__(self, client: AsyncMongoClient, deployment: str):
+    document_cls: type[DocumentType]
+
+    def __init__(
+        self,
+        client: AsyncMongoClient,
+        deployment: str,
+        document_cls: type[DocumentType],
+        internal_cls: type[InternalType],
+    ):
         self.client = client
         self.db = self.client[deployment]
-        self.collection_name = KCAssistantInput.__name__.lower()
+        self.collection_name = internal_cls.__name__.lower()
         self.collection = self.db[self.collection_name]
+        self.document_cls = document_cls
 
     async def insert_many(self, items: list[InternalType]):
-        docs = [KCAssistantInputDocument.from_internal(item) for item in items]
+        docs = [self.document_cls.from_internal(item) for item in items]
         bson_docs = [doc.model_dump() for doc in docs]
 
         await self.collection.insert_many(bson_docs)
@@ -23,7 +32,7 @@ class CommonRepository(Generic[DocumentType, InternalType]):
         operations = []
 
         for item in items:
-            doc = KCAssistantInputDocument.from_internal(item)
+            doc = self.document_cls.from_internal(item)
             bson_doc = doc.model_dump()
             operations.append(InsertOne(bson_doc))
 
@@ -35,8 +44,8 @@ class CommonRepository(Generic[DocumentType, InternalType]):
         bson_doc = await self.collection.find_one({'_id': id})
 
         if bson_doc:
-            doc = KCAssistantInputDocument(**bson_doc)
-            item = KCAssistantInputDocument.to_internal(doc)
+            doc = self.document_cls(**bson_doc)
+            item = self.document_cls.to_internal(doc)
 
             return item
 
@@ -49,7 +58,7 @@ class CommonRepository(Generic[DocumentType, InternalType]):
             cursor = cursor.limit(limit)
 
         bson_docs = await cursor.to_list(length=limit)
-        docs = [KCAssistantInputDocument(**bson_doc) for bson_doc in bson_docs]
-        items = [KCAssistantInputDocument.to_internal(doc) for doc in docs]
+        docs = [self.document_cls(**bson_doc) for bson_doc in bson_docs]
+        items = [self.document_cls.to_internal(doc) for doc in docs]
 
         return items

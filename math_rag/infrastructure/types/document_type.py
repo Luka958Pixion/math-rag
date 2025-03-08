@@ -1,7 +1,6 @@
-from typing import TYPE_CHECKING, TypeVar
+from typing import TypeVar
 
+from math_rag.infrastructure.base import BaseDocument
 
-if TYPE_CHECKING:
-    from math_rag.infrastructure.base import BaseDocument
 
 DocumentType = TypeVar('DocumentType', bound=BaseDocument)

@@ -1,4 +1,6 @@
 from typing import TypeVar
 
+from pydantic import BaseModel
 
-InternalType = TypeVar('InternalType')
+
+InternalType = TypeVar('InternalType', bound=BaseModel)

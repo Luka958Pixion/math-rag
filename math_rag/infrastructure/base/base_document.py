@@ -1,18 +1,15 @@
 from abc import ABC, abstractmethod
-from typing import Generic
 
 from pydantic import BaseModel
 
-from math_rag.infrastructure.types import DocumentType, InternalType
 
-
-class BaseDocument(BaseModel, ABC, Generic[DocumentType, InternalType]):
+class BaseDocument(BaseModel, ABC):
     @classmethod
     @abstractmethod
-    def from_internal(cls: type[DocumentType], inter: InternalType) -> DocumentType:
+    def from_internal(cls, inter: BaseModel) -> 'BaseDocument':
         pass
 
     @classmethod
     @abstractmethod
-    def to_internal(cls: type[InternalType], doc: DocumentType) -> InternalType:
+    def to_internal(cls, doc: 'BaseDocument') -> BaseModel:
         pass
