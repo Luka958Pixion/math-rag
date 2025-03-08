@@ -10,7 +10,4 @@ class KCAssistantOutputRepository(
     CommonRepository[KCAssistantOutputDocument, KCAssistantOutput]
 ):
     def __init__(self, client: AsyncMongoClient, deployment: str):
-        super().__init__(
-            client=client,
-            deployment=deployment,
-        )
+        super().__init__(client, deployment)

@@ -12,10 +12,7 @@ class MathExpressionRepository(
     CommonRepository[MathExpressionDocument, MathExpression]
 ):
     def __init__(self, client: AsyncMongoClient, deployment: str):
-        super().__init__(
-            client=client,
-            deployment=deployment,
-        )
+        super().__init__(client, deployment)
 
     async def update_katex(self, id: UUID, katex: str):
         await self.collection.update_one({'_id': id}, {'$set': {'katex': katex}})
