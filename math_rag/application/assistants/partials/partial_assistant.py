@@ -1,12 +1,8 @@
-from abc import ABC, abstractmethod
-from typing import Generic, Type
+from typing import Type
 
+from math_rag.application.base.assistants import BaseAssistant
 from math_rag.application.base.inference import BaseLLM
-from math_rag.application.models.inference import (
-    LLMRequest,
-    LLMRequestBatch,
-    LLMResponseList,
-)
+from math_rag.application.models.inference import LLMRequestBatch
 from math_rag.application.types.assistants import (
     AssistantInputType,
     AssistantOutputType,
@@ -15,22 +11,12 @@ from math_rag.application.types.inference import LLMResponseType
 
 
 class PartialAssistant(
-    ABC, Generic[AssistantInputType, AssistantOutputType, LLMResponseType]
+    BaseAssistant[AssistantInputType, AssistantOutputType, LLMResponseType]
 ):
     def __init__(self, llm: BaseLLM):
         self.llm = llm
 
-    @abstractmethod
-    def to_request(self, input: AssistantInputType) -> LLMRequest[LLMResponseType]:
-        pass
-
-    @abstractmethod
-    def from_response_list(
-        self, response_list: LLMResponseList[LLMResponseType]
-    ) -> AssistantOutputType:
-        pass
-
-    def to_request_batch(
+    def _to_request_batch(
         self, inputs: list[AssistantInputType]
     ) -> LLMRequestBatch[LLMResponseType]:
         request_batch = LLMRequestBatch(
@@ -53,7 +39,7 @@ class PartialAssistant(
         delay: float,
         num_retries: int,
     ) -> tuple[list[AssistantInputType], list[AssistantOutputType]]:
-        request_batch = self.to_request_batch(inputs)
+        request_batch = self._to_request_batch(inputs)
         response_batch = await self.llm.batch_generate_retry(
             request_batch, response_type, delay, num_retries
         )
@@ -69,7 +55,7 @@ class PartialAssistant(
         return remaining_assistant_requests, outputs
 
     async def batch_assist_init(self, inputs: list[AssistantInputType]) -> str:
-        request_batch = self.to_request_batch(inputs)
+        request_batch = self._to_request_batch(inputs)
         batch_id = await self.llm.batch_generate_init(request_batch)
 
         return batch_id
