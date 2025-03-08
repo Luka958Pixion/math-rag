@@ -20,7 +20,7 @@ class MathExpressionClassificationAssistant(
     PartialAssistant[MECAssistantInput, MECAssistantOutput, MECAndLLMResponse]
 ):
     def __init__(self, llm: BaseLLM):
-        self.llm = llm
+        super().__init__(llm)
 
     def to_request(self, input: MECAssistantInput) -> LLMRequest[MECAndLLMResponse]:
         prompt = MATH_EXPRESSION_CLASSIFICATION_PROMPT.format(latex=input.latex)

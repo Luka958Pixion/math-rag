@@ -20,11 +20,8 @@ from .prompts import KATEX_CORRECTION_PROMPT
 class KatexCorrectionAssistant(
     PartialAssistant[KCAssistantInput, KCAssistantOutput, KCAndLLMResponse]
 ):
-    def __init__(
-        self, llm: BaseLLM, katex_validation_service: BaseKatexValidatorService
-    ):
-        self.llm = llm
-        self.katex_validation_service = katex_validation_service
+    def __init__(self, llm: BaseLLM):
+        super().__init__(llm)
 
     def to_request(self, input: KCAssistantInput) -> LLMRequest[KCAndLLMResponse]:
         prompt = KATEX_CORRECTION_PROMPT.format(katex=input.katex, error=input.error)
@@ -44,7 +41,7 @@ class KatexCorrectionAssistant(
     def from_response_list(
         self, response_list: LLMResponseList[KCAndLLMResponse]
     ) -> KCAssistantOutput:
-        katex = response_list.responses[0].content.label
-        output = KCAssistantOutput(label=katex)
+        katex = response_list.responses[0].content.katex
+        output = KCAssistantOutput(katex=katex)
 
         return output
