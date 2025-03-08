@@ -11,7 +11,7 @@ from math_rag.infrastructure.models.objects import MathArticleObject
 class MathArticleRepository(BaseArticleRepository):
     def __init__(self, client: Minio):
         self.client = client
-        self.bucket_name = MathArticle.__name__.lower()
+        self.bucket_name = MathArticleObject.__name__.lower()
 
     def insert_many(self, items: list[MathArticle]):
         objs = [MathArticleMapping.to_target(item) for item in items]

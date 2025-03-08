@@ -170,7 +170,13 @@ class OpenAILLM(BaseLLM):
         self, batch_id: str, response_type: type[LLMResponseType]
     ) -> LLMResponseBatch[LLMResponseType] | None:
         batch = await self.client.batches.retrieve(batch_id)
-        logging.info(f'Batch {batch.id} status {batch.status}')
+        logging.info(
+            f'Batch {batch.id} status {batch.status}\n'
+            f'Batch {batch.id} requests - '
+            f'completed: {batch.request_counts.completed}, '
+            f'failed: {batch.request_counts.failed}, '
+            f'total: {batch.request_counts.total}'
+        )
 
         match batch.status:
             case 'validating' | 'in_progress' | 'finalizing' | 'cancelling':

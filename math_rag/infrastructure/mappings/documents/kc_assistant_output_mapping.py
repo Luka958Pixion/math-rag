@@ -6,16 +6,16 @@ from math_rag.infrastructure.models.documents import KCAssistantOutputDocument
 class KCAssistantOutputMapping(
     BaseMapping[KCAssistantOutput, KCAssistantOutputDocument]
 ):
-    @classmethod
-    def to_source(cls, target: KCAssistantOutputDocument) -> KCAssistantOutput:
-        return cls(
+    @staticmethod
+    def to_source(target: KCAssistantOutputDocument) -> KCAssistantOutput:
+        return KCAssistantOutput(
             id=target._id,
             katex=target.katex,
         )
 
-    @classmethod
-    def to_target(cls, source: KCAssistantOutput) -> KCAssistantOutputDocument:
-        return cls(
+    @staticmethod
+    def to_target(source: KCAssistantOutput) -> KCAssistantOutputDocument:
+        return KCAssistantOutputDocument(
             _id=source.id,
             katex=source.katex,
         )

@@ -8,21 +8,21 @@ from math_rag.infrastructure.models.documents import (
 class MathExpressionClassificationMapping(
     BaseMapping[MathExpressionClassification, MathExpressionClassificationDocument]
 ):
-    @classmethod
+    @staticmethod
     def to_source(
-        cls, target: MathExpressionClassificationDocument
+        target: MathExpressionClassificationDocument,
     ) -> MathExpressionClassification:
-        return cls(
+        return MathExpressionClassification(
             id=target._id,
             math_expression_id=target.math_expression_id,
             value=target.value,
         )
 
-    @classmethod
+    @staticmethod
     def to_target(
-        cls, source: MathExpressionClassification
+        source: MathExpressionClassification,
     ) -> MathExpressionClassificationDocument:
-        return cls(
+        return MathExpressionClassificationDocument(
             _id=source.id,
             math_expression_id=source.math_expression_id,
             value=source.value,

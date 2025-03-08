@@ -61,10 +61,10 @@ class PartialBatchAssistant(
     ) -> list[AssistantOutputType] | None:
         args = get_args(self.__class__.__orig_bases__[0])
 
-        if len(args) != 1:
+        if len(args) != 2:
             raise TypeError(f'Expected two type arguments, got {len(args)}: {args}')
 
-        response_type = cast(type[AssistantOutputType], args[2])
+        response_type = cast(type[AssistantOutputType], args[1])
         response_batch = await self.llm.batch_generate_result(batch_id, response_type)
 
         if response_batch is None:

@@ -6,17 +6,17 @@ from math_rag.infrastructure.models.objects import MathArticleObject
 
 
 class MathArticleMapping(BaseMapping[MathArticle, MathArticleObject]):
-    @classmethod
-    def to_source(cls, target: MathArticleObject) -> MathArticle:
-        return cls(
+    @staticmethod
+    def to_source(target: MathArticleObject) -> MathArticle:
+        return MathArticle(
             id=UUID(target.id),
             name=target.name,
             bytes=target.bytes,
         )
 
-    @classmethod
-    def to_target(cls, source: MathArticle) -> MathArticleObject:
-        return cls(
+    @staticmethod
+    def to_target(source: MathArticle) -> MathArticleObject:
+        return MathArticleObject(
             id=str(source.id),
             name=source.name,
             bytes=source.bytes,
