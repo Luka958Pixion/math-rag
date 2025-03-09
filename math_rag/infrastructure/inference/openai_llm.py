@@ -1,6 +1,7 @@
-import asyncio
 import json
 import logging
+
+from asyncio import sleep
 
 from backoff import expo, on_exception
 from openai import NOT_GIVEN, AsyncOpenAI, RateLimitError
@@ -96,7 +97,7 @@ class OpenAILLM(BaseLLM):
             if result is not None:
                 return result
 
-            await asyncio.sleep(poll_interval)
+            await sleep(poll_interval)
 
     async def batch_generate_retry(
         self,

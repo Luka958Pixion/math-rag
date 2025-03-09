@@ -1,5 +1,6 @@
-import asyncio
 import logging
+
+from asyncio import run
 
 from math_rag.infrastructure.containers import InfrastructureContainer
 
@@ -27,4 +28,4 @@ async def main():
 
 
 if __name__ == '__main__':
-    asyncio.run(main())
+    run(main())
