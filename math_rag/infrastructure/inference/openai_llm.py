@@ -3,7 +3,11 @@ import json
 import logging
 
 from backoff import expo, on_exception
-from openai import AsyncOpenAI, RateLimitError
+from openai import NOT_GIVEN, AsyncOpenAI, RateLimitError
+from openai.lib._parsing._completions import (
+    parse_chat_completion,
+    type_to_response_format_param,
+)
 from openai.types.chat import ChatCompletion
 
 from math_rag.application.base.inference import BaseLLM
@@ -128,9 +132,16 @@ class OpenAILLM(BaseLLM):
         return response_batch
 
     async def batch_generate_init(
-        self, request_batch: LLMRequestBatch[LLMResponseType]
+        self,
+        request_batch: LLMRequestBatch[LLMResponseType],
+        response_type: type[LLMResponseType],
     ) -> str:
         url = '/v1/chat/completions'
+        response_format = (
+            {'type': 'text'}
+            if response_type is LLMDefaultResponse
+            else type_to_response_format_param(response_format)
+        )
         requests = [
             {
                 'custom_id': str(request.id),
@@ -142,7 +153,7 @@ class OpenAILLM(BaseLLM):
                         {'role': message.role, 'content': message.content}
                         for message in request.conversation.messages
                     ],
-                    'response_format': {'type': 'text'},
+                    'response_format': response_format,
                     'temperature': request.params.temperature,
                     'logprobs': request.params.top_logprobs is not None,
                     'top_logprobs': request.params.top_logprobs,
@@ -204,12 +215,27 @@ class OpenAILLM(BaseLLM):
 
             else:
                 completion = ChatCompletion(**response['body'])
-                response_list = LLMResponseList(
-                    responses=[
-                        LLMResponse[LLMResponseType](content=choice.message.content)
-                        for choice in completion.choices
-                    ]
-                )
+
+                if response_type is LLMDefaultResponse:
+                    response_list = LLMResponseList(
+                        responses=[
+                            LLMResponse[LLMResponseType](content=choice.message.content)
+                            for choice in completion.choices
+                        ]
+                    )
+                else:
+                    parsed_completion = parse_chat_completion(
+                        response_format=response_type,
+                        input_tools=NOT_GIVEN,
+                        chat_completion=completion,
+                    )
+                    response_list = LLMResponseList(
+                        responses=[
+                            LLMResponse[LLMResponseType](content=choice.message.content)
+                            for choice in parsed_completion.choices
+                        ]
+                    )
+
                 request_id_to_response_list[custom_id] = response_list
                 complete_request_ids.append(custom_id)
 

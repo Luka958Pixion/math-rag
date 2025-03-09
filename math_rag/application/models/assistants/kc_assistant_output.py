@@ -1,8 +1,9 @@
 from uuid import UUID, uuid4
 
 from pydantic import BaseModel, Field
+from pydantic.json_schema import SkipJsonSchema
 
 
 class KCAssistantOutput(BaseModel):
-    id: UUID = Field(default_factory=uuid4, exclude=True)
+    id: SkipJsonSchema[UUID] = Field(default_factory=uuid4)
     katex: str
