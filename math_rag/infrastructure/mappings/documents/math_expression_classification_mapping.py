@@ -12,18 +12,22 @@ class MathExpressionClassificationMapping(
     def to_source(
         target: MathExpressionClassificationDocument,
     ) -> MathExpressionClassification:
-        return MathExpressionClassification(
+        math_expression_classification = MathExpressionClassification(
             id=target._id,
             math_expression_id=target.math_expression_id,
             value=target.value,
         )
 
+        return math_expression_classification
+
     @staticmethod
     def to_target(
         source: MathExpressionClassification,
     ) -> MathExpressionClassificationDocument:
-        return MathExpressionClassificationDocument(
+        math_expression_classification_document = MathExpressionClassificationDocument(
             _id=source.id,
             math_expression_id=source.math_expression_id,
             value=source.value,
         )
+
+        return math_expression_classification_document

@@ -8,14 +8,18 @@ class KCAssistantOutputMapping(
 ):
     @staticmethod
     def to_source(target: KCAssistantOutputDocument) -> KCAssistantOutput:
-        return KCAssistantOutput(
+        kc_assistant_output = KCAssistantOutput(
             id=target._id,
             katex=target.katex,
         )
 
+        return kc_assistant_output
+
     @staticmethod
     def to_target(source: KCAssistantOutput) -> KCAssistantOutputDocument:
-        return KCAssistantOutputDocument(
+        kc_assistant_output_document = KCAssistantOutputDocument(
             _id=source.id,
             katex=source.katex,
         )
+
+        return kc_assistant_output_document
