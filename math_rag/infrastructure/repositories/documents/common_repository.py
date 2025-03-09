@@ -1,18 +1,15 @@
-from typing import Generic, cast, get_args
+from typing import Generic, cast
 from uuid import UUID
 
 from pymongo import AsyncMongoClient, InsertOne
 
 from math_rag.infrastructure.types import MappingType, SourceType, TargetType
+from math_rag.shared.utils import TypeArgExtractorUtil
 
 
 class CommonRepository(Generic[SourceType, TargetType, MappingType]):
     def __init__(self, client: AsyncMongoClient, deployment: str):
-        args = get_args(self.__class__.__orig_bases__[0])
-
-        if len(args) != 3:
-            raise TypeError(f'Expected three type arguments, got {len(args)}: {args}')
-
+        args = TypeArgExtractorUtil.extract(self.__class__)
         self.source_cls = cast(type[SourceType], args[0])
         self.target_cls = cast(type[TargetType], args[1])
         self.mapping_cls = cast(type[MappingType], args[2])

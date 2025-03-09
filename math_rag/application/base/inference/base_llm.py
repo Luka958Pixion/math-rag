@@ -37,7 +37,9 @@ class BaseLLM(ABC):
 
     @abstractmethod
     async def batch_generate_init(
-        self, request_batch: LLMRequestBatch[LLMResponseType]
+        self,
+        request_batch: LLMRequestBatch[LLMResponseType],
+        response_type: type[LLMResponseType],
     ) -> str:
         pass
 

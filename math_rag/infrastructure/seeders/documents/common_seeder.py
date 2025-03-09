@@ -1,17 +1,14 @@
-from typing import Generic, cast, get_args
+from typing import Generic, cast
 
 from pymongo import AsyncMongoClient
 
 from math_rag.infrastructure.types import TargetType
+from math_rag.shared.utils import TypeArgExtractorUtil
 
 
 class CommonSeeder(Generic[TargetType]):
     def __init__(self, client: AsyncMongoClient, deployment: str):
-        args = get_args(self.__class__.__orig_bases__[0])
-
-        if len(args) != 1:
-            raise TypeError(f'Expected one type argument, got {len(args)}: {args}')
-
+        args = TypeArgExtractorUtil.extract(self.__class__)
         self.target_cls = cast(type[TargetType], args[0])
 
         self.client = client
