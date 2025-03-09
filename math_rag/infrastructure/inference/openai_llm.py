@@ -285,12 +285,4 @@ class OpenAILLM(BaseLLM):
             response_lists=response_lists,
         )
 
-        if response_batch.incomplete_request_batch.requests:
-            completed = len(response_batch.response_lists)
-            total = completed + len(response_batch.incomplete_request_batch.requests)
-
-            logging.info(
-                f'{self.batch_generate_result.__name__} completed {completed}/{total} requests'
-            )
-
         return response_batch
