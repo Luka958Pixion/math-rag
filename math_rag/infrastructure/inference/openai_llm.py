@@ -86,7 +86,7 @@ class OpenAILLM(BaseLLM):
         self,
         request_batch: LLMRequestBatch[LLMResponseType],
         response_type: type[LLMResponseType],
-        delay: float,
+        poll_interval: float,
     ) -> LLMResponseBatch[LLMResponseType]:
         batch_id = await self.batch_generate_init(request_batch)
 
@@ -96,13 +96,13 @@ class OpenAILLM(BaseLLM):
             if result is not None:
                 return result
 
-            await asyncio.sleep(delay)
+            await asyncio.sleep(poll_interval)
 
     async def batch_generate_retry(
         self,
         request_batch: LLMRequestBatch[LLMResponseType],
         response_type: type[LLMResponseType],
-        delay: float,
+        poll_interval: float,
         num_retries: int,
     ) -> LLMResponseBatch[LLMResponseType]:
         if num_retries < 0:
@@ -113,7 +113,7 @@ class OpenAILLM(BaseLLM):
 
         for _ in range(num_retries + 1):
             response_batch = await self.batch_generate(
-                request_batch, response_type, delay
+                request_batch, response_type, poll_interval
             )
             response_lists.extend(response_batch.response_lists)
 

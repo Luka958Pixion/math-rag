@@ -35,12 +35,12 @@ class PartialBatchAssistant(
         self,
         inputs: list[AssistantInputType],
         response_type: type[AssistantOutputType],
-        delay: float,
+        poll_interval: float,
         num_retries: int,
     ) -> tuple[list[AssistantInputType], list[AssistantOutputType]]:
         request_batch = self.to_request_batch(inputs)
         response_batch = await self.llm.batch_generate_retry(
-            request_batch, response_type, delay, num_retries
+            request_batch, response_type, poll_interval, num_retries
         )
         outputs = [
             self.from_response_list(response_list)

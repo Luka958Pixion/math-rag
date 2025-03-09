@@ -21,7 +21,7 @@ class BaseLLM(ABC):
         self,
         request_batch: LLMRequestBatch[LLMResponseType],
         response_type: type[LLMResponseType],
-        delay: float,
+        poll_interval: float,
     ) -> LLMResponseBatch[LLMResponseType]:
         pass
 
@@ -30,7 +30,7 @@ class BaseLLM(ABC):
         self,
         request_batch: LLMRequestBatch[LLMResponseType],
         response_type: type[LLMResponseType],
-        delay: float,
+        poll_interval: float,
         num_retries: int,
     ) -> LLMResponseBatch[LLMResponseType]:
         pass

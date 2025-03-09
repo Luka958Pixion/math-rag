@@ -21,7 +21,7 @@ class BaseBatchAssistant(BaseAssistant[AssistantInputType, AssistantOutputType])
         self,
         inputs: list[AssistantInputType],
         response_type: type[AssistantOutputType],
-        delay: float,
+        poll_interval: float,
         num_retries: int,
     ) -> tuple[list[AssistantInputType], list[AssistantOutputType]]:
         pass
