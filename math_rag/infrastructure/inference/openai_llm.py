@@ -28,19 +28,18 @@ class OpenAILLM(BaseLLM):
         self,
         request: LLMRequest[LLMResponseType],
     ) -> LLMResponseList[LLMResponseType]:
-        params = request.params
         completion = await self.client.chat.completions.create(
-            model=params.model,
+            model=request.params.model,
             messages=[
                 {'role': message.role, 'content': message.content}
                 for message in request.conversation.messages
             ],
             response_format={'type': 'text'},
-            temperature=params.temperature,
-            logprobs=params.top_logprobs is not None,
-            top_logprobs=params.top_logprobs,
-            reasoning_effort=params.reasoning_effort,
-            max_completion_tokens=params.max_completion_tokens,
+            temperature=request.params.temperature,
+            logprobs=request.params.top_logprobs is not None,
+            top_logprobs=request.params.top_logprobs,
+            reasoning_effort=request.params.reasoning_effort,
+            max_completion_tokens=request.params.max_completion_tokens,
         )
         response_list = LLMResponseListMapping[LLMResponseType].to_source(completion)
 
@@ -50,19 +49,18 @@ class OpenAILLM(BaseLLM):
         self,
         request: LLMRequest[LLMResponseType],
     ) -> LLMResponseList[LLMResponseType]:
-        params = request.params
         parsed_completion = await self.client.beta.chat.completions.parse(
-            model=params.model,
+            model=request.params.model,
             messages=[
                 {'role': message.role, 'content': message.content}
                 for message in request.conversation.messages
             ],
-            response_format=params.response_type,
-            temperature=params.temperature,
-            logprobs=params.top_logprobs is not None,
-            top_logprobs=params.top_logprobs,
-            reasoning_effort=params.reasoning_effort,
-            max_completion_tokens=params.max_completion_tokens,
+            response_format=request.params.response_type,
+            temperature=request.params.temperature,
+            logprobs=request.params.top_logprobs is not None,
+            top_logprobs=request.params.top_logprobs,
+            reasoning_effort=request.params.reasoning_effort,
+            max_completion_tokens=request.params.max_completion_tokens,
         )
         response_list = LLMResponseListMapping[LLMResponseType].to_source(
             parsed_completion
