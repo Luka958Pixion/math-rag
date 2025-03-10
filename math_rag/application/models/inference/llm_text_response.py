@@ -1,5 +1,5 @@
 from pydantic import BaseModel
 
 
-class LLMDefaultResponse(BaseModel):
+class LLMTextResponse(BaseModel):
     content: str

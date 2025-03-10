@@ -1,6 +1,7 @@
 from openai import AsyncOpenAI
 
 
+# TODO deprecated
 class EM:
     def __init__(self, model: str, base_url: str = None, api_key: str = None):
         self.model = model
