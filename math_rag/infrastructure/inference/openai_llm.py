@@ -26,7 +26,6 @@ from math_rag.application.types.inference import LLMResponseType
 from math_rag.infrastructure.constants.inference import (
     OPENAI_ERRORS_TO_RAISE,
     OPENAI_ERRORS_TO_RETRY,
-    OPENAI_ERRORS_TO_RETRY_NO_RATE_LIMIT,
 )
 from math_rag.infrastructure.mappings.inference import LLMResponseListMapping
 
@@ -91,7 +90,7 @@ class OpenAILLM(BaseLLM):
             response_list = (
                 await self._generate_text(request)
                 if request.params.response_type is LLMDefaultResponse
-                else self._generate_json(request)
+                else await self._generate_json(request)
             )
 
         except OPENAI_ERRORS_TO_RAISE:
