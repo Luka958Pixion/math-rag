@@ -23,10 +23,6 @@ from math_rag.application.models.inference import (
     LLMTextResponse,
 )
 from math_rag.application.types.inference import LLMResponseType
-from math_rag.infrastructure.inference.constants import (
-    OPENAI_ERRORS_TO_RAISE,
-    OPENAI_ERRORS_TO_RETRY,
-)
 from math_rag.infrastructure.mappings.inference import LLMResponseListMapping
 
 

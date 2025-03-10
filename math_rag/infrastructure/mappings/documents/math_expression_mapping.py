@@ -6,7 +6,7 @@ from math_rag.infrastructure.models.documents import MathExpressionDocument
 class MathExpressionMapping(BaseMapping[MathExpression, MathExpressionDocument]):
     @staticmethod
     def to_source(target: MathExpressionDocument) -> MathExpression:
-        math_expression = MathExpression(
+        source = MathExpression(
             id=target._id,
             latex=target.latex,
             katex=target.katex,
@@ -14,11 +14,11 @@ class MathExpressionMapping(BaseMapping[MathExpression, MathExpressionDocument])
             is_inline=target.is_inline,
         )
 
-        return math_expression
+        return source
 
     @staticmethod
     def to_target(source: MathExpression) -> MathExpressionDocument:
-        math_expression_document = MathExpressionDocument(
+        target = MathExpressionDocument(
             _id=source.id,
             latex=source.latex,
             katex=source.katex,
@@ -26,4 +26,4 @@ class MathExpressionMapping(BaseMapping[MathExpression, MathExpressionDocument])
             is_inline=source.is_inline,
         )
 
-        return math_expression_document
+        return target

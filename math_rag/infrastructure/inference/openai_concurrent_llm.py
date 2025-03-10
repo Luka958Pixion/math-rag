@@ -18,7 +18,7 @@ from math_rag.application.models.inference import (
     LLMTextResponse,
 )
 from math_rag.application.types.inference import LLMResponseType
-from math_rag.infrastructure.inference.constants import (
+from math_rag.infrastructure.constants.inference import (
     ENCODING_NAME,
     MAX_COMPLETION_TOKENS,
     OPENAI_ERRORS_TO_RAISE,
