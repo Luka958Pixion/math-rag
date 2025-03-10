@@ -4,7 +4,21 @@ import logging
 from asyncio import sleep
 
 from backoff import expo, on_exception
-from openai import NOT_GIVEN, AsyncOpenAI, RateLimitError
+from openai import (
+    NOT_GIVEN,
+    APIConnectionError,
+    APIError,
+    APITimeoutError,
+    AsyncOpenAI,
+    AuthenticationError,
+    BadRequestError,
+    ConflictError,
+    InternalServerError,
+    NotFoundError,
+    PermissionDeniedError,
+    RateLimitError,
+    UnprocessableEntityError,
+)
 from openai.lib._parsing._completions import (
     parse_chat_completion,
     type_to_response_format_param,
@@ -33,7 +47,6 @@ class OpenAILLM(BaseLLM):
     def __init__(self, client: AsyncOpenAI):
         self.client = client
 
-    @retry
     async def generate(
         self,
         request: LLMRequest[LLMResponseType],
@@ -74,6 +87,15 @@ class OpenAILLM(BaseLLM):
             response_list = LLMResponseListMapping[LLMResponseType].to_source(
                 parsed_completion
             )
+
+        return response_list
+
+    @retry
+    async def generate_retry(
+        self,
+        request: LLMRequest[LLMResponseType],
+    ) -> LLMResponseList[LLMResponseType]:
+        response_list = await self.generate(request)
 
         return response_list
 
