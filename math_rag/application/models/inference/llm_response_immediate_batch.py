@@ -5,9 +5,11 @@ from pydantic import BaseModel, Field
 
 from math_rag.application.types.inference import LLMResponseType
 
+from .llm_request_batch import LLMRequestBatch
 from .llm_response_list import LLMResponseList
 
 
-class LLMResponseBatch(BaseModel, Generic[LLMResponseType]):
+class LLMResponseImmediateBatch(BaseModel, Generic[LLMResponseType]):
     id: UUID = Field(default_factory=uuid4)
+    incomplete_request_batch: LLMRequestBatch[LLMResponseType]
     response_lists: list[LLMResponseList[LLMResponseType]]
