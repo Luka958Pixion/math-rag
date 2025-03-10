@@ -22,7 +22,7 @@ from math_rag.application.models.inference import (
     LLMTextResponse,
 )
 from math_rag.application.types.inference import LLMResponseType
-from math_rag.infrastructure.constants.inference import (
+from math_rag.infrastructure.inference.constants import (
     OPENAI_ERRORS_TO_RAISE,
     OPENAI_ERRORS_TO_RETRY,
 )

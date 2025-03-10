@@ -18,9 +18,13 @@ from math_rag.application.models.inference import (
     LLMTextResponse,
 )
 from math_rag.application.types.inference import LLMResponseType
-from math_rag.infrastructure.constants.inference import (
+from math_rag.infrastructure.inference.constants import (
+    ENCODING_NAME,
+    MAX_COMPLETION_TOKENS,
     OPENAI_ERRORS_TO_RAISE,
     OPENAI_ERRORS_TO_RETRY_NO_RATE_LIMIT,
+    SECONDS_TO_PAUSE_AFTER_RATE_LIMIT_ERROR,
+    SECONDS_TO_SLEEP_EACH_LOOP,
 )
 from math_rag.infrastructure.mappings.inference import LLMResponseListMapping
 
@@ -121,22 +125,25 @@ class OpenAIConcurrentLLM(BaseConcurrentLLM):
             status_tracker.num_tasks_succeeded += 1
 
     def num_tokens_from_request(self, request: LLMRequest[LLMResponseType]):
-        encoding = get_encoding('cl100k_base')  # TODO const
-
-        max_tokens = request.params.max_completion_tokens or 15  # TODO const
-        n = request.params.n
-        completion_tokens = n * max_tokens
-
-        num_tokens = 0
+        encoding = get_encoding(ENCODING_NAME)
+        prompt_tokens = 0
 
         for message in request.conversation.messages:
             message_content_tokens = encoding.encode(message.content)
-            num_tokens += len(message_content_tokens)
-            num_tokens += 4  # TODO const
+            prompt_tokens += len(message_content_tokens)
+            prompt_tokens += 4  # TODO why
 
-        num_tokens += 2  # TODO const
+        prompt_tokens += 2  # TODO why
 
-        return num_tokens + completion_tokens
+        max_completion_tokens = (
+            request.params.max_completion_tokens or MAX_COMPLETION_TOKENS
+        )
+        n = request.params.n
+        completion_tokens = n * max_completion_tokens
+
+        total_tokens = prompt_tokens + completion_tokens
+
+        return total_tokens
 
     async def concurrent_generate(
         self,
@@ -145,9 +152,6 @@ class OpenAIConcurrentLLM(BaseConcurrentLLM):
         max_tokens_per_minute: float,
         max_attempts: int,
     ) -> LLMResponseBatch[LLMResponseType]:
-        SECONDS_TO_PAUSE_AFTER_RATE_LIMIT_ERROR = 15
-        SECONDS_TO_SLEEP_EACH_LOOP = 0.001
-
         retry_queue: Queue[LLMRequestTracker] = Queue()
         status_tracker = LLMStatusTracker()
         next_request: LLMRequestTracker | None = None
