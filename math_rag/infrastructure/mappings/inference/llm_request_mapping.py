@@ -25,6 +25,7 @@ class LLMRequestMapping(BaseMapping[LLMRequest[LLMResponseType], dict[str, Any]]
             'logprobs': source.params.top_logprobs is not None,
             'top_logprobs': source.params.top_logprobs,
             'max_completion_tokens': source.params.max_completion_tokens,
+            'metadata': source.params.metadata,
         }
 
         return target

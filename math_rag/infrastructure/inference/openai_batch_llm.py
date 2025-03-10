@@ -128,6 +128,7 @@ class OpenAIBatchLLM(BaseBatchLLM):
                     'logprobs': request.params.top_logprobs is not None,
                     'top_logprobs': request.params.top_logprobs,
                     'max_completion_tokens': request.params.max_completion_tokens,
+                    'metadata': request.params.metadata,
                 },
             }
             for request in request_batch.requests
