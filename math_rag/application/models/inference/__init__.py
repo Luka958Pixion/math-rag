@@ -9,8 +9,8 @@ from .llm_request_concurrent import LLMRequestConcurrent
 from .llm_request_tracker import LLMRequestTracker
 from .llm_response import LLMResponse
 from .llm_response_batch import LLMResponseBatch
+from .llm_response_batch_plus import LLMResponseBatchPlus
 from .llm_response_concurrent import LLMResponseConcurrent
-from .llm_response_immediate_batch import LLMResponseImmediateBatch
 from .llm_response_list import LLMResponseList
 from .llm_status_tracker import LLMStatusTracker
 from .llm_text_response import LLMTextResponse

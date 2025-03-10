@@ -19,7 +19,7 @@ from math_rag.application.models.inference import (
     LLMRequest,
     LLMRequestBatch,
     LLMResponseBatch,
-    LLMResponseImmediateBatch,
+    LLMResponseBatchPlus,
     LLMResponseList,
     LLMTextResponse,
 )
