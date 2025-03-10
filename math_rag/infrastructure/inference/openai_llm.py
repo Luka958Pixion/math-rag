@@ -33,20 +33,14 @@ class OpenAILLM(BaseLLM):
         self,
         request: LLMRequest[LLMResponseType],
     ) -> LLMResponseList[LLMResponseType]:
-        try:
-            request_dict = LLMRequestMapping[LLMResponseType].to_target(request)
-            completion_callback = (
-                self.client.chat.completions.create
-                if request.params.response_type is LLMTextResponse
-                else self.client.beta.chat.completions.parse
-            )
-            completion = await completion_callback(**request_dict)
-            response_list = LLMResponseListMapping[LLMResponseType].to_source(
-                completion
-            )
-
-        except OPENAI_ERRORS_TO_RAISE:
-            raise
+        request_dict = LLMRequestMapping[LLMResponseType].to_target(request)
+        completion_callback = (
+            self.client.chat.completions.create
+            if request.params.response_type is LLMTextResponse
+            else self.client.beta.chat.completions.parse
+        )
+        completion = await completion_callback(**request_dict)
+        response_list = LLMResponseListMapping[LLMResponseType].to_source(completion)
 
         return response_list
 
@@ -63,5 +57,8 @@ class OpenAILLM(BaseLLM):
             # TODO save errors
             error = LLMError(message=e.message, body=e.body)
             pass
+
+        except OPENAI_ERRORS_TO_RAISE:
+            raise
 
         return response_list
