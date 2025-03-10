@@ -15,7 +15,9 @@ from math_rag.infrastructure.inference.constants import (
 from math_rag.infrastructure.mappings.inference import LLMResponseListMapping
 
 
-retry = on_exception(expo, OPENAI_ERRORS_TO_RETRY, max_time=60, max_tries=6)
+retry = on_exception(
+    wait_gen=expo, exception=OPENAI_ERRORS_TO_RETRY, max_time=60, max_tries=6
+)
 
 
 class OpenAILLM(BaseLLM):
@@ -69,7 +71,7 @@ class OpenAILLM(BaseLLM):
         return response_list
 
     @retry
-    async def generate(
+    async def _generate(
         self,
         request: LLMRequest[LLMResponseType],
     ) -> LLMResponseList[LLMResponseType]:
@@ -82,5 +84,24 @@ class OpenAILLM(BaseLLM):
 
         except OPENAI_ERRORS_TO_RAISE:
             raise
+
+        return response_list
+
+    async def generate(
+        self,
+        request: LLMRequest[LLMResponseType],
+    ) -> LLMResponseList[LLMResponseType] | None:
+        response_list = None
+
+        try:
+            response_list = (
+                await self._generate_text(request)
+                if request.params.response_type is LLMTextResponse
+                else await self._generate_json(request)
+            )
+
+        except OPENAI_ERRORS_TO_RETRY as e:
+            # TODO save errors
+            pass
 
         return response_list

@@ -13,6 +13,7 @@ from openai.types.chat import ChatCompletion
 from math_rag.application.base.inference import BaseBatchLLM
 from math_rag.application.models.inference import (
     LLMConversation,
+    LLMError,
     LLMMessage,
     LLMParams,
     LLMRequest,
@@ -164,6 +165,15 @@ class OpenAIBatchLLM(BaseBatchLLM):
 
             if response is None:
                 incomplete_request_ids.append(custom_id)
+
+                if 'error' in data:
+                    error = LLMError(
+                        message=data['error']['message']
+                        if 'message' in data['error']
+                        else str(),
+                        body=data['error']['body'] if 'body' in data['error'] else None,
+                    )
+                    # TODO save error
 
             else:
                 completion = ChatCompletion(**response['body'])
