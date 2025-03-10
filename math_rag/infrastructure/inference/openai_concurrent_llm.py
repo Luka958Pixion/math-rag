@@ -9,6 +9,8 @@ from tiktoken import get_encoding
 
 from math_rag.application.base.inference import BaseConcurrentLLM
 from math_rag.application.models.inference import (
+    LLMError,
+    LLMFailedRequest,
     LLMRequest,
     LLMRequestConcurrent,
     LLMRequestTracker,
@@ -44,7 +46,7 @@ class OpenAIConcurrentLLM(BaseConcurrentLLM):
         response_lists: list[LLMResponseList[LLMResponseType]],
     ):
         request = request_tracker.request
-        error = None
+        exception = None
 
         try:
             request_dict = LLMRequestMapping[LLMResponseType].to_target(request)
@@ -59,29 +61,37 @@ class OpenAIConcurrentLLM(BaseConcurrentLLM):
             )
 
         except RateLimitError as e:
-            error = e
+            exception = e
             status_tracker.time_of_last_rate_limit_error = perf_counter()
             status_tracker.num_rate_limit_errors += 1
 
         except OPENAI_ERRORS_TO_RETRY_NO_RATE_LIMIT as e:
-            error = e
+            exception = e
             status_tracker.num_api_errors += 1
 
         except OPENAI_ERRORS_TO_RAISE:
             raise
 
-        if error:
+        if exception:
+            error = LLMError(message=exception.message, body=exception.message)
             request_tracker.errors.append(error)
 
             if request_tracker.attempts_left:
                 retry_queue.put_nowait(request_tracker)
 
             else:
-                logging.error(f'Request {request_tracker.id} failed after all attempts')
-                # TODO: save self.errors
+                # TODO: save failed_request
+                failed_request = LLMFailedRequest(
+                    request=request_tracker.request, errors=request_tracker.errors
+                )
 
                 status_tracker.num_tasks_in_progress -= 1
                 status_tracker.num_tasks_failed += 1
+
+                logging.error(
+                    f'Request {request_tracker.request.id} failed after all attempts'
+                )
+
         else:
             response_lists.append(response_list)
 
@@ -192,6 +202,7 @@ class OpenAIConcurrentLLM(BaseConcurrentLLM):
                 break
 
             await sleep(SECONDS_TO_SLEEP_EACH_LOOP)
+
             seconds_since_rate_limit_error = (
                 perf_counter() - status_tracker.time_of_last_rate_limit_error
             )
@@ -203,9 +214,11 @@ class OpenAIConcurrentLLM(BaseConcurrentLLM):
                 )
                 await sleep(remaining_seconds_to_pause)
 
-                logging.warning(
-                    f'Pausing to cool down until {ctime(status_tracker.time_of_last_rate_limit_error + SECONDS_TO_PAUSE_AFTER_RATE_LIMIT_ERROR)}'
+                wait_until = ctime(
+                    status_tracker.time_of_last_rate_limit_error
+                    + SECONDS_TO_PAUSE_AFTER_RATE_LIMIT_ERROR
                 )
+                logging.warning(f'Pausing to cool down until {wait_until}')
 
         if status_tracker.num_tasks_failed > 0:
             logging.warning(

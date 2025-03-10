@@ -4,6 +4,7 @@ from openai import AsyncOpenAI
 from math_rag.application.base.inference import BaseLLM
 from math_rag.application.models.inference import (
     LLMError,
+    LLMFailedRequest,
     LLMRequest,
     LLMResponseList,
     LLMTextResponse,
@@ -54,8 +55,9 @@ class OpenAILLM(BaseLLM):
             response_list = await self._generate(request)
 
         except OPENAI_ERRORS_TO_RETRY as e:
-            # TODO save errors
+            # TODO save failed_request
             error = LLMError(message=e.message, body=e.body)
+            failed_request = LLMFailedRequest(request=request, errors=[error])
             pass
 
         except OPENAI_ERRORS_TO_RAISE:

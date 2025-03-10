@@ -14,6 +14,7 @@ from math_rag.application.base.inference import BaseBatchLLM
 from math_rag.application.models.inference import (
     LLMConversation,
     LLMError,
+    LLMFailedRequest,
     LLMMessage,
     LLMParams,
     LLMRequest,
@@ -192,7 +193,11 @@ class OpenAIBatchLLM(BaseBatchLLM):
                         else str(),
                         body=data['error']['body'] if 'body' in data['error'] else None,
                     )
-                    # TODO save error
+                    # TODO save failed_request
+                    failed_request = LLMFailedRequest(
+                        request=...,  # TODO find request
+                        errors=[error],
+                    )
 
             else:
                 completion = ChatCompletion(**response['body'])

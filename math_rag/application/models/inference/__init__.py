@@ -1,5 +1,6 @@
 from .llm_conversation import LLMConversation
 from .llm_error import LLMError
+from .llm_failed_request import LLMFailedRequest
 from .llm_logprob import LLMLogprob
 from .llm_message import LLMMessage
 from .llm_params import LLMParams
