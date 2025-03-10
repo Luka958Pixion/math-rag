@@ -1,5 +1,6 @@
 from .kc_assistant_input_document import KCAssistantInputDocument
 from .kc_assistant_output_document import KCAssistantOutputDocument
+from .llm_failed_request_document import LLMFailedRequestDocument
 from .math_expression_classification_document import (
     MathExpressionClassificationDocument,
 )
