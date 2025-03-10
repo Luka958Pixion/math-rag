@@ -10,9 +10,9 @@ from tiktoken import get_encoding
 from math_rag.application.base.inference import BaseConcurrentLLM
 from math_rag.application.models.inference import (
     LLMRequest,
-    LLMRequestBatch,
+    LLMRequestConcurrent,
     LLMRequestTracker,
-    LLMResponseBatch,
+    LLMResponseConcurrent,
     LLMResponseList,
     LLMStatusTracker,
     LLMTextResponse,
@@ -111,11 +111,11 @@ class OpenAIConcurrentLLM(BaseConcurrentLLM):
 
     async def concurrent_generate(
         self,
-        request_batch: LLMRequestBatch[LLMResponseType],
+        request_concurrent: LLMRequestConcurrent[LLMResponseType],
         max_requests_per_minute: float,
         max_tokens_per_minute: float,
         max_attempts: int,
-    ) -> LLMResponseBatch[LLMResponseType]:
+    ) -> LLMResponseConcurrent[LLMResponseType]:
         retry_queue: Queue[LLMRequestTracker] = Queue()
         status_tracker = LLMStatusTracker()
         next_request: LLMRequestTracker | None = None
@@ -126,7 +126,9 @@ class OpenAIConcurrentLLM(BaseConcurrentLLM):
 
         requests_not_empty = True
 
-        requests: deque[LLMRequest[LLMResponseType]] = deque(request_batch.requests)
+        requests: deque[LLMRequest[LLMResponseType]] = deque(
+            request_concurrent.requests
+        )
         response_lists: list[LLMResponseList[LLMResponseType]] = []
 
         while True:
@@ -215,8 +217,7 @@ class OpenAIConcurrentLLM(BaseConcurrentLLM):
                 f'{status_tracker.num_rate_limit_errors} rate limit errors received'
             )
 
-        response_batch = LLMResponseBatch(
-            incomplete_request_batch=...,  # TODO not needed
+        response_batch = LLMResponseConcurrent(
             response_lists=response_lists,
         )
 
