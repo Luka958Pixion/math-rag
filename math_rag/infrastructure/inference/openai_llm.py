@@ -24,6 +24,7 @@ from math_rag.application.models.inference import (
     LLMResponseList,
 )
 from math_rag.application.types.inference import LLMResponseType
+from math_rag.infrastructure.mappings.inference import LLMResponseListMapping
 
 
 retry = on_exception(expo, RateLimitError, max_time=60, max_tries=6)
@@ -54,15 +55,12 @@ class OpenAILLM(BaseLLM):
                 top_logprobs=params.top_logprobs,
                 reasoning_effort=params.reasoning_effort,
             )
-            response_list = LLMResponseList(
-                [
-                    LLMResponse[LLMResponseType](content=choice.message.content)
-                    for choice in completion.choices
-                ]
+            response_list = LLMResponseListMapping[LLMResponseType].to_source(
+                completion
             )
 
         else:
-            completion = await self.client.beta.chat.completions.parse(
+            parsed_completion = await self.client.beta.chat.completions.parse(
                 model=params.model,
                 messages=[
                     {'role': message.role, 'content': message.content}
@@ -74,11 +72,8 @@ class OpenAILLM(BaseLLM):
                 top_logprobs=params.top_logprobs,
                 reasoning_effort=params.reasoning_effort,
             )
-            response_list = response_list = LLMResponseList(
-                [
-                    LLMResponse[LLMResponseType](content=choice.message.parsed)
-                    for choice in completion.choices
-                ]
+            response_list = LLMResponseListMapping[LLMResponseType].to_source(
+                parsed_completion
             )
 
         return response_list
@@ -218,23 +213,18 @@ class OpenAILLM(BaseLLM):
                 completion = ChatCompletion(**response['body'])
 
                 if response_type is LLMDefaultResponse:
-                    response_list = LLMResponseList(
-                        responses=[
-                            LLMResponse[LLMResponseType](content=choice.message.content)
-                            for choice in completion.choices
-                        ]
+                    response_list = LLMResponseListMapping[LLMResponseType].to_source(
+                        completion
                     )
+
                 else:
                     parsed_completion = parse_chat_completion(
                         response_format=response_type,
                         input_tools=NOT_GIVEN,
                         chat_completion=completion,
                     )
-                    response_list = LLMResponseList(
-                        responses=[
-                            LLMResponse[LLMResponseType](content=choice.message.content)
-                            for choice in parsed_completion.choices
-                        ]
+                    response_list = LLMResponseListMapping[LLMResponseType].to_source(
+                        parsed_completion
                     )
 
                 request_id_to_response_list[custom_id] = response_list
