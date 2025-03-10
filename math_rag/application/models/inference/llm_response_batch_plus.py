@@ -11,5 +11,5 @@ from .llm_response_list import LLMResponseList
 
 class LLMResponseBatchPlus(BaseModel, Generic[LLMResponseType]):
     id: UUID = Field(default_factory=uuid4)
-    incomplete_request_batch: LLMRequestBatch[LLMResponseType]
     response_lists: list[LLMResponseList[LLMResponseType]]
+    incomplete_request_batch: LLMRequestBatch[LLMResponseType]

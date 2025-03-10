@@ -31,21 +31,38 @@ class OpenAIBatchLLM(BaseBatchLLM):
     def __init__(self, client: AsyncOpenAI):
         self.client = client
 
+    async def _batch_generate(
+        self,
+        request_batch: LLMRequestBatch[LLMResponseType],
+        response_type: type[LLMResponseType],
+        poll_interval: float,
+    ) -> LLMResponseBatchPlus[LLMResponseType]:
+        batch_id = await self.batch_generate_init(request_batch)
+
+        while True:
+            response_batch_plus = await self._batch_generate_result(
+                batch_id, response_type
+            )
+
+            if response_batch_plus is not None:
+                return response_batch_plus
+
+            await sleep(poll_interval)
+
     async def batch_generate(
         self,
         request_batch: LLMRequestBatch[LLMResponseType],
         response_type: type[LLMResponseType],
         poll_interval: float,
     ) -> LLMResponseBatch[LLMResponseType]:
-        batch_id = await self.batch_generate_init(request_batch)
+        response_batch_plus = await self._batch_generate(
+            request_batch, response_type, poll_interval
+        )
+        response_batch = LLMResponseBatch(
+            id=response_batch_plus.id, response_lists=response_batch_plus.response_lists
+        )
 
-        while True:
-            result = await self.batch_generate_result(batch_id, response_type)
-
-            if result is not None:
-                return result
-
-            await sleep(poll_interval)
+        return response_batch
 
     async def batch_generate_retry(
         self,
@@ -61,17 +78,21 @@ class OpenAIBatchLLM(BaseBatchLLM):
         response_lists: list[LLMResponseList[LLMResponseType]] = []
 
         for _ in range(num_retries + 1):
-            response_batch = await self.batch_generate(
+            response_batch_plus = await self._batch_generate(
                 request_batch, response_type, poll_interval
             )
-            response_lists.extend(response_batch.response_lists)
+            response_lists.extend(response_batch_plus.response_lists)
 
-            if not response_batch.incomplete_request_batch.requests:
+            if not response_batch_plus.incomplete_request_batch.requests:
                 break
 
-            request_batch = response_batch.incomplete_request_batch
+            request_batch = response_batch_plus.incomplete_request_batch
 
-        response_batch.response_lists = response_lists
+        response_batch_plus.response_lists = response_lists
+        response_batch = LLMResponseBatch(
+            id=response_batch_plus.id, response_lists=response_batch_plus.response_lists
+        )
+
         num_completed = len(response_lists)
 
         logging.info(
@@ -89,7 +110,7 @@ class OpenAIBatchLLM(BaseBatchLLM):
         response_format = (
             {'type': 'text'}
             if response_type is LLMTextResponse
-            else type_to_response_format_param(response_format)
+            else type_to_response_format_param(response_type)
         )
         requests = [
             {
@@ -127,9 +148,9 @@ class OpenAIBatchLLM(BaseBatchLLM):
 
         return batch.id
 
-    async def batch_generate_result(
+    async def _batch_generate_result(
         self, batch_id: str, response_type: type[LLMResponseType]
-    ) -> LLMResponseBatch[LLMResponseType] | None:
+    ) -> LLMResponseBatchPlus[LLMResponseType] | None:
         batch = await self.client.batches.retrieve(batch_id)
         logging.info(
             f'Batch {batch.id} status {batch.status}\n'
@@ -235,9 +256,19 @@ class OpenAIBatchLLM(BaseBatchLLM):
         await self.client.files.delete(batch.output_file_id)
 
         incomplete_request_batch = LLMRequestBatch(requests=incomplete_requests)
-        response_batch = LLMResponseBatch(
-            incomplete_request_batch=incomplete_request_batch,
+        response_batch = LLMResponseBatchPlus(
             response_lists=response_lists,
+            incomplete_request_batch=incomplete_request_batch,
+        )
+
+        return response_batch
+
+    async def batch_generate_result(
+        self, batch_id: str, response_type: type[LLMResponseType]
+    ) -> LLMResponseBatch[LLMResponseType] | None:
+        response_batch_plus = await self._batch_generate_result(batch_id, response_type)
+        response_batch = LLMResponseBatch(
+            id=response_batch_plus.id, response_lists=response_batch_plus.response_lists
         )
 
         return response_batch
