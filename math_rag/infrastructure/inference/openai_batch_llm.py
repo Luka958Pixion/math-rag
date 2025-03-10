@@ -108,6 +108,7 @@ class OpenAIBatchLLM(BaseBatchLLM):
                     'temperature': request.params.temperature,
                     'logprobs': request.params.top_logprobs is not None,
                     'top_logprobs': request.params.top_logprobs,
+                    'max_completion_tokens': request.params.max_completion_tokens,
                 },
             }
             for request in request_batch.requests
@@ -213,11 +214,12 @@ class OpenAIBatchLLM(BaseBatchLLM):
                 ),
                 params=LLMParams[LLMResponseType](
                     model=body['messages'],
-                    temperature=body['messages'],
-                    logprobs=body['messages'],
-                    top_logprobs=body['messages'],
+                    temperature=body['temperature'],
+                    logprobs=body['logprobs'],
+                    top_logprobs=body['top_logprobs'],
                     response_type=response_type,
-                    n=body['messages'],
+                    max_completion_tokens=body['max_completion_tokens'],
+                    n=body['n'],
                 ),
             )
             incomplete_requests.append(request)

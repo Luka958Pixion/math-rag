@@ -1,5 +1,5 @@
 from backoff import expo, on_exception
-from openai import NOT_GIVEN, AsyncOpenAI
+from openai import AsyncOpenAI
 
 from math_rag.application.base.inference import BaseLLM
 from math_rag.application.models.inference import (
@@ -38,6 +38,7 @@ class OpenAILLM(BaseLLM):
             logprobs=params.top_logprobs is not None,
             top_logprobs=params.top_logprobs,
             reasoning_effort=params.reasoning_effort,
+            max_completion_tokens=params.max_completion_tokens,
         )
         response_list = LLMResponseListMapping[LLMResponseType].to_source(completion)
 
@@ -59,6 +60,7 @@ class OpenAILLM(BaseLLM):
             logprobs=params.top_logprobs is not None,
             top_logprobs=params.top_logprobs,
             reasoning_effort=params.reasoning_effort,
+            max_completion_tokens=params.max_completion_tokens,
         )
         response_list = LLMResponseListMapping[LLMResponseType].to_source(
             parsed_completion

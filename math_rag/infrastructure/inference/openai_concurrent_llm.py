@@ -49,6 +49,7 @@ class OpenAIConcurrentLLM(BaseConcurrentLLM):
             logprobs=params.top_logprobs is not None,
             top_logprobs=params.top_logprobs,
             reasoning_effort=params.reasoning_effort,
+            max_completion_tokens=params.max_completion_tokens,
         )
         response_list = LLMResponseListMapping[LLMResponseType].to_source(completion)
 
@@ -70,6 +71,7 @@ class OpenAIConcurrentLLM(BaseConcurrentLLM):
             logprobs=params.top_logprobs is not None,
             top_logprobs=params.top_logprobs,
             reasoning_effort=params.reasoning_effort,
+            max_completion_tokens=params.max_completion_tokens,
         )
         response_list = LLMResponseListMapping[LLMResponseType].to_source(
             parsed_completion
