@@ -31,6 +31,7 @@ class KatexCorrectionAssistant(
                 model='gpt-4o-mini',
                 temperature=0.0,
                 response_type=KCAssistantOutput,
+                metadata={f'{KCAssistantInput.__name__.lower()}-id': input.id},
             ),
         )
 
