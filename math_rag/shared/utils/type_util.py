@@ -7,7 +7,7 @@ T = TypeVar('T')
 
 class TypeUtil(Generic[T]):
     @staticmethod
-    def get_type_arg(cls: type[T]) -> dict[int, type | tuple[type, ...]]:
+    def get_type_args(cls: type[T]) -> dict[int, type | tuple[type, ...]]:
         args: dict[int, type | tuple[type, ...]] = {
             i: get_args(base)[0] if len(get_args(base)) == 1 else get_args(base)
             for i, base in enumerate(cls.__orig_bases__)

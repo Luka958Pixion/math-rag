@@ -19,7 +19,7 @@ class PartialBatchAssistant(
     def __init__(self, llm: BaseLLM):
         super().__init__(llm)
 
-        args = TypeUtil.get_type_arg(self.__class__)
+        args = TypeUtil.get_type_args(self.__class__)
         self.response_type = cast(type[AssistantOutputType], args[0][1])
 
     def to_request_batch(

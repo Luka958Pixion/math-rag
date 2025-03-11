@@ -8,7 +8,7 @@ from math_rag.shared.utils import TypeUtil
 
 class DocumentSeeder(Generic[TargetType]):
     def __init__(self, client: AsyncMongoClient, deployment: str):
-        args = TypeUtil.get_type_arg(self.__class__)
+        args = TypeUtil.get_type_args(self.__class__)
         self.target_cls = cast(type[TargetType], args[0])
 
         self.client = client
