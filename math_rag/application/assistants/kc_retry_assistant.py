@@ -51,7 +51,7 @@ class KatexCorrectionRetryAssistant(
                 model='gpt-4o',
                 temperature=0.0,
                 response_type=KCRetryAssistantOutput,
-                metadata={f'{KCRetryAssistantOutput.__name__.lower()}-id': input.id},
+                metadata={'id': input.id, 'cls': KCRetryAssistantOutput.__name__},
             ),
         )
 
