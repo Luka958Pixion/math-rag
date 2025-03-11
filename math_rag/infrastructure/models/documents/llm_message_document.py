@@ -1,9 +1,9 @@
 from uuid import UUID
 
-from pydantic import BaseModel
+from math_rag.infrastructure.base import BaseDocument
 
 
-class LLMMessageDocument(BaseModel):
-    _id: UUID
+class LLMMessageDocument(BaseDocument):
+    id: UUID
     role: str
     content: str

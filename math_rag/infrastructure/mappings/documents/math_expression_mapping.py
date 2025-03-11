@@ -7,7 +7,7 @@ class MathExpressionMapping(BaseMapping[MathExpression, MathExpressionDocument])
     @staticmethod
     def to_source(target: MathExpressionDocument) -> MathExpression:
         return MathExpression(
-            id=target._id,
+            id=target.id,
             latex=target.latex,
             katex=target.katex,
             position=target.position,
@@ -17,7 +17,7 @@ class MathExpressionMapping(BaseMapping[MathExpression, MathExpressionDocument])
     @staticmethod
     def to_target(source: MathExpression) -> MathExpressionDocument:
         return MathExpressionDocument(
-            _id=source.id,
+            id=source.id,
             latex=source.latex,
             katex=source.katex,
             position=source.position,

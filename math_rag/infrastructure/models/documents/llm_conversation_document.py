@@ -1,10 +1,10 @@
 from uuid import UUID
 
-from pydantic import BaseModel
+from math_rag.infrastructure.base import BaseDocument
 
 from .llm_message_document import LLMMessageDocument
 
 
-class LLMConversationDocument(BaseModel):
-    _id: UUID
+class LLMConversationDocument(BaseDocument):
+    id: UUID
     messages: list[LLMMessageDocument]

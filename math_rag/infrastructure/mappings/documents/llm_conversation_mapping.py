@@ -6,8 +6,8 @@ from math_rag.infrastructure.models.documents import LLMConversationDocument
 class LLMConversationMapping(BaseMapping[LLMConversation, LLMConversationDocument]):
     @staticmethod
     def to_source(target: LLMConversationDocument) -> LLMConversation:
-        return LLMConversation(id=target._id, messages=target.messages)
+        return LLMConversation(id=target.id, messages=target.messages)
 
     @staticmethod
     def to_target(source: LLMConversation) -> LLMConversationDocument:
-        return LLMConversationDocument(_id=source.id, messages=source.messages)
+        return LLMConversationDocument(id=source.id, messages=source.messages)

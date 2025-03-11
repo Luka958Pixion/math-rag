@@ -1,8 +1,8 @@
 from uuid import UUID
 
-from pydantic import BaseModel
+from math_rag.infrastructure.base import BaseDocument
 
 
-class KCAssistantOutputDocument(BaseModel):
-    _id: UUID
+class KCAssistantOutputDocument(BaseDocument):
+    id: UUID
     katex: str

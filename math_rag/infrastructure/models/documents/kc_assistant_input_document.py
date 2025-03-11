@@ -1,9 +1,9 @@
 from uuid import UUID
 
-from pydantic import BaseModel
+from math_rag.infrastructure.base import BaseDocument
 
 
-class KCAssistantInputDocument(BaseModel):
-    _id: UUID
+class KCAssistantInputDocument(BaseDocument):
+    id: UUID
     katex: str
     error: str

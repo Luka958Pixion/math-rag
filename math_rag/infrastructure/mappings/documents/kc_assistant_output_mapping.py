@@ -9,13 +9,13 @@ class KCAssistantOutputMapping(
     @staticmethod
     def to_source(target: KCAssistantOutputDocument) -> KCAssistantOutput:
         return KCAssistantOutput(
-            id=target._id,
+            id=target.id,
             katex=target.katex,
         )
 
     @staticmethod
     def to_target(source: KCAssistantOutput) -> KCAssistantOutputDocument:
         return KCAssistantOutputDocument(
-            _id=source.id,
+            id=source.id,
             katex=source.katex,
         )

@@ -1,9 +1,9 @@
 from uuid import UUID
 
-from pydantic import BaseModel
+from math_rag.infrastructure.base import BaseDocument
 
 
-class LLMErrorDocument(BaseModel):
-    _id: UUID
+class LLMErrorDocument(BaseDocument):
+    id: UUID
     message: str
     body: object | None

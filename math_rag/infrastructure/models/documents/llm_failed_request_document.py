@@ -1,13 +1,13 @@
 from uuid import UUID
 
-from pydantic import BaseModel
+from math_rag.infrastructure.base import BaseDocument
 
 from .llm_error_document import LLMErrorDocument
 from .llm_request_document import LLMRequestDocument
 
 
-class LLMFailedRequestDocument(BaseModel):
-    _id: UUID
+class LLMFailedRequestDocument(BaseDocument):
+    id: UUID
     _type: str
     request: LLMRequestDocument
     errors: list[LLMErrorDocument]

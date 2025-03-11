@@ -1,10 +1,10 @@
 from uuid import UUID
 
-from pydantic import BaseModel
+from math_rag.infrastructure.base import BaseDocument
 
 
-class MathExpressionDocument(BaseModel):
-    _id: UUID
+class MathExpressionDocument(BaseDocument):
+    id: UUID
     latex: str
     katex: str | None
     position: int

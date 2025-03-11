@@ -7,7 +7,7 @@ class KCAssistantInputMapping(BaseMapping[KCAssistantInput, KCAssistantInputDocu
     @staticmethod
     def to_source(target: KCAssistantInputDocument) -> KCAssistantInput:
         return KCAssistantInput(
-            id=target._id,
+            id=target.id,
             katex=target.katex,
             error=target.error,
         )
@@ -15,7 +15,7 @@ class KCAssistantInputMapping(BaseMapping[KCAssistantInput, KCAssistantInputDocu
     @staticmethod
     def to_target(source: KCAssistantInput) -> KCAssistantInputDocument:
         return KCAssistantInputDocument(
-            _id=source.id,
+            id=source.id,
             katex=source.katex,
             error=source.error,
         )

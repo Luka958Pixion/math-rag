@@ -8,7 +8,7 @@ class LLMFailedRequestMapping(BaseMapping[LLMFailedRequest, LLMFailedRequestDocu
     def to_source(target: LLMFailedRequestDocument) -> LLMFailedRequest:
         # TODO
         return LLMFailedRequest(
-            id=target._id, request=target.request, errors=target.errors
+            id=target.id, request=target.request, errors=target.errors
         )
 
     @staticmethod
@@ -16,7 +16,7 @@ class LLMFailedRequestMapping(BaseMapping[LLMFailedRequest, LLMFailedRequestDocu
         response_type = source.request.params.response_type
 
         return LLMFailedRequestDocument(
-            _id=source.id,
+            id=source.id,
             _type=f'{response_type.__module__}.{response_type.__qualname__}',
             request=source.request,
             errors=source.errors,
