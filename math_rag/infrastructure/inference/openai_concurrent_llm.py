@@ -42,6 +42,7 @@ class OpenAIConcurrentLLM(BaseConcurrentLLM):
         retry_queue: Queue[LLMRequestTracker[LLMResponseType]],
         status_tracker: LLMStatusTracker,
         response_lists: list[LLMResponseList[LLMResponseType]],
+        failed_requests: list[LLMFailedRequest[LLMResponseType]],
     ):
         request = request_tracker.request
         exception = None
@@ -78,10 +79,10 @@ class OpenAIConcurrentLLM(BaseConcurrentLLM):
                 retry_queue.put_nowait(request_tracker)
 
             else:
-                # TODO: save failed_request
                 failed_request = LLMFailedRequest(
                     request=request_tracker.request, errors=request_tracker.errors
                 )
+                failed_requests.append(failed_request)
 
                 status_tracker.num_tasks_in_progress -= 1
                 status_tracker.num_tasks_failed += 1
@@ -117,6 +118,7 @@ class OpenAIConcurrentLLM(BaseConcurrentLLM):
             request_concurrent.requests
         )
         response_lists: list[LLMResponseList[LLMResponseType]] = []
+        failed_requests: list[LLMFailedRequest[LLMResponseType]] = []
 
         while True:
             if next_request is None:
@@ -135,7 +137,6 @@ class OpenAIConcurrentLLM(BaseConcurrentLLM):
                         )
                         status_tracker.num_tasks_started += 1
                         status_tracker.num_tasks_in_progress += 1
-                        logging.debug(f'Reading request {next_request.request.id}')
 
                     else:
                         requests_not_empty = False
@@ -210,5 +211,7 @@ class OpenAIConcurrentLLM(BaseConcurrentLLM):
         response_batch = LLMResponseConcurrent(
             response_lists=response_lists,
         )
+
+        # TODO: save failed_requests
 
         return response_batch
