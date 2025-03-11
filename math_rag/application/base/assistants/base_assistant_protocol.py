@@ -13,17 +13,14 @@ from math_rag.application.types.assistants import (
 
 
 class BaseAssistantProtocol(ABC, Generic[AssistantInputType, AssistantOutputType]):
-    def __init__(self, llm: BaseLLM):
-        self.llm = llm
-
     @abstractmethod
-    def encode_request(
+    def encode_to_request(
         self, input: AssistantInputType
     ) -> LLMRequest[AssistantOutputType]:
         pass
 
     @abstractmethod
-    def decode_response(
+    def decode_from_response(
         self, response_list: LLMResponseList[AssistantOutputType]
     ) -> AssistantOutputType:
         pass

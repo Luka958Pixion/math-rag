@@ -1,4 +1,4 @@
-from math_rag.application.base.assistants import BaseAssistant
+from math_rag.application.base.assistants import BaseAssistant, BaseAssistantProtocol
 from math_rag.application.base.inference import BaseLLM
 from math_rag.application.types.assistants import (
     AssistantInputType,
@@ -6,13 +6,16 @@ from math_rag.application.types.assistants import (
 )
 
 
-class PartialAssistant(BaseAssistant[AssistantInputType, AssistantOutputType]):
+class PartialAssistant(
+    BaseAssistant[AssistantInputType, AssistantOutputType],
+    BaseAssistantProtocol[AssistantInputType, AssistantOutputType],
+):
     def __init__(self, llm: BaseLLM):
         self.llm = llm
 
     async def assist(self, input: AssistantInputType) -> AssistantOutputType:
-        request = self.to_request(input)
+        request = self.encode_to_request(input)
         response_list = await self.llm.generate(request)
-        output = self.from_response_list(response_list)
+        output = self.decode_from_response(response_list)
 
         return output

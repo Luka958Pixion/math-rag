@@ -1,6 +1,9 @@
 from typing import cast
 
-from math_rag.application.base.assistants import BaseBatchAssistant
+from math_rag.application.base.assistants import (
+    BaseAssistantProtocol,
+    BaseBatchAssistant,
+)
 from math_rag.application.base.inference import BaseLLM
 from math_rag.application.models.inference import LLMRequestBatch
 from math_rag.application.types.assistants import (
@@ -9,12 +12,10 @@ from math_rag.application.types.assistants import (
 )
 from math_rag.shared.utils import TypeUtil
 
-from .partial_assistant import PartialAssistant
-
 
 class PartialBatchAssistant(
-    PartialAssistant[AssistantInputType, AssistantOutputType],
     BaseBatchAssistant[AssistantInputType, AssistantOutputType],
+    BaseAssistantProtocol[AssistantInputType, AssistantOutputType],
 ):
     def __init__(self, llm: BaseLLM):
         super().__init__(llm)
@@ -26,7 +27,7 @@ class PartialBatchAssistant(
         self, inputs: list[AssistantInputType]
     ) -> LLMRequestBatch[AssistantOutputType]:
         request_batch = LLMRequestBatch(
-            requests=[self.to_request(input) for input in inputs]
+            requests=[self.encode_to_request(input) for input in inputs]
         )
 
         return request_batch

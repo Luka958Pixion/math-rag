@@ -1,6 +1,5 @@
 from abc import abstractmethod
 
-from math_rag.application.models.inference import LLMRequestBatch
 from math_rag.application.types.assistants import (
     AssistantInputType,
     AssistantOutputType,
@@ -10,12 +9,6 @@ from .base_assistant import BaseAssistant
 
 
 class BaseBatchAssistant(BaseAssistant[AssistantInputType, AssistantOutputType]):
-    @abstractmethod
-    def to_request_batch(
-        self, inputs: list[AssistantInputType]
-    ) -> LLMRequestBatch[AssistantOutputType]:
-        pass
-
     @abstractmethod
     async def batch_assist(
         self,
