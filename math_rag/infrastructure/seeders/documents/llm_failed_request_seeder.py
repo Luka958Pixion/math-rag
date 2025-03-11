@@ -5,6 +5,6 @@ from math_rag.infrastructure.models.documents import MathExpressionDocument
 from .document_seeder import DocumentSeeder
 
 
-class MathExpressionSeeder(DocumentSeeder[MathExpressionDocument]):
+class LLMFailedRequestSeeder(DocumentSeeder[MathExpressionDocument]):
     def __init__(self, client: AsyncMongoClient, deployment: str):
         super().__init__(client, deployment)

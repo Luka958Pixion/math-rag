@@ -4,11 +4,11 @@ from math_rag.application.models.assistants import KCAssistantOutput
 from math_rag.infrastructure.mappings.documents import KCAssistantOutputMapping
 from math_rag.infrastructure.models.documents import KCAssistantOutputDocument
 
-from .common_repository import CommonRepository
+from .document_repository import DocumentRepository
 
 
 class KCAssistantOutputRepository(
-    CommonRepository[
+    DocumentRepository[
         KCAssistantOutput, KCAssistantOutputDocument, KCAssistantOutputMapping
     ]
 ):

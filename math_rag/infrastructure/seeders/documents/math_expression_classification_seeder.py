@@ -4,11 +4,11 @@ from math_rag.infrastructure.models.documents import (
     MathExpressionClassificationDocument,
 )
 
-from .common_seeder import CommonSeeder
+from .document_seeder import DocumentSeeder
 
 
 class MathExpressionClassificationSeeder(
-    CommonSeeder[MathExpressionClassificationDocument]
+    DocumentSeeder[MathExpressionClassificationDocument]
 ):
     def __init__(self, client: AsyncMongoClient, deployment: str):
         super().__init__(client, deployment)

@@ -4,11 +4,11 @@ from math_rag.application.models.assistants import KCAssistantInput
 from math_rag.infrastructure.mappings.documents import KCAssistantInputMapping
 from math_rag.infrastructure.models.documents import KCAssistantInputDocument
 
-from .common_repository import CommonRepository
+from .document_repository import DocumentRepository
 
 
 class KCAssistantInputRepository(
-    CommonRepository[
+    DocumentRepository[
         KCAssistantInput, KCAssistantInputDocument, KCAssistantInputMapping
     ]
 ):

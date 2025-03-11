@@ -6,7 +6,7 @@ from math_rag.infrastructure.types import TargetType
 from math_rag.shared.utils import TypeUtil
 
 
-class CommonSeeder(Generic[TargetType]):
+class DocumentSeeder(Generic[TargetType]):
     def __init__(self, client: AsyncMongoClient, deployment: str):
         args = TypeUtil.get_type_arg(self.__class__)
         self.target_cls = cast(type[TargetType], args[0])

@@ -8,11 +8,11 @@ from math_rag.infrastructure.models.documents import (
     MathExpressionClassificationDocument,
 )
 
-from .common_repository import CommonRepository
+from .document_repository import DocumentRepository
 
 
 class MathExpressionClassificationRepository(
-    CommonRepository[
+    DocumentRepository[
         MathExpressionClassification,
         MathExpressionClassificationDocument,
         MathExpressionClassificationMapping,

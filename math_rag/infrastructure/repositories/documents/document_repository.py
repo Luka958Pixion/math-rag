@@ -7,7 +7,7 @@ from math_rag.infrastructure.types import MappingType, SourceType, TargetType
 from math_rag.shared.utils import TypeUtil
 
 
-class CommonRepository(Generic[SourceType, TargetType, MappingType]):
+class DocumentRepository(Generic[SourceType, TargetType, MappingType]):
     def __init__(self, client: AsyncMongoClient, deployment: str):
         args = TypeUtil.get_type_arg(self.__class__)
         self.source_cls = cast(type[SourceType], args[0])
@@ -18,6 +18,12 @@ class CommonRepository(Generic[SourceType, TargetType, MappingType]):
         self.db = self.client[deployment]
         self.collection_name = self.target_cls.__name__.lower()
         self.collection = self.db[self.collection_name]
+
+    async def insert_one(self, item: SourceType):
+        doc = self.mapping_cls.to_target(item)
+        bson_doc = doc.model_dump()
+
+        await self.collection.insert_one(bson_doc)
 
     async def insert_many(self, items: list[SourceType]):
         docs = [self.mapping_cls.to_target(item) for item in items]
