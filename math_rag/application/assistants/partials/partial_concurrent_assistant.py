@@ -15,3 +15,13 @@ class PartialConcurrentAssistant(
 ):
     def __init__(self, llm: BaseLLM):
         super().__init__(llm)
+
+    async def concurrent_generate(
+        self,
+        inputs: list[AssistantInputType],
+        max_requests_per_minute: float,
+        max_tokens_per_minute: float,
+        max_attempts: int,
+    ) -> tuple[list[AssistantInputType], list[AssistantOutputType]]:
+        # TODO
+        pass
