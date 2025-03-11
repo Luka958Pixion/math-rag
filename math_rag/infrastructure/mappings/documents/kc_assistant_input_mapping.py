@@ -6,20 +6,16 @@ from math_rag.infrastructure.models.documents import KCAssistantInputDocument
 class KCAssistantInputMapping(BaseMapping[KCAssistantInput, KCAssistantInputDocument]):
     @staticmethod
     def to_source(target: KCAssistantInputDocument) -> KCAssistantInput:
-        source = KCAssistantInput(
+        return KCAssistantInput(
             id=target._id,
             katex=target.katex,
             error=target.error,
         )
 
-        return source
-
     @staticmethod
     def to_target(source: KCAssistantInput) -> KCAssistantInputDocument:
-        target = KCAssistantInputDocument(
+        return KCAssistantInputDocument(
             _id=source.id,
             katex=source.katex,
             error=source.error,
         )
-
-        return target

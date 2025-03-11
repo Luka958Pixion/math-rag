@@ -1,4 +1,3 @@
-from typing import Generic
 from uuid import UUID
 
 from pydantic import BaseModel
