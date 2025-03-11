@@ -15,9 +15,10 @@ class LLMFailedRequestMapping(BaseMapping[LLMFailedRequest, LLMFailedRequestDocu
 
     @staticmethod
     def to_target(source: LLMFailedRequest) -> LLMFailedRequestDocument:
+        response_type = source.request.params.response_type
         target = LLMFailedRequestDocument(
             _id=source.id,
-            _type=source.__class__.__name__,
+            _type=f'{response_type.__module__}.{response_type.__qualname__}',
             request=source.request,
             errors=source.errors,
         )
