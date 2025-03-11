@@ -3,6 +3,7 @@ from typing import cast
 from math_rag.application.base.assistants import (
     BaseAssistantProtocol,
     BaseBatchAssistant,
+    BaseBatchAssistantProtocol,
 )
 from math_rag.application.base.inference import BaseLLM
 from math_rag.application.models.inference import LLMRequestBatch
@@ -16,6 +17,7 @@ from math_rag.shared.utils import TypeUtil
 class PartialBatchAssistant(
     BaseBatchAssistant[AssistantInputType, AssistantOutputType],
     BaseAssistantProtocol[AssistantInputType, AssistantOutputType],
+    BaseBatchAssistantProtocol[AssistantInputType, AssistantOutputType],
 ):
     def __init__(self, llm: BaseLLM):
         super().__init__(llm)
@@ -23,7 +25,7 @@ class PartialBatchAssistant(
         args = TypeUtil.get_type_args(self.__class__)
         self.response_type = cast(type[AssistantOutputType], args[0][1])
 
-    def to_request_batch(
+    def encode_to_request_batch(
         self, inputs: list[AssistantInputType]
     ) -> LLMRequestBatch[AssistantOutputType]:
         request_batch = LLMRequestBatch(
@@ -39,7 +41,7 @@ class PartialBatchAssistant(
         poll_interval: float,
         num_retries: int,
     ) -> tuple[list[AssistantInputType], list[AssistantOutputType]]:
-        request_batch = self.to_request_batch(inputs)
+        request_batch = self.encode_to_request_batch(inputs)
         response_batch = await self.llm.batch_generate_retry(
             request_batch, response_type, poll_interval, num_retries
         )
@@ -55,7 +57,7 @@ class PartialBatchAssistant(
         return remaining_assistant_requests, outputs
 
     async def batch_assist_init(self, inputs: list[AssistantInputType]) -> str:
-        request_batch = self.to_request_batch(inputs)
+        request_batch = self.encode_to_request_batch(inputs)
         batch_id = await self.llm.batch_generate_init(request_batch, self.response_type)
 
         return batch_id

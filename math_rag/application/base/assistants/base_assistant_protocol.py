@@ -1,7 +1,6 @@
 from abc import ABC, abstractmethod
 from typing import Generic
 
-from math_rag.application.base.inference import BaseLLM
 from math_rag.application.models.inference import (
     LLMRequest,
     LLMResponseList,
