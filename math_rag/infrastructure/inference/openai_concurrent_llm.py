@@ -5,7 +5,6 @@ from collections import deque
 from time import ctime, perf_counter
 
 from openai import AsyncOpenAI, RateLimitError
-from tiktoken import get_encoding
 
 from math_rag.application.base.inference import BaseConcurrentLLM
 from math_rag.application.models.inference import (
@@ -21,8 +20,6 @@ from math_rag.application.models.inference import (
 )
 from math_rag.application.types.inference import LLMResponseType
 from math_rag.infrastructure.constants.inference import (
-    ENCODING_NAME,
-    MAX_COMPLETION_TOKENS,
     OPENAI_ERRORS_TO_RAISE,
     OPENAI_ERRORS_TO_RETRY_NO_RATE_LIMIT,
     SECONDS_TO_PAUSE_AFTER_RATE_LIMIT_ERROR,
@@ -32,6 +29,7 @@ from math_rag.infrastructure.mappings.inference import (
     LLMRequestMapping,
     LLMResponseListMapping,
 )
+from math_rag.infrastructure.utils import TokenCounterUtil
 
 
 class OpenAIConcurrentLLM(BaseConcurrentLLM):
@@ -98,27 +96,6 @@ class OpenAIConcurrentLLM(BaseConcurrentLLM):
             status_tracker.num_tasks_in_progress -= 1
             status_tracker.num_tasks_succeeded += 1
 
-    def num_tokens_from_request(self, request: LLMRequest[LLMResponseType]):
-        encoding = get_encoding(ENCODING_NAME)
-        prompt_tokens = 0
-
-        for message in request.conversation.messages:
-            message_content_tokens = encoding.encode(message.content)
-            prompt_tokens += len(message_content_tokens)
-            prompt_tokens += 4  # TODO why
-
-        prompt_tokens += 2  # TODO why
-
-        max_completion_tokens = (
-            request.params.max_completion_tokens or MAX_COMPLETION_TOKENS
-        )
-        n = request.params.n
-        completion_tokens = n * max_completion_tokens
-
-        total_tokens = prompt_tokens + completion_tokens
-
-        return total_tokens
-
     async def concurrent_generate(
         self,
         request_concurrent: LLMRequestConcurrent[LLMResponseType],
@@ -150,7 +127,7 @@ class OpenAIConcurrentLLM(BaseConcurrentLLM):
                 elif requests_not_empty:
                     if requests:
                         request = requests.popleft()
-                        token_consumption = self.num_tokens_from_request(request)
+                        token_consumption = TokenCounterUtil.count(request)
                         next_request = LLMRequestTracker(
                             request=request,
                             token_consumption=token_consumption,
