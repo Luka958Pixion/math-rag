@@ -17,11 +17,13 @@ class BaseAssistantProtocol(ABC, Generic[AssistantInputType, AssistantOutputType
         self.llm = llm
 
     @abstractmethod
-    def to_request(self, input: AssistantInputType) -> LLMRequest[AssistantOutputType]:
+    def encode_request(
+        self, input: AssistantInputType
+    ) -> LLMRequest[AssistantOutputType]:
         pass
 
     @abstractmethod
-    def from_response_list(
+    def decode_response(
         self, response_list: LLMResponseList[AssistantOutputType]
     ) -> AssistantOutputType:
         pass
