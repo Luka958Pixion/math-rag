@@ -3,11 +3,14 @@ from uuid import UUID
 
 from pymongo import AsyncMongoClient, InsertOne
 
+from math_rag.application.base.repositories.documents import BaseDocumentRepository
 from math_rag.infrastructure.types import MappingType, SourceType, TargetType
 from math_rag.shared.utils import TypeUtil
 
 
-class DocumentRepository(Generic[SourceType, TargetType, MappingType]):
+class DocumentRepository(
+    BaseDocumentRepository[SourceType], Generic[SourceType, TargetType, MappingType]
+):
     def __init__(self, client: AsyncMongoClient, deployment: str):
         args = TypeUtil.get_type_args(self.__class__)
         self.source_cls = cast(type[SourceType], args[0])
@@ -31,7 +34,7 @@ class DocumentRepository(Generic[SourceType, TargetType, MappingType]):
 
         await self.collection.insert_many(bson_docs)
 
-    async def batch_insert_many(self, items: list[SourceType], batch_size: int):
+    async def batch_insert_many(self, items: list[SourceType], *, batch_size: int):
         operations = []
 
         for item in items:
@@ -54,13 +57,10 @@ class DocumentRepository(Generic[SourceType, TargetType, MappingType]):
 
         return None
 
-    async def find_many(self, limit: int | None = None) -> list[SourceType]:
+    async def find_many(self) -> list[SourceType]:
         cursor = self.collection.find()
+        bson_docs = await cursor.to_list()
 
-        if limit:
-            cursor = cursor.limit(limit)
-
-        bson_docs = await cursor.to_list(length=limit)
         docs = [self.target_cls(**bson_doc) for bson_doc in bson_docs]
         items = [self.mapping_cls.to_source(doc) for doc in docs]
 

@@ -1,21 +1,28 @@
-from typing import Generic
+from abc import ABC, abstractmethod
+from typing import Generic, TypeVar
 from uuid import UUID
 
-from math_rag.infrastructure.types import MappingType, SourceType, TargetType
+
+T = TypeVar('T')
 
 
-class BaseDocumentRepository(Generic[SourceType, TargetType, MappingType]):
-    async def insert_one(self, item: SourceType):
+class BaseDocumentRepository(ABC, Generic[T]):
+    @abstractmethod
+    async def insert_one(self, item: T):
         pass
 
-    async def insert_many(self, items: list[SourceType]):
+    @abstractmethod
+    async def insert_many(self, items: list[T]):
         pass
 
-    async def batch_insert_many(self, items: list[SourceType], *, batch_size: int):
+    @abstractmethod
+    async def batch_insert_many(self, items: list[T], *, batch_size: int):
         pass
 
-    async def find_by_id(self, id: UUID) -> SourceType | None:
+    @abstractmethod
+    async def find_by_id(self, id: UUID) -> T | None:
         pass
 
-    async def find_many(self, *, limit: int | None = None) -> list[SourceType]:
+    @abstractmethod
+    async def find_many(self) -> list[T]:
         pass
