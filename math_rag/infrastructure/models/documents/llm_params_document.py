@@ -1,10 +1,10 @@
 from uuid import UUID
 
-from pydantic import BaseModel, Field
+from math_rag.infrastructure.base import BaseDocument
 
 
-class LLMParamsDocument(BaseModel):
-    id: UUID = Field(serialization_alias='id')
+class LLMParamsDocument(BaseDocument):
+    id: UUID
     model: str
     temperature: float
     top_logprobs: int | None = None
