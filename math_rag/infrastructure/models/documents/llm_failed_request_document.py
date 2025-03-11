@@ -3,12 +3,12 @@ from uuid import UUID
 
 from pydantic import BaseModel
 
-from math_rag.application.models.inference import LLMError, LLMRequest
-from math_rag.application.types.inference import LLMResponseType
+from .llm_error_document import LLMErrorDocument
+from .llm_request_document import LLMRequestDocument
 
 
-class LLMFailedRequestDocument(BaseModel, Generic[LLMResponseType]):
+class LLMFailedRequestDocument(BaseModel):
     _id: UUID
     _type: str
-    request: LLMRequest[LLMResponseType]
-    errors: list[LLMError]
+    request: LLMRequestDocument
+    errors: list[LLMErrorDocument]
