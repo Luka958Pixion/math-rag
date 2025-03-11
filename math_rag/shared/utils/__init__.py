@@ -1,1 +1,1 @@
-from .type_arg_extractor_util import TypeArgExtractorUtil
+from .type_arg_util import TypeArgUtil

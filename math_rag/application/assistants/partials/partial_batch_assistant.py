@@ -7,7 +7,7 @@ from math_rag.application.types.assistants import (
     AssistantInputType,
     AssistantOutputType,
 )
-from math_rag.shared.utils import TypeArgExtractorUtil
+from math_rag.shared.utils import TypeArgUtil
 
 from .partial_assistant import PartialAssistant
 
@@ -19,7 +19,7 @@ class PartialBatchAssistant(
     def __init__(self, llm: BaseLLM):
         super().__init__(llm)
 
-        args = TypeArgExtractorUtil.extract(self.__class__)
+        args = TypeArgUtil.get_type_arg(self.__class__)
         self.response_type = cast(type[AssistantOutputType], args[0][1])
 
     def to_request_batch(

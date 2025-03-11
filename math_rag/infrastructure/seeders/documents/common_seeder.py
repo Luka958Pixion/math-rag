@@ -3,12 +3,12 @@ from typing import Generic, cast
 from pymongo import AsyncMongoClient
 
 from math_rag.infrastructure.types import TargetType
-from math_rag.shared.utils import TypeArgExtractorUtil
+from math_rag.shared.utils import TypeArgUtil
 
 
 class CommonSeeder(Generic[TargetType]):
     def __init__(self, client: AsyncMongoClient, deployment: str):
-        args = TypeArgExtractorUtil.extract(self.__class__)
+        args = TypeArgUtil.get_type_arg(self.__class__)
         self.target_cls = cast(type[TargetType], args[0])
 
         self.client = client
