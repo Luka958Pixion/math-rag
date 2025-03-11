@@ -1,5 +1,6 @@
 from .kc_assistant_input_mapping import KCAssistantInputMapping
 from .kc_assistant_output_mapping import KCAssistantOutputMapping
+from .llm_conversation_mapping import LLMConversationMapping
 from .llm_error_mapping import LLMErrorMapping
 from .llm_failed_request_mapping import LLMFailedRequestMapping
 from .llm_message_mapping import LLMMessageMapping
