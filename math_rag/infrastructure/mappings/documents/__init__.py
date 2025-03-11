@@ -8,3 +8,17 @@ from .llm_params_mapping import LLMParamsMapping
 from .llm_request_mapping import LLMRequestMapping
 from .math_expression_classification_mapping import MathExpressionClassificationMapping
 from .math_expression_mapping import MathExpressionMapping
+
+
+__all__ = [
+    'KCAssistantInputMapping',
+    'KCAssistantOutputMapping',
+    'LLMConversationMapping',
+    'LLMErrorMapping',
+    'LLMFailedRequestMapping',
+    'LLMMessageMapping',
+    'LLMParamsMapping',
+    'LLMRequestMapping',
+    'MathExpressionClassificationMapping',
+    'MathExpressionMapping',
+]

@@ -7,3 +7,16 @@ from .phys_category import PhysCategory
 from .quant_bio_category import QuantBioCategory
 from .quant_fin_category import QuantFinCategory
 from .stats_category import StatsCategory
+
+
+__all__ = [
+    'BaseArxivCategory',
+    'CompSciCategory',
+    'EconCategory',
+    'EESSCategory',
+    'MathCategory',
+    'PhysCategory',
+    'QuantBioCategory',
+    'QuantFinCategory',
+    'StatsCategory',
+]

@@ -1,3 +1,10 @@
 from .kc_assistant import KatexCorrectionAssistant
 from .kc_retry_assistant import KatexCorrectionRetryAssistant
 from .mec_assistant import MathExpressionClassificationAssistant
+
+
+__all__ = [
+    'KatexCorrectionAssistant',
+    'KatexCorrectionRetryAssistant',
+    'MathExpressionClassificationAssistant',
+]

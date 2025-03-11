@@ -1,2 +1,5 @@
 from .partial_assistant import PartialAssistant
 from .partial_batch_assistant import PartialBatchAssistant
+
+
+__all__ = ['PartialAssistant', 'PartialBatchAssistant']

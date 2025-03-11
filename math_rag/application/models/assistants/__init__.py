@@ -4,3 +4,13 @@ from .kc_retry_assistant_input import KCRetryAssistantInput
 from .kc_retry_assistant_output import KCRetryAssistantOutput
 from .mec_assistant_input import MECAssistantInput
 from .mec_assistant_output import MECAssistantOutput
+
+
+__all__ = [
+    'KCAssistantInput',
+    'KCAssistantOutput',
+    'KCRetryAssistantInput',
+    'KCRetryAssistantOutput',
+    'MECAssistantInput',
+    'MECAssistantOutput',
+]

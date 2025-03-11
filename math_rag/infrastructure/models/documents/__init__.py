@@ -10,3 +10,17 @@ from .math_expression_classification_document import (
     MathExpressionClassificationDocument,
 )
 from .math_expression_document import MathExpressionDocument
+
+
+__all__ = [
+    'KCAssistantInputDocument',
+    'KCAssistantOutputDocument',
+    'LLMConversationDocument',
+    'LLMErrorDocument',
+    'LLMFailedRequestDocument',
+    'LLMMessageDocument',
+    'LLMParamsDocument',
+    'LLMRequestDocument',
+    'MathExpressionClassificationDocument',
+    'MathExpressionDocument',
+]
