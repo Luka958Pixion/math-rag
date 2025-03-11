@@ -1,9 +1,9 @@
 from uuid import UUID
 
-from pydantic import BaseModel
+from math_rag.infrastructure.base import BaseDocument
 
 
-class MathExpressionClassificationDocument(BaseModel):
-    _id: UUID
+class MathExpressionClassificationDocument(BaseDocument):
+    id: UUID
     math_expression_id: UUID
     value: str

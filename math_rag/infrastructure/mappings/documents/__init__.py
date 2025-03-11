@@ -5,5 +5,6 @@ from .llm_error_mapping import LLMErrorMapping
 from .llm_failed_request_mapping import LLMFailedRequestMapping
 from .llm_message_mapping import LLMMessageMapping
 from .llm_params_mapping import LLMParamsMapping
+from .llm_request_mapping import LLMRequestMapping
 from .math_expression_classification_mapping import MathExpressionClassificationMapping
 from .math_expression_mapping import MathExpressionMapping

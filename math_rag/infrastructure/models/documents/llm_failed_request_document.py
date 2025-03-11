@@ -8,6 +8,5 @@ from .llm_request_document import LLMRequestDocument
 
 class LLMFailedRequestDocument(BaseDocument):
     id: UUID
-    _type: str
     request: LLMRequestDocument
     errors: list[LLMErrorDocument]

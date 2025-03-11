@@ -13,7 +13,7 @@ class MathExpressionClassificationMapping(
         target: MathExpressionClassificationDocument,
     ) -> MathExpressionClassification:
         return MathExpressionClassification(
-            id=target._id,
+            id=target.id,
             math_expression_id=target.math_expression_id,
             value=target.value,
         )
@@ -23,7 +23,7 @@ class MathExpressionClassificationMapping(
         source: MathExpressionClassification,
     ) -> MathExpressionClassificationDocument:
         return MathExpressionClassificationDocument(
-            _id=source.id,
+            id=source.id,
             math_expression_id=source.math_expression_id,
             value=source.value,
         )
