@@ -4,12 +4,12 @@ from uuid import UUID
 from pymongo import AsyncMongoClient, InsertOne
 
 from math_rag.infrastructure.types import MappingType, SourceType, TargetType
-from math_rag.shared.utils import TypeArgUtil
+from math_rag.shared.utils import TypeUtil
 
 
 class CommonRepository(Generic[SourceType, TargetType, MappingType]):
     def __init__(self, client: AsyncMongoClient, deployment: str):
-        args = TypeArgUtil.get_type_arg(self.__class__)
+        args = TypeUtil.get_type_arg(self.__class__)
         self.source_cls = cast(type[SourceType], args[0])
         self.target_cls = cast(type[TargetType], args[1])
         self.mapping_cls = cast(type[MappingType], args[2])

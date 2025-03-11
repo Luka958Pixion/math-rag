@@ -14,7 +14,7 @@ class LLMParams(BaseModel, Generic[LLMResponseType]):
     reasoning_effort: str | None = None
     max_completion_tokens: int | None = None
     response_type: type[LLMResponseType]
-    metadata: dict[str, str]
+    metadata: dict[str, str] | None = None
     n: int = 1
 
     @field_validator('response_type', mode='before')
@@ -24,7 +24,10 @@ class LLMParams(BaseModel, Generic[LLMResponseType]):
 
     @field_validator('metadata')
     @classmethod
-    def validate_metadata(cls, value: dict[str, str]):
+    def validate_metadata(cls, value: dict[str, str] | None):
+        if value is None:
+            return
+
         if len(value) > 16:
             raise ValueError('Metadata cannot have more than 16 key-value pairs')
 
