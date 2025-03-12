@@ -13,5 +13,5 @@ class BaseAssistant(ABC, Generic[AssistantInputType, AssistantOutputType]):
         self.llm = llm
 
     @abstractmethod
-    async def assist(self, input: AssistantInputType) -> AssistantOutputType:
+    async def assist(self, input: AssistantInputType) -> AssistantOutputType | None:
         pass
