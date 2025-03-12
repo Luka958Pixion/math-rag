@@ -19,9 +19,7 @@ from .partials import PartialUnifiedAssistant
 from .prompts import KATEX_CORRECTION_PROMPT
 
 
-class KatexCorrectionAssistant(
-    PartialUnifiedAssistant[KCAssistantInput, KCAssistantOutput]
-):
+class KCAssistant(PartialUnifiedAssistant[KCAssistantInput, KCAssistantOutput]):
     def __init__(
         self,
         llm: BaseUnifiedLLM,

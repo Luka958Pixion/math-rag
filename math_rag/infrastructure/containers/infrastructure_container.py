@@ -8,8 +8,8 @@ from openai import AsyncOpenAI
 from pymongo import AsyncMongoClient
 
 from math_rag.application.assistants import (
-    KatexCorrectionAssistant,
-    MathExpressionClassificationAssistant,
+    KCAssistant,
+    MECAssistant,
 )
 from math_rag.infrastructure.inference import OpenAILLM
 from math_rag.infrastructure.repositories.documents import (
@@ -131,9 +131,7 @@ class InfrastructureContainer(DeclarativeContainer):
 
     # KaTeX
     katex_correction_assistant = Factory(
-        KatexCorrectionAssistant,
+        KCAssistant,
         llm=openai_llm,
     )
-    math_expression_classification_assistant = Factory(
-        MathExpressionClassificationAssistant, llm=openai_llm
-    )
+    math_expression_classification_assistant = Factory(MECAssistant, llm=openai_llm)

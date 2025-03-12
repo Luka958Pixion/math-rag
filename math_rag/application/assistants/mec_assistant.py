@@ -19,9 +19,7 @@ from .partials import PartialBatchAssistant
 from .prompts import MATH_EXPRESSION_CLASSIFICATION_PROMPT
 
 
-class MathExpressionClassificationAssistant(
-    PartialBatchAssistant[MECAssistantInput, MECAssistantOutput]
-):
+class MECAssistant(PartialBatchAssistant[MECAssistantInput, MECAssistantOutput]):
     def __init__(
         self,
         llm: BaseUnifiedLLM,

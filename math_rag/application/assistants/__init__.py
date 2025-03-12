@@ -1,10 +1,10 @@
-from .kc_assistant import KatexCorrectionAssistant
-from .kc_retry_assistant import KatexCorrectionRetryAssistant
-from .mec_assistant import MathExpressionClassificationAssistant
+from .kc_assistant import KCAssistant
+from .kc_retry_assistant import KCRetryAssistant
+from .mec_assistant import MECAssistant
 
 
 __all__ = [
-    'KatexCorrectionAssistant',
-    'KatexCorrectionRetryAssistant',
-    'MathExpressionClassificationAssistant',
+    'KCAssistant',
+    'KCRetryAssistant',
+    'MECAssistant',
 ]

@@ -19,7 +19,7 @@ from .partials import PartialBatchAssistant
 from .prompts import KATEX_CORRECTION_PROMPT, KATEX_CORRECTION_RETRY_PROMPT
 
 
-class KatexCorrectionRetryAssistant(
+class KCRetryAssistant(
     PartialBatchAssistant[KCRetryAssistantInput, KCRetryAssistantOutput]
 ):
     def __init__(
