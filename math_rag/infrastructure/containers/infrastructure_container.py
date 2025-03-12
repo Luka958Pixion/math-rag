@@ -2,7 +2,12 @@ from pathlib import Path
 
 from arxiv import Client
 from dependency_injector.containers import DeclarativeContainer
-from dependency_injector.providers import Configuration, Factory, Singleton
+from dependency_injector.providers import (
+    Configuration,
+    DependenciesContainer,
+    Factory,
+    Singleton,
+)
 from minio import Minio
 from openai import AsyncOpenAI
 from pymongo import AsyncMongoClient
@@ -11,14 +16,17 @@ from math_rag.application.assistants import (
     KCAssistant,
     MECAssistant,
 )
-from math_rag.infrastructure.inference import OpenAILLM
+from math_rag.application.containers import ApplicationContainer
+from math_rag.infrastructure.inference import OpenAIUnifiedLLM
 from math_rag.infrastructure.repositories.documents import (
+    LLMFailedRequestRepository,
     MathExpressionClassificationRepository,
     MathExpressionRepository,
 )
 from math_rag.infrastructure.repositories.files import GoogleFileRepository
 from math_rag.infrastructure.repositories.objects import MathArticleRepository
 from math_rag.infrastructure.seeders.documents import (
+    LLMFailedRequestSeeder,
     MathExpressionClassificationSeeder,
     MathExpressionSeeder,
 )
@@ -33,6 +41,7 @@ from math_rag.infrastructure.services import (
 
 class InfrastructureContainer(DeclarativeContainer):
     config = Configuration()
+    application_container: ApplicationContainer = DependenciesContainer()
 
     # --------------
     # Infrastructure
@@ -67,27 +76,22 @@ class InfrastructureContainer(DeclarativeContainer):
         uuidRepresentation='standard',
     )
 
-    math_expression_seeder = Factory(
-        MathExpressionSeeder,
-        client=mongo_client,
-        deployment=config.mongo.deployment,
-    )
-    math_expression_repository = Factory(
-        MathExpressionRepository,
-        client=mongo_client,
-        deployment=config.mongo.deployment,
-    )
+    mongo_kwargs = {
+        'client': mongo_client,
+        'deployment': config.mongo.deployment,
+    }
+
+    math_expression_seeder = Factory(MathExpressionSeeder, **mongo_kwargs)
+    math_expression_repository = Factory(MathExpressionRepository, **mongo_kwargs)
+    llm_failed_request_repository = Factory(LLMFailedRequestRepository, **mongo_kwargs)
 
     math_expression_classification_seeder = Factory(
-        MathExpressionClassificationSeeder,
-        client=mongo_client,
-        deployment=config.mongo.deployment,
+        MathExpressionClassificationSeeder, **mongo_kwargs
     )
     math_expression_classification_repository = Factory(
-        MathExpressionClassificationRepository,
-        client=mongo_client,
-        deployment=config.mongo.deployment,
+        MathExpressionClassificationRepository, **mongo_kwargs
     )
+    llm_failed_request_seeder = Factory(LLMFailedRequestSeeder, **mongo_kwargs)
 
     # Neo4j
 
@@ -112,7 +116,7 @@ class InfrastructureContainer(DeclarativeContainer):
         api_key=config.openai.api_key,
     )
 
-    openai_llm = Factory(OpenAILLM, client=async_openai_client)
+    openai_unified_llm = Factory(OpenAIUnifiedLLM, client=async_openai_client)
 
     # arXiv
     arxiv_client = Singleton(Client)
@@ -132,6 +136,9 @@ class InfrastructureContainer(DeclarativeContainer):
     # KaTeX
     katex_correction_assistant = Factory(
         KCAssistant,
-        llm=openai_llm,
+        llm=openai_unified_llm,
+        settings_loader_service=application_container.settings_loader_service,
     )
-    math_expression_classification_assistant = Factory(MECAssistant, llm=openai_llm)
+    math_expression_classification_assistant = Factory(
+        MECAssistant, llm=openai_unified_llm
+    )
