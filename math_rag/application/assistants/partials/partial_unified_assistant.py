@@ -2,7 +2,7 @@ from math_rag.application.base.inference import BaseUnifiedLLM
 from math_rag.application.base.repositories.documents import (
     BaseLLMFailedRequestRepository,
 )
-from math_rag.application.services import SettingsLoaderService
+from math_rag.application.base.services import BaseSettingsLoaderService
 from math_rag.application.types.assistants import (
     AssistantInputType,
     AssistantOutputType,
@@ -21,7 +21,7 @@ class PartialUnifiedAssistant(
     def __init__(
         self,
         llm: BaseUnifiedLLM,
-        settings_loader_service: SettingsLoaderService,
+        settings_loader_service: BaseSettingsLoaderService,
         failed_request_repository: BaseLLMFailedRequestRepository,
     ):
         super().__init__(llm, settings_loader_service, failed_request_repository)

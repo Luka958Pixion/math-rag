@@ -1,5 +1,6 @@
 from decouple import config
 
+from math_rag.application.base.services import BaseSettingsLoaderService
 from math_rag.application.models import (
     BatchLLMSettings,
     ConcurrentLLMSettings,
@@ -7,7 +8,7 @@ from math_rag.application.models import (
 )
 
 
-class SettingsLoaderService:
+class SettingsLoaderService(BaseSettingsLoaderService):
     def __init__(self):
         self.llm_settings = LLMSettings(
             max_time=config('max_time', cast=float),
