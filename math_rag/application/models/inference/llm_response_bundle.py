@@ -12,4 +12,4 @@ from .llm_response_list import LLMResponseList
 class LLMResponseBundle(BaseModel, Generic[LLMResponseType]):
     id: UUID = Field(default_factory=uuid4)
     response_list: LLMResponseList[LLMResponseType]
-    failed_request: LLMFailedRequest[LLMResponseType]
+    failed_request: LLMFailedRequest[LLMResponseType] | None

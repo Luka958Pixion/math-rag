@@ -6,6 +6,7 @@ from math_rag.application.models.inference import (
     LLMError,
     LLMFailedRequest,
     LLMRequest,
+    LLMResponseBundle,
     LLMResponseList,
     LLMTextResponse,
 )
@@ -48,14 +49,14 @@ class OpenAILLM(BaseLLM):
     async def generate(
         self,
         request: LLMRequest[LLMResponseType],
-    ) -> LLMResponseList[LLMResponseType] | None:
-        response_list = None
+    ) -> LLMResponseBundle[LLMResponseType]:
+        response_list = []
+        failed_request = None
 
         try:
             response_list = await self._generate(request)
 
         except OPENAI_ERRORS_TO_RETRY as e:
-            # TODO save failed_request
             error = LLMError(message=e.message, body=e.body)
             failed_request = LLMFailedRequest(request=request, errors=[error])
             pass
@@ -63,4 +64,8 @@ class OpenAILLM(BaseLLM):
         except OPENAI_ERRORS_TO_RAISE:
             raise
 
-        return response_list
+        response_bundle = LLMResponseBundle(
+            response_list=response_list, failed_request=failed_request
+        )
+
+        return response_bundle
