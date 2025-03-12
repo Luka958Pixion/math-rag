@@ -46,7 +46,8 @@ class OpenAIBatchLLM(BaseBatchLLM):
         self,
         request_batch: LLMRequestBatch[LLMResponseType],
         response_type: type[LLMResponseType],
-        *poll_interval: float,
+        *,
+        poll_interval: float,
         num_retries: int,
     ) -> LLMResponseBatchBundle[LLMResponseType]:
         if num_retries < 0:
