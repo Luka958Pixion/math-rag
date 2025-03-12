@@ -15,6 +15,6 @@ class BaseConcurrentLLM(ABC):
         *,
         max_requests_per_minute: float,
         max_tokens_per_minute: float,
-        max_attempts: int,
+        max_num_retries: int,
     ) -> LLMResponseConcurrentBundle[LLMResponseType]:
         pass

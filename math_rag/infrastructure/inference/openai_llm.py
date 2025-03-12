@@ -21,40 +21,44 @@ from math_rag.infrastructure.mappings.inference import (
 )
 
 
-retry = on_exception(
-    wait_gen=expo, exception=OPENAI_ERRORS_TO_RETRY, max_time=60, max_tries=6
-)
-
-
 class OpenAILLM(BaseLLM):
     def __init__(self, client: AsyncOpenAI):
         self.client = client
 
-    @retry
-    async def _generate(
-        self,
-        request: LLMRequest[LLMResponseType],
-    ) -> LLMResponseList[LLMResponseType]:
-        request_dict = LLMRequestMapping[LLMResponseType].to_target(request)
-        completion_callback = (
-            self.client.chat.completions.create
-            if request.params.response_type is LLMTextResponse
-            else self.client.beta.chat.completions.parse
-        )
-        completion = await completion_callback(**request_dict)
-        response_list = LLMResponseListMapping[LLMResponseType].to_source(completion)
-
-        return response_list
-
     async def generate(
         self,
         request: LLMRequest[LLMResponseType],
+        *,
+        max_time: float,
+        max_num_retries: int,
     ) -> LLMResponseBundle[LLMResponseType]:
         response_list = []
         failed_request = None
 
+        @on_exception(
+            wait_gen=expo,
+            exception=OPENAI_ERRORS_TO_RETRY,
+            max_time=max_time,
+            max_tries=max_num_retries,
+        )
+        async def _generate(
+            request: LLMRequest[LLMResponseType],
+        ) -> LLMResponseList[LLMResponseType]:
+            request_dict = LLMRequestMapping[LLMResponseType].to_target(request)
+            completion_callback = (
+                self.client.chat.completions.create
+                if request.params.response_type is LLMTextResponse
+                else self.client.beta.chat.completions.parse
+            )
+            completion = await completion_callback(**request_dict)
+            response_list = LLMResponseListMapping[LLMResponseType].to_source(
+                completion
+            )
+
+            return response_list
+
         try:
-            response_list = await self._generate(request)
+            response_list = await _generate(request)
 
         except OPENAI_ERRORS_TO_RETRY as e:
             response_list = LLMResponseList[LLMResponseType](responses=[])

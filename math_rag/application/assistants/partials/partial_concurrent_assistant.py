@@ -36,7 +36,7 @@ class PartialConcurrentAssistant(
             request_concurrent,
             max_requests_per_minute=...,
             max_tokens_per_minute=...,
-            max_attempts=...,
+            max_num_retries=...,
         )
 
         if response_bundle.failed_requests:
