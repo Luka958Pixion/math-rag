@@ -1,4 +1,7 @@
-from math_rag.application.base.inference import BaseLLM
+from math_rag.application.base.inference import BaseUnifiedLLM
+from math_rag.application.base.repositories.documents import (
+    BaseLLMFailedRequestRepository,
+)
 from math_rag.application.models.assistants import (
     KCAssistantInput,
     KCAssistantOutput,
@@ -10,16 +13,22 @@ from math_rag.application.models.inference import (
     LLMRequest,
     LLMResponseList,
 )
+from math_rag.application.services import SettingsLoaderService
 
-from .partials import PartialBatchAssistant
+from .partials import PartialUnifiedAssistant
 from .prompts import KATEX_CORRECTION_PROMPT
 
 
 class KatexCorrectionAssistant(
-    PartialBatchAssistant[KCAssistantInput, KCAssistantOutput]
+    PartialUnifiedAssistant[KCAssistantInput, KCAssistantOutput]
 ):
-    def __init__(self, llm: BaseLLM):
-        super().__init__(llm)
+    def __init__(
+        self,
+        llm: BaseUnifiedLLM,
+        settings_loader_service: SettingsLoaderService,
+        failed_request_repository: BaseLLMFailedRequestRepository,
+    ):
+        super().__init__(llm, settings_loader_service, failed_request_repository)
 
     def encode_to_request(
         self, input: KCAssistantInput
