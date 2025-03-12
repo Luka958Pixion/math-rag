@@ -57,6 +57,7 @@ class OpenAILLM(BaseLLM):
             response_list = await self._generate(request)
 
         except OPENAI_ERRORS_TO_RETRY as e:
+            response_list = LLMResponseList[LLMResponseType](responses=[])
             error = LLMError(message=e.message, body=e.body)
             failed_request = LLMFailedRequest(request=request, errors=[error])
             pass

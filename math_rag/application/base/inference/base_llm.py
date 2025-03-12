@@ -11,5 +11,5 @@ class BaseLLM(ABC):
     @abstractmethod
     async def generate(
         self, request: LLMRequest[LLMResponseType]
-    ) -> LLMResponseBundle[LLMResponseType] | None:
+    ) -> LLMResponseBundle[LLMResponseType]:
         pass
