@@ -203,11 +203,13 @@ class OpenAIBatchLLM(BaseBatchLLM):
                 completion = ChatCompletion(**response['body'])
 
                 if response_type is LLMTextResponse:
+                    # TODO extract _request_id and map it to ResponseList, remove sorting
                     response_list = LLMResponseListMapping[LLMResponseType].to_source(
                         completion
                     )
 
                 else:
+                    # TODO
                     parsed_completion = parse_chat_completion(
                         response_format=response_type,
                         input_tools=NOT_GIVEN,

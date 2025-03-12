@@ -9,10 +9,10 @@ TargetType = TypeVar('TargetType')
 class BaseMapping(ABC, Generic[SourceType, TargetType]):
     @classmethod
     @abstractmethod
-    def to_source(cls, target: TargetType) -> SourceType:
+    def to_source(cls, target: TargetType, **kwargs) -> SourceType:
         pass
 
     @classmethod
     @abstractmethod
-    def to_target(cls, source: SourceType) -> TargetType:
+    def to_target(cls, source: SourceType, **kwargs) -> TargetType:
         pass

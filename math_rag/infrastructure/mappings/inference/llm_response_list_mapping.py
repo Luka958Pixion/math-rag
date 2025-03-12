@@ -10,9 +10,10 @@ class LLMResponseListMapping(
 ):
     @staticmethod
     def to_source(
-        target: ChatCompletion | ParsedChatCompletion,
+        target: ChatCompletion | ParsedChatCompletion, **kwargs
     ) -> LLMResponseList[LLMResponseType]:
-        source = LLMResponseList(
+        return LLMResponseList(
+            request_id=kwargs['request_id'],
             responses=[
                 LLMResponse[LLMResponseType](
                     content=choice.message.content
@@ -20,10 +21,8 @@ class LLMResponseListMapping(
                     else choice.message.parsed
                 )
                 for choice in target.choices
-            ]
+            ],
         )
-
-        return source
 
     @staticmethod
     def to_target(source: LLMResponseList) -> ChatCompletion:

@@ -12,7 +12,7 @@ class LLMRequestMapping(BaseMapping[LLMRequest[LLMResponseType], dict[str, Any]]
 
     @staticmethod
     def to_target(source: LLMRequest[LLMResponseType]) -> dict[str, Any]:
-        target = {
+        return {
             'model': source.params.model,
             'messages': [
                 {'role': message.role, 'content': message.content}
@@ -27,5 +27,3 @@ class LLMRequestMapping(BaseMapping[LLMRequest[LLMResponseType], dict[str, Any]]
             'max_completion_tokens': source.params.max_completion_tokens,
             'metadata': source.params.metadata,
         }
-
-        return target
