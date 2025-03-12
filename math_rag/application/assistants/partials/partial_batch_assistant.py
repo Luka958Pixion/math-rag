@@ -43,7 +43,7 @@ class PartialBatchAssistant(
             request_batch,
             response_type,
             poll_interval=...,
-            num_retries=...,  # TODO
+            max_num_retries=...,  # TODO
         )
 
         if response_bundle.failed_requests:

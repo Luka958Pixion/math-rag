@@ -15,7 +15,7 @@ class BaseBatchLLM(ABC):
         response_type: type[LLMResponseType],
         *,
         poll_interval: float,
-        num_retries: int,
+        max_num_retries: int,
     ) -> LLMResponseBatchBundle[LLMResponseType]:
         pass
 

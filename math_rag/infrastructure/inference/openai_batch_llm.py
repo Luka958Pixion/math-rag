@@ -48,15 +48,15 @@ class OpenAIBatchLLM(BaseBatchLLM):
         response_type: type[LLMResponseType],
         *,
         poll_interval: float,
-        num_retries: int,
+        max_num_retries: int,
     ) -> LLMResponseBatchBundle[LLMResponseType]:
-        if num_retries < 0:
+        if max_num_retries < 0:
             raise ValueError()
 
         num_total = len(request_batch.requests)
         response_lists: list[LLMResponseList[LLMResponseType]] = []
 
-        for _ in range(num_retries + 1):
+        for _ in range(max_num_retries + 1):
             response_bundle = await self._batch_generate(
                 request_batch, response_type, poll_interval
             )
@@ -76,7 +76,7 @@ class OpenAIBatchLLM(BaseBatchLLM):
         num_completed = len(response_lists)
 
         logging.info(
-            f'{self.batch_generate_retry.__name__} completed {num_completed}/{num_total} requests within {num_retries} retries'
+            f'{self.batch_generate_retry.__name__} completed {num_completed}/{num_total} requests within {max_num_retries} retries'
         )
 
         return response_bundle
@@ -94,7 +94,7 @@ class OpenAIBatchLLM(BaseBatchLLM):
                 request_batch,
                 response_type,
                 poll_interval=poll_interval,
-                num_retries=num_retries,
+                max_num_retries=num_retries,
             )
 
         response_bundle = await self._batch_generate(

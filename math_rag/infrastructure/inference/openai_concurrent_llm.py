@@ -75,7 +75,7 @@ class OpenAIConcurrentLLM(BaseConcurrentLLM):
             error = LLMError(message=exception.message, body=exception.message)
             request_tracker.errors.append(error)
 
-            if request_tracker.attempts_left:
+            if request_tracker.retries_left:
                 retry_queue.put_nowait(request_tracker)
 
             else:
@@ -88,7 +88,7 @@ class OpenAIConcurrentLLM(BaseConcurrentLLM):
                 status_tracker.num_tasks_failed += 1
 
                 logging.error(
-                    f'Request {request_tracker.request.id} failed after all attempts'
+                    f'Request {request_tracker.request.id} failed after all retries'
                 )
 
         else:
@@ -103,7 +103,7 @@ class OpenAIConcurrentLLM(BaseConcurrentLLM):
         *,
         max_requests_per_minute: float,
         max_tokens_per_minute: float,
-        max_attempts: int,
+        max_num_retries: int,
     ) -> LLMResponseConcurrentBundle[LLMResponseType]:
         retry_queue: Queue[LLMRequestTracker] = Queue()
         status_tracker = LLMStatusTracker()
@@ -134,7 +134,7 @@ class OpenAIConcurrentLLM(BaseConcurrentLLM):
                         next_request = LLMRequestTracker(
                             request=request,
                             token_consumption=token_consumption,
-                            attempts_left=max_attempts,
+                            retries_left=max_num_retries,
                         )
                         status_tracker.num_tasks_started += 1
                         status_tracker.num_tasks_in_progress += 1
@@ -165,7 +165,7 @@ class OpenAIConcurrentLLM(BaseConcurrentLLM):
                 ):
                     available_request_capacity -= 1
                     available_token_capacity -= next_request_tokens
-                    next_request.attempts_left -= 1
+                    next_request.retries_left -= 1
 
                     create_task(
                         self._generate(

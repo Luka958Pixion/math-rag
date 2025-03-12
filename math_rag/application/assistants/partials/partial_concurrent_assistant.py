@@ -44,9 +44,9 @@ class PartialConcurrentAssistant(
                 response_bundle.failed_requests
             )
 
-        output = [
+        outputs = [
             self.decode_from_response_list(response_list)
             for response_list in response_bundle.response_lists
         ]
 
-        return output
+        return outputs

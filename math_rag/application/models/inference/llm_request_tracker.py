@@ -12,4 +12,4 @@ class LLMRequestTracker(BaseModel, Generic[LLMResponseType]):
     request: LLMRequest[LLMResponseType]
     errors: list[LLMError] = Field(default_factory=list)
     token_consumption: int
-    attempts_left: int
+    retries_left: int
