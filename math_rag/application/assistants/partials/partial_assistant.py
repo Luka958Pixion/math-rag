@@ -3,6 +3,7 @@ from math_rag.application.base.inference import BaseLLM
 from math_rag.application.base.repositories.documents import (
     BaseLLMFailedRequestRepository,
 )
+from math_rag.application.services import SettingsLoaderService
 from math_rag.application.types.assistants import (
     AssistantInputType,
     AssistantOutputType,
@@ -14,14 +15,23 @@ class PartialAssistant(
     BaseAssistantProtocol[AssistantInputType, AssistantOutputType],
 ):
     def __init__(
-        self, llm: BaseLLM, failed_request_repository: BaseLLMFailedRequestRepository
+        self,
+        llm: BaseLLM,
+        settings_loader_service: SettingsLoaderService,
+        failed_request_repository: BaseLLMFailedRequestRepository,
     ):
         self.llm = llm
+        self.settings_loader_service = settings_loader_service
         self.failed_request_repository = failed_request_repository
 
     async def assist(self, input: AssistantInputType) -> AssistantOutputType | None:
         request = self.encode_to_request(input)
-        response_bundle = await self.llm.generate(request)
+        settings = self.settings_loader_service.load_llm_settings()
+        response_bundle = await self.llm.generate(
+            request,
+            max_time=settings.max_time,
+            max_num_retries=settings.max_num_retries,
+        )
 
         if response_bundle.failed_request:
             await self.failed_request_repository.insert_one(
