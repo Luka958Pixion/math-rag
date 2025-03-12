@@ -21,7 +21,9 @@ class MathExpressionClassificationAssistant(
     def __init__(self, llm: BaseLLM):
         super().__init__(llm)
 
-    def to_request(self, input: MECAssistantInput) -> LLMRequest[MECAssistantOutput]:
+    def encode_to_request(
+        self, input: MECAssistantInput
+    ) -> LLMRequest[MECAssistantOutput]:
         prompt = MATH_EXPRESSION_CLASSIFICATION_PROMPT.format(latex=input.latex)
         request = LLMRequest(
             conversation=LLMConversation(
@@ -37,7 +39,7 @@ class MathExpressionClassificationAssistant(
 
         return request
 
-    def from_response_list(
+    def decode_from_response_list(
         self, response_list: LLMResponseList[MECAssistantOutput]
     ) -> MECAssistantOutput:
         output = response_list.responses[0].content

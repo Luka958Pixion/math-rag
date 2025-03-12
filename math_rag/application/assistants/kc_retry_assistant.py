@@ -21,7 +21,7 @@ class KatexCorrectionRetryAssistant(
     def __init__(self, llm: BaseLLM):
         super().__init__(llm)
 
-    def to_request(
+    def encode_to_request(
         self, input: KCRetryAssistantInput
     ) -> LLMRequest[KCRetryAssistantOutput]:
         initial_input = input.pairs[0][0]
@@ -57,7 +57,7 @@ class KatexCorrectionRetryAssistant(
 
         return request
 
-    def from_response_list(
+    def decode_from_response_list(
         self, response_list: LLMResponseList[KCRetryAssistantOutput]
     ) -> KCRetryAssistantOutput:
         output = response_list.responses[0].content

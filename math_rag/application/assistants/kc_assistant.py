@@ -21,7 +21,9 @@ class KatexCorrectionAssistant(
     def __init__(self, llm: BaseLLM):
         super().__init__(llm)
 
-    def to_request(self, input: KCAssistantInput) -> LLMRequest[KCAssistantOutput]:
+    def encode_to_request(
+        self, input: KCAssistantInput
+    ) -> LLMRequest[KCAssistantOutput]:
         prompt = KATEX_CORRECTION_PROMPT.format(katex=input.katex, error=input.error)
         request = LLMRequest(
             conversation=LLMConversation(
@@ -37,7 +39,7 @@ class KatexCorrectionAssistant(
 
         return request
 
-    def from_response_list(
+    def decode_from_response_list(
         self, response_list: LLMResponseList[KCAssistantOutput]
     ) -> KCAssistantOutput:
         output = response_list.responses[0].content

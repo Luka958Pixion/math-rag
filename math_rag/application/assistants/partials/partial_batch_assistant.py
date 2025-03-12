@@ -40,7 +40,10 @@ class PartialBatchAssistant(
             requests=[self.encode_to_request(input) for input in inputs]
         )
         response_bundle = await self.llm.batch_generate(
-            request_batch, response_type, poll_interval=..., num_retries=...
+            request_batch,
+            response_type,
+            poll_interval=...,
+            num_retries=...,  # TODO
         )
 
         if response_bundle.failed_requests:
