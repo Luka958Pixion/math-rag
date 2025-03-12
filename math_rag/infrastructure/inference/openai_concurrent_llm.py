@@ -13,7 +13,7 @@ from math_rag.application.models.inference import (
     LLMRequest,
     LLMRequestConcurrent,
     LLMRequestTracker,
-    LLMResponseConcurrent,
+    LLMResponseConcurrentBundle,
     LLMResponseList,
     LLMStatusTracker,
     LLMTextResponse,
@@ -103,7 +103,7 @@ class OpenAIConcurrentLLM(BaseConcurrentLLM):
         max_requests_per_minute: float,
         max_tokens_per_minute: float,
         max_attempts: int,
-    ) -> LLMResponseConcurrent[LLMResponseType]:
+    ) -> LLMResponseConcurrentBundle[LLMResponseType]:
         retry_queue: Queue[LLMRequestTracker] = Queue()
         status_tracker = LLMStatusTracker()
         next_request: LLMRequestTracker | None = None
@@ -208,10 +208,8 @@ class OpenAIConcurrentLLM(BaseConcurrentLLM):
                 f'{status_tracker.num_rate_limit_errors} rate limit errors received'
             )
 
-        response_batch = LLMResponseConcurrent(
-            response_lists=response_lists,
+        response_bundle = LLMResponseConcurrentBundle(
+            response_lists=response_lists, failed_requests=failed_requests
         )
 
-        # TODO: save failed_requests
-
-        return response_batch
+        return response_bundle

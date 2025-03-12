@@ -9,7 +9,7 @@ from .llm_failed_request import LLMFailedRequest
 from .llm_response_list import LLMResponseList
 
 
-class LLMResponseBundleConcurrent(BaseModel, Generic[LLMResponseType]):
+class LLMResponseBatchBundle(BaseModel, Generic[LLMResponseType]):
     id: UUID = Field(default_factory=uuid4)
     response_lists: list[LLMResponseList[LLMResponseType]]
     failed_requests: list[LLMFailedRequest[LLMResponseType]]
