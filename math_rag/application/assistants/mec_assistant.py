@@ -42,7 +42,7 @@ class MathExpressionClassificationAssistant(
                 model='gpt-4o-mini',
                 temperature=0.0,
                 response_type=MECAssistantOutput,
-                metadata={'id': input.id, 'cls': MECAssistantInput.__name__},
+                metadata={'id': str(input.id), 'cls': MECAssistantInput.__name__},
             ),
         )
 

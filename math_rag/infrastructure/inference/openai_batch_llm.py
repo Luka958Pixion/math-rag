@@ -197,11 +197,11 @@ class OpenAIBatchLLM(BaseBatchLLM):
                 )
                 response_lists.append(response_list)
 
-        await self.client.files.delete(batch.input_file_id)
-        await self.client.files.delete(batch.output_file_id)
-
         response_bundle = LLMResponseBatchBundle(
             response_lists=response_lists, failed_requests=failed_requests
         )
+
+        await self.client.files.delete(batch.input_file_id)
+        await self.client.files.delete(batch.output_file_id)
 
         return response_bundle

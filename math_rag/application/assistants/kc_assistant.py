@@ -41,8 +41,8 @@ class KatexCorrectionAssistant(
             params=LLMParams[KCAssistantOutput](
                 model='gpt-4o-mini',
                 temperature=0.0,
-                response_type=KCAssistantOutput,
-                metadata={'id': input.id, 'cls': KCAssistantInput.__name__},
+                response_type=KCAssistantOutput.bind(input.id),
+                # metadata={'id': str(input.id), 'cls': KCAssistantInput.__name__},
             ),
         )
 
