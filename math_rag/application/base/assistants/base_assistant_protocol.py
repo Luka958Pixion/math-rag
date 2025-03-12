@@ -19,7 +19,7 @@ class BaseAssistantProtocol(ABC, Generic[AssistantInputType, AssistantOutputType
         pass
 
     @abstractmethod
-    def decode_from_response(
+    def decode_from_response_list(
         self, response_list: LLMResponseList[AssistantOutputType]
     ) -> AssistantOutputType:
         pass

@@ -1,20 +1,16 @@
-from abc import abstractmethod
+from abc import ABC, abstractmethod
+from typing import Generic
 
 from math_rag.application.types.assistants import (
     AssistantInputType,
     AssistantOutputType,
 )
 
-from .base_assistant import BaseAssistant
 
-
-class BaseConcurrentAssistant(BaseAssistant[AssistantInputType, AssistantOutputType]):
+class BaseConcurrentAssistant(ABC, Generic[AssistantInputType, AssistantOutputType]):
     @abstractmethod
     async def concurrent_generate(
         self,
         inputs: list[AssistantInputType],
-        max_requests_per_minute: float,
-        max_tokens_per_minute: float,
-        max_attempts: int,
-    ) -> tuple[list[AssistantInputType], list[AssistantOutputType]]:
+    ) -> list[AssistantOutputType]:
         pass

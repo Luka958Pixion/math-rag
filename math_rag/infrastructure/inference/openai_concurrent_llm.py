@@ -100,6 +100,7 @@ class OpenAIConcurrentLLM(BaseConcurrentLLM):
     async def concurrent_generate(
         self,
         request_concurrent: LLMRequestConcurrent[LLMResponseType],
+        *,
         max_requests_per_minute: float,
         max_tokens_per_minute: float,
         max_attempts: int,

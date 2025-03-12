@@ -30,6 +30,6 @@ class PartialAssistant(
 
             return None
 
-        output = self.decode_from_response(response_bundle.response_list)
+        output = self.decode_from_response_list(response_bundle.response_list)
 
         return output

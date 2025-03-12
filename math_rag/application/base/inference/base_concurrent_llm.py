@@ -11,6 +11,10 @@ class BaseConcurrentLLM(ABC):
     @abstractmethod
     async def concurrent_generate(
         self,
-        request_batch: LLMRequestConcurrent[LLMResponseType],
+        request_concurrent: LLMRequestConcurrent[LLMResponseType],
+        *,
+        max_requests_per_minute: float,
+        max_tokens_per_minute: float,
+        max_attempts: int,
     ) -> LLMResponseConcurrentBundle[LLMResponseType]:
         pass

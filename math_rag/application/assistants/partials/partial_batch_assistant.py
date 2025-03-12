@@ -3,9 +3,11 @@ from typing import cast
 from math_rag.application.base.assistants import (
     BaseAssistantProtocol,
     BaseBatchAssistant,
-    BaseBatchAssistantProtocol,
 )
-from math_rag.application.base.inference import BaseLLM
+from math_rag.application.base.inference import BaseBatchLLM
+from math_rag.application.base.repositories.documents import (
+    BaseLLMFailedRequestRepository,
+)
 from math_rag.application.models.inference import LLMRequestBatch
 from math_rag.application.types.assistants import (
     AssistantInputType,
@@ -17,48 +19,47 @@ from math_rag.shared.utils import TypeUtil
 class PartialBatchAssistant(
     BaseBatchAssistant[AssistantInputType, AssistantOutputType],
     BaseAssistantProtocol[AssistantInputType, AssistantOutputType],
-    BaseBatchAssistantProtocol[AssistantInputType, AssistantOutputType],
 ):
-    def __init__(self, llm: BaseLLM):
-        super().__init__(llm)
+    def __init__(
+        self,
+        llm: BaseBatchLLM,
+        failed_request_repository: BaseLLMFailedRequestRepository,
+    ):
+        self.llm = llm
+        self.failed_request_repository = failed_request_repository
 
         args = TypeUtil.get_type_args(self.__class__)
         self.response_type = cast(type[AssistantOutputType], args[0][1])
-
-    def encode_to_request_batch(
-        self, inputs: list[AssistantInputType]
-    ) -> LLMRequestBatch[AssistantOutputType]:
-        request_batch = LLMRequestBatch(
-            requests=[self.encode_to_request(input) for input in inputs]
-        )
-
-        return request_batch
 
     async def batch_assist(
         self,
         inputs: list[AssistantInputType],
         response_type: type[AssistantOutputType],
-        poll_interval: float,
-        num_retries: int,
-    ) -> tuple[list[AssistantInputType], list[AssistantOutputType]]:
-        request_batch = self.encode_to_request_batch(inputs)
-        response_batch = await self.llm.batch_generate_retry(
-            request_batch, response_type, poll_interval, num_retries
+    ) -> list[AssistantOutputType]:
+        request_batch = LLMRequestBatch(
+            requests=[self.encode_to_request(input) for input in inputs]
         )
-        outputs = [
-            self.from_response_list(response_list)
-            for response_list in response_batch.response_lists
-        ]
-        num_completed = len(response_batch.response_lists)
-        num_total = len(inputs)
-        num_remaining = num_total - num_completed
-        remaining_assistant_requests = inputs[-num_remaining:]
+        response_bundle = await self.llm.batch_generate(
+            request_batch, response_type, poll_interval=..., num_retries=...
+        )
 
-        return remaining_assistant_requests, outputs
+        if response_bundle.failed_requests:
+            await self.failed_request_repository.insert_many(
+                response_bundle.failed_requests
+            )
+
+        outputs = [
+            self.decode_from_response_list(response_list)
+            for response_list in response_bundle.response_lists
+        ]
+
+        return outputs
 
     async def batch_assist_init(self, inputs: list[AssistantInputType]) -> str:
-        request_batch = self.encode_to_request_batch(inputs)
-        batch_id = await self.llm.batch_generate_init(request_batch, self.response_type)
+        request_batch = LLMRequestBatch(
+            requests=[self.encode_to_request(input) for input in inputs]
+        )
+        batch_id = await self.llm.batch_generate_init(request_batch)
 
         return batch_id
 
@@ -74,7 +75,7 @@ class PartialBatchAssistant(
             return
 
         outputs = [
-            self.from_response_list(response_list)
+            self.decode_from_response_list(response_list)
             for response_list in response_batch.response_lists
         ]
 
