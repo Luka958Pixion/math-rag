@@ -35,7 +35,7 @@ class OpenAIBatchLLM(BaseBatchLLM):
         batch_id = await self.batch_generate_init(request_batch)
 
         while True:
-            response_bundle = await self._batch_generate_result(batch_id, response_type)
+            response_bundle = await self.batch_generate_result(batch_id, response_type)
 
             if response_bundle is not None:
                 return response_bundle
@@ -76,7 +76,7 @@ class OpenAIBatchLLM(BaseBatchLLM):
         num_completed = len(response_lists)
 
         logging.info(
-            f'{self.batch_generate_retry.__name__} completed {num_completed}/{num_total} requests within {max_num_retries} retries'
+            f'Completed {num_completed}/{num_total} requests within {max_num_retries} retries'
         )
 
         return response_bundle
@@ -135,7 +135,7 @@ class OpenAIBatchLLM(BaseBatchLLM):
 
         return batch.id
 
-    async def _batch_generate_result(
+    async def batch_generate_result(
         self, batch_id: str, response_type: type[LLMResponseType]
     ) -> LLMResponseBatchBundle[LLMResponseType] | None:
         batch = await self.client.batches.retrieve(batch_id)
@@ -203,12 +203,5 @@ class OpenAIBatchLLM(BaseBatchLLM):
         response_bundle = LLMResponseBatchBundle(
             response_lists=response_lists, failed_requests=failed_requests
         )
-
-        return response_bundle
-
-    async def batch_generate_result(
-        self, batch_id: str, response_type: type[LLMResponseType]
-    ) -> LLMResponseBatchBundle[LLMResponseType] | None:
-        response_bundle = await self._batch_generate_result(batch_id, response_type)
 
         return response_bundle
