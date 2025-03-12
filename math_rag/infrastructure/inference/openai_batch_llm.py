@@ -2,6 +2,7 @@ import json
 import logging
 
 from asyncio import sleep
+from uuid import UUID
 
 from openai import NOT_GIVEN, AsyncOpenAI
 from openai.lib._parsing._completions import (
@@ -12,20 +13,20 @@ from openai.types.chat import ChatCompletion
 
 from math_rag.application.base.inference import BaseBatchLLM
 from math_rag.application.models.inference import (
-    LLMConversation,
-    LLMError,
     LLMFailedRequest,
-    LLMMessage,
-    LLMParams,
-    LLMRequest,
     LLMRequestBatch,
     LLMResponseBatch,
+    LLMResponseBatchBundle,
     LLMResponseBatchPlus,
     LLMResponseList,
     LLMTextResponse,
 )
 from math_rag.application.types.inference import LLMResponseType
-from math_rag.infrastructure.mappings.inference import LLMResponseListMapping
+from math_rag.infrastructure.mappings.inference import (
+    LLMErrorMapping,
+    LLMRequestMapping,
+    LLMResponseListMapping,
+)
 
 
 class OpenAIBatchLLM(BaseBatchLLM):
@@ -152,7 +153,7 @@ class OpenAIBatchLLM(BaseBatchLLM):
 
     async def _batch_generate_result(
         self, batch_id: str, response_type: type[LLMResponseType]
-    ) -> LLMResponseBatchPlus[LLMResponseType] | None:
+    ) -> LLMResponseBatchBundle[LLMResponseType] | None:
         batch = await self.client.batches.retrieve(batch_id)
         logging.info(
             f'Batch {batch.id} status {batch.status}\n'
@@ -166,110 +167,67 @@ class OpenAIBatchLLM(BaseBatchLLM):
             case 'validating' | 'in_progress' | 'finalizing' | 'cancelling':
                 return None
 
-            case 'failed':
-                raise ValueError(f'File {batch.input_file_id} validation failed')
-
             case 'completed' | 'expired' | 'cancelled':
                 pass
 
-        output_file_content = await self.client.files.content(batch.output_file_id)
-        lines = output_file_content.text.strip().splitlines()
-        complete_request_ids = []
-        incomplete_request_ids = []
-        request_id_to_response_list: dict[str, LLMResponseList[LLMResponseType]] = {}
+            case 'failed':
+                raise ValueError(f'File {batch.input_file_id} validation failed')
 
-        for line in lines:
-            data = json.loads(line)
+        input_file_content = await self.client.files.content(batch.input_file_id)
+        output_file_content = await self.client.files.content(batch.output_file_id)
+
+        input_lines = input_file_content.text.strip().splitlines()
+        output_lines = output_file_content.text.strip().splitlines()
+
+        input_items = [json.loads(line) for line in input_lines]
+        output_items = [json.loads(line) for line in output_lines]
+
+        requests_dict = {
+            UUID(data['custom_id']): LLMRequestMapping[LLMResponseType].to_source(
+                data['body']
+            )
+            for data in input_items
+        }
+
+        failed_requests: list[LLMFailedRequest[LLMResponseType]] = []
+        response_lists: list[LLMResponseList[LLMResponseType]] = []
+
+        for data in output_items:
+            request_id = UUID(data['custom_id'])
             response = data['response']
-            custom_id = str(data['custom_id'])
 
             if response is None:
-                incomplete_request_ids.append(custom_id)
-
                 if 'error' in data:
-                    error = LLMError(
-                        message=data['error']['message']
-                        if 'message' in data['error']
-                        else str(),
-                        body=data['error']['body'] if 'body' in data['error'] else None,
-                    )
-                    # TODO save failed_request
+                    error = LLMErrorMapping.to_source(data['error'])
                     failed_request = LLMFailedRequest(
-                        request=...,  # TODO find request
+                        request=requests_dict[request_id],
                         errors=[error],
                     )
+                    failed_requests.append(failed_request)
 
             else:
                 completion = ChatCompletion(**response['body'])
 
-                if response_type is LLMTextResponse:
-                    # TODO extract _request_id and map it to ResponseList, remove sorting
-                    response_list = LLMResponseListMapping[LLMResponseType].to_source(
-                        completion
-                    )
-
-                else:
-                    # TODO
-                    parsed_completion = parse_chat_completion(
+                if response_type is not LLMTextResponse:
+                    completion = parse_chat_completion(
                         response_format=response_type,
                         input_tools=NOT_GIVEN,
                         chat_completion=completion,
                     )
-                    response_list = LLMResponseListMapping[LLMResponseType].to_source(
-                        parsed_completion
-                    )
 
-                request_id_to_response_list[custom_id] = response_list
-                complete_request_ids.append(custom_id)
-
-        response_lists = [
-            request_id_to_response_list[request_id]
-            for request_id in complete_request_ids
-        ]
-
-        input_file_content = await self.client.files.content(batch.input_file_id)
-        lines = input_file_content.text.strip().splitlines()
-        incomplete_requests: list[LLMRequest[LLMResponseType]] = []
-
-        for line in lines:
-            data = json.loads(line)
-            request_id = str(data['custom_id'])
-
-            if request_id not in incomplete_request_ids:
-                continue
-
-            body = data['body']
-            messages = body['messages']
-
-            request = LLMRequest(
-                conversation=LLMConversation(
-                    messages=[
-                        LLMMessage(role=message['role'], content=message['content'])
-                        for message in messages
-                    ]
-                ),
-                params=LLMParams[LLMResponseType](
-                    model=body['messages'],
-                    temperature=body['temperature'],
-                    logprobs=body['logprobs'],
-                    top_logprobs=body['top_logprobs'],
-                    response_type=response_type,
-                    max_completion_tokens=body['max_completion_tokens'],
-                    n=body['n'],
-                ),
-            )
-            incomplete_requests.append(request)
+                response_list = LLMResponseListMapping[LLMResponseType].to_source(
+                    completion, request_id=request_id
+                )
+                response_lists.append(response_list)
 
         await self.client.files.delete(batch.input_file_id)
         await self.client.files.delete(batch.output_file_id)
 
-        incomplete_request_batch = LLMRequestBatch(requests=incomplete_requests)
-        response_batch = LLMResponseBatchPlus(
-            response_lists=response_lists,
-            incomplete_request_batch=incomplete_request_batch,
+        response_bundle = LLMResponseBatchBundle(
+            response_lists=response_lists, failed_requests=failed_requests
         )
 
-        return response_batch
+        return response_bundle
 
     async def batch_generate_result(
         self, batch_id: str, response_type: type[LLMResponseType]
