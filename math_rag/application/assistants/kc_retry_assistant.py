@@ -68,6 +68,8 @@ class KCRetryAssistant(
     def decode_from_response_list(
         self, response_list: LLMResponseList[KCRetryAssistantOutput]
     ) -> KCRetryAssistantOutput:
-        output = response_list.responses[0].content
+        content = response_list.responses[0].content
+        content_dict = content.model_dump(exclude_unset=True)
+        output = KCRetryAssistantOutput(**content_dict)
 
         return output
