@@ -9,9 +9,9 @@ from openai.types.chat import ChatCompletion
 
 from math_rag.application.base.inference import BaseBatchLLM
 from math_rag.application.models.inference import (
+    LLMBatchRequest,
     LLMBatchResult,
     LLMFailedRequest,
-    LLMRequestBatch,
     LLMResponseList,
 )
 from math_rag.application.types.inference import LLMResponseType
@@ -28,11 +28,11 @@ class OpenAIBatchLLM(BaseBatchLLM):
 
     async def _batch_generate(
         self,
-        request_batch: LLMRequestBatch[LLMResponseType],
+        batch_request: LLMBatchRequest[LLMResponseType],
         response_type: type[LLMResponseType],
         poll_interval: float,
     ) -> LLMBatchResult[LLMResponseType]:
-        batch_id = await self.batch_generate_init(request_batch)
+        batch_id = await self.batch_generate_init(batch_request)
 
         while True:
             batch_result = await self.batch_generate_result(batch_id, response_type)
@@ -44,7 +44,7 @@ class OpenAIBatchLLM(BaseBatchLLM):
 
     async def _batch_generate_retry(
         self,
-        request_batch: LLMRequestBatch[LLMResponseType],
+        batch_request: LLMBatchRequest[LLMResponseType],
         response_type: type[LLMResponseType],
         *,
         poll_interval: float,
@@ -53,19 +53,19 @@ class OpenAIBatchLLM(BaseBatchLLM):
         if max_num_retries < 0:
             raise ValueError()
 
-        num_total = len(request_batch.requests)
+        num_total = len(batch_request.requests)
         response_lists: list[LLMResponseList[LLMResponseType]] = []
 
         for _ in range(max_num_retries + 1):
             batch_result = await self._batch_generate(
-                request_batch, response_type, poll_interval
+                batch_request, response_type, poll_interval
             )
             response_lists.extend(batch_result.response_lists)
 
             if not batch_result.failed_requests:
                 break
 
-            request_batch = LLMRequestBatch(
+            batch_request = LLMBatchRequest(
                 requests=[
                     failed_request.request
                     for failed_request in batch_result.failed_requests
@@ -83,7 +83,7 @@ class OpenAIBatchLLM(BaseBatchLLM):
 
     async def batch_generate(
         self,
-        request_batch: LLMRequestBatch[LLMResponseType],
+        batch_request: LLMBatchRequest[LLMResponseType],
         response_type: type[LLMResponseType],
         *,
         poll_interval: float,
@@ -91,21 +91,21 @@ class OpenAIBatchLLM(BaseBatchLLM):
     ) -> LLMBatchResult[LLMResponseType]:
         if num_retries:
             batch_result = await self._batch_generate_retry(
-                request_batch,
+                batch_request,
                 response_type,
                 poll_interval=poll_interval,
                 max_num_retries=num_retries,
             )
 
         batch_result = await self._batch_generate(
-            request_batch, response_type, poll_interval
+            batch_request, response_type, poll_interval
         )
 
         return batch_result
 
     async def batch_generate_init(
         self,
-        request_batch: LLMRequestBatch[LLMResponseType],
+        batch_request: LLMBatchRequest[LLMResponseType],
     ) -> str:
         url = '/v1/chat/completions'
         requests = [
@@ -117,7 +117,7 @@ class OpenAIBatchLLM(BaseBatchLLM):
                     request, use_parsed=True
                 ),
             }
-            for request in request_batch.requests
+            for request in batch_request.requests
         ]
 
         lines = [json.dumps(request, separators=(',', ':')) for request in requests]

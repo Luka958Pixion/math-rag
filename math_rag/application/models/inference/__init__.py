@@ -1,4 +1,6 @@
+from .llm_batch_request import LLMBatchRequest
 from .llm_batch_result import LLMBatchResult
+from .llm_concurrent_request import LLMConcurrentRequest
 from .llm_concurrent_result import LLMConcurrentResult
 from .llm_conversation import LLMConversation
 from .llm_error import LLMError
@@ -7,8 +9,6 @@ from .llm_logprob import LLMLogprob
 from .llm_message import LLMMessage
 from .llm_params import LLMParams
 from .llm_request import LLMRequest
-from .llm_request_batch import LLMRequestBatch
-from .llm_request_concurrent import LLMRequestConcurrent
 from .llm_request_tracker import LLMRequestTracker
 from .llm_response import LLMResponse
 from .llm_response_list import LLMResponseList
@@ -25,8 +25,8 @@ __all__ = [
     'LLMMessage',
     'LLMParams',
     'LLMRequest',
-    'LLMRequestBatch',
-    'LLMRequestConcurrent',
+    'LLMBatchRequest',
+    'LLMConcurrentRequest',
     'LLMRequestTracker',
     'LLMResponse',
     'LLMResponseList',

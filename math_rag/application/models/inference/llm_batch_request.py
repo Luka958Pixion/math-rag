@@ -8,6 +8,6 @@ from math_rag.application.types.inference import LLMResponseType
 from .llm_request import LLMRequest
 
 
-class LLMRequestConcurrent(BaseModel, Generic[LLMResponseType]):
+class LLMBatchRequest(BaseModel, Generic[LLMResponseType]):
     id: UUID = Field(default_factory=uuid4)
     requests: list[LLMRequest[LLMResponseType]]

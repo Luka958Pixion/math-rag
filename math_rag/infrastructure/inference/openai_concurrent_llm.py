@@ -8,11 +8,11 @@ from openai import AsyncOpenAI, RateLimitError
 
 from math_rag.application.base.inference import BaseConcurrentLLM
 from math_rag.application.models.inference import (
+    LLMConcurrentRequest,
     LLMConcurrentResult,
     LLMError,
     LLMFailedRequest,
     LLMRequest,
-    LLMRequestConcurrent,
     LLMRequestTracker,
     LLMResponseList,
     LLMStatusTracker,
@@ -103,7 +103,7 @@ class OpenAIConcurrentLLM(BaseConcurrentLLM):
 
     async def concurrent_generate(
         self,
-        request_concurrent: LLMRequestConcurrent[LLMResponseType],
+        concurrent_request: LLMConcurrentRequest[LLMResponseType],
         *,
         max_requests_per_minute: float,
         max_tokens_per_minute: float,
@@ -120,7 +120,7 @@ class OpenAIConcurrentLLM(BaseConcurrentLLM):
         requests_not_empty = True
 
         requests: deque[LLMRequest[LLMResponseType]] = deque(
-            request_concurrent.requests
+            concurrent_request.requests
         )
         response_lists: list[LLMResponseList[LLMResponseType]] = []
         failed_requests: list[LLMFailedRequest[LLMResponseType]] = []

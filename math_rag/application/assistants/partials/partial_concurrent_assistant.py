@@ -7,7 +7,7 @@ from math_rag.application.base.repositories.documents import (
     BaseLLMFailedRequestRepository,
 )
 from math_rag.application.base.services import BaseSettingsLoaderService
-from math_rag.application.models.inference import LLMRequestConcurrent
+from math_rag.application.models.inference import LLMConcurrentRequest
 from math_rag.application.types.assistants import (
     AssistantInputType,
     AssistantOutputType,
@@ -32,12 +32,12 @@ class PartialConcurrentAssistant(
         self,
         inputs: list[AssistantInputType],
     ) -> list[AssistantOutputType]:
-        request_concurrent = LLMRequestConcurrent(
+        concurrent_request = LLMConcurrentRequest(
             requests=[self.encode_to_request(input) for input in inputs]
         )
         settings = self.settings_loader_service.load_concurrent_llm_settings()
         concurrent_result = await self.llm.concurrent_generate(
-            request_concurrent,
+            concurrent_request,
             max_requests_per_minute=settings.max_requests_per_minute,
             max_tokens_per_minute=settings.max_tokens_per_minute,
             max_num_retries=settings.max_num_retries,

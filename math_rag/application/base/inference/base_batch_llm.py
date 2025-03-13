@@ -1,8 +1,8 @@
 from abc import ABC, abstractmethod
 
 from math_rag.application.models.inference import (
+    LLMBatchRequest,
     LLMBatchResult,
-    LLMRequestBatch,
 )
 from math_rag.application.types.inference import LLMResponseType
 
@@ -11,7 +11,7 @@ class BaseBatchLLM(ABC):
     @abstractmethod
     async def batch_generate(
         self,
-        request_batch: LLMRequestBatch[LLMResponseType],
+        batch_request: LLMBatchRequest[LLMResponseType],
         response_type: type[LLMResponseType],
         *,
         poll_interval: float,
@@ -22,7 +22,7 @@ class BaseBatchLLM(ABC):
     @abstractmethod
     async def batch_generate_init(
         self,
-        request_batch: LLMRequestBatch[LLMResponseType],
+        batch_request: LLMBatchRequest[LLMResponseType],
     ) -> str:
         pass
 

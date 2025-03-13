@@ -9,7 +9,7 @@ from math_rag.application.base.repositories.documents import (
     BaseLLMFailedRequestRepository,
 )
 from math_rag.application.base.services import BaseSettingsLoaderService
-from math_rag.application.models.inference import LLMRequestBatch
+from math_rag.application.models.inference import LLMBatchRequest
 from math_rag.application.types.assistants import (
     AssistantInputType,
     AssistantOutputType,
@@ -39,12 +39,12 @@ class PartialBatchAssistant(
         inputs: list[AssistantInputType],
         response_type: type[AssistantOutputType],
     ) -> list[AssistantOutputType]:
-        request_batch = LLMRequestBatch(
+        batch_request = LLMBatchRequest(
             requests=[self.encode_to_request(input) for input in inputs]
         )
         settings = self.settings_loader_service.load_batch_llm_settings()
         batch_result = await self.llm.batch_generate(
-            request_batch,
+            batch_request,
             response_type,
             poll_interval=settings.poll_interval,
             max_num_retries=settings.max_num_retries,
@@ -63,10 +63,10 @@ class PartialBatchAssistant(
         return outputs
 
     async def batch_assist_init(self, inputs: list[AssistantInputType]) -> str:
-        request_batch = LLMRequestBatch(
+        batch_request = LLMBatchRequest(
             requests=[self.encode_to_request(input) for input in inputs]
         )
-        batch_id = await self.llm.batch_generate_init(request_batch)
+        batch_id = await self.llm.batch_generate_init(batch_request)
 
         return batch_id
 

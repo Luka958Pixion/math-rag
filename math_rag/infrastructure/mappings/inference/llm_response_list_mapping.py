@@ -23,7 +23,6 @@ class LLMResponseListMapping(
     def to_source(target: ChatCompletion, **kwargs) -> LLMResponseList[LLMResponseType]:
         request_id = kwargs['request_id']
         response_type = kwargs.get('response_type')
-        print(response_type, type(response_type))
 
         if response_type and response_type is not LLMTextResponse:
             target = parse_chat_completion(
