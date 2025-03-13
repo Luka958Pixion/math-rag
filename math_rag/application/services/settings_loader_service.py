@@ -11,17 +11,21 @@ from math_rag.application.models import (
 class SettingsLoaderService(BaseSettingsLoaderService):
     def __init__(self):
         self.llm_settings = LLMSettings(
-            max_time=config('max_time', cast=float),
-            max_num_retries=config('max_num_retries', cast=int),
+            max_time=config('LLM_MAX_TIME', cast=float),
+            max_num_retries=config('LLM_MAX_NUM_RETRIES', cast=int),
         )
         self.batch_llm_settings = BatchLLMSettings(
-            poll_interval=config('poll_interval', cast=float),
-            max_num_retries=config('max_num_retries', cast=int),
+            poll_interval=config('BATCH_LLM_POLL_INTERVAL', cast=float),
+            max_num_retries=config('BATCH_LLM_MAX_NUM_RETRIES', cast=int),
         )
         self.concurrent_llm_settings = ConcurrentLLMSettings(
-            max_requests_per_minute=config('max_requests_per_minute', cast=float),
-            max_tokens_per_minute=config('max_tokens_per_minute', cast=float),
-            max_num_retries=config('max_num_retries', cast=int),
+            max_requests_per_minute=config(
+                'CONCURRENT_LLM_MAX_REQUESTS_PER_MINUTE', cast=float
+            ),
+            max_tokens_per_minute=config(
+                'CONCURRENT_LLM_MAX_TOKENS_PER_MINUTE', cast=float
+            ),
+            max_num_retries=config('CONCURRENT_LLM_MAX_NUM_RETRIES', cast=int),
         )
 
     def load_llm_settings(self) -> LLMSettings:
