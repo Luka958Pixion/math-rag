@@ -24,4 +24,12 @@ class PartialUnifiedAssistant(
         settings_loader_service: BaseSettingsLoaderService,
         failed_request_repository: BaseLLMFailedRequestRepository,
     ):
-        super().__init__(llm, settings_loader_service, failed_request_repository)
+        PartialAssistant.__init__(
+            self, llm, settings_loader_service, failed_request_repository
+        )
+        PartialBatchAssistant.__init__(
+            self, llm, settings_loader_service, failed_request_repository
+        )
+        PartialConcurrentAssistant.__init__(
+            self, llm, settings_loader_service, failed_request_repository
+        )
