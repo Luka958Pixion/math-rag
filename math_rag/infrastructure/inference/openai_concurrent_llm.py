@@ -56,7 +56,9 @@ class OpenAIConcurrentLLM(BaseConcurrentLLM):
             )
             completion = await completion_callback(**request_dict)
             response_list = LLMResponseListMapping[LLMResponseType].to_source(
-                completion, request_id=request.id, response_type=request.params.id
+                completion,
+                request_id=request.id,
+                response_type=request.params.response_type,
             )
 
         except RateLimitError as e:
@@ -68,7 +70,9 @@ class OpenAIConcurrentLLM(BaseConcurrentLLM):
             exception = e
             status_tracker.num_api_errors += 1
 
-        except OPENAI_ERRORS_TO_RAISE:
+        except (*OPENAI_ERRORS_TO_RAISE, Exception) as e:
+            logging.error(f'Uncaught exception {type(e).__class__}: {e}')
+
             raise
 
         if exception:
