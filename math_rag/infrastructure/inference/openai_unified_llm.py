@@ -7,4 +7,6 @@ from .openai_llm import OpenAILLM
 
 class OpenAIUnifiedLLM(OpenAILLM, OpenAIBatchLLM, OpenAIConcurrentLLM):
     def __init__(self, client: AsyncOpenAI):
-        self.client = client
+        OpenAILLM.__init__(self, client)
+        OpenAIBatchLLM.__init__(self, client)
+        OpenAIConcurrentLLM.__init__(self, client)

@@ -74,17 +74,16 @@ class PartialBatchAssistant(
         self,
         batch_id: str,
     ) -> list[AssistantOutputType] | None:
-        print(self.response_type)
-        response_batch = await self.llm.batch_generate_result(
+        batch_result = await self.llm.batch_generate_result(
             batch_id, self.response_type
         )
 
-        if response_batch is None:
+        if batch_result is None:
             return
 
         outputs = [
             self.decode_from_response_list(response_list)
-            for response_list in response_batch.response_lists
+            for response_list in batch_result.response_lists
         ]
 
         return outputs
