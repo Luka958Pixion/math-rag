@@ -1,13 +1,12 @@
-from uuid import UUID, uuid4
+from pydantic import field_validator
 
-from pydantic import BaseModel, Field, field_validator
+from math_rag.application.base.assistants import BaseAssistantInput
 
 from .kc_assistant_input import KCAssistantInput
 from .kc_assistant_output import KCAssistantOutput
 
 
-class KCRetryAssistantInput(BaseModel):
-    id: UUID = Field(default_factory=uuid4)
+class KCRetryAssistantInput(BaseAssistantInput):
     pairs: list[tuple[KCAssistantInput, KCAssistantOutput | None]]
 
     @field_validator('pairs')

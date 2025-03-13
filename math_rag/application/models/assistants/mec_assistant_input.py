@@ -1,8 +1,5 @@
-from uuid import UUID, uuid4
-
-from pydantic import BaseModel, Field
+from math_rag.application.base.assistants import BaseAssistantInput
 
 
-class MECAssistantInput(BaseModel):
-    id: UUID = Field(default_factory=uuid4)
+class MECAssistantInput(BaseAssistantInput):
     latex: str
