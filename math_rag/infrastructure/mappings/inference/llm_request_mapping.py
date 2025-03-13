@@ -38,6 +38,7 @@ class LLMRequestMapping(
                 response_type=response_type,
                 max_completion_tokens=target['max_completion_tokens'],
                 metadata=target['metadata'],
+                store=target['store'],
                 n=target.get('n', 1),
             ),
         )
@@ -65,4 +66,5 @@ class LLMRequestMapping(
             'top_logprobs': source.params.top_logprobs,
             'max_completion_tokens': source.params.max_completion_tokens,
             'metadata': source.params.metadata,
+            'store': source.params.store,
         }

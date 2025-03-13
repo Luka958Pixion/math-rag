@@ -12,4 +12,5 @@ class LLMParamsDocument(BaseDocument):
     max_completion_tokens: int | None = None
     response_type: str
     metadata: dict[str, str] | None = None
+    store: bool | None = None
     n: int = 1

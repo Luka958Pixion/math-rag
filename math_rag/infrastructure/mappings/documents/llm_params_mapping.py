@@ -21,6 +21,7 @@ class LLMParamsMapping(
             max_completion_tokens=target.max_completion_tokens,
             response_type=TypeUtil[LLMResponseType].from_fqn(target.response_type),
             metadata=target.metadata,
+            store=target.store,
             n=target.n,
         )
 
@@ -35,5 +36,6 @@ class LLMParamsMapping(
             max_completion_tokens=source.max_completion_tokens,
             response_type=TypeUtil.to_fqn(source.response_type),
             metadata=source.metadata,
+            store=source.store,
             n=source.n,
         )

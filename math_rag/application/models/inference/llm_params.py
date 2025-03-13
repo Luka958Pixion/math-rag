@@ -15,6 +15,7 @@ class LLMParams(BaseModel, Generic[LLMResponseType]):
     max_completion_tokens: int | None = None
     response_type: type[LLMResponseType]
     metadata: dict[str, str] | None = None
+    store: bool | None = None
     n: int = 1
 
     @field_validator('response_type', mode='before')
