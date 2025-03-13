@@ -52,7 +52,9 @@ class OpenAILLM(BaseLLM):
             )
             completion = await completion_callback(**request_dict)
             response_list = LLMResponseListMapping[LLMResponseType].to_source(
-                completion
+                completion,
+                request_id=request.id,
+                response_type=request.params.response_type,
             )
 
             return response_list

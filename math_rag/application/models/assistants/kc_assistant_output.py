@@ -1,4 +1,3 @@
-from functools import partial
 from uuid import UUID, uuid4
 
 from pydantic import BaseModel, Field
@@ -12,4 +11,9 @@ class KCAssistantOutput(BaseModel):
 
     @classmethod
     def bind(cls, input_id: UUID) -> type['KCAssistantOutput']:
-        return partial(cls, input_id=input_id)
+        class BoundKCAssistantOutput(cls):
+            def __init__(self, **kwargs):
+                kwargs['input_id'] = input_id
+                super().__init__(**kwargs)
+
+        return BoundKCAssistantOutput

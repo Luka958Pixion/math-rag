@@ -1,3 +1,5 @@
+from typing import Generic
+
 from openai import NOT_GIVEN
 from openai.lib._parsing._completions import (
     parse_chat_completion,
@@ -14,7 +16,8 @@ from math_rag.infrastructure.base import BaseMapping
 
 
 class LLMResponseListMapping(
-    BaseMapping[LLMResponseList[LLMResponseType], ChatCompletion]
+    BaseMapping[LLMResponseList[LLMResponseType], ChatCompletion],
+    Generic[LLMResponseType],
 ):
     @staticmethod
     def to_source(target: ChatCompletion, **kwargs) -> LLMResponseList[LLMResponseType]:

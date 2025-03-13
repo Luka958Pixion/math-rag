@@ -1,4 +1,4 @@
-from typing import Any
+from typing import Any, Generic
 
 from openai.lib._parsing._completions import (
     type_to_response_format_param,
@@ -15,7 +15,9 @@ from math_rag.application.types.inference import LLMResponseType
 from math_rag.infrastructure.base import BaseMapping
 
 
-class LLMRequestMapping(BaseMapping[LLMRequest[LLMResponseType], dict[str, Any]]):
+class LLMRequestMapping(
+    BaseMapping[LLMRequest[LLMResponseType], dict[str, Any]], Generic[LLMResponseType]
+):
     @staticmethod
     def to_source(target: dict[str, Any], **kwargs) -> LLMRequest[LLMResponseType]:
         response_type = kwargs['response_type']
