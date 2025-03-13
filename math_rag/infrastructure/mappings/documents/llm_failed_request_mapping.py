@@ -3,8 +3,9 @@ from typing import Generic
 from math_rag.application.models.inference import LLMFailedRequest
 from math_rag.application.types.inference import LLMResponseType
 from math_rag.infrastructure.base import BaseMapping
-from math_rag.infrastructure.mappings.documents import LLMRequestMapping
 from math_rag.infrastructure.models.documents import LLMFailedRequestDocument
+
+from .llm_request_mapping import LLMRequestMapping
 
 
 class LLMFailedRequestMapping(

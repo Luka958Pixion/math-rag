@@ -3,11 +3,10 @@ from typing import Generic
 from math_rag.application.models.inference import LLMRequest
 from math_rag.application.types.inference import LLMResponseType
 from math_rag.infrastructure.base import BaseMapping
-from math_rag.infrastructure.mappings.documents import (
-    LLMConversationMapping,
-    LLMParamsMapping,
-)
 from math_rag.infrastructure.models.documents import LLMRequestDocument
+
+from .llm_conversation_mapping import LLMConversationMapping
+from .llm_params_mapping import LLMParamsMapping
 
 
 class LLMRequestMapping(

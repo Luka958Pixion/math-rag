@@ -28,7 +28,7 @@ class LLMResponseListMapping(
                 chat_completion=target,
             )
 
-        response_list = LLMResponseList(
+        return LLMResponseList(
             request_id=request_id,
             responses=[
                 LLMResponse[LLMResponseType](
@@ -39,9 +39,6 @@ class LLMResponseListMapping(
                 for choice in target.choices
             ],
         )
-
-        for response in response_list.responses:
-            response.content.id = ...
 
     @staticmethod
     def to_target(source: LLMResponseList) -> ChatCompletion:

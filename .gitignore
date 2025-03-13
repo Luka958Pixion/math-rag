@@ -171,6 +171,7 @@ cython_debug/
 .pypirc
 
 # custom
-.ruff_cache
-.VSCodeCounter
+.ruff_cache/
+.VSCodeCounter/
 secrets/
+jupyter_sessions/
