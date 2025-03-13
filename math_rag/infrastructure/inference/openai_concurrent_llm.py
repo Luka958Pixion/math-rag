@@ -173,6 +173,7 @@ class OpenAIConcurrentLLM(BaseConcurrentLLM):
                             retry_queue=retry_queue,
                             status_tracker=status_tracker,
                             response_lists=response_lists,
+                            failed_requests=failed_requests,
                         )
                     )
                     next_request = None
