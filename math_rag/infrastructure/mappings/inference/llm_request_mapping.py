@@ -20,10 +20,11 @@ class LLMRequestMapping(
 ):
     @staticmethod
     def to_source(target: dict[str, Any], **kwargs) -> LLMRequest[LLMResponseType]:
+        request_id = kwargs['request_id']
         response_type = kwargs['response_type']
 
         return LLMRequest(
-            id=kwargs['request_id'],
+            id=request_id,
             conversation=LLMConversation(
                 messages=[
                     LLMMessage(role=message['role'], content=message['content'])
@@ -31,13 +32,13 @@ class LLMRequestMapping(
                 ]
             ),
             params=LLMParams[LLMResponseType](
-                model=target['messages'],
+                model=target['model'],
                 temperature=target['temperature'],
-                logprobs=target['logprobs'],
                 top_logprobs=target['top_logprobs'],
                 response_type=response_type,
                 max_completion_tokens=target['max_completion_tokens'],
-                n=target['n'],
+                metadata=target['metadata'],
+                n=target.get('n', 1),
             ),
         )
 

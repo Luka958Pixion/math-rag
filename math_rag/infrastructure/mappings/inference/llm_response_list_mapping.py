@@ -24,6 +24,9 @@ class LLMResponseListMapping(
         request_id = kwargs['request_id']
         response_type = kwargs.get('response_type')
 
+        for choice in target.choices:
+            print(choice.message.content)
+
         if response_type and response_type is not LLMTextResponse:
             target = parse_chat_completion(
                 response_format=response_type,

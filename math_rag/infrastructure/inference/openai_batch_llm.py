@@ -168,8 +168,10 @@ class OpenAIBatchLLM(BaseBatchLLM):
         output_items = [json.loads(line) for line in output_lines]
 
         requests_dict = {
-            UUID(data['custom_id']): LLMRequestMapping[LLMResponseType].to_source(
-                data['body']
+            (request_id := UUID(data['custom_id'])): LLMRequestMapping[
+                LLMResponseType
+            ].to_source(
+                data['body'], request_id=request_id, response_type=response_type
             )
             for data in input_items
         }
