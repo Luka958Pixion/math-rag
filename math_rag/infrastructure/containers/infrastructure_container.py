@@ -4,7 +4,7 @@ from arxiv import Client
 from dependency_injector.containers import DeclarativeContainer
 from dependency_injector.providers import (
     Configuration,
-    DependenciesContainer,
+    Container,
     Factory,
     Singleton,
 )
@@ -41,7 +41,7 @@ from math_rag.infrastructure.services import (
 
 class InfrastructureContainer(DeclarativeContainer):
     config = Configuration()
-    application_container: ApplicationContainer = DependenciesContainer()
+    application_container = Container(ApplicationContainer)
 
     # --------------
     # Infrastructure

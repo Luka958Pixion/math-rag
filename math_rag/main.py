@@ -15,9 +15,8 @@ async def main():
     application_container.init_resources()
     application_container.wire(modules=[__name__])
 
-    infrastructure_container = InfrastructureContainer(
-        application_container=application_container
-    )
+    infrastructure_container = InfrastructureContainer()
+    infrastructure_container.application_container.override(application_container)
     infrastructure_container.init_resources()
     infrastructure_container.wire(modules=[__name__])
 

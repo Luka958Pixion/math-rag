@@ -12,7 +12,7 @@ class DocumentRepository(
     BaseDocumentRepository[SourceType], Generic[SourceType, TargetType, MappingType]
 ):
     def __init__(self, client: AsyncMongoClient, deployment: str):
-        args = TypeUtil.get_type_args(self.__class__)
+        args = TypeUtil.get_type_args(self.__class__)[0]
         self.source_cls = cast(type[SourceType], args[0])
         self.target_cls = cast(type[TargetType], args[1])
         self.mapping_cls = cast(type[MappingType], args[2])
