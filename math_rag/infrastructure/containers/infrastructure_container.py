@@ -41,7 +41,7 @@ from math_rag.infrastructure.services import (
 
 class InfrastructureContainer(DeclarativeContainer):
     config = Configuration()
-    application_container = Container(ApplicationContainer)
+    application_container = Container(ApplicationContainer).container
 
     # --------------
     # Infrastructure
@@ -138,9 +138,11 @@ class InfrastructureContainer(DeclarativeContainer):
         KCAssistant,
         llm=openai_unified_llm,
         settings_loader_service=application_container.settings_loader_service,
+        failed_request_repository=llm_failed_request_repository,
     )
     math_expression_classification_assistant = Factory(
         MECAssistant,
         llm=openai_unified_llm,
         settings_loader_service=application_container.settings_loader_service,
+        failed_request_repository=llm_failed_request_repository,
     )

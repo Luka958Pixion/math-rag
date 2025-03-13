@@ -9,7 +9,7 @@ from math_rag.application.types.assistants import (
 
 class BaseConcurrentAssistant(ABC, Generic[AssistantInputType, AssistantOutputType]):
     @abstractmethod
-    async def concurrent_generate(
+    async def concurrent_assist(
         self,
         inputs: list[AssistantInputType],
     ) -> list[AssistantOutputType]:
