@@ -43,21 +43,21 @@ class PartialBatchAssistant(
             requests=[self.encode_to_request(input) for input in inputs]
         )
         settings = self.settings_loader_service.load_batch_llm_settings()
-        response_bundle = await self.llm.batch_generate(
+        batch_result = await self.llm.batch_generate(
             request_batch,
             response_type,
             poll_interval=settings.poll_interval,
             max_num_retries=settings.max_num_retries,
         )
 
-        if response_bundle.failed_requests:
+        if batch_result.failed_requests:
             await self.failed_request_repository.insert_many(
-                response_bundle.failed_requests
+                batch_result.failed_requests
             )
 
         outputs = [
             self.decode_from_response_list(response_list)
-            for response_list in response_bundle.response_lists
+            for response_list in batch_result.response_lists
         ]
 
         return outputs

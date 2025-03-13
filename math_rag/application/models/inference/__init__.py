@@ -1,3 +1,5 @@
+from .llm_batch_result import LLMBatchResult
+from .llm_concurrent_result import LLMConcurrentResult
 from .llm_conversation import LLMConversation
 from .llm_error import LLMError
 from .llm_failed_request import LLMFailedRequest
@@ -9,10 +11,8 @@ from .llm_request_batch import LLMRequestBatch
 from .llm_request_concurrent import LLMRequestConcurrent
 from .llm_request_tracker import LLMRequestTracker
 from .llm_response import LLMResponse
-from .llm_response_batch_bundle import LLMResponseBatchBundle
-from .llm_response_bundle import LLMResponseBundle
-from .llm_response_concurrent_bundle import LLMResponseConcurrentBundle
 from .llm_response_list import LLMResponseList
+from .llm_result import LLMResult
 from .llm_status_tracker import LLMStatusTracker
 from .llm_text_response import LLMTextResponse
 
@@ -32,7 +32,7 @@ __all__ = [
     'LLMResponseList',
     'LLMStatusTracker',
     'LLMTextResponse',
-    'LLMResponseBundle',
-    'LLMResponseBatchBundle',
-    'LLMResponseConcurrentBundle',
+    'LLMResult',
+    'LLMBatchResult',
+    'LLMConcurrentResult',
 ]

@@ -8,12 +8,12 @@ from openai import AsyncOpenAI, RateLimitError
 
 from math_rag.application.base.inference import BaseConcurrentLLM
 from math_rag.application.models.inference import (
+    LLMConcurrentResult,
     LLMError,
     LLMFailedRequest,
     LLMRequest,
     LLMRequestConcurrent,
     LLMRequestTracker,
-    LLMResponseConcurrentBundle,
     LLMResponseList,
     LLMStatusTracker,
     LLMTextResponse,
@@ -108,7 +108,7 @@ class OpenAIConcurrentLLM(BaseConcurrentLLM):
         max_requests_per_minute: float,
         max_tokens_per_minute: float,
         max_num_retries: int,
-    ) -> LLMResponseConcurrentBundle[LLMResponseType]:
+    ) -> LLMConcurrentResult[LLMResponseType]:
         retry_queue: Queue[LLMRequestTracker] = Queue()
         status_tracker = LLMStatusTracker()
         next_request: LLMRequestTracker | None = None
@@ -214,8 +214,8 @@ class OpenAIConcurrentLLM(BaseConcurrentLLM):
                 f'{status_tracker.num_rate_limit_errors} rate limit errors received'
             )
 
-        response_bundle = LLMResponseConcurrentBundle(
+        concurrent_result = LLMConcurrentResult(
             response_lists=response_lists, failed_requests=failed_requests
         )
 
-        return response_bundle
+        return concurrent_result

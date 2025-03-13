@@ -27,19 +27,17 @@ class PartialAssistant(
     async def assist(self, input: AssistantInputType) -> AssistantOutputType | None:
         request = self.encode_to_request(input)
         settings = self.settings_loader_service.load_llm_settings()
-        response_bundle = await self.llm.generate(
+        result = await self.llm.generate(
             request,
             max_time=settings.max_time,
             max_num_retries=settings.max_num_retries,
         )
 
-        if response_bundle.failed_request:
-            await self.failed_request_repository.insert_one(
-                response_bundle.failed_request
-            )
+        if result.failed_request:
+            await self.failed_request_repository.insert_one(result.failed_request)
 
             return None
 
-        output = self.decode_from_response_list(response_bundle.response_list)
+        output = self.decode_from_response_list(result.response_list)
 
         return output

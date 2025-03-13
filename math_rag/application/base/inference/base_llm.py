@@ -2,7 +2,7 @@ from abc import ABC, abstractmethod
 
 from math_rag.application.models.inference import (
     LLMRequest,
-    LLMResponseBundle,
+    LLMResult,
 )
 from math_rag.application.types.inference import LLMResponseType
 
@@ -15,5 +15,5 @@ class BaseLLM(ABC):
         *,
         max_time: float,
         max_num_retries: int,
-    ) -> LLMResponseBundle[LLMResponseType]:
+    ) -> LLMResult[LLMResponseType]:
         pass

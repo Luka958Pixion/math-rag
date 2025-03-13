@@ -1,8 +1,8 @@
 from abc import ABC, abstractmethod
 
 from math_rag.application.models.inference import (
+    LLMConcurrentResult,
     LLMRequestConcurrent,
-    LLMResponseConcurrentBundle,
 )
 from math_rag.application.types.inference import LLMResponseType
 
@@ -16,5 +16,5 @@ class BaseConcurrentLLM(ABC):
         max_requests_per_minute: float,
         max_tokens_per_minute: float,
         max_num_retries: int,
-    ) -> LLMResponseConcurrentBundle[LLMResponseType]:
+    ) -> LLMConcurrentResult[LLMResponseType]:
         pass

@@ -9,9 +9,9 @@ from openai.types.chat import ChatCompletion
 
 from math_rag.application.base.inference import BaseBatchLLM
 from math_rag.application.models.inference import (
+    LLMBatchResult,
     LLMFailedRequest,
     LLMRequestBatch,
-    LLMResponseBatchBundle,
     LLMResponseList,
 )
 from math_rag.application.types.inference import LLMResponseType
@@ -31,14 +31,14 @@ class OpenAIBatchLLM(BaseBatchLLM):
         request_batch: LLMRequestBatch[LLMResponseType],
         response_type: type[LLMResponseType],
         poll_interval: float,
-    ) -> LLMResponseBatchBundle[LLMResponseType]:
+    ) -> LLMBatchResult[LLMResponseType]:
         batch_id = await self.batch_generate_init(request_batch)
 
         while True:
-            response_bundle = await self.batch_generate_result(batch_id, response_type)
+            batch_result = await self.batch_generate_result(batch_id, response_type)
 
-            if response_bundle is not None:
-                return response_bundle
+            if batch_result is not None:
+                return batch_result
 
             await sleep(poll_interval)
 
@@ -49,7 +49,7 @@ class OpenAIBatchLLM(BaseBatchLLM):
         *,
         poll_interval: float,
         max_num_retries: int,
-    ) -> LLMResponseBatchBundle[LLMResponseType]:
+    ) -> LLMBatchResult[LLMResponseType]:
         if max_num_retries < 0:
             raise ValueError()
 
@@ -57,29 +57,29 @@ class OpenAIBatchLLM(BaseBatchLLM):
         response_lists: list[LLMResponseList[LLMResponseType]] = []
 
         for _ in range(max_num_retries + 1):
-            response_bundle = await self._batch_generate(
+            batch_result = await self._batch_generate(
                 request_batch, response_type, poll_interval
             )
-            response_lists.extend(response_bundle.response_lists)
+            response_lists.extend(batch_result.response_lists)
 
-            if not response_bundle.failed_requests:
+            if not batch_result.failed_requests:
                 break
 
             request_batch = LLMRequestBatch(
                 requests=[
                     failed_request.request
-                    for failed_request in response_bundle.failed_requests
+                    for failed_request in batch_result.failed_requests
                 ]
             )
 
-        response_bundle.response_lists = response_lists
+        batch_result.response_lists = response_lists
         num_completed = len(response_lists)
 
         logging.info(
             f'Completed {num_completed}/{num_total} requests within {max_num_retries} retries'
         )
 
-        return response_bundle
+        return batch_result
 
     async def batch_generate(
         self,
@@ -88,20 +88,20 @@ class OpenAIBatchLLM(BaseBatchLLM):
         *,
         poll_interval: float,
         num_retries: int,
-    ) -> LLMResponseBatchBundle[LLMResponseType]:
+    ) -> LLMBatchResult[LLMResponseType]:
         if num_retries:
-            response_bundle = await self._batch_generate_retry(
+            batch_result = await self._batch_generate_retry(
                 request_batch,
                 response_type,
                 poll_interval=poll_interval,
                 max_num_retries=num_retries,
             )
 
-        response_bundle = await self._batch_generate(
+        batch_result = await self._batch_generate(
             request_batch, response_type, poll_interval
         )
 
-        return response_bundle
+        return batch_result
 
     async def batch_generate_init(
         self,
@@ -137,7 +137,7 @@ class OpenAIBatchLLM(BaseBatchLLM):
 
     async def batch_generate_result(
         self, batch_id: str, response_type: type[LLMResponseType]
-    ) -> LLMResponseBatchBundle[LLMResponseType] | None:
+    ) -> LLMBatchResult[LLMResponseType] | None:
         batch = await self.client.batches.retrieve(batch_id)
 
         logging.info(
@@ -197,11 +197,11 @@ class OpenAIBatchLLM(BaseBatchLLM):
                 )
                 response_lists.append(response_list)
 
-        response_bundle = LLMResponseBatchBundle(
+        batch_result = LLMBatchResult(
             response_lists=response_lists, failed_requests=failed_requests
         )
 
         await self.client.files.delete(batch.input_file_id)
         await self.client.files.delete(batch.output_file_id)
 
-        return response_bundle
+        return batch_result

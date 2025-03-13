@@ -6,8 +6,8 @@ from math_rag.application.models.inference import (
     LLMError,
     LLMFailedRequest,
     LLMRequest,
-    LLMResponseBundle,
     LLMResponseList,
+    LLMResult,
     LLMTextResponse,
 )
 from math_rag.application.types.inference import LLMResponseType
@@ -31,7 +31,7 @@ class OpenAILLM(BaseLLM):
         *,
         max_time: float,
         max_num_retries: int,
-    ) -> LLMResponseBundle[LLMResponseType]:
+    ) -> LLMResult[LLMResponseType]:
         response_list = []
         failed_request = None
 
@@ -71,8 +71,6 @@ class OpenAILLM(BaseLLM):
         except OPENAI_ERRORS_TO_RAISE:
             raise
 
-        response_bundle = LLMResponseBundle(
-            response_list=response_list, failed_request=failed_request
-        )
+        result = LLMResult(response_list=response_list, failed_request=failed_request)
 
-        return response_bundle
+        return result

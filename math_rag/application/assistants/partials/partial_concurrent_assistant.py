@@ -36,21 +36,21 @@ class PartialConcurrentAssistant(
             requests=[self.encode_to_request(input) for input in inputs]
         )
         settings = self.settings_loader_service.load_concurrent_llm_settings()
-        response_bundle = await self.llm.concurrent_generate(
+        concurrent_result = await self.llm.concurrent_generate(
             request_concurrent,
             max_requests_per_minute=settings.max_requests_per_minute,
             max_tokens_per_minute=settings.max_tokens_per_minute,
             max_num_retries=settings.max_num_retries,
         )
 
-        if response_bundle.failed_requests:
+        if concurrent_result.failed_requests:
             await self.failed_request_repository.insert_many(
-                response_bundle.failed_requests
+                concurrent_result.failed_requests
             )
 
         outputs = [
             self.decode_from_response_list(response_list)
-            for response_list in response_bundle.response_lists
+            for response_list in concurrent_result.response_lists
         ]
 
         return outputs
