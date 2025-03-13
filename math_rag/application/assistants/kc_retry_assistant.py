@@ -59,7 +59,7 @@ class KCRetryAssistant(
             params=LLMParams[KCRetryAssistantOutput](
                 model='gpt-4o',
                 temperature=0.0,
-                response_type=KCRetryAssistantOutput,
+                response_type=KCRetryAssistantOutput.bind(input.id),
                 metadata={'id': str(input.id), 'cls': KCRetryAssistantOutput.__name__},
             ),
         )

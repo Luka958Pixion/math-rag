@@ -134,11 +134,13 @@ class InfrastructureContainer(DeclarativeContainer):
     # -----------
 
     # KaTeX
-    katex_correction_assistant = Factory(
+    kc_assistant = Factory(
         KCAssistant,
         llm=openai_unified_llm,
         settings_loader_service=application_container.settings_loader_service,
     )
     math_expression_classification_assistant = Factory(
-        MECAssistant, llm=openai_unified_llm
+        MECAssistant,
+        llm=openai_unified_llm,
+        settings_loader_service=application_container.settings_loader_service,
     )

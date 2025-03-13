@@ -39,7 +39,7 @@ class MECAssistant(PartialBatchAssistant[MECAssistantInput, MECAssistantOutput])
             params=LLMParams[MECAssistantOutput](
                 model='gpt-4o-mini',
                 temperature=0.0,
-                response_type=MECAssistantOutput,
+                response_type=MECAssistantOutput.bind(input.id),
                 metadata={'id': str(input.id), 'cls': MECAssistantInput.__name__},
             ),
         )
