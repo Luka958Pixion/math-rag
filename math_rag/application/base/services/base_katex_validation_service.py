@@ -14,6 +14,6 @@ class BaseKatexValidatorService(ABC):
 
     @abstractmethod
     async def batch_validate_many(
-        self, katexes: list[str], batch_size: int
+        self, katexes: list[str], *, batch_size: int
     ) -> list[KatexValidationResult]:
         pass

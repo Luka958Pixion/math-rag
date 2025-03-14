@@ -42,7 +42,7 @@ class KatexValidatorService(BaseKatexValidatorService):
             raise
 
     async def batch_validate_many(
-        self, katexes: list[str], batch_size: int
+        self, katexes: list[str], *, batch_size: int
     ) -> list[KatexValidationResult]:
         tasks = [
             self.validate_many(katexes[i : i + batch_size])
