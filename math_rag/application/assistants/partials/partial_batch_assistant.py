@@ -39,9 +39,8 @@ class PartialBatchAssistant(
         inputs: list[AssistantInputType],
         response_type: type[AssistantOutputType],
     ) -> list[AssistantOutputType]:
-        batch_request = LLMBatchRequest(
-            requests=[self.encode_to_request(input) for input in inputs]
-        )
+        requests = [self.encode_to_request(input) for input in inputs]
+        batch_request = LLMBatchRequest(requests=requests)
         settings = self.settings_loader_service.load_batch_llm_settings()
         batch_result = await self.llm.batch_generate(
             batch_request,
@@ -63,9 +62,8 @@ class PartialBatchAssistant(
         return outputs
 
     async def batch_assist_init(self, inputs: list[AssistantInputType]) -> str:
-        batch_request = LLMBatchRequest(
-            requests=[self.encode_to_request(input) for input in inputs]
-        )
+        requests = [self.encode_to_request(input) for input in inputs]
+        batch_request = LLMBatchRequest(requests=requests)
         batch_id = await self.llm.batch_generate_init(batch_request)
 
         return batch_id
@@ -76,7 +74,7 @@ class PartialBatchAssistant(
     ) -> list[AssistantOutputType] | None:
         batch_result = await self.llm.batch_generate_result(
             batch_id,
-            self.response_type,  # TODO response_type isn't bound
+            self.response_type,
         )
 
         if batch_result is None:

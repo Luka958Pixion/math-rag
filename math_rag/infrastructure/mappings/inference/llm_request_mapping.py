@@ -1,4 +1,5 @@
 from typing import Any, Generic
+from uuid import UUID
 
 from openai.lib._parsing._completions import (
     type_to_response_format_param,
@@ -21,7 +22,8 @@ class LLMRequestMapping(
     @staticmethod
     def to_source(target: dict[str, Any], **kwargs) -> LLMRequest[LLMResponseType]:
         request_id = kwargs['request_id']
-        response_type = kwargs['response_type']
+        input_id = UUID(target['metadata']['input_id'])
+        response_type = kwargs['response_type'].bind(input_id)
 
         return LLMRequest(
             id=request_id,
