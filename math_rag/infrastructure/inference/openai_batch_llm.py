@@ -181,13 +181,14 @@ class OpenAIBatchLLM(BaseBatchLLM):
 
         for data in output_items:
             request_id = UUID(data['custom_id'])
+            request = requests_dict[request_id]
             response = data['response']
 
             if response is None:
                 if 'error' in data:
                     error = LLMErrorMapping.to_source(data['error'])
                     failed_request = LLMFailedRequest(
-                        request=requests_dict[request_id],
+                        request=request,
                         errors=[error],
                     )
                     failed_requests.append(failed_request)
@@ -195,7 +196,10 @@ class OpenAIBatchLLM(BaseBatchLLM):
             else:
                 completion = ChatCompletion(**response['body'])
                 response_list = LLMResponseListMapping[LLMResponseType].to_source(
-                    completion, request_id=request_id, response_type=response_type
+                    completion,
+                    request_id=request_id,
+                    input_id=request.params.metadata['input_id'],
+                    response_type=response_type,
                 )
                 response_lists.append(response_list)
 

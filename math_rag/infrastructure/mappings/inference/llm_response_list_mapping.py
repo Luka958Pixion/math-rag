@@ -22,12 +22,10 @@ class LLMResponseListMapping(
     @staticmethod
     def to_source(target: ChatCompletion, **kwargs) -> LLMResponseList[LLMResponseType]:
         request_id = kwargs['request_id']
-        response_type = kwargs.get('response_type')
+        input_id = kwargs['input_id']
+        response_type = kwargs['response_type'].bind(input_id)
 
-        for choice in target.choices:
-            print(choice.message.content)
-
-        if response_type and response_type is not LLMTextResponse:
+        if response_type is not LLMTextResponse:
             target = parse_chat_completion(
                 response_format=response_type,
                 input_tools=NOT_GIVEN,
