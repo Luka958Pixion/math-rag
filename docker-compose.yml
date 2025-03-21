@@ -78,6 +78,18 @@ services:
       - 3000:3000
     restart: unless-stopped
 
+  apptainer:
+    build:
+      context: .
+      dockerfile: Dockerfile.apptainer
+      secrets:
+        - git_token
+    volumes:
+      - apptainer_data:/mnt/data
+    ports:
+      - 3001:3001
+    restart: unless-stopped
+
 volumes:
   minio_data:
   mongo_data:
@@ -87,6 +99,7 @@ volumes:
   neo4j_plugins:
   qdrant_storage:
   jupyter_sessions:
+  apptainer_data:
 
 configs:
   qdrant_config:
