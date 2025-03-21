@@ -54,7 +54,7 @@ services:
     volumes:
       - qdrant_storage:/qdrant/storage
 
-  isolated-jupyter-kernel:
+  jupyter-api:
     build:
       context: .
       dockerfile: Dockerfile.jupyter
@@ -68,7 +68,7 @@ services:
       - 5200:5000
     restart: unless-stopped
 
-  katex-validator:
+  katex-api:
     build:
       context: .
       dockerfile: Dockerfile.katex
@@ -78,7 +78,7 @@ services:
       - 3000:3000
     restart: unless-stopped
 
-  apptainer:
+  apptainer-api:
     build:
       context: .
       dockerfile: Dockerfile.apptainer

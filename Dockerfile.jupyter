@@ -10,9 +10,9 @@ RUN apt-get update && apt-get install -y --no-install-recommends \
     && ln -s $HOME/.local/bin/poetry /usr/local/bin/poetry
 
 RUN --mount=type=secret,id=git_token \
-    git clone https://Luka958Pixion:$(cat /run/secrets/git_token)@github.com/Luka958Pixion/isolated-jupyter-kernel.git isolated-jupyter-kernel
+    git clone https://Luka958Pixion:$(cat /run/secrets/git_token)@github.com/Luka958Pixion/jupyter-api.git jupyter-api
 
-WORKDIR /isolated-jupyter-kernel
+WORKDIR /jupyter-api
 
 RUN mkdir -p /mnt/data /mnt/jupyter_sessions /workspace
 RUN poetry install

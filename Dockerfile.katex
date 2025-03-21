@@ -1,9 +1,9 @@
 FROM node:latest
 
 RUN --mount=type=secret,id=git_token \
-    git clone https://Luka958Pixion:$(cat /run/secrets/git_token)@github.com/Luka958Pixion/katex-validator.git katex-validator
+    git clone https://Luka958Pixion:$(cat /run/secrets/git_token)@github.com/Luka958Pixion/katex-api.git katex-api
 
-WORKDIR /katex-validator
+WORKDIR /katex-api
 
 RUN npm install
 
