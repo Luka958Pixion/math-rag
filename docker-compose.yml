@@ -70,7 +70,7 @@ services:
       - qdrant_storage:/qdrant/storage
 
   math-rag-jupyter:
-    image: ghcr.io/luka958pixion/math_rag_katex:latest
+    image: ghcr.io/luka958pixion/math_rag_jupyter:latest
     platform: linux/amd64
     environment:
       - PORT=7030
