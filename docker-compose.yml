@@ -75,7 +75,7 @@ services:
     environment:
       - PORT=7030
     ports:
-      - 7030:7030
+      - 7035:7030
     restart: unless-stopped
 
   math-rag-katex:
@@ -84,16 +84,18 @@ services:
     environment:
       - PORT=7020
     ports:
-      - 7020:7020
+      - 7025:7020
     restart: unless-stopped
 
   math-rag-apptainer:
     image: ghcr.io/luka958pixion/math_rag_apptainer:latest
     platform: linux/amd64
+    volumes:
+      - /var/run/docker.sock:/var/run/docker.sock
     environment:
       - PORT=7010
     ports:
-      - 7010:7010
+      - 7015:7010
     restart: unless-stopped
 
 volumes:
