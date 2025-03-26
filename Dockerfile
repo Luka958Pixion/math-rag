@@ -37,7 +37,7 @@ RUN poetry install --no-root --only main
 COPY . .
 
 # Set production startup command
-CMD ["poetry", "run", "python", "-m" "math_rag.main"]
+CMD ["poetry", "run", "python", "-m", "math_rag.main"]
 
 # ---------- Development Stage ----------
 FROM base AS dev
