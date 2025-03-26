@@ -1,10 +1,10 @@
 # math-rag
 
 ## Setup
-- `python3 setup.py`
-- `docker compose up -d`
+- `echo $GITHUB_PAT | docker login ghcr.io -u Luka958Pixion --password-stdin`
 
 ## Environment
+- `PORT`
 - `DEPLOYMENT`
 - `MINIO_ENDPOINT`
 - `MINIO_ACCESS_KEY`

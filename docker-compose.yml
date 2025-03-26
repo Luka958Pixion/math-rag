@@ -1,4 +1,19 @@
 services:
+  math-rag-service:
+    build:
+      context: .
+      dockerfile: Dockerfile
+      target: dev
+    container_name: math_rag_dev_container
+    volumes:
+      - ./:/workspaces:cached
+      - venv_volume:/workspaces/.venv
+      - /var/run/docker.sock:/var/run/docker.sock
+      - ./.env:/workspaces/.env:ro
+    ports:
+      - ${PORT}:${PORT}
+    command: sleep infinity
+
   minio:
     image: minio/minio:latest
     container_name: minio
@@ -54,43 +69,35 @@ services:
     volumes:
       - qdrant_storage:/qdrant/storage
 
-  jupyter-api:
-    build:
-      context: .
-      dockerfile: Dockerfile.jupyter
-      secrets:
-        - git_token
+  math-rag-jupyter:
+    image: ghcr.io/luka958pixion/math_rag_katex:latest
+    platform: linux/amd64
     environment:
-      - JUPYTER_SESSIONS_DIR=/mnt/jupyter_sessions
-    volumes:
-      - jupyter_sessions:/mnt/jupyter_sessions
+      - PORT=7030
     ports:
-      - 5200:5000
+      - 7030:7030
     restart: unless-stopped
 
-  katex-api:
-    build:
-      context: .
-      dockerfile: Dockerfile.katex
-      secrets:
-        - git_token
+  math-rag-katex:
+    image: ghcr.io/luka958pixion/math_rag_katex:latest
+    platform: linux/amd64
+    environment:
+      - PORT=7020
     ports:
-      - 3000:3000
+      - 7020:7020
     restart: unless-stopped
 
-  apptainer-api:
-    build:
-      context: .
-      dockerfile: Dockerfile.apptainer
-      secrets:
-        - git_token
-    volumes:
-      - apptainer_data:/mnt/data
+  math-rag-apptainer:
+    image: ghcr.io/luka958pixion/math_rag_apptainer:latest
+    platform: linux/amd64
+    environment:
+      - PORT=7010
     ports:
-      - 3001:3001
+      - 7010:7010
     restart: unless-stopped
 
 volumes:
+  venv_volume:
   minio_data:
   mongo_data:
   neo4j_data:
@@ -105,7 +112,3 @@ configs:
   qdrant_config:
     content: |
       log_level: INFO
-
-secrets:
-  git_token:
-    file: ./secrets/git_token.txt 
