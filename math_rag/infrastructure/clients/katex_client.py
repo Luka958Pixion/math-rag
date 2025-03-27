@@ -2,11 +2,11 @@ from asyncio import gather
 
 from httpx import AsyncClient
 
-from math_rag.application.base.services import BaseKatexValidatorService
+from math_rag.application.base.clients import BaseKatexClient
 from math_rag.application.models import KatexValidationResult
 
 
-class KatexValidatorService(BaseKatexValidatorService):
+class KatexClient(BaseKatexClient):
     async def validate(self, katex: str) -> KatexValidationResult:
         url = 'http://localhost:7025/validate'
 

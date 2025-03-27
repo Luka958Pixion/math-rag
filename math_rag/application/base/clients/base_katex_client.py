@@ -3,7 +3,7 @@ from abc import ABC, abstractmethod
 from math_rag.application.models import KatexValidationResult
 
 
-class BaseKatexValidatorService(ABC):
+class BaseKatexClient(ABC):
     @abstractmethod
     async def validate(self, katex: str) -> KatexValidationResult:
         pass

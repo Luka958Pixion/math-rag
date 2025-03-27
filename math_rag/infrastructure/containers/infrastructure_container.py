@@ -17,6 +17,7 @@ from math_rag.application.assistants import (
     MECAssistant,
 )
 from math_rag.application.containers import ApplicationContainer
+from math_rag.infrastructure.clients import ArxivClient, KatexClient
 from math_rag.infrastructure.inference import OpenAIUnifiedLLM
 from math_rag.infrastructure.repositories.documents import (
     LLMFailedRequestRepository,
@@ -32,8 +33,6 @@ from math_rag.infrastructure.seeders.documents import (
 )
 from math_rag.infrastructure.seeders.objects import MathArticleSeeder
 from math_rag.infrastructure.services import (
-    ArxivSearcherService,
-    KatexValidatorService,
     LatexParserService,
     LatexVisitorService,
 )
@@ -119,15 +118,15 @@ class InfrastructureContainer(DeclarativeContainer):
     openai_unified_llm = Factory(OpenAIUnifiedLLM, client=async_openai_client)
 
     # arXiv
-    arxiv_client = Singleton(Client)
-    arxiv_searcher_service = Factory(ArxivSearcherService, client=arxiv_client)
+    _arxiv_client = Singleton(Client)
+    arxiv_client = Factory(ArxivClient, client=_arxiv_client)
 
     # LaTeX
     latex_parser_service = Factory(LatexParserService)
     latex_visitor_service = Factory(LatexVisitorService)
 
     # KaTeX
-    katex_validator_service = Factory(KatexValidatorService)
+    katex_client = Factory(KatexClient)
 
     # -----------
     # Application

@@ -1,4 +1,4 @@
-from math_rag.infrastructure.services.arxiv import BaseArxivCategory
+from math_rag.application.enums.arxiv import BaseArxivCategory
 
 
 class AstroPhCategory(BaseArxivCategory):

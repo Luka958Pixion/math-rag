@@ -5,6 +5,8 @@
 
 ## Environment
 - `PORT`
+- `HPC_USERNAME`
+- `HPC_HOSTNAME`
 - `DEPLOYMENT`
 - `MINIO_ENDPOINT`
 - `MINIO_ACCESS_KEY`

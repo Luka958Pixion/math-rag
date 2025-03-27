@@ -1,7 +1,8 @@
 from arxiv import Client, Result, Search, SortCriterion, SortOrder
 from httpx import AsyncClient, HTTPStatusError, RequestError
 
-from .arxiv import (
+from math_rag.application.base.clients import BaseArxivClient
+from math_rag.application.enums.arxiv import (
     BaseArxivCategory,
     CompSciCategory,
     EconCategory,
@@ -25,7 +26,7 @@ CATEGORY_TYPE_TO_PREFIX: dict[type[BaseArxivCategory], str] = {
 }
 
 
-class ArxivSearcherService:
+class ArxivClient(BaseArxivClient):
     def __init__(self, client: Client):
         self.client = client
 

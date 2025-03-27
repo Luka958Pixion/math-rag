@@ -3,10 +3,25 @@ from pathlib import Path
 from typing import AsyncGenerator
 from uuid import UUID
 
-from math_rag.application.enums import ApptainerOverlayCreateStatus
+from math_rag.application.enums import (
+    ApptainerBuildStatus,
+    ApptainerOverlayCreateStatus,
+)
 
 
-class BaseApptainerOverlayCreatorService(ABC):
+class BaseApptainerClient(ABC):
+    @abstractmethod
+    async def build(self, def_file_path: Path) -> UUID:
+        pass
+
+    @abstractmethod
+    async def build_status(self, task_id: UUID) -> ApptainerBuildStatus:
+        pass
+
+    @abstractmethod
+    async def build_result(self, task_id: UUID) -> AsyncGenerator[bytes, None]:
+        pass
+
     @abstractmethod
     async def overlay_create(self, dfakeroot: bool, size: int) -> UUID:
         pass
