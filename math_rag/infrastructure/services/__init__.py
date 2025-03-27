@@ -1,3 +1,4 @@
+from .apptainer_builder_service import ApptainerBuilderService
 from .arxiv_searcher_service import ArxivSearcherService
 from .katex_validator_service import KatexValidatorService
 from .latex_parser_service import LatexParserService
@@ -9,4 +10,5 @@ __all__ = [
     'KatexValidatorService',
     'LatexParserService',
     'LatexVisitorService',
+    'ApptainerBuilderService',
 ]
