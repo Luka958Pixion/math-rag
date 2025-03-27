@@ -24,7 +24,7 @@ class ApptainerBuilderService(BaseApptainerBuilderService):
 
     async def build_status(self, task_id: UUID) -> ApptainerBuildStatus:
         url = 'http://localhost:7015/apptainer/build/status'
-        payload = {'task_id': task_id}
+        payload = {'task_id': str(task_id)}
 
         async with AsyncClient() as client:
             response = await client.post(url, json=payload)
@@ -35,7 +35,7 @@ class ApptainerBuilderService(BaseApptainerBuilderService):
 
     async def build_result(self, task_id: UUID) -> AsyncGenerator[bytes, None]:
         url = 'http://localhost:7015/apptainer/build/result'
-        payload = {'task_id': task_id}
+        payload = {'task_id': str(task_id)}
 
         async with AsyncClient() as client:
             async with client.stream('POST', url, json=payload) as response:
