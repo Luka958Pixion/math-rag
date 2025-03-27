@@ -23,7 +23,7 @@ class BaseApptainerClient(ABC):
         pass
 
     @abstractmethod
-    async def overlay_create(self, dfakeroot: bool, size: int) -> UUID:
+    async def overlay_create(self, fakeroot: bool, size: int) -> UUID:
         pass
 
     @abstractmethod

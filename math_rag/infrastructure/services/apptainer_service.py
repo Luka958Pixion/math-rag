@@ -4,7 +4,10 @@ from typing import AsyncGenerator
 
 from math_rag.application.base.clients import BaseApptainerClient
 from math_rag.application.base.services import BaseApptainerService
-from math_rag.application.enums import ApptainerBuildStatus
+from math_rag.application.enums import (
+    ApptainerBuildStatus,
+    ApptainerOverlayCreateStatus,
+)
 
 
 class ApptainerService(BaseApptainerService):
@@ -15,17 +18,17 @@ class ApptainerService(BaseApptainerService):
         self, def_file_path: Path, *, max_retries: int = 3, poll_interval: float = 5
     ) -> AsyncGenerator[bytes, None]:
         retries = 0
-        build_id = await self.apptainer_client.build(def_file_path)
+        task_id = await self.apptainer_client.build(def_file_path)
 
         while True:
-            status = await self.apptainer_client.build_status(build_id)
+            status = await self.apptainer_client.build_status(task_id)
 
             if status == ApptainerBuildStatus.DONE:
                 break
 
             if status == ApptainerBuildStatus.FAILED:
                 if retries < max_retries:
-                    build_id = await self.apptainer_client.build(...)
+                    task_id = await self.apptainer_client.build(def_file_path)
                     retries += 1
 
                 else:
@@ -33,11 +36,32 @@ class ApptainerService(BaseApptainerService):
 
             await sleep(poll_interval)
 
-        result = await self.apptainer_client.build_result(build_id)
+        result = await self.apptainer_client.build_result(task_id)
 
         return result
 
     async def overlay_create(
         self, fakeroot: bool, size: int, *, max_retries: int, poll_interval: float
     ) -> AsyncGenerator[bytes, None]:
-        raise NotImplementedError()
+        retries = 0
+        task_id = await self.apptainer_client.overlay_create(fakeroot, size)
+
+        while True:
+            status = await self.apptainer_client.overlay_create_status(task_id)
+
+            if status == ApptainerOverlayCreateStatus.DONE:
+                break
+
+            if status == ApptainerOverlayCreateStatus.FAILED:
+                if retries < max_retries:
+                    task_id = await self.apptainer_client.overlay_create(fakeroot, size)
+                    retries += 1
+
+                else:
+                    raise Exception('Max retries reached')
+
+            await sleep(poll_interval)
+
+        result = await self.apptainer_client.overlay_create_result(task_id)
+
+        return result
