@@ -1,6 +1,9 @@
 from pathlib import Path
+from typing import Any
 
-from pydantic import BaseModel, Field
+from pydantic import BaseModel, Field, model_validator
+
+from math_rag.infrastructure.utils import PBSProParserUtil
 
 from .pbs_pro_resource_list import PBSProResourceList
 from .pbs_pro_resources_used import PBSProResourcesUsed
@@ -34,8 +37,32 @@ class PBSProJob(BaseModel):
     project: str = Field(alias='project')
     submit_host: str = Field(alias='submit_host')
 
-    # TODO
     resource_list: PBSProResourceList
     resources_used: PBSProResourcesUsed
     time: PBSProTime
     variable_list: PBSProVariableList
+
+    @model_validator(mode='before')
+    def group_nested_fields(cls, values: dict[str, Any]) -> dict[str, Any]:
+        return {
+            **values,
+            'resource_list': {
+                key: value
+                for key, value in values.items()
+                if key.startswith('resource_list.')
+            },
+            'resources_used': {
+                key: value
+                for key, value in values.items()
+                if key.startswith('resources_used.')
+            },
+            'time': {
+                key: value
+                for key, value in values.items()
+                if key
+                in {field_info.alias for field_info in PBSProTime.model_fields.values()}
+            },
+            'variable_list': PBSProParserUtil.parse_variable_list(
+                values['variable_list']
+            ),
+        }
