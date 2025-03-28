@@ -10,7 +10,6 @@ class KCRetryAssistantInput(BaseAssistantInput):
     pairs: list[tuple[KCAssistantInput, KCAssistantOutput | None]]
 
     @field_validator('pairs')
-    @classmethod
     def validate_pairs(
         cls, pairs: list[tuple[KCAssistantInput, KCAssistantOutput | None]]
     ):

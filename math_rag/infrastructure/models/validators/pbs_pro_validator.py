@@ -4,7 +4,7 @@ class PBSProValidator:
         units = {'b': 1, 'kb': 1024, 'mb': 1024**2, 'gb': 1024**3, 'tb': 1024**4}
         value = value.strip().lower()
 
-        for unit in units:
+        for unit in sorted(units, key=len, reverse=True):
             if value.endswith(unit):
                 number = value.removesuffix(unit)
 

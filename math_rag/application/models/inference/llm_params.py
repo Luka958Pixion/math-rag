@@ -19,12 +19,10 @@ class LLMParams(BaseModel, Generic[LLMResponseType]):
     n: int = 1
 
     @field_validator('response_type', mode='before')
-    @classmethod
     def allow_python_types(cls, value: type[LLMResponseType]):
         return value
 
     @field_validator('metadata', mode='before')
-    @classmethod
     def validate_metadata(cls, value: dict[str, str] | None):
         if value is None:
             return
