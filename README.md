@@ -4,12 +4,13 @@
 - `export GITHUB_PERSONAL_ACCESS_TOKEN=...`
 - `echo $GITHUB_PERSONAL_ACCESS_TOKEN | docker login ghcr.io -u Luka958Pixion --password-stdin`
 - `mkdir -p .ssh`
-- `ssh-keygen -t ed25519 -f .ssh/id_ed25519`
+- `ssh-keygen -t ed25519 -f .ssh/id_ed25519 -C "math-rag-key"`
 
 ## Environment
 - `PORT`
 - `HPC_USER`
 - `HPC_HOST`
+- `HPC_PASSPHRASE`
 - `DEPLOYMENT`
 - `MINIO_ENDPOINT`
 - `MINIO_ACCESS_KEY`

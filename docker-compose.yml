@@ -10,7 +10,7 @@ services:
       - venv_volume:/workspaces/.venv
       - /var/run/docker.sock:/var/run/docker.sock
       - ./.env:/workspaces/.env:ro
-      - ./.ssh/id_ed25519:/workspaces/.ssh/id_ed25519:ro
+      - ./.ssh/id_ed25519:/.ssh/id_ed25519:ro
     ports:
       - ${PORT}:${PORT}
     command: sleep infinity
