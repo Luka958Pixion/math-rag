@@ -18,7 +18,7 @@ class SCPClient:
         target: Path,
     ):
         if isinstance(source, Path):
-            source = self.stream_file(source)
+            source = self._stream_file(source)
 
         async with AsyncExitStack() as stack:
             conn = await stack.enter_async_context(
@@ -30,7 +30,7 @@ class SCPClient:
             async for chunk in source:
                 await file.write(chunk)
 
-    async def stream_file(self, path: Path) -> AsyncGenerator[bytes, None]:
+    async def _stream_file(self, path: Path) -> AsyncGenerator[bytes, None]:
         async with open(path, 'rb') as file:
             while True:
                 chunk = await file.read(8192)
