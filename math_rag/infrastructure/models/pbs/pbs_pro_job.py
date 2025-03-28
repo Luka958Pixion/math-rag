@@ -44,6 +44,10 @@ class PBSProJob(BaseModel):
 
     @model_validator(mode='before')
     def group_nested_fields(cls, values: dict[str, Any]) -> dict[str, Any]:
+        time_fields = {
+            field_info.alias for field_info in PBSProTime.model_fields.values()
+        }
+
         return {
             **values,
             'resource_list': {
@@ -56,12 +60,7 @@ class PBSProJob(BaseModel):
                 for key, value in values.items()
                 if key.startswith('resources_used.')
             },
-            'time': {
-                key: value
-                for key, value in values.items()
-                if key
-                in {field_info.alias for field_info in PBSProTime.model_fields.values()}
-            },
+            'time': {key: value for key, value in values.items() if key in time_fields},
             'variable_list': PBSProParserUtil.parse_variable_list(
                 values['variable_list']
             ),
