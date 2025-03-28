@@ -42,26 +42,30 @@ class PBSProJob(BaseModel):
     time: PBSProTime
     variable_list: PBSProVariableList
 
-    @model_validator(mode='before')
-    def group_nested_fields(cls, values: dict[str, Any]) -> dict[str, Any]:
-        time_fields = {
-            field_info.alias for field_info in PBSProTime.model_fields.values()
-        }
+    @classmethod
+    def from_queue_status(cls, queue_status: str) -> 'PBSProJob':
+        queue_status_flat_dict = PBSProParserUtil.parse(queue_status)
 
-        return {
-            **values,
-            'resource_list': {
+        time_fields = {field.alias for field in PBSProTime.model_fields.values()}
+
+        return cls(
+            **queue_status_flat_dict,
+            resource_list={
                 key: value
-                for key, value in values.items()
+                for key, value in queue_status_flat_dict.items()
                 if key.startswith('resource_list.')
             },
-            'resources_used': {
+            resources_used={
                 key: value
-                for key, value in values.items()
+                for key, value in queue_status_flat_dict.items()
                 if key.startswith('resources_used.')
             },
-            'time': {key: value for key, value in values.items() if key in time_fields},
-            'variable_list': PBSProParserUtil.parse_variable_list(
-                values['variable_list']
+            time={
+                key: value
+                for key, value in queue_status_flat_dict.items()
+                if key in time_fields
+            },
+            variable_list=PBSProParserUtil.parse_variable_list(
+                queue_status_flat_dict['variable_list']
             ),
-        }
+        )
