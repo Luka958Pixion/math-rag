@@ -6,7 +6,7 @@ class PBSSubjobState(str, Enum):
     PBS Pro 2022.1.1 Subjob States
 
     Reference:
-        https://help.altair.com/2022.1.0/PBS%20Professional/PBSReferenceGuide2022.1.pdf
+        https://help.altair.com/2024.1.0/PBS%20Professional/PBSReferenceGuide2024.1.pdf
     """
 
     E = 'ending'

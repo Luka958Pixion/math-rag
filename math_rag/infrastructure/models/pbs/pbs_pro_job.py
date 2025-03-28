@@ -2,6 +2,7 @@ from pathlib import Path
 
 from pydantic import BaseModel, Field
 
+from math_rag.infrastructure.enums import PBSProJobState, PBSProQueue
 from math_rag.infrastructure.utils import PBSProParserUtil
 
 from .pbs_pro_resource_list import PBSProResourceList
@@ -14,8 +15,8 @@ class PBSProJob(BaseModel):
     id: str = Field(alias='job_id')
     name: str = Field(alias='job_name')
     owner: str = Field(alias='job_owner')
-    state: str = Field(alias='job_state')
-    queue: str = Field(alias='queue')
+    state: PBSProJobState = Field(alias='job_state')
+    queue: PBSProQueue = Field(alias='queue')
     server: str = Field(alias='server')
     checkpoint: str = Field(alias='checkpoint')
     exec_host: str = Field(alias='exec_host')
