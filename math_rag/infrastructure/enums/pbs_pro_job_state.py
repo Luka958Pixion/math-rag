@@ -3,44 +3,44 @@ from enum import Enum
 
 class PBSProJobState(str, Enum):
     """
-    PBS Pro 2022.1.1 Job States
+    PBS Pro 2024.1.0 Job States
 
     Reference:
         https://help.altair.com/2024.1.0/PBS%20Professional/PBSReferenceGuide2024.1.pdf
     """
 
     BEGUN = 'B'
-    """(7): Job arrays only; at least one subjob has started."""
+    """Job array has started execution."""
 
     EXITING = 'E'
-    """(5): Job is exiting after having run."""
+    """The Exiting state."""
 
     FINISHED = 'F'
-    """(9): Job has completed execution, failed during execution, or was deleted."""
+    """The Finished state."""
 
     HELD = 'H'
-    """(2): Job is held by user, admin, or server."""
+    """The Held state."""
 
     MOVED = 'M'
-    """(8): Job was moved to another server."""
+    """The Moved state."""
 
     QUEUED = 'Q'
-    """(1): Job is queued, eligible to run or be routed."""
+    """The Queued state."""
 
     RUNNING = 'R'
-    """(4): Job is currently running."""
+    """The Running state."""
 
     SUSPENDED = 'S'
-    """(400): Job is suspended by scheduler to free up resources."""
+    """The Suspended state."""
 
-    TRANSITION = 'T'
-    """(0): Job is transitioning to or from a server."""
+    TRANSITING = 'T'
+    """The Transiting state."""
 
-    UNKNOWN = 'U'
-    """(410): Job is suspended due to workstation becoming busy."""
+    USER_SUSPENDED = 'U'
+    """Job suspended due to workstation user activity."""
 
     WAITING = 'W'
-    """(3): Job is waiting for its execution time or delayed due to stagein failure."""
+    """The Waiting state."""
 
     EXITED = 'X'
-    """(6): Subjobs only; subjob is finished or expired."""
+    """The Exited state (subjobs only)."""

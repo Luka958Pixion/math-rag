@@ -2,7 +2,14 @@ from pathlib import Path
 
 from pydantic import BaseModel, Field
 
-from math_rag.infrastructure.enums import PBSProJobState, PBSProQueue
+from math_rag.infrastructure.enums import (
+    PBSProHoldType,
+    PBSProJobState,
+    PBSProJoinPath,
+    PBSProKeepFiles,
+    PBSProMailPoints,
+    PBSProQueue,
+)
 from math_rag.infrastructure.utils import PBSProParserUtil
 
 from .pbs_pro_resource_list import PBSProResourceList
@@ -24,10 +31,10 @@ class PBSProJob(BaseModel):
     error_path: str = Field(alias='error_path')
     output_path: str = Field(alias='output_path')
     dir: Path = Field(alias='jobdir')
-    hold_types: str = Field(alias='hold_types')
-    join_path: str = Field(alias='join_path')
-    keep_files: str = Field(alias='keep_files')
-    mail_points: str = Field(alias='mail_points')
+    hold_types: PBSProHoldType = Field(alias='hold_types')
+    join_path: PBSProJoinPath = Field(alias='join_path')
+    keep_files: PBSProKeepFiles = Field(alias='keep_files')
+    mail_points: PBSProMailPoints = Field(alias='mail_points')
     substate: int = Field(alias='substate')
     priority: int = Field(alias='priority')
     session_id: str = Field(alias='session_id')
