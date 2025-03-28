@@ -1,7 +1,10 @@
 # math-rag
 
 ## Setup
-- `echo $GITHUB_PAT | docker login ghcr.io -u Luka958Pixion --password-stdin`
+- `export GITHUB_PERSONAL_ACCESS_TOKEN=...`
+- `echo $GITHUB_PERSONAL_ACCESS_TOKEN | docker login ghcr.io -u Luka958Pixion --password-stdin`
+- `mkdir -p .ssh`
+- `ssh-keygen -t ed25519 -f .ssh/id_ed25519`
 
 ## Environment
 - `PORT`
