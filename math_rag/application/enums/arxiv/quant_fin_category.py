@@ -1,4 +1,4 @@
-from math_rag.infrastructure.services.arxiv import BaseArxivCategory
+from .base_arxiv_category import BaseArxivCategory
 
 
 class QuantFinCategory(BaseArxivCategory):

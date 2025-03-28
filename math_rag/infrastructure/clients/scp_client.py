@@ -12,7 +12,7 @@ class SCPClient:
         self.user = user
         self.private_key = read_private_key('/.ssh/id_ed25519', passphrase=passphrase)
 
-    async def secure_copy(
+    async def upload(
         self,
         source: Path | AsyncGenerator[bytes, None],
         target: Path,
@@ -39,3 +39,24 @@ class SCPClient:
                     break
 
                 yield chunk
+
+    async def download(
+        self,
+        source: Path,
+        target: Path,
+    ):
+        async with AsyncExitStack() as stack:
+            conn = await stack.enter_async_context(
+                connect(self.host, username=self.user, client_keys=[self.private_key])
+            )
+            sftp = await stack.enter_async_context(conn.start_sftp_client())
+            file = await stack.enter_async_context(sftp.open(str(source), 'rb'))
+
+            async with open(target, 'wb') as source_file:
+                while True:
+                    chunk = await file.read(8192)
+
+                    if not chunk:
+                        break
+
+                    await source_file.write(chunk)

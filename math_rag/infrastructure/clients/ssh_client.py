@@ -22,8 +22,8 @@ class SSHClient:
                     logging.error(
                         f'SSH process with command {result.command},\n'
                         f'completed with status {result.exit_status},\n'
-                        f'STDOUT: {result.stderr},\n'
-                        f'STDERR: {result.stderr}'
+                        f'stdout: {result.stderr},\n'
+                        f'stderr: {result.stderr}'
                     )
                     raise Exception(
                         f'SSH process completed with status {result.exit_status}'
