@@ -34,6 +34,8 @@ class PBSProParserUtil:
                 key, value = entry.split(' = ', 1)
                 result[key.strip()] = value.strip()
 
+        result = {key.lower(): value for key, value in result.items()}
+
         return result
 
     def parse_variable_list(value: str) -> dict[str, str]:

@@ -1,7 +1,6 @@
 from pathlib import Path
-from typing import Any
 
-from pydantic import BaseModel, Field, model_validator
+from pydantic import BaseModel, Field
 
 from math_rag.infrastructure.utils import PBSProParserUtil
 
@@ -45,8 +44,8 @@ class PBSProJob(BaseModel):
     @classmethod
     def from_queue_status(cls, queue_status: str) -> 'PBSProJob':
         queue_status_flat_dict = PBSProParserUtil.parse(queue_status)
-
         time_fields = {field.alias for field in PBSProTime.model_fields.values()}
+        variable_list = queue_status_flat_dict.pop('variable_list')
 
         return cls(
             **queue_status_flat_dict,
@@ -65,7 +64,5 @@ class PBSProJob(BaseModel):
                 for key, value in queue_status_flat_dict.items()
                 if key in time_fields
             },
-            variable_list=PBSProParserUtil.parse_variable_list(
-                queue_status_flat_dict['variable_list']
-            ),
+            variable_list=PBSProParserUtil.parse_variable_list(variable_list),
         )

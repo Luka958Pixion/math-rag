@@ -2,7 +2,7 @@ from datetime import timedelta
 
 from pydantic import BaseModel, Field, field_validator
 
-from math_rag.infrastructure.models.validators import PBSProValidator
+from math_rag.infrastructure.utils import PBSProParserUtil
 
 
 class PBSProResourceList(BaseModel):
@@ -16,4 +16,4 @@ class PBSProResourceList(BaseModel):
 
     @field_validator('memory', mode='before')
     def parse_memory(cls, value: str):
-        return PBSProValidator.parse_memory(value)
+        return PBSProParserUtil.parse_memory(value)
