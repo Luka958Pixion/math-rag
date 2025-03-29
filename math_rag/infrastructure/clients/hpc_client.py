@@ -25,8 +25,6 @@ class HPCClient(SSHClient):
         return HPCQueueLiveMapping.to_source(stdout)
 
     async def job_statistics(self, queue: HPCQueue) -> HPCJobStatistics | None:
-        # TODO supports multiple stats
-
         stdout, _ = await self.run(
             "jobstat -u  | awk 'NR>=3 {print $1, $2, $3, $4, $5, $6, $7, $8}'"
         )
@@ -38,7 +36,7 @@ class HPCClient(SSHClient):
 
     async def gpu_statistics(self) -> HPCGPUStatistics | None:
         stdout, _ = await self.run(
-            """gpustat | awk 'NR==3 {print $1"_"$2"_"$3"_"$4"_"$5}'"""
+            """gpustat | awk 'NR>=3 {print $1"_"$2"_"$3"_"$4"_"$5}'"""
         )
 
         if stdout.startswith('No running jobs'):

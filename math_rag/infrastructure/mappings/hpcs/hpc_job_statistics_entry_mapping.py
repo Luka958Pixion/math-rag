@@ -11,7 +11,7 @@ class HPCJobStatisticsEntryMapping(BaseMapping[HPCJobStatisticsEntry, str]):
         return HPCJobStatisticsEntry(
             job_id=fields[0],
             num_cpus=fields[1],
-            used_percent=fields[1],
+            used_percent=fields[2],
             mem=HPCParserUtil.parse_memory(fields[3]),
             used_mem=HPCParserUtil.parse_memory(fields[4]),
             walltime=fields[5],

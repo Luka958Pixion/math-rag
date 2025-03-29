@@ -1,4 +1,6 @@
 from .hpc_gpu_statistics import HPCGPUStatistics
+from .hpc_gpu_statistics_entry import HPCGPUStatisticsEntry
+from .hpc_gpu_statistics_sub_entry import HPCGPUStatisticsSubEntry
 from .hpc_job_statistics import HPCJobStatistics
 from .hpc_job_statistics_entry import HPCJobStatisticsEntry
 from .hpc_job_temporary_size import HPCJobTemporarySize
@@ -10,6 +12,8 @@ from .hpc_queue_live_entry import HPCQueueLiveEntry
 __all__ = [
     'HPCJobStatistics',
     'HPCJobStatisticsEntry',
+    'HPCGPUStatisticsSubEntry',
+    'HPCGPUStatisticsEntry',
     'HPCGPUStatistics',
     'HPCQueueLive',
     'HPCQueueLiveEntry',

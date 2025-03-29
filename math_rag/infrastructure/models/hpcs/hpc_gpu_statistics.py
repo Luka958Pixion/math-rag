@@ -1,9 +1,7 @@
 from pydantic import BaseModel
 
+from .hpc_gpu_statistics_entry import HPCGPUStatisticsEntry
+
 
 class HPCGPUStatistics(BaseModel):
-    job_id: int
-    node: str
-    gpu: str
-    used_percent: int
-    mem_used: int
+    entries: list[HPCGPUStatisticsEntry]
