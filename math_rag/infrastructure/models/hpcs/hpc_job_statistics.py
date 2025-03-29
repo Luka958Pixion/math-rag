@@ -1,14 +1,7 @@
-from datetime import timedelta
-
 from pydantic import BaseModel
+
+from .hpc_job_statistics_entry import HPCJobStatisticsEntry
 
 
 class HPCJobStatistics(BaseModel):
-    job_id: int
-    num_cpus: int
-    used_percent: float
-    mem: int
-    used_mem: int
-    walltime: timedelta
-    used_walltime: timedelta
-    exit_code: str
+    entries: list[HPCJobStatisticsEntry]

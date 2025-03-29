@@ -2,13 +2,13 @@ from math_rag.infrastructure.enums.hpcs import HPCQueue
 from math_rag.infrastructure.mappings.hpcs import (
     HPCGPUStatisticsMapping,
     HPCJobStatisticsMapping,
-    HPCJobTemporarySizeEntryMapping,
+    HPCJobTemporarySizeMapping,
     HPCQueueLiveMapping,
 )
 from math_rag.infrastructure.models.hpcs import (
     HPCGPUStatistics,
     HPCJobStatistics,
-    HPCJobTemporarySizeEntry,
+    HPCJobTemporarySize,
     HPCQueueLive,
 )
 
@@ -28,7 +28,7 @@ class HPCClient(SSHClient):
         # TODO supports multiple stats
 
         stdout, _ = await self.run(
-            "jobstat -u  | awk 'NR==3 {print $1, $2, $3, $4, $5, $6, $7, $8}'"
+            "jobstat -u  | awk 'NR>=3 {print $1, $2, $3, $4, $5, $6, $7, $8}'"
         )
 
         if stdout == 'No jobs meet the search limits':
@@ -46,10 +46,7 @@ class HPCClient(SSHClient):
 
         return HPCGPUStatisticsMapping.to_source(stdout)
 
-    async def job_temporary_size(self) -> HPCJobTemporarySizeEntry | None:
+    async def job_temporary_size(self) -> HPCJobTemporarySize:
         stdout, _ = await self.run('job_tmp_size')
 
-        if stdout.endswith('total'):  # TODO bug, there is always total
-            return None
-
-        return HPCJobTemporarySizeEntryMapping.to_source(stdout)
+        return HPCJobTemporarySizeMapping.to_source(stdout)
