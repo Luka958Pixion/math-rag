@@ -13,7 +13,7 @@ class PBSProVariableList(BaseModel):
 
     home: Path | None = None
     paths: list[Path] = []
-    mail: str | None = None
+    mail: Path | None = None
     shell: str | None = None
     workdir: Path | None = None
     host: str | None = None

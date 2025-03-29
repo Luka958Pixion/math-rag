@@ -61,7 +61,7 @@ class PBSProJobMapping(BaseMapping[PBSProJob, str]):
             eligible_delta=fields['eligible_time'],
             resource_list=PBSProResourceListMapping.to_source(resource_list_fields),
             resources_used=PBSProResourcesUsedMapping.to_source(resources_used_fields),
-            variable_list=PBSProVariableListMapping.to_source('variable_list'),
+            variable_list=PBSProVariableListMapping.to_source(fields['variable_list']),
         )
 
     @staticmethod
