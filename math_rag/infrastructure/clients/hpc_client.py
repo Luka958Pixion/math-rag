@@ -1,13 +1,14 @@
+from math_rag.infrastructure.enums.hpcs import HPCQueue
 from math_rag.infrastructure.mappings.hpcs import (
     HPCGPUStatisticsMapping,
     HPCJobStatisticsMapping,
-    HPCJobTemporarySizeMapping,
+    HPCJobTemporarySizeEntryMapping,
     HPCQueueLiveMapping,
 )
 from math_rag.infrastructure.models.hpcs import (
     HPCGPUStatistics,
     HPCJobStatistics,
-    HPCJobTemporarySize,
+    HPCJobTemporarySizeEntry,
     HPCQueueLive,
 )
 
@@ -23,11 +24,11 @@ class HPCClient(SSHClient):
 
         return HPCQueueLiveMapping.to_source(stdout)
 
-    async def job_statistics(self, queue) -> HPCJobStatistics | None:
+    async def job_statistics(self, queue: HPCQueue) -> HPCJobStatistics | None:
         # TODO supports multiple stats
 
         stdout, _ = await self.run(
-            "jobstat | awk 'NR==3 {print $1, $2, $3, $4, $5, $6, $7, $8}'"
+            "jobstat -u  | awk 'NR==3 {print $1, $2, $3, $4, $5, $6, $7, $8}'"
         )
 
         if stdout == 'No jobs meet the search limits':
@@ -45,10 +46,10 @@ class HPCClient(SSHClient):
 
         return HPCGPUStatisticsMapping.to_source(stdout)
 
-    async def job_temporary_size(self) -> HPCJobTemporarySize | None:
+    async def job_temporary_size(self) -> HPCJobTemporarySizeEntry | None:
         stdout, _ = await self.run('job_tmp_size')
 
-        if stdout.endswith('total'):
+        if stdout.endswith('total'):  # TODO bug, there is always total
             return None
 
-        return HPCJobTemporarySizeMapping.to_source(stdout)
+        return HPCJobTemporarySizeEntryMapping.to_source(stdout)

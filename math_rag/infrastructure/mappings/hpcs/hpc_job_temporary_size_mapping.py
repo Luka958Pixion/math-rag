@@ -2,17 +2,22 @@ from math_rag.infrastructure.base import BaseMapping
 from math_rag.infrastructure.models.hpcs import HPCJobTemporarySize
 from math_rag.infrastructure.utils import HPCParserUtil
 
+from .hpc_job_temporary_size_entry_mapping import HPCJobTemporarySizeEntryMapping
+
 
 class HPCJobTemporarySizeMapping(BaseMapping[HPCJobTemporarySize, str]):
     @staticmethod
     def to_source(target: str) -> HPCJobTemporarySize:
-        lines = target.strip().splitlines()
-        job_id = lines[0].split('JOB_ID : ')[1]
-        mem, path = lines[1].split()
+        entries_str, total_str = target.strip().rsplit('\n', 1)
+        mem_total_str = total_str.split()[0]
 
-        return HPCJobTemporarySize(
-            job_id=job_id, mem=HPCParserUtil.parse_memory(mem), path=path
-        )
+        entries = [
+            HPCJobTemporarySizeEntryMapping.to_source(entry_str)
+            for entry_str in entries_str.strip().split('\n\n')
+        ]
+        mem_total = HPCParserUtil.parse_memory(mem_total_str)
+
+        return HPCJobTemporarySize(entries=entries, mem_total=mem_total)
 
     @staticmethod
     def to_target(source: HPCJobTemporarySize) -> str:

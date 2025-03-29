@@ -1,9 +1,8 @@
-from pathlib import Path
-
 from pydantic import BaseModel
+
+from .hpc_job_temporary_size_entry import HPCJobTemporarySizeEntry
 
 
 class HPCJobTemporarySize(BaseModel):
-    job_id: int
-    mem: int
-    path: Path
+    entries: list[HPCJobTemporarySizeEntry]
+    mem_total: int
