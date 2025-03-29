@@ -1,6 +1,7 @@
+from datetime import datetime, timedelta
 from pathlib import Path
 
-from pydantic import BaseModel, Field
+from pydantic import BaseModel, Field, field_validator
 
 from math_rag.infrastructure.enums.hpcs import HPCQueue
 from math_rag.infrastructure.enums.hpcs.pbs import (
@@ -16,6 +17,9 @@ from .pbs_pro_resource_list import PBSProResourceList
 from .pbs_pro_resources_used import PBSProResourcesUsed
 from .pbs_pro_time import PBSProTime
 from .pbs_pro_variable_list import PBSProVariableList
+
+
+FORMAT = '%a %b %d %H:%M:%S %Y'
 
 
 class PBSProJob(BaseModel):
@@ -44,10 +48,22 @@ class PBSProJob(BaseModel):
     project: str = Field(alias='project')
     submit_host: str = Field(alias='submit_host')
 
+    created: datetime = Field(alias='ctime')
+    queued: datetime = Field(alias='qtime')
+    modified: datetime = Field(alias='mtime')
+    started: datetime = Field(alias='stime')
+    eligible: datetime = Field(alias='etime')
+    eligible_delta: timedelta = Field(alias='eligible_time')
+
     resource_list: PBSProResourceList
     resources_used: PBSProResourcesUsed
-    time: PBSProTime  # TODO integrate this field directly in pbs job (kill PBSProTime model)
     variable_list: PBSProVariableList
+
+    @field_validator(
+        'created', 'queued', 'modified', 'started', 'eligible', mode='before'
+    )
+    def parse_datetime(cls, value: str) -> datetime:
+        return datetime.strptime(value, FORMAT)
 
     @classmethod
     def from_queue_status(cls, queue_status: str) -> 'PBSProJob':
