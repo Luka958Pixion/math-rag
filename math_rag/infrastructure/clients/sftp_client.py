@@ -7,7 +7,7 @@ from aiofiles import open
 from .ssh_client import SSHClient
 
 
-class SCPClient(SSHClient):
+class SFTPClient(SSHClient):
     def __init__(self, host: str, user: str, passphrase: str):
         super().__init__(host, user, passphrase)
 

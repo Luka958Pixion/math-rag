@@ -1,7 +1,7 @@
 from pydantic import BaseModel
 
 
-class HPCGPUStats(BaseModel):
+class HPCGPUStatistics(BaseModel):
     job_id: int
     node: str
     gpu: str

@@ -2,7 +2,7 @@ from .apptainer_client import ApptainerClient
 from .arxiv_client import ArxivClient
 from .katex_client import KatexClient
 from .pbs_pro_client import PBSProClient
-from .scp_client import SCPClient
+from .sftp_client import SFTPClient
 from .ssh_client import SSHClient
 
 
@@ -10,7 +10,7 @@ __all__ = [
     'ApptainerClient',
     'ArxivClient',
     'KatexClient',
-    'SCPClient',
+    'SFTPClient',
     'SSHClient',
     'PBSProClient',
 ]

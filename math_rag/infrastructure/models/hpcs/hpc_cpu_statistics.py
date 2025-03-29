@@ -3,7 +3,7 @@ from datetime import timedelta
 from pydantic import BaseModel
 
 
-class HPCCPUStats(BaseModel):
+class HPCCPUStatistics(BaseModel):
     job_id: int
     num_cpus: int
     used_percent: float
