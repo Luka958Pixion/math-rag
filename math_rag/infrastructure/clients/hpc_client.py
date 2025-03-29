@@ -1,5 +1,13 @@
-from math_rag.infrastructure.mappings.hpcs import HPCQueueLiveMapping
-from math_rag.infrastructure.models.hpcs import HPCQueueLive
+from math_rag.infrastructure.mappings.hpcs import (
+    HPCCPUStatisticsMapping,
+    HPCGPUStatisticsMapping,
+    HPCQueueLiveMapping,
+)
+from math_rag.infrastructure.models.hpcs import (
+    HPCCPUStatistics,
+    HPCGPUStatistics,
+    HPCQueueLive,
+)
 
 from .ssh_client import SSHClient
 
@@ -14,3 +22,17 @@ class HPCClient(SSHClient):
         )
 
         return HPCQueueLiveMapping.to_source(stdout)
+
+    async def cpu_statistics(self) -> HPCCPUStatistics:
+        stdout, stderr = await self.run(
+            "jobstat | awk 'NR==3 {print $1, $2, $3, $4, $5, $6, $7, $8}'"
+        )
+
+        return HPCCPUStatisticsMapping.to_source(stdout)
+
+    async def gpu_statistics(self) -> HPCGPUStatistics:
+        stdout, stderr = await self.run(
+            "gpustat | awk 'NR==3 {print $1, $2, $3, $4, $5}'"
+        )
+
+        return HPCGPUStatisticsMapping.to_source(stdout)
