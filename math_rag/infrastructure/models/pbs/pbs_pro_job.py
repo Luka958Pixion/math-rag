@@ -3,12 +3,12 @@ from pathlib import Path
 from pydantic import BaseModel, Field
 
 from math_rag.infrastructure.enums import (
+    HPCQueue,
     PBSProHoldType,
     PBSProJobState,
     PBSProJoinPath,
     PBSProKeepFiles,
     PBSProMailPoints,
-    PBSProQueue,
 )
 from math_rag.infrastructure.utils import PBSProParserUtil
 
@@ -23,7 +23,7 @@ class PBSProJob(BaseModel):
     name: str = Field(alias='job_name')
     owner: str = Field(alias='job_owner')
     state: PBSProJobState = Field(alias='job_state')
-    queue: PBSProQueue = Field(alias='queue')
+    queue: HPCQueue = Field(alias='queue')
     server: str = Field(alias='server')
     checkpoint: str = Field(alias='checkpoint')
     exec_host: str = Field(alias='exec_host')

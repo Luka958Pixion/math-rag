@@ -1,7 +1,7 @@
 from enum import Enum
 
 
-class PBSProQueue(str, Enum):
+class HPCQueue(str, Enum):
     """
     https://wiki.srce.hr/spaces/NR/pages/121966239/Redovi+poslova+Supek
     """

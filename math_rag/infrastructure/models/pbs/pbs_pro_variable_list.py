@@ -32,7 +32,6 @@ class PBSProVariableList(BaseModel):
     tmpdir: Path | None = Field(default=None, alias='PBS_TMPDIR')
 
     @field_validator('paths', mode='before')
-    @classmethod
     def split_path(cls, value: str | None) -> list[Path] | None:
         if not value:
             return None
