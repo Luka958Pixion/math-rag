@@ -3,12 +3,12 @@ from datetime import timedelta
 from pydantic import BaseModel
 
 
-class HPCCPUStatistics(BaseModel):
+class HPCJobStatistics(BaseModel):
     job_id: int
     num_cpus: int
     used_percent: float
-    mem: int  # TODO parse
-    used_mem: int  # TODO parse
+    mem: int
+    used_mem: int
     walltime: timedelta
     used_walltime: timedelta
     exit_code: str

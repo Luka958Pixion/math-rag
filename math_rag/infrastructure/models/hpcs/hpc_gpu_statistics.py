@@ -6,4 +6,4 @@ class HPCGPUStatistics(BaseModel):
     node: str
     gpu: str
     used_percent: int
-    mem_used: int  # TODO parse
+    mem_used: int

@@ -1,11 +1,13 @@
 from math_rag.infrastructure.mappings.hpcs import (
-    HPCCPUStatisticsMapping,
     HPCGPUStatisticsMapping,
+    HPCJobStatisticsMapping,
+    HPCJobTemporarySizeMapping,
     HPCQueueLiveMapping,
 )
 from math_rag.infrastructure.models.hpcs import (
-    HPCCPUStatistics,
     HPCGPUStatistics,
+    HPCJobStatistics,
+    HPCJobTemporarySize,
     HPCQueueLive,
 )
 
@@ -21,16 +23,32 @@ class HPCClient(SSHClient):
 
         return HPCQueueLiveMapping.to_source(stdout)
 
-    async def cpu_statistics(self) -> HPCCPUStatistics:
+    async def job_statistics(self, queue) -> HPCJobStatistics | None:
+        # TODO supports multiple stats
+
         stdout, _ = await self.run(
             "jobstat | awk 'NR==3 {print $1, $2, $3, $4, $5, $6, $7, $8}'"
         )
 
-        return HPCCPUStatisticsMapping.to_source(stdout)
+        if stdout == 'No jobs meet the search limits':
+            return None
 
-    async def gpu_statistics(self) -> HPCGPUStatistics:
+        return HPCJobStatisticsMapping.to_source(stdout)
+
+    async def gpu_statistics(self) -> HPCGPUStatistics | None:
         stdout, _ = await self.run(
             """gpustat | awk 'NR==3 {print $1"_"$2"_"$3"_"$4"_"$5}'"""
         )
 
+        if stdout.startswith('No running jobs'):
+            return None
+
         return HPCGPUStatisticsMapping.to_source(stdout)
+
+    async def job_temporary_size(self) -> HPCJobTemporarySize | None:
+        stdout, _ = await self.run('job_tmp_size')
+
+        if stdout.endswith('total'):
+            return None
+
+        return HPCJobTemporarySizeMapping.to_source(stdout)

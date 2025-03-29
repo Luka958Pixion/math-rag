@@ -1,14 +1,14 @@
 from math_rag.infrastructure.base import BaseMapping
-from math_rag.infrastructure.models.hpcs import HPCCPUStatistics
+from math_rag.infrastructure.models.hpcs import HPCJobStatistics
 from math_rag.infrastructure.utils import HPCParserUtil
 
 
-class HPCCPUStatisticsMapping(BaseMapping[HPCCPUStatistics, str]):
+class HPCJobStatisticsMapping(BaseMapping[HPCJobStatistics, str]):
     @staticmethod
-    def to_source(target: str) -> HPCCPUStatistics:
+    def to_source(target: str) -> HPCJobStatistics:
         fields = target.strip().split()
 
-        return HPCCPUStatistics(
+        return HPCJobStatistics(
             job_id=fields[0],
             num_cpus=fields[1],
             used_percent=fields[1],
@@ -20,5 +20,5 @@ class HPCCPUStatisticsMapping(BaseMapping[HPCCPUStatistics, str]):
         )
 
     @staticmethod
-    def to_target(source: HPCCPUStatistics) -> str:
+    def to_target(source: HPCJobStatistics) -> str:
         raise NotImplementedError()
