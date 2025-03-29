@@ -17,21 +17,19 @@ class HPCClient(SSHClient):
         super().__init__(host, user, passphrase)
 
     async def queue_live(self) -> HPCQueueLive:
-        stdout, stderr = await self.run(
-            "qlive | awk 'NR>=5 {print $1, $2, $3, $4, $5}'"
-        )
+        stdout, _ = await self.run("qlive | awk 'NR>=5 {print $1, $2, $3, $4, $5}'")
 
         return HPCQueueLiveMapping.to_source(stdout)
 
     async def cpu_statistics(self) -> HPCCPUStatistics:
-        stdout, stderr = await self.run(
+        stdout, _ = await self.run(
             "jobstat | awk 'NR==3 {print $1, $2, $3, $4, $5, $6, $7, $8}'"
         )
 
         return HPCCPUStatisticsMapping.to_source(stdout)
 
     async def gpu_statistics(self) -> HPCGPUStatistics:
-        stdout, stderr = await self.run(
+        stdout, _ = await self.run(
             """gpustat | awk 'NR==3 {print $1"_"$2"_"$3"_"$4"_"$5}'"""
         )
 

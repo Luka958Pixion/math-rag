@@ -1,3 +1,5 @@
+import logging
+
 from asyncssh import ConnectionLost, SSHClientConnection, connect, read_private_key
 from asyncssh.misc import async_context_manager
 from backoff import expo, on_exception
@@ -21,5 +23,10 @@ class SSHClient:
             result = await connection.run(command, check=True)
             stdout = result.stdout.strip()
             stderr = result.stderr.strip()
+
+            if stderr:
+                logging.error(
+                    f'Error while running `{command}` in `{self.run.__name__}`: {stderr}'
+                )
 
             return (stdout, stderr)

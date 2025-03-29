@@ -2,8 +2,8 @@ from pathlib import Path
 
 from pydantic import BaseModel, Field
 
-from math_rag.infrastructure.enums import (
-    HPCQueue,
+from math_rag.infrastructure.enums.hpcs import HPCQueue
+from math_rag.infrastructure.enums.hpcs.pbs import (
     PBSProHoldType,
     PBSProJobState,
     PBSProJoinPath,
@@ -46,7 +46,7 @@ class PBSProJob(BaseModel):
 
     resource_list: PBSProResourceList
     resources_used: PBSProResourcesUsed
-    time: PBSProTime
+    time: PBSProTime  # TODO integrate this field directly in pbs job (kill PBSProTime model)
     variable_list: PBSProVariableList
 
     @classmethod
