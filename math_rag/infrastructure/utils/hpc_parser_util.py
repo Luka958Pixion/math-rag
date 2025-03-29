@@ -38,17 +38,6 @@ class HPCParserUtil:
 
         return result
 
-    def parse_variable_list(value: str) -> dict[str, str]:
-        pairs = value.split(',')
-        env_vars = {}
-
-        for pair in pairs:
-            if pair.startswith('PBS_O_') and '=' in pair:
-                key, value = pair.split('=', 1)
-                env_vars[key] = value
-
-        return env_vars
-
     @staticmethod
     def parse_memory(value: str) -> int:
         base10 = {'b': 1, 'kb': 10**3, 'mb': 10**6, 'gb': 10**9, 'tb': 10**12}
