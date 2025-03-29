@@ -10,7 +10,7 @@ from math_rag.infrastructure.enums import (
     PBSProKeepFiles,
     PBSProMailPoints,
 )
-from math_rag.infrastructure.utils import PBSProParserUtil
+from math_rag.infrastructure.utils import HPCParserUtil
 
 from .pbs_pro_resource_list import PBSProResourceList
 from .pbs_pro_resources_used import PBSProResourcesUsed
@@ -51,7 +51,7 @@ class PBSProJob(BaseModel):
 
     @classmethod
     def from_queue_status(cls, queue_status: str) -> 'PBSProJob':
-        queue_status_flat_dict = PBSProParserUtil.parse(queue_status)
+        queue_status_flat_dict = HPCParserUtil.parse(queue_status)
         time_fields = {field.alias for field in PBSProTime.model_fields.values()}
         variable_list = queue_status_flat_dict.pop('variable_list')
 
@@ -72,5 +72,5 @@ class PBSProJob(BaseModel):
                 for key, value in queue_status_flat_dict.items()
                 if key in time_fields
             },
-            variable_list=PBSProParserUtil.parse_variable_list(variable_list),
+            variable_list=HPCParserUtil.parse_variable_list(variable_list),
         )

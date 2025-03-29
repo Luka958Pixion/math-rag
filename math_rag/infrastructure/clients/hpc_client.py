@@ -32,7 +32,7 @@ class HPCClient(SSHClient):
 
     async def gpu_statistics(self) -> HPCGPUStatistics:
         stdout, stderr = await self.run(
-            "gpustat | awk 'NR==3 {print $1, $2, $3, $4, $5}'"
+            """gpustat | awk 'NR==3 {print $1"_"$2"_"$3"_"$4"_"$5}'"""
         )
 
         return HPCGPUStatisticsMapping.to_source(stdout)

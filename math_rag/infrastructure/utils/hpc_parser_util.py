@@ -1,4 +1,4 @@
-class PBSProParserUtil:
+class HPCParserUtil:
     @staticmethod
     def parse(value: str) -> dict[str, str]:
         result: dict[str, str] = {}
@@ -51,7 +51,10 @@ class PBSProParserUtil:
 
     @staticmethod
     def parse_memory(value: str) -> int:
-        units = {'b': 1, 'kb': 1024, 'mb': 1024**2, 'gb': 1024**3, 'tb': 1024**4}
+        base10 = {'b': 1, 'kb': 10**3, 'mb': 10**6, 'gb': 10**9, 'tb': 10**12}
+        base2 = {'kib': 1024, 'mib': 1024**2, 'gib': 1024**3, 'tib': 1024**4}
+        units = {**base2, **base10}
+
         value = value.strip().lower()
 
         for unit in sorted(units, key=len, reverse=True):

@@ -2,11 +2,11 @@ from datetime import timedelta
 
 from pydantic import BaseModel, Field, field_validator
 
-from math_rag.infrastructure.utils import PBSProParserUtil
+from math_rag.infrastructure.utils import HPCParserUtil
 
 
 class PBSProResourceList(BaseModel):
-    memory: int = Field(alias='resource_list.mem')
+    mem: int = Field(alias='resource_list.mem')
     num_cpus: int = Field(alias='resource_list.ncpus')
     num_gpus: int = Field(alias='resource_list.ngpus')
     num_nodes: int = Field(alias='resource_list.nodect')
@@ -14,6 +14,6 @@ class PBSProResourceList(BaseModel):
     select: str = Field(alias='resource_list.select')
     walltime: timedelta = Field(alias='resource_list.walltime')
 
-    @field_validator('memory', mode='before')
+    @field_validator('mem', mode='before')
     def parse_memory(cls, value: str):
-        return PBSProParserUtil.parse_memory(value)
+        return HPCParserUtil.parse_memory(value)
