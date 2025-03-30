@@ -1,21 +1,21 @@
 from math_rag.infrastructure.base import BaseMapping
-from math_rag.infrastructure.models.hpcs.pbs import PBSProJobFull
+from math_rag.infrastructure.models.hpcs.pbs import PBSProJob
 
 
-class PBSProJobMapping(BaseMapping[PBSProJobFull, str]):
+class PBSProJobMapping(BaseMapping[PBSProJob, str]):
     @staticmethod
-    def to_source(target: str) -> PBSProJobFull:
-        fields = ...
-        # TODO
+    def to_source(target: str) -> PBSProJob:
+        fields = [field for field in target.strip().splitlines()]
 
-        return PBSProJobFull(
-            id=fields['job_id'],
-            name=fields['job_name'],
-            owner=fields['job_owner'],
-            state=fields['job_state'],
-            queue=fields['queue'],
+        return PBSProJob(
+            id=fields[0],
+            name=fields[1],
+            user=fields[2],
+            time=fields[3],
+            state=fields[4],
+            queue=fields[5],
         )
 
     @staticmethod
-    def to_target(source: PBSProJobFull) -> str:
+    def to_target(source: PBSProJob) -> str:
         raise NotImplementedError()

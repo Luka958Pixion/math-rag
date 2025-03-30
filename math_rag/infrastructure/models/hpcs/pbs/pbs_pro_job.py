@@ -10,6 +10,6 @@ class PBSProJob(BaseModel):
     id: str
     name: str
     user: str
-    time_use: timedelta
+    time: timedelta
     state: PBSProJobState
     queue: HPCQueue
