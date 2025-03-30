@@ -1,5 +1,7 @@
 from pathlib import Path
 
+from math_rag.infrastructure.mappings.hpcs.pbs import PBSProJobMapping
+
 from .ssh_client import SSHClient
 
 
@@ -8,15 +10,16 @@ class PBSProClient(SSHClient):
         super().__init__(host, user, passphrase)
 
     async def queue_submit(self, pbs_path: Path) -> str:
-        stdout = await self.run(f'qsub {pbs_path}')
+        stdout = await self.run(f'qsub {pbs_path}')  # TODO
 
         return stdout
 
-    async def queue_state(self):
+    async def queue_status(self, job_id: str | None):
         stdout = await self.run(
             f"qstat -u {self.user} | awk 'NR>=3 {{print $1, $2, $3, $4, $5, $6}}'"
         )
         # TODO parse
+        job = PBSProJobMapping.to_source(...)
 
         return stdout
 
@@ -31,6 +34,8 @@ class PBSProClient(SSHClient):
     async def queue_hold(self, job_id: str):
         # qhold
         stdout = await self.run(f'qhold {job_id}')
+
+        # qhold: Unknown Job Id 12.x3000c0s25b0n0.hsn.hpc.srce.hr
 
         return stdout
 
