@@ -1,7 +1,7 @@
 from re import fullmatch
 
 from math_rag.infrastructure.base import BaseMapping
-from math_rag.infrastructure.models.hpcs import HPCJobTemporarySize
+from math_rag.infrastructure.models.hpc import HPCJobTemporarySize
 from math_rag.infrastructure.utils import FormatParserUtil
 
 from .hpc_job_temporary_size_entry_mapping import HPCJobTemporarySizeEntryMapping

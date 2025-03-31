@@ -1,5 +1,5 @@
 from math_rag.infrastructure.base import BaseMapping
-from math_rag.infrastructure.models.hpcs import HPCGPUStatisticsEntry
+from math_rag.infrastructure.models.hpc import HPCGPUStatisticsEntry
 
 from .hpc_gpu_statistics_sub_entry_mapping import HPCGPUStatisticsSubEntryMapping
 

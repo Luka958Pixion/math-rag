@@ -1,5 +1,5 @@
 from math_rag.infrastructure.base import BaseMapping
-from math_rag.infrastructure.models.hpcs import HPCGPUStatisticsSubEntry
+from math_rag.infrastructure.models.hpc import HPCGPUStatisticsSubEntry
 from math_rag.infrastructure.utils import FormatParserUtil
 
 

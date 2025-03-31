@@ -1,6 +1,6 @@
 from pydantic import BaseModel
 
-from math_rag.infrastructure.enums.hpcs import HPCQueue
+from math_rag.infrastructure.enums.hpc import HPCQueue
 
 
 class HPCQueueLiveEntry(BaseModel):

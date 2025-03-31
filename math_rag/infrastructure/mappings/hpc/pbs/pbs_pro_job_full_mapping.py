@@ -1,7 +1,7 @@
 from pathlib import Path
 
 from math_rag.infrastructure.base import BaseMapping
-from math_rag.infrastructure.models.hpcs.pbs import PBSProJobFull
+from math_rag.infrastructure.models.hpc.pbs import PBSProJobFull
 from math_rag.infrastructure.utils import FormatParserUtil
 
 from .pbs_pro_resource_list_mapping import PBSProResourceListMapping

@@ -1,5 +1,5 @@
 from math_rag.infrastructure.base import BaseMapping
-from math_rag.infrastructure.models.hpcs.pbs import PBSProResourceList
+from math_rag.infrastructure.models.hpc.pbs import PBSProResourceList
 from math_rag.infrastructure.utils import FormatParserUtil
 
 

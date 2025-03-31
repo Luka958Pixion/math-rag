@@ -1,10 +1,10 @@
-from math_rag.infrastructure.mappings.hpcs import (
+from math_rag.infrastructure.mappings.hpc import (
     HPCGPUStatisticsMapping,
     HPCJobStatisticsMapping,
     HPCJobTemporarySizeMapping,
     HPCQueueLiveMapping,
 )
-from math_rag.infrastructure.models.hpcs import (
+from math_rag.infrastructure.models.hpc import (
     HPCGPUStatistics,
     HPCJobStatistics,
     HPCJobTemporarySize,

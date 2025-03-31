@@ -3,8 +3,8 @@ from pathlib import Path
 
 from pydantic import BaseModel
 
-from math_rag.infrastructure.enums.hpcs import HPCQueue
-from math_rag.infrastructure.enums.hpcs.pbs import (
+from math_rag.infrastructure.enums.hpc import HPCQueue
+from math_rag.infrastructure.enums.hpc.pbs import (
     PBSProHoldType,
     PBSProJobState,
     PBSProJoinPath,

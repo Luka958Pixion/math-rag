@@ -1,7 +1,7 @@
 from pathlib import Path
 
 from math_rag.infrastructure.base import BaseMapping
-from math_rag.infrastructure.models.hpcs.pbs import PBSProVariableList
+from math_rag.infrastructure.models.hpc.pbs import PBSProVariableList
 
 
 class PBSProVariableListMapping(BaseMapping[PBSProVariableList, str]):

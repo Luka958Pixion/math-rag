@@ -1,5 +1,5 @@
 from math_rag.infrastructure.base import BaseMapping
-from math_rag.infrastructure.models.hpcs import HPCJobStatistics
+from math_rag.infrastructure.models.hpc import HPCJobStatistics
 
 from .hpc_job_statistics_entry_mapping import HPCJobStatisticsEntryMapping
 

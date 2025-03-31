@@ -1,7 +1,7 @@
 from datetime import timedelta
 
 from math_rag.infrastructure.base import BaseMapping
-from math_rag.infrastructure.models.hpcs.pbs import PBSProJob
+from math_rag.infrastructure.models.hpc.pbs import PBSProJob
 
 
 class PBSProJobMapping(BaseMapping[PBSProJob, str]):

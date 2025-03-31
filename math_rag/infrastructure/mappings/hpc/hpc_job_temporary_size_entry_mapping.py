@@ -1,7 +1,7 @@
 from pathlib import Path
 
 from math_rag.infrastructure.base import BaseMapping
-from math_rag.infrastructure.models.hpcs import HPCJobTemporarySizeEntry
+from math_rag.infrastructure.models.hpc import HPCJobTemporarySizeEntry
 from math_rag.infrastructure.utils import FormatParserUtil
 
 

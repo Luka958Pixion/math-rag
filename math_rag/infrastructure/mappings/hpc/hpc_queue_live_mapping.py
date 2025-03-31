@@ -1,5 +1,5 @@
 from math_rag.infrastructure.base import BaseMapping
-from math_rag.infrastructure.models.hpcs import HPCQueueLive
+from math_rag.infrastructure.models.hpc import HPCQueueLive
 
 from .hpc_queue_live_entry_mapping import HPCQueueLiveEntryMapping
 

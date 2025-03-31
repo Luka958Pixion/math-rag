@@ -1,6 +1,6 @@
 from math_rag.infrastructure.base import BaseMapping
-from math_rag.infrastructure.enums.hpcs import HPCQueue
-from math_rag.infrastructure.models.hpcs import HPCQueueLiveEntry
+from math_rag.infrastructure.enums.hpc import HPCQueue
+from math_rag.infrastructure.models.hpc import HPCQueueLiveEntry
 
 
 class HPCQueueLiveEntryMapping(BaseMapping[HPCQueueLiveEntry, str]):
