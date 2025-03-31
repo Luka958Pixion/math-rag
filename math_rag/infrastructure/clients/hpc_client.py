@@ -10,6 +10,7 @@ from math_rag.infrastructure.models.hpcs import (
     HPCJobTemporarySize,
     HPCQueueLive,
 )
+from math_rag.infrastructure.utils import AwkCmdBuilderUtil
 
 from .ssh_client import SSHClient
 
@@ -19,16 +20,18 @@ class HPCClient(SSHClient):
         super().__init__(host, user, passphrase)
 
     async def queue_live(self) -> HPCQueueLive:
-        fields = ', '.join(f'${i}' for i in range(1, 5 + 1)).strip()
-        stdout = await self.run(f"qlive | awk 'NR>=5 {{print {fields}}}'")
+        awk_cmd = AwkCmdBuilderUtil.build(
+            row_number=6, col_numbers=range(1, 5 + 1), operator='>='
+        )
+        stdout = await self.run(f'qlive | {awk_cmd}')
 
         return HPCQueueLiveMapping.to_source(stdout)
 
     async def job_statistics(self) -> HPCJobStatistics | None:
-        fields = ', '.join(f'${i}' for i in range(1, 8 + 1)).strip()
-        stdout = await self.run(
-            f"jobstat -u {self.user} | awk 'NR>=4 {{print {fields}}}'"
+        awk_cmd = AwkCmdBuilderUtil.build(
+            row_number=4, col_numbers=range(1, 8 + 1), operator='>='
         )
+        stdout = await self.run(f'jobstat -u {self.user} | {awk_cmd}')
 
         if stdout == 'No jobs meet the search limits':
             return None
@@ -36,8 +39,10 @@ class HPCClient(SSHClient):
         return HPCJobStatisticsMapping.to_source(stdout)
 
     async def gpu_statistics(self) -> HPCGPUStatistics | None:
-        fields = '"_"'.join(f'${i}' for i in range(1, 5 + 1)).strip()
-        stdout = await self.run(f"gpustat | awk 'NR>=3 {{print {fields}}}'")
+        awk_cmd = AwkCmdBuilderUtil.build(
+            row_number=3, col_numbers=range(1, 5 + 1), operator='>=', separator='"_"'
+        )
+        stdout = await self.run(f'gpustat | {awk_cmd}')
 
         if stdout == f'No running jobs for {self.user}':
             return None

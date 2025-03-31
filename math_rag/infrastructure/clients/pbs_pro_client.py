@@ -10,6 +10,7 @@ from math_rag.infrastructure.models.hpcs.pbs import (
     PBSProJobAlternate,
     PBSProJobFull,
 )
+from math_rag.infrastructure.utils import AwkCmdBuilderUtil
 
 from .ssh_client import SSHClient
 
@@ -25,10 +26,11 @@ class PBSProClient(SSHClient):
         self, job_id: str, *, alternate: bool, full: bool
     ) -> PBSProJob | PBSProJobAlternate | PBSProJobFull:
         if alternate:
-            fields = ', '.join(f'${i}' for i in range(1, 11 + 1)).strip()
-            stdout = await self.run(
-                f"qstat -a {job_id} | awk 'NR==6 {{print {fields}}}'"
+            awk_cmd = AwkCmdBuilderUtil.build(
+                row_number=6,
+                col_numbers=range(1, 11 + 1),
             )
+            stdout = await self.run(f'qstat -a {job_id} | {awk_cmd}')
 
             return PBSProJobAlternateMapping.to_source(stdout)
 
@@ -37,8 +39,11 @@ class PBSProClient(SSHClient):
 
             return PBSProJobFullMapping.to_source(stdout)
 
-        fields = ', '.join(f'${i}' for i in range(1, 6 + 1))
-        stdout = await self.run(f"qstat {job_id} | awk 'NR==3 {{print {fields}}}'")
+        awk_cmd = AwkCmdBuilderUtil.build(
+            row_number=3,
+            col_numbers=range(1, 6 + 1),
+        )
+        stdout = await self.run(f'qstat {job_id} | {awk_cmd}')
 
         return PBSProJobMapping.to_source(stdout)
 

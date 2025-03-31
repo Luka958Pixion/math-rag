@@ -1,8 +1,15 @@
+from collections.abc import Iterable
+
+
 class AwkCmdBuilderUtil:
     @staticmethod
     def build(
-        num_records: int, fields: list[int], operator: str = '==', separator: str = ', '
+        *,
+        row_number: int,
+        col_numbers: Iterable[int],
+        operator: str = '==',
+        separator: str = ', ',
     ) -> str:
-        print_args = separator.join(f'${i}' for i in fields).strip()
+        print_args = separator.join(f'${i}' for i in col_numbers).strip()
 
-        return f"awk 'NR{operator}{num_records} {{print {print_args}}}'"
+        return f"awk 'NR{operator}{row_number} {{print {print_args}}}'"
