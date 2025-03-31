@@ -25,7 +25,7 @@ class HPCClient(SSHClient):
 
     async def job_statistics(self) -> HPCJobStatistics | None:
         stdout = await self.run(
-            f"jobstat -u {self.user} | awk 'NR>=3 {{print $1, $2, $3, $4, $5, $6, $7, $8}}'"
+            f"jobstat -u {self.user} | awk 'NR>=4 {{print $1, $2, $3, $4, $5, $6, $7, $8}}'"
         )
 
         if stdout == 'No jobs meet the search limits':

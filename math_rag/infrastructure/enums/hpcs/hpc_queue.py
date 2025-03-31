@@ -1,7 +1,15 @@
-from enum import Enum
+from enum import Enum, EnumMeta
 
 
-class HPCQueue(str, Enum):
+class HPCQueueMeta(EnumMeta):
+    def __call__(cls, value):
+        if value in cls._value2member_map_:
+            return cls._value2member_map_[value]
+
+        return cls._value2member_map_['unknown']
+
+
+class HPCQueue(str, Enum, metaclass=HPCQueueMeta):
     """
     https://wiki.srce.hr/spaces/NR/pages/121966239/Redovi+poslova+Supek
     """
@@ -14,3 +22,5 @@ class HPCQueue(str, Enum):
     CPU_SINGLE = 'cpu-single'
     LOGIN_CPU = 'login-cpu'
     LOGIN_GPU = 'login-gpu'
+
+    UNKNOWN = 'unknown'

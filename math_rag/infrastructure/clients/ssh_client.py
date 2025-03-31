@@ -27,9 +27,11 @@ class SSHClient:
             logging.info(
                 f'Command `{command}` in `{self.run.__name__}` returned stdout: {stdout}'
             )
-            logging.error(
-                f'Command `{command}` in `{self.run.__name__}` returned stderr: {stderr}'
-            )
+
+            if stderr:
+                logging.error(
+                    f'Command `{command}` in `{self.run.__name__}` returned stderr: {stderr}'
+                )
 
             if result.exit_status != 0:
                 raise Exception(
