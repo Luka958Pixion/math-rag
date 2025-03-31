@@ -21,7 +21,7 @@ class HPCClient(SSHClient):
 
     async def queue_live(self) -> HPCQueueLive:
         awk_cmd = AwkCmdBuilderUtil.build(
-            row_number=6, col_numbers=range(1, 5 + 1), operator='>='
+            row_number=5, col_numbers=range(1, 5 + 1), operator='>='
         )
         stdout = await self.run(f'qlive | {awk_cmd}')
 
