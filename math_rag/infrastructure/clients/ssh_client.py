@@ -20,18 +20,20 @@ class SSHClient:
 
     async def run(self, command: str) -> str:
         async with await self.connect() as connection:
-            result = await connection.run(command, check=True)
+            result = await connection.run(command, check=False)
             stdout = result.stdout.strip()
             stderr = result.stderr.strip()
 
             logging.info(
-                f'Running `{command}` in `{self.run.__name__}` resulted in: {stdout}'
+                f'Command `{command}` in `{self.run.__name__}` returned stdout: {stdout}'
+            )
+            logging.error(
+                f'Command `{command}` in `{self.run.__name__}` returned stderr: {stderr}'
             )
 
-            if stderr:
-                logging.error(
-                    f'Error while running `{command}` in `{self.run.__name__}`: {stderr}'
+            if result.exit_status != 0:
+                raise Exception(
+                    f'Command `{command}` failed with status {result.exit_status}'
                 )
-                raise Exception(stderr)
 
             return stdout

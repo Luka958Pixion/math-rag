@@ -1,4 +1,3 @@
-from math_rag.infrastructure.enums.hpcs import HPCQueue
 from math_rag.infrastructure.mappings.hpcs import (
     HPCGPUStatisticsMapping,
     HPCJobStatisticsMapping,
@@ -24,9 +23,9 @@ class HPCClient(SSHClient):
 
         return HPCQueueLiveMapping.to_source(stdout)
 
-    async def job_statistics(self, queue: HPCQueue) -> HPCJobStatistics | None:
+    async def job_statistics(self) -> HPCJobStatistics | None:
         stdout = await self.run(
-            "jobstat -u  | awk 'NR>=3 {print $1, $2, $3, $4, $5, $6, $7, $8}'"
+            f"jobstat -u {self.user} | awk 'NR>=3 {{print $1, $2, $3, $4, $5, $6, $7, $8}}'"
         )
 
         if stdout == 'No jobs meet the search limits':
@@ -39,7 +38,7 @@ class HPCClient(SSHClient):
             """gpustat | awk 'NR>=3 {print $1"_"$2"_"$3"_"$4"_"$5}'"""
         )
 
-        if stdout.startswith('No running jobs'):
+        if stdout == f'No running jobs for {self.user}':
             return None
 
         return HPCGPUStatisticsMapping.to_source(stdout)
