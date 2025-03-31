@@ -1,6 +1,6 @@
 from .file_reader_util import FileReaderUtil
+from .format_parser_util import FormatParserUtil
 from .gzip_extractor_util import GzipExtractorUtil
-from .hpc_parser_util import HPCParserUtil
 from .token_counter_util import TokenCounterUtil
 from .uuid_encoder_util import UUIDEncoderUtil
 
@@ -10,5 +10,5 @@ __all__ = [
     'GzipExtractorUtil',
     'UUIDEncoderUtil',
     'TokenCounterUtil',
-    'HPCParserUtil',
+    'FormatParserUtil',
 ]

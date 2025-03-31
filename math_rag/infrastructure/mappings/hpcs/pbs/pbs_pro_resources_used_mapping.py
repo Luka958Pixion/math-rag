@@ -1,6 +1,6 @@
 from math_rag.infrastructure.base import BaseMapping
 from math_rag.infrastructure.models.hpcs.pbs import PBSProResourcesUsed
-from math_rag.infrastructure.utils import HPCParserUtil
+from math_rag.infrastructure.utils import FormatParserUtil
 
 
 class PBSProResourcesUsedMapping(BaseMapping[PBSProResourcesUsed, str]):
@@ -10,8 +10,8 @@ class PBSProResourcesUsedMapping(BaseMapping[PBSProResourcesUsed, str]):
             cpu_percent=target['resources_used.cpupercent'],
             cpu_time=target['resources_used.cput'],
             num_cpus=target['resources_used.ncpus'],
-            mem=HPCParserUtil.parse_memory(target['resources_used.mem']),
-            vmem=HPCParserUtil.parse_memory(target['resources_used.vmem']),
+            mem=FormatParserUtil.parse_memory(target['resources_used.mem']),
+            vmem=FormatParserUtil.parse_memory(target['resources_used.vmem']),
             walltime=target['resources_used.walltime'],
         )
 

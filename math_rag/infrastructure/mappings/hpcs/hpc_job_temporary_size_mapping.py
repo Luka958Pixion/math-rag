@@ -2,7 +2,7 @@ from re import fullmatch
 
 from math_rag.infrastructure.base import BaseMapping
 from math_rag.infrastructure.models.hpcs import HPCJobTemporarySize
-from math_rag.infrastructure.utils import HPCParserUtil
+from math_rag.infrastructure.utils import FormatParserUtil
 
 from .hpc_job_temporary_size_entry_mapping import HPCJobTemporarySizeEntryMapping
 
@@ -14,7 +14,7 @@ class HPCJobTemporarySizeMapping(BaseMapping[HPCJobTemporarySize, str]):
             mem_total_str = target.split()[0]
 
             entries = []
-            mem_total = HPCParserUtil.parse_memory(mem_total_str)
+            mem_total = FormatParserUtil.parse_memory(mem_total_str)
 
             return HPCJobTemporarySize(entries=entries, mem_total=mem_total)
 
@@ -25,7 +25,7 @@ class HPCJobTemporarySizeMapping(BaseMapping[HPCJobTemporarySize, str]):
             HPCJobTemporarySizeEntryMapping.to_source(entry_str)
             for entry_str in entries_str.strip().split('\n\n')
         ]
-        mem_total = HPCParserUtil.parse_memory(mem_total_str)
+        mem_total = FormatParserUtil.parse_memory(mem_total_str)
 
         return HPCJobTemporarySize(entries=entries, mem_total=mem_total)
 

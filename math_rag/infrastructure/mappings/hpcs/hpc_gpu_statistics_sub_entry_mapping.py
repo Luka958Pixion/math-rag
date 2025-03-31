@@ -1,6 +1,6 @@
 from math_rag.infrastructure.base import BaseMapping
 from math_rag.infrastructure.models.hpcs import HPCGPUStatisticsSubEntry
-from math_rag.infrastructure.utils import HPCParserUtil
+from math_rag.infrastructure.utils import FormatParserUtil
 
 
 class HPCGPUStatisticsSubEntryMapping(BaseMapping[HPCGPUStatisticsSubEntry, list[str]]):
@@ -10,7 +10,7 @@ class HPCGPUStatisticsSubEntryMapping(BaseMapping[HPCGPUStatisticsSubEntry, list
             node=target[0],
             gpu=target[1],
             used_percent=target[2].removesuffix(' %'),
-            mem_used=HPCParserUtil.parse_memory(target[3].replace(' ', '')),
+            mem_used=FormatParserUtil.parse_memory(target[3].replace(' ', '')),
         )
 
     @staticmethod

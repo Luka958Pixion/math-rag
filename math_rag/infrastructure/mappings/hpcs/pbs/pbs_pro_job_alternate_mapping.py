@@ -2,7 +2,7 @@ from datetime import timedelta
 
 from math_rag.infrastructure.base import BaseMapping
 from math_rag.infrastructure.models.hpcs.pbs import PBSProJobAlternate
-from math_rag.infrastructure.utils import HPCParserUtil
+from math_rag.infrastructure.utils import FormatParserUtil
 
 
 class PBSProJobAlternateMapping(BaseMapping[PBSProJobAlternate, str]):
@@ -18,12 +18,12 @@ class PBSProJobAlternateMapping(BaseMapping[PBSProJobAlternate, str]):
             session_id=None if fields[4] == '--' else fields[4],
             num_chunks=fields[5],
             num_cpus=fields[6],
-            requested_mem=HPCParserUtil.parse_memory(fields[7]),
-            requested_time=HPCParserUtil.parse_time(fields[8]),
+            requested_mem=FormatParserUtil.parse_memory(fields[7]),
+            requested_time=FormatParserUtil.parse_timedelta(fields[8]),
             state=fields[9],
             elapsed_time=None
             if fields[10] == '--'
-            else HPCParserUtil.parse_time(fields[10]),
+            else FormatParserUtil.parse_timedelta(fields[10]),
         )
 
     @staticmethod
