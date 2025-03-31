@@ -19,13 +19,15 @@ class HPCClient(SSHClient):
         super().__init__(host, user, passphrase)
 
     async def queue_live(self) -> HPCQueueLive:
-        stdout = await self.run("qlive | awk 'NR>=5 {print $1, $2, $3, $4, $5}'")
+        fields = ', '.join(f'${i}' for i in range(1, 5 + 1)).strip()
+        stdout = await self.run(f"qlive | awk 'NR>=5 {{print {fields}}}'")
 
         return HPCQueueLiveMapping.to_source(stdout)
 
     async def job_statistics(self) -> HPCJobStatistics | None:
+        fields = ', '.join(f'${i}' for i in range(1, 8 + 1)).strip()
         stdout = await self.run(
-            f"jobstat -u {self.user} | awk 'NR>=4 {{print $1, $2, $3, $4, $5, $6, $7, $8}}'"
+            f"jobstat -u {self.user} | awk 'NR>=4 {{print {fields}}}'"
         )
 
         if stdout == 'No jobs meet the search limits':
@@ -34,9 +36,8 @@ class HPCClient(SSHClient):
         return HPCJobStatisticsMapping.to_source(stdout)
 
     async def gpu_statistics(self) -> HPCGPUStatistics | None:
-        stdout = await self.run(
-            """gpustat | awk 'NR>=3 {print $1"_"$2"_"$3"_"$4"_"$5}'"""
-        )
+        fields = '"_"'.join(f'${i}' for i in range(1, 5 + 1)).strip()
+        stdout = await self.run(f"gpustat | awk 'NR>=3 {{print {fields}}}'")
 
         if stdout == f'No running jobs for {self.user}':
             return None

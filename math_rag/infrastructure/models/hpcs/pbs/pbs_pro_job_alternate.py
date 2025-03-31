@@ -1,11 +1,20 @@
 from datetime import timedelta
 
-from .pbs_pro_job import PBSProJob
+from pydantic import BaseModel
+
+from math_rag.infrastructure.enums.hpcs import HPCQueue
+from math_rag.infrastructure.enums.hpcs.pbs import PBSProJobState
 
 
-class PBSProJobAlternate(PBSProJob):
-    session_id: str
+class PBSProJobAlternate(BaseModel):
+    id: str
+    user: str
+    queue: HPCQueue
+    name: str
+    session_id: str | None
     num_chunks: int
     num_cpus: int
     requested_mem: int
     requested_time: timedelta
+    state: PBSProJobState
+    elapsed_time: timedelta | None

@@ -12,16 +12,18 @@ class PBSProJobAlternateMapping(BaseMapping[PBSProJobAlternate, str]):
 
         return PBSProJobAlternate(
             id=fields[0],
-            name=fields[1],
-            user=fields[2],
-            time=timedelta(seconds=0) if fields[3] == '0' else fields[3],
-            state=fields[4],
-            queue=fields[5],
-            session_id=fields[6],
-            num_chunks=fields[7],
-            num_cpus=fields[8],
-            requested_mem=HPCParserUtil.parse_memory(fields[9]),
-            requested_time=timedelta(seconds=0) if fields[10] == '0' else fields[10],
+            user=fields[1],
+            queue=fields[2],
+            name=fields[3],
+            session_id=None if fields[4] == '--' else fields[4],
+            num_chunks=fields[5],
+            num_cpus=fields[6],
+            requested_mem=HPCParserUtil.parse_memory(fields[7]),
+            requested_time=HPCParserUtil.parse_time(fields[8]),
+            state=fields[9],
+            elapsed_time=None
+            if fields[10] == '--'
+            else HPCParserUtil.parse_time(fields[10]),
         )
 
     @staticmethod

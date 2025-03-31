@@ -1,3 +1,6 @@
+from datetime import timedelta
+
+
 class HPCParserUtil:
     @staticmethod
     def parse(value: str) -> dict[str, str]:
@@ -62,3 +65,13 @@ class HPCParserUtil:
                 return int(float(number) * units[unit])
 
         raise ValueError(f'Invalid memory format: {value}')
+
+    @staticmethod
+    def parse_time(value: str) -> timedelta:
+        if value == '0':
+            return timedelta(seconds=0)
+
+        if value.count(':') == 1:
+            value += ':00'
+
+        return value

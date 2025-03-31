@@ -25,29 +25,29 @@ class PBSProJobFull(BaseModel):
     queue: HPCQueue
     server: str
     checkpoint: str
-    exec_host: str
-    exec_vnode: str
+    exec_host: str | None
+    exec_vnode: str | None
     error_path: str
     output_path: str
-    dir: Path
+    dir: Path | None
     hold_types: PBSProHoldType
     join_path: PBSProJoinPath
     keep_files: PBSProKeepFiles
     mail_points: PBSProMailPoints
     substate: int
     priority: int
-    session_id: str
+    session_id: str | None
     rerunable: bool
-    run_count: int
+    run_count: int | None
     submit_arguments: str
     project: str
     submit_host: str
     created: datetime
     queued: datetime
     modified: datetime
-    started: datetime
+    started: datetime | None
     eligible: datetime
     eligible_delta: timedelta
     resource_list: PBSProResourceList
-    resources_used: PBSProResourcesUsed
+    resources_used: PBSProResourcesUsed | None
     variable_list: PBSProVariableList

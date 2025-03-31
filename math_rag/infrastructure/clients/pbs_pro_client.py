@@ -2,9 +2,14 @@ from pathlib import Path
 
 from math_rag.infrastructure.mappings.hpcs.pbs import (
     PBSProJobAlternateMapping,
+    PBSProJobFullMapping,
     PBSProJobMapping,
 )
-from math_rag.infrastructure.models.hpcs.pbs import PBSProJob, PBSProJobAlternate
+from math_rag.infrastructure.models.hpcs.pbs import (
+    PBSProJob,
+    PBSProJobAlternate,
+    PBSProJobFull,
+)
 
 from .ssh_client import SSHClient
 
@@ -17,18 +22,25 @@ class PBSProClient(SSHClient):
         return await self.run(f'qsub {pbs_path}')
 
     async def queue_status(
-        self, job_id: str, *, alternate: bool
-    ) -> PBSProJob | PBSProJobAlternate:
-        alternate_flag = '-a' if alternate else str()
-        stdout = await self.run(
-            f"qstat {alternate_flag}{job_id} | awk 'NR>=3 {{print $1, $2, $3, $4, $5, $6}}'"
-        )
+        self, job_id: str, *, alternate: bool, full: bool
+    ) -> PBSProJob | PBSProJobAlternate | PBSProJobFull:
+        if alternate:
+            fields = ', '.join(f'${i}' for i in range(1, 11 + 1)).strip()
+            stdout = await self.run(
+                f"qstat -a {job_id} | awk 'NR==6 {{print {fields}}}'"
+            )
 
-        return (
-            PBSProJobAlternateMapping.to_source(stdout)
-            if alternate
-            else PBSProJobMapping.to_source(stdout)
-        )
+            return PBSProJobAlternateMapping.to_source(stdout)
+
+        if full:
+            stdout = await self.run(f'qstat -f {job_id}')
+
+            return PBSProJobFullMapping.to_source(stdout)
+
+        fields = ', '.join(f'${i}' for i in range(1, 6 + 1))
+        stdout = await self.run(f"qstat {job_id} | awk 'NR==3 {{print {fields}}}'")
+
+        return PBSProJobMapping.to_source(stdout)
 
     async def queue_delete(self, job_id: str, *, force: bool):
         await self.run(f'qdel -W force -x {job_id}' if force else f'qdel {job_id}')
