@@ -14,8 +14,8 @@ class HPCJobStatisticsEntryMapping(BaseMapping[HPCJobStatisticsEntry, str]):
             used_percent=fields[2],
             mem=FormatParserUtil.parse_memory(fields[3]),
             used_mem=FormatParserUtil.parse_memory(fields[4]),
-            walltime=fields[5],
-            used_walltime=fields[6],
+            walltime=FormatParserUtil.parse_timedelta(fields[5]),
+            used_walltime=FormatParserUtil.parse_timedelta(fields[6]),
             exit_code=fields[7],
         )
 

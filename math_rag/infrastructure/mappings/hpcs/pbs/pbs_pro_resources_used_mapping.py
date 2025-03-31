@@ -8,11 +8,13 @@ class PBSProResourcesUsedMapping(BaseMapping[PBSProResourcesUsed, str]):
     def to_source(target: dict[str, str]) -> PBSProResourcesUsed:
         return PBSProResourcesUsed(
             cpu_percent=target['resources_used.cpupercent'],
-            cpu_time=target['resources_used.cput'],
+            cpu_time=FormatParserUtil.parse_timedelta(target['resources_used.cput']),
             num_cpus=target['resources_used.ncpus'],
             mem=FormatParserUtil.parse_memory(target['resources_used.mem']),
             vmem=FormatParserUtil.parse_memory(target['resources_used.vmem']),
-            walltime=target['resources_used.walltime'],
+            walltime=FormatParserUtil.parse_timedelta(
+                target['resources_used.walltime']
+            ),
         )
 
     @staticmethod

@@ -13,7 +13,7 @@ class PBSProResourceListMapping(BaseMapping[PBSProResourceList, str]):
             num_nodes=target['resource_list.nodect'],
             place=target['resource_list.place'],
             select=target['resource_list.select'],
-            walltime=target['resource_list.walltime'],
+            walltime=FormatParserUtil.parse_timedelta(target['resource_list.walltime']),
         )
 
     @staticmethod
