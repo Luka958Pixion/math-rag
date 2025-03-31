@@ -2,6 +2,13 @@ from collections.abc import Iterable
 
 
 class AwkCmdBuilderUtil:
+    """
+    GNU awk simple command builder utility
+
+    Reference:
+        https://savannah.gnu.org/git/?group=gawk
+    """
+
     @staticmethod
     def build(
         *,

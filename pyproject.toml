@@ -35,6 +35,11 @@ pytest = "^8.3.4"
 jupyter = "^1.1.1"
 ipykernel = "^6.29.5"
 
+
+[tool.poetry.group."dev.tgi".dependencies]
+text-generation = "^0.7.0"
+python-decouple = "^3.8"
+
 [tool.ruff]
 line-length = 88
 include = ["**/pyproject.toml", "**.py"]

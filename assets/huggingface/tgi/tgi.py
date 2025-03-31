@@ -1,13 +1,17 @@
 from asyncio import run
+from pathlib import Path
 
+from decouple import config
 from text_generation import AsyncClient
 
 
 async def main():
-    client = AsyncClient('http://0.0.0.0:8000')
+    ROOT = Path(...)  # TODO /lustre/user...
+    TGI_BASE_URL = config('TGI_BASE_URL')
+    client = AsyncClient(TGI_BASE_URL)
     prompt = 'Tell me a joke.'
     response = await client.generate(prompt, max_new_tokens=50)
-    print('Generated Text:', response.generated_text)
+    print(response.generated_text)
 
 
 if __name__ == '__main__':
