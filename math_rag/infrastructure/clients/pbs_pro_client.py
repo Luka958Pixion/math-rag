@@ -10,43 +10,26 @@ class PBSProClient(SSHClient):
         super().__init__(host, user, passphrase)
 
     async def queue_submit(self, pbs_path: Path) -> str:
-        stdout = await self.run(f'qsub {pbs_path}')  # TODO
+        return await self.run(f'qsub {pbs_path}')
 
-        return stdout
-
-    async def queue_status(self, job_id: str | None):
+    async def queue_status(self, job_id: str):
         stdout = await self.run(
-            f"qstat -u {self.user} | awk 'NR>=3 {{print $1, $2, $3, $4, $5, $6}}'"
-        )
-        # TODO parse
-        job = PBSProJobMapping.to_source(...)
-
-        return stdout
-
-    async def queue_delete(self, job_id: str, force: bool):
-        # qdel
-        stdout = await self.run(
-            f'qdel -W force -x {job_id}' if force else f'qdel {job_id}'
+            f"qstat {job_id} | awk 'NR>=3 {{print $1, $2, $3, $4, $5, $6}}'"
         )
 
-        return stdout
+        return PBSProJobMapping.to_source(stdout)
+
+    async def queue_delete(self, job_id: str, *, force: bool):
+        await self.run(f'qdel -W force -x {job_id}' if force else f'qdel {job_id}')
 
     async def queue_hold(self, job_id: str):
-        # qhold
-        stdout = await self.run(f'qhold {job_id}')
-
-        # qhold: Unknown Job Id 12.x3000c0s25b0n0.hsn.hpc.srce.hr
-
-        return stdout
+        await self.run(f'qhold {job_id}')
 
     async def queue_release(self, job_id: str):
-        # qrls
-        stdout = await self.run(f'qrls {job_id}')
-
-        return stdout
+        await self.run(f'qrls {job_id}')
 
     async def trace_job(self, job_id: str):
-        # tracejob
         stdout = await self.run(f'tracejob {job_id}')
+        # TODO parse
 
         return stdout
