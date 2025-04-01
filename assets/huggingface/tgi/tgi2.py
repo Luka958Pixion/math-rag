@@ -13,11 +13,11 @@ from huggingface_hub import AsyncInferenceClient
 from huggingface_hub.errors import TextGenerationError
 
 
+# PBS environment
 WORKDIR = config('PBS_O_WORKDIR', cast=Path)
 
 TGI_BASE_URL = config('TGI_BASE_URL')
 TGI_MODEL = config('TGI_MODEL')
-BATCH_ID = config('BATCH_ID', cast=UUID)
 MAX_QUEUE_SIZE = config('MAX_QUEUE_SIZE', cast=int, default=5)
 NUM_CONCURRENT_REQUESTS = config('NUM_CONCURRENT_REQUESTS', cast=int, default=5)
 MAX_RETRIES = config('MAX_RETRIES', cast=int, default=3)
@@ -101,11 +101,11 @@ async def process_input_lines(
         logger.exception(f'Error in TaskGroup: {e}')
 
 
-def read_input_file(input_path: Path, input_queue: Queue[str | None]):
+def read_input_file(input_file_path: Path, input_queue: Queue[str | None]):
     logger.info('Reader thread started')
 
     try:
-        with open(input_path, 'r') as input_file:
+        with open(input_file_path, 'r') as input_file:
             for line in input_file:
                 line = line.strip()
 
@@ -146,11 +146,11 @@ def process_lines(client, input_queue: Queue[str], output_queue: Queue[str | Non
         logger.info('Processor thread exiting')  # TODO
 
 
-def write_output_path(output_path: Path, output_queue: Queue[str | None]):
+def write_output_file(output_file_path: Path, output_queue: Queue[str | None]):
     logger.info('Writer thread started')
 
     try:
-        with open(output_path, 'w') as output_file:
+        with open(output_file_path, 'w') as output_file:
             while True:
                 line = output_queue.get()
 
@@ -168,11 +168,13 @@ def write_output_path(output_path: Path, output_queue: Queue[str | None]):
         logger.info('Writer thread exiting')
 
 
-def main():
-    input_file_path = WORKDIR / f'input_{BATCH_ID}.jsonl'
-    output_file_path = WORKDIR / f'output_{BATCH_ID}.jsonl'
+def main(batch_id: UUID):
+    input_file_path = WORKDIR / f'input_{batch_id}.jsonl'
+    output_file_path = WORKDIR / f'output_{batch_id}.jsonl'
 
-    client = AsyncInferenceClient(base_url=TGI_BASE_URL, model=TGI_MODEL, timeout=None)
+    client = AsyncInferenceClient(
+        base_url=TGI_BASE_URL, model=TGI_MODEL, provider='hf-inference', timeout=None
+    )
 
     input_queue: Queue[str | None] = Queue(maxsize=MAX_QUEUE_SIZE)
     output_queue: Queue[str | None] = Queue(maxsize=MAX_QUEUE_SIZE)
@@ -186,7 +188,7 @@ def main():
         name='ProcessorThread',
     )
     writer_thread = Thread(
-        target=write_output_path,
+        target=write_output_file,
         args=(output_file_path, output_queue),
         name='WriterThread',
     )
