@@ -50,33 +50,40 @@ async def safe_chat_completion(client: AsyncInferenceClient, input_line: str) ->
     return output_line
 
 
-async def process_all_lines(lines: list[str], client, output_queue: Queue):
+async def process_single_line(
+    semaphore: Semaphore, line: str, client: AsyncInferenceClient, output_queue: Queue
+):
+    async with semaphore:
+        try:
+            result = await safe_chat_completion(client, line)
+
+        except Exception as e:
+            logger.error(
+                f'Failed processing line after {MAX_RETRIES} retries: '
+                f'{line.strip()} - Error: {e}'
+            )
+            result = f'Error: Failed to process line: {line.strip()}'
+
+        while True:
+            try:
+                output_queue.put_nowait(result)
+                break
+
+            except Full:
+                await sleep(0.1)
+
+
+async def process_all_lines(
+    lines: list[str], client: AsyncInferenceClient, output_queue: Queue
+):
     semaphore = Semaphore(CONCURRENT_REQUESTS)
 
-    async def process_single_line(line: str):
-        async with semaphore:
-            try:
-                result = await safe_chat_completion(client, line)
-
-            except Exception as e:
-                logger.error(
-                    f'Failed processing line after {MAX_RETRIES} retries: '
-                    f'{line.strip()} - Error: {e}'
-                )
-                result = f'Error: Failed to process line: {line.strip()}'
-
-            while True:
-                try:
-                    output_queue.put_nowait(result)
-                    break
-
-                except Full:
-                    await sleep(0.1)
-
     try:
-        async with TaskGroup() as tg:
+        async with TaskGroup() as task_group:
             for line in lines:
-                tg.create_task(process_single_line(line))
+                task_group.create_task(
+                    process_single_line(semaphore, line, client, output_queue)
+                )
 
     except Exception as e:
         logger.exception(f'Error in TaskGroup: {e}')
