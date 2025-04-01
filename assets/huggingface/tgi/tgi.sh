@@ -11,6 +11,10 @@ cd "${PBS_O_WORKDIR:-""}"
 
 export PYTHONUNBUFFERED=1
 
+set -a
+source .env
+set +a
+
 apptainer run --nv --bind $PWD/data/meta-llama/Llama-3.2-3B:/model tgi.sif
 
 

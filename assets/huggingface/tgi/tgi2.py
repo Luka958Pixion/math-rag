@@ -5,6 +5,7 @@ from logging import INFO, basicConfig, getLogger
 from pathlib import Path
 from queue import Full, Queue
 from threading import Thread
+from uuid import UUID
 
 from backoff import expo, full_jitter, on_exception
 from decouple import config
@@ -12,11 +13,14 @@ from huggingface_hub import AsyncInferenceClient
 from huggingface_hub.errors import TextGenerationError
 
 
-MAX_QUEUE_SIZE = 5
-MAX_RETRIES = config('MAX_RETRIES', cast=int, default=3)
-CONCURRENT_REQUESTS = config('CONCURRENT_REQUESTS', cast=int, default=5)
-ROOT = config('ROOT', cast=Path, default=...)  # TODO /lustre/user...
+WORKDIR = config('PBS_O_WORKDIR', cast=Path)
+
 TGI_BASE_URL = config('TGI_BASE_URL')
+TGI_MODEL = config('TGI_MODEL')
+BATCH_ID = config('BATCH_ID', cast=UUID)
+MAX_QUEUE_SIZE = config('MAX_QUEUE_SIZE', cast=int, default=5)
+NUM_CONCURRENT_REQUESTS = config('NUM_CONCURRENT_REQUESTS', cast=int, default=5)
+MAX_RETRIES = config('MAX_RETRIES', cast=int, default=3)
 
 
 basicConfig(
@@ -26,7 +30,7 @@ logger = getLogger(__name__)
 
 
 def on_backoff_handler(details: dict):
-    line = details['args'][1].strip() if len(details['args']) > 1 else ''
+    line = details['args'][1] if len(details['args']) > 1 else str()
     logger.error(
         f'Error processing line {line} '
         f'(attempt {details['tries']}/{MAX_RETRIES}): '
@@ -41,61 +45,71 @@ def on_backoff_handler(details: dict):
     jitter=full_jitter,
     on_backoff=on_backoff_handler,
 )
-async def safe_chat_completion(client: AsyncInferenceClient, input_line: str) -> str:
-    request = json.loads(input_line.strip())
+async def safe_chat_completion(client: AsyncInferenceClient, request: dict) -> dict:
     output = await client.chat_completion(**request['body'])
     response = {'request_id': request['id'], 'body': output}
-    output_line = json.dumps(response)
 
-    return output_line
+    return response
 
 
-async def process_single_line(
-    semaphore: Semaphore, line: str, client: AsyncInferenceClient, output_queue: Queue
+async def process_input_line(
+    semaphore: Semaphore,
+    input_line: str,
+    client: AsyncInferenceClient,
+    output_queue: Queue[str | None],
 ):
     async with semaphore:
+        request = json.loads(input_line)
+
         try:
-            result = await safe_chat_completion(client, line)
+            response = await safe_chat_completion(client, request)
 
         except Exception as e:
             logger.error(
                 f'Failed processing line after {MAX_RETRIES} retries: '
-                f'{line.strip()} - Error: {e}'
+                f'{input_line} - Error: {e}'
             )
-            result = f'Error: Failed to process line: {line.strip()}'
+            response = {'request_id': request['id'], 'error': e}
+
+        finally:
+            output_line = json.dumps(response)
 
         while True:
             try:
-                output_queue.put_nowait(result)
+                output_queue.put_nowait(output_line)
                 break
 
             except Full:
                 await sleep(0.1)
 
 
-async def process_all_lines(
-    lines: list[str], client: AsyncInferenceClient, output_queue: Queue
+async def process_input_lines(
+    input_lines: list[str],
+    client: AsyncInferenceClient,
+    output_queue: Queue[str | None],
 ):
-    semaphore = Semaphore(CONCURRENT_REQUESTS)
+    semaphore = Semaphore(NUM_CONCURRENT_REQUESTS)
 
     try:
         async with TaskGroup() as task_group:
-            for line in lines:
+            for input_line in input_lines:
                 task_group.create_task(
-                    process_single_line(semaphore, line, client, output_queue)
+                    process_input_line(semaphore, input_line, client, output_queue)
                 )
 
     except Exception as e:
         logger.exception(f'Error in TaskGroup: {e}')
 
 
-def read_input_file(input_path: Path, input_queue: Queue):
+def read_input_file(input_path: Path, input_queue: Queue[str | None]):
     logger.info('Reader thread started')
 
     try:
-        with open(input_path, 'r') as infile:
-            for line in infile:
-                if line.strip():
+        with open(input_path, 'r') as input_file:
+            for line in input_file:
+                line = line.strip()
+
+                if line:
                     input_queue.put(line)
 
         logger.info('Finished reading input file')
@@ -108,42 +122,42 @@ def read_input_file(input_path: Path, input_queue: Queue):
         logger.info('Reader thread exiting')
 
 
-def process_lines(client, input_queue: Queue, output_queue: Queue):
+def process_lines(client, input_queue: Queue[str], output_queue: Queue[str | None]):
     logger.info('Processor thread started')
 
     try:
-        lines: list[str] = []
+        input_lines: list[str] = []
 
         while True:
-            line = input_queue.get()
+            input_line = input_queue.get()
 
-            if line is None:
+            if input_line is None:
                 break
 
-            lines.append(line)
+            input_lines.append(input_line)
 
-        run(process_all_lines(lines, client, output_queue))
+        run(process_input_lines(input_lines, client, output_queue))
 
     except Exception as e:
         logger.exception(f'Error processing lines in asyncio loop: {e}')
 
     finally:
         output_queue.put(None)
-        logger.info('Processor thread exiting')
+        logger.info('Processor thread exiting')  # TODO
 
 
-def write_output_path(output_path: Path, output_queue: Queue):
+def write_output_path(output_path: Path, output_queue: Queue[str | None]):
     logger.info('Writer thread started')
 
     try:
-        with open(output_path, 'w') as outfile:
+        with open(output_path, 'w') as output_file:
             while True:
                 line = output_queue.get()
 
                 if line is None:
                     break
 
-                outfile.write(line + '\n')
+                output_file.write(line + '\n')
 
         logger.info('Finished writing output file')
 
@@ -155,13 +169,13 @@ def write_output_path(output_path: Path, output_queue: Queue):
 
 
 def main():
-    input_file_path = Path('path/to/input.txt')
-    output_file_path = Path('path/to/output.txt')
+    input_file_path = WORKDIR / f'input_{BATCH_ID}.jsonl'
+    output_file_path = WORKDIR / f'output_{BATCH_ID}.jsonl'
 
-    client = AsyncInferenceClient()
+    client = AsyncInferenceClient(base_url=TGI_BASE_URL, model=TGI_MODEL, timeout=None)
 
-    input_queue = Queue(maxsize=MAX_QUEUE_SIZE)
-    output_queue = Queue(maxsize=MAX_QUEUE_SIZE)
+    input_queue: Queue[str | None] = Queue(maxsize=MAX_QUEUE_SIZE)
+    output_queue: Queue[str | None] = Queue(maxsize=MAX_QUEUE_SIZE)
 
     reader_thread = Thread(
         target=read_input_file, args=(input_file_path, input_queue), name='ReaderThread'

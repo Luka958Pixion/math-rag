@@ -1,16 +1,14 @@
-import logging
-
 from asyncio import run
+from logging import INFO, basicConfig
 
 from math_rag.application.containers import ApplicationContainer
 from math_rag.infrastructure.containers import InfrastructureContainer
 
 
-async def main():
-    logging.basicConfig(
-        level=logging.INFO, format='%(asctime)s - %(levelname)s - %(message)s'
-    )
+basicConfig(level=INFO, format='%(asctime)s - %(levelname)s - %(message)s')
 
+
+async def main():
     application_container = ApplicationContainer()
     application_container.init_resources()
     application_container.wire(modules=[__name__])
