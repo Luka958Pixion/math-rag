@@ -1,11 +1,11 @@
 from pathlib import Path
 
-from math_rag.infrastructure.mappings.hpcs.pbs import (
+from math_rag.infrastructure.mappings.hpc.pbs import (
     PBSProJobAlternateMapping,
     PBSProJobFullMapping,
     PBSProJobMapping,
 )
-from math_rag.infrastructure.models.hpcs.pbs import (
+from math_rag.infrastructure.models.hpc.pbs import (
     PBSProJob,
     PBSProJobAlternate,
     PBSProJobFull,
@@ -22,23 +22,7 @@ class PBSProClient(SSHClient):
     async def queue_submit(self, pbs_path: Path) -> str:
         return await self.run(f'qsub {pbs_path}')
 
-    async def queue_status(
-        self, job_id: str, *, alternate: bool, full: bool
-    ) -> PBSProJob | PBSProJobAlternate | PBSProJobFull:
-        if alternate:
-            awk_cmd = AwkCmdBuilderUtil.build(
-                row_number=6,
-                col_numbers=range(1, 11 + 1),
-            )
-            stdout = await self.run(f'qstat -a {job_id} | {awk_cmd}')
-
-            return PBSProJobAlternateMapping.to_source(stdout)
-
-        if full:
-            stdout = await self.run(f'qstat -f {job_id}')
-
-            return PBSProJobFullMapping.to_source(stdout)
-
+    async def queue_status(self, job_id: str) -> PBSProJob:
         awk_cmd = AwkCmdBuilderUtil.build(
             row_number=3,
             col_numbers=range(1, 6 + 1),
@@ -46,6 +30,20 @@ class PBSProClient(SSHClient):
         stdout = await self.run(f'qstat {job_id} | {awk_cmd}')
 
         return PBSProJobMapping.to_source(stdout)
+
+    async def queue_status_alternate(self, job_id: str) -> PBSProJobAlternate:
+        awk_cmd = AwkCmdBuilderUtil.build(
+            row_number=6,
+            col_numbers=range(1, 11 + 1),
+        )
+        stdout = await self.run(f'qstat -a {job_id} | {awk_cmd}')
+
+        return PBSProJobAlternateMapping.to_source(stdout)
+
+    async def queue_status_full(self, job_id: str) -> PBSProJobFull:
+        stdout = await self.run(f'qstat -f {job_id}')
+
+        return PBSProJobFullMapping.to_source(stdout)
 
     async def queue_delete(self, job_id: str, *, force: bool):
         await self.run(f'qdel -W force -x {job_id}' if force else f'qdel {job_id}')

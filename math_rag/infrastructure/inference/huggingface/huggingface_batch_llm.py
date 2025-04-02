@@ -4,8 +4,6 @@ import logging
 from asyncio import sleep
 from uuid import UUID
 
-from huggingface_hub import AsyncInferenceClient
-
 from math_rag.application.base.inference import BaseBatchLLM
 from math_rag.application.models.inference import (
     LLMBatchRequest,
@@ -24,7 +22,14 @@ from math_rag.infrastructure.utils import BytesStreamerUtil
 
 
 class HuggingFaceBatchLLM(BaseBatchLLM):
-    def __init__(self, sftp_client: SFTPClient):
+    def __init__(
+        self,
+        hpc_client: HPCClient,
+        pbs_pro_client: PBSProClient,
+        sftp_client: SFTPClient,
+    ):
+        self.hpc_client = hpc_client
+        self.pbs_pro_client = pbs_pro_client
         self.sftp_client = sftp_client
 
     async def _batch_generate(
@@ -119,11 +124,13 @@ class HuggingFaceBatchLLM(BaseBatchLLM):
 
         await self.sftp_client.upload(source)
 
-        input_file = ...
-        batch = ...
-        logging.info(f'Batch {batch.id} created with status {batch.status}')
+        pbs_path = ...
+        job_id = await self.pbs_pro_client.queue_submit(pbs_path)
+        status = await self.pbs_pro_client.queue_status(job_id)
 
-        return batch.id
+        logging.info(f'Batch job {job_id} created with state {status.state}')
+
+        return job_id
 
     async def batch_generate_result(
         self, batch_id: str, response_type: type[LLMResponseType]
