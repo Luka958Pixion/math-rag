@@ -18,7 +18,7 @@ from math_rag.application.assistants import (
 )
 from math_rag.application.containers import ApplicationContainer
 from math_rag.infrastructure.clients import ArxivClient, KatexClient
-from math_rag.infrastructure.inference import OpenAIUnifiedLLM
+from math_rag.infrastructure.inference.openai import OpenAIUnifiedLLM
 from math_rag.infrastructure.repositories.documents import (
     LLMFailedRequestRepository,
     MathExpressionClassificationRepository,
