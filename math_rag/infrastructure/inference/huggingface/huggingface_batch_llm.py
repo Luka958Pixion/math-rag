@@ -13,6 +13,7 @@ from math_rag.application.models.inference import (
 )
 from math_rag.application.types.inference import LLMResponseType
 from math_rag.infrastructure.clients import HPCClient, PBSProClient, SFTPClient
+from math_rag.infrastructure.enums.hpc.pbs import PBSProJobState
 from math_rag.infrastructure.mappings.inference.huggingface import (
     LLMErrorMapping,
     LLMRequestMapping,
@@ -124,36 +125,38 @@ class HuggingFaceBatchLLM(BaseBatchLLM):
 
         await self.sftp_client.upload(source)
 
-        pbs_path = ...
-        job_id = await self.pbs_pro_client.queue_submit(pbs_path)
-        status = await self.pbs_pro_client.queue_status(job_id)
+        pbs_path = ...  # TODO
+        batch_id = await self.pbs_pro_client.queue_submit(pbs_path)
+        status = await self.pbs_pro_client.queue_status(batch_id)
 
-        logging.info(f'Batch job {job_id} created with state {status.state}')
+        logging.info(f'Batch {batch_id} created with state {status.state}')
 
-        return job_id
+        return batch_id
 
     async def batch_generate_result(
         self, batch_id: str, response_type: type[LLMResponseType]
     ) -> LLMBatchResult[LLMResponseType] | None:
-        batch = await self.client.batches.retrieve(batch_id)
+        status = await self.pbs_pro_client.queue_status(batch_id)
 
-        logging.info(
-            f'Batch {batch.id} status {batch.status}\n'
-            f'Batch {batch.id} requests - '
-            f'completed: {batch.request_counts.completed}, '
-            f'failed: {batch.request_counts.failed}, '
-            f'total: {batch.request_counts.total}'
-        )
+        logging.info(f'Batch {batch_id} state {status.state}')
 
-        match batch.status:
-            case 'validating' | 'in_progress' | 'finalizing' | 'cancelling':
+        match status.state:
+            case (
+                PBSProJobState.BEGUN
+                | PBSProJobState.QUEUED
+                | PBSProJobState.RUNNING
+                | PBSProJobState.EXITING
+                | PBSProJobState.WAITING
+                | PBSProJobState.TRANSITING
+                | PBSProJobState.SUSPENDED
+                | PBSProJobState.USER_SUSPENDED
+                | PBSProJobState.HELD
+                | PBSProJobState.MOVED
+            ):
                 return None
 
-            case 'completed' | 'expired' | 'cancelled':
+            case PBSProJobState.FINISHED | PBSProJobState.EXITED:
                 pass
-
-            case 'failed':
-                raise ValueError(f'File {batch.input_file_id} validation failed')
 
         input_file_content = await self.client.files.content(batch.input_file_id)
         output_file_content = await self.client.files.content(batch.output_file_id)

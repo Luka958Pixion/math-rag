@@ -6,7 +6,7 @@ class PBSProJobState(str, Enum):
     PBS Pro 2024.1.0 Job States
 
     Reference:
-        https://help.altair.com/2024.1.0/PBS%20Professional/PBSReferenceGuide2024.1.pdf
+        https://help.altair.com/2024.1.0/PBS%20Professional/PBSReferenceGuide2024.1.pdf#page=369&zoom=100,150,242
     """
 
     BEGUN = 'B'
