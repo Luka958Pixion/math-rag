@@ -20,11 +20,12 @@ from math_rag.infrastructure.mappings.inference.huggingface import (
     LLMRequestMapping,
     LLMResponseListMapping,
 )
+from math_rag.infrastructure.utils import BytesStreamerUtil
 
 
 class HuggingFaceBatchLLM(BaseBatchLLM):
-    def __init__(self, client: AsyncInferenceClient):
-        self.client = client
+    def __init__(self, sftp_client: SFTPClient):
+        self.sftp_client = sftp_client
 
     async def _batch_generate(
         self,
@@ -114,6 +115,9 @@ class HuggingFaceBatchLLM(BaseBatchLLM):
         lines = [json.dumps(request, separators=(',', ':')) for request in requests]
         jsonl_str = '\n'.join(lines)
         jsonl_bytes = jsonl_str.encode('utf-8')
+        source = BytesStreamerUtil.stream_bytes(jsonl_bytes)
+
+        await self.sftp_client.upload(source)
 
         input_file = ...
         batch = ...

@@ -4,6 +4,8 @@ from typing import AsyncGenerator
 
 from aiofiles import open
 
+from math_rag.infrastructure.utils import BytesStreamerUtil
+
 from .ssh_client import SSHClient
 
 
@@ -17,7 +19,7 @@ class SFTPClient(SSHClient):
         target: Path,
     ):
         if isinstance(source, Path):
-            source = self._stream_file(source)
+            source = BytesStreamerUtil.stream_file(source)
 
         async with AsyncExitStack() as stack:
             conn = await stack.enter_async_context(self.connect())
@@ -26,16 +28,6 @@ class SFTPClient(SSHClient):
 
             async for chunk in source:
                 await file.write(chunk)
-
-    async def _stream_file(self, path: Path) -> AsyncGenerator[bytes, None]:
-        async with open(path, 'rb') as file:
-            while True:
-                chunk = await file.read(8192)
-
-                if not chunk:
-                    break
-
-                yield chunk
 
     async def download(
         self,
