@@ -4,8 +4,7 @@ import logging
 from asyncio import sleep
 from uuid import UUID
 
-from openai import AsyncOpenAI
-from openai.types.chat import ChatCompletion
+from huggingface_hub import AsyncInferenceClient
 
 from math_rag.application.base.inference import BaseBatchLLM
 from math_rag.application.models.inference import (
@@ -15,15 +14,16 @@ from math_rag.application.models.inference import (
     LLMResponseList,
 )
 from math_rag.application.types.inference import LLMResponseType
-from math_rag.infrastructure.mappings.inference.openai import (
+from math_rag.infrastructure.clients import HPCClient, PBSProClient, SFTPClient
+from math_rag.infrastructure.mappings.inference.huggingface import (
     LLMErrorMapping,
     LLMRequestMapping,
     LLMResponseListMapping,
 )
 
 
-class OpenAIBatchLLM(BaseBatchLLM):
-    def __init__(self, client: AsyncOpenAI):
+class HuggingFaceBatchLLM(BaseBatchLLM):
+    def __init__(self, client: AsyncInferenceClient):
         self.client = client
 
     async def _batch_generate(
@@ -107,30 +107,16 @@ class OpenAIBatchLLM(BaseBatchLLM):
         self,
         batch_request: LLMBatchRequest[LLMResponseType],
     ) -> str:
-        url = '/v1/chat/completions'
         requests = [
-            {
-                'custom_id': str(request.id),
-                'method': 'POST',
-                'url': url,
-                'body': LLMRequestMapping[LLMResponseType].to_target(
-                    request, use_parsed=True
-                ),
-            }
-            for request in batch_request.requests
+            LLMRequestMapping.to_target(request) for request in batch_request.requests
         ]
 
         lines = [json.dumps(request, separators=(',', ':')) for request in requests]
         jsonl_str = '\n'.join(lines)
         jsonl_bytes = jsonl_str.encode('utf-8')
 
-        input_file = await self.client.files.create(file=jsonl_bytes, purpose='batch')
-        batch = await self.client.batches.create(
-            input_file_id=input_file.id,
-            endpoint=url,
-            completion_window='24h',
-            metadata=None,
-        )
+        input_file = ...
+        batch = ...
         logging.info(f'Batch {batch.id} created with status {batch.status}')
 
         return batch.id
@@ -206,8 +192,5 @@ class OpenAIBatchLLM(BaseBatchLLM):
         batch_result = LLMBatchResult(
             response_lists=response_lists, failed_requests=failed_requests
         )
-
-        await self.client.files.delete(batch.input_file_id)
-        await self.client.files.delete(batch.output_file_id)
 
         return batch_result
