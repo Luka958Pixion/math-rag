@@ -9,6 +9,7 @@ class LLMParamsDocument(BaseDocument):
     temperature: float
     logprobs: bool | None = None
     top_logprobs: int | None = None
+    top_p: float | None = None
     reasoning_effort: str | None = None
     max_completion_tokens: int | None = None
     response_type: str
