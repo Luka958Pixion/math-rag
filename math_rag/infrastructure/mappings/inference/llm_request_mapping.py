@@ -6,14 +6,14 @@ from openai.lib._parsing._completions import (
 )
 
 from math_rag.application.models.inference import (
-    LLMConversation,
-    LLMMessage,
     LLMParams,
     LLMRequest,
     LLMTextResponse,
 )
 from math_rag.application.types.inference import LLMResponseType
 from math_rag.infrastructure.base import BaseMapping
+
+from .llm_conversation_mapping import LLMConversationMapping
 
 
 class LLMRequestMapping(
@@ -27,15 +27,11 @@ class LLMRequestMapping(
 
         return LLMRequest(
             id=request_id,
-            conversation=LLMConversation(
-                messages=[
-                    LLMMessage(role=message['role'], content=message['content'])
-                    for message in target['messages']
-                ]
-            ),
+            conversation=LLMConversationMapping.to_source(target['messages']),
             params=LLMParams[LLMResponseType](
                 model=target['model'],
                 temperature=target['temperature'],
+                logprobs=target['logprobs'],
                 top_logprobs=target['top_logprobs'],
                 response_type=response_type,
                 max_completion_tokens=target['max_completion_tokens'],
@@ -57,16 +53,14 @@ class LLMRequestMapping(
         )
 
         return {
+            'messages': LLMConversationMapping.to_target(source.conversation),
             'model': source.params.model,
-            'messages': [
-                {'role': message.role, 'content': message.content}
-                for message in source.conversation.messages
-            ],
-            'response_format': response_format,
             'temperature': source.params.temperature,
             'logprobs': source.params.top_logprobs is not None,
             'top_logprobs': source.params.top_logprobs,
+            'response_format': response_format,
             'max_completion_tokens': source.params.max_completion_tokens,
             'metadata': source.params.metadata,
             'store': source.params.store,
+            'n': source.params.n,
         }

@@ -7,12 +7,13 @@ from openai.lib._parsing._completions import (
 from openai.types.chat import ChatCompletion
 
 from math_rag.application.models.inference import (
-    LLMResponse,
     LLMResponseList,
     LLMTextResponse,
 )
 from math_rag.application.types.inference import LLMResponseType
 from math_rag.infrastructure.base import BaseMapping
+
+from .llm_response_mapping import LLMResponseMapping
 
 
 class LLMResponseListMapping(
@@ -38,15 +39,11 @@ class LLMResponseListMapping(
         return LLMResponseList(
             request_id=request_id,
             responses=[
-                LLMResponse[LLMResponseType](
-                    content=choice.message.content
-                    if isinstance(choice, ChatCompletion)
-                    else choice.message.parsed
-                )
+                LLMResponseMapping[LLMResponseType].to_source(choice.message)
                 for choice in target.choices
             ],
         )
 
     @staticmethod
-    def to_target(source: LLMResponseList) -> ChatCompletion:
+    def to_target(source: LLMResponseList[LLMResponseType]) -> ChatCompletion:
         raise NotImplementedError()

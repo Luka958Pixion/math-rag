@@ -10,6 +10,7 @@ class LLMParams(BaseModel, Generic[LLMResponseType]):
     id: UUID = Field(default_factory=uuid4)
     model: str
     temperature: float
+    logprobs: bool | None = None
     top_logprobs: int | None = None
     reasoning_effort: str | None = None
     max_completion_tokens: int | None = None
