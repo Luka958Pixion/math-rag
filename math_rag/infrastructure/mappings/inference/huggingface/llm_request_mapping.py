@@ -32,6 +32,7 @@ class LLMRequestMapping(
                 top_p=target['top_p'],
                 response_type=response_type,
                 max_completion_tokens=target['max_tokens'],
+                metadata=target['extra_body'],
                 n=target.get('n', 1),
             ),
         )
@@ -56,5 +57,6 @@ class LLMRequestMapping(
             'top_p': source.params.top_p,
             'response_format': response_format,
             'max_tokens': source.params.max_completion_tokens,
+            'extra_body': source.params.metadata,
             'n': source.params.n,
         }

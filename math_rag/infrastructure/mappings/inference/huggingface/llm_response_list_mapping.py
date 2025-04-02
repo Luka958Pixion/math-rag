@@ -28,7 +28,7 @@ class LLMResponseListMapping(
             request_id=request_id,
             responses=[
                 LLMResponseMapping[LLMResponseType].to_source(
-                    choice.message, response_type=response_type
+                    choice, response_type=response_type
                 )
                 for choice in target.choices
             ],
