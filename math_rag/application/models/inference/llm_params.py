@@ -9,7 +9,7 @@ from math_rag.application.types.inference import LLMResponseType
 class LLMParams(BaseModel, Generic[LLMResponseType]):
     id: UUID = Field(default_factory=uuid4)
     model: str
-    temperature: float
+    temperature: float = 0
     logprobs: bool | None = None
     top_logprobs: int | None = None
     top_p: float | None = None

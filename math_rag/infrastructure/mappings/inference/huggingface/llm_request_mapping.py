@@ -41,7 +41,10 @@ class LLMRequestMapping(
         response_format = (
             None
             if source.params.response_type is LLMTextResponse
-            else source.params.response_type.model_json_schema()
+            else {
+                'type': 'json',
+                'value': source.params.response_type.model_json_schema(),
+            }
         )
 
         return {
