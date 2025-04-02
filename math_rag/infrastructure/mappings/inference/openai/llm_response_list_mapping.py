@@ -1,17 +1,16 @@
 from typing import Generic
 
-from openai import NOT_GIVEN
-from openai.lib._parsing._completions import (
-    parse_chat_completion,
-)
-from openai.types.chat import ChatCompletion
-
 from math_rag.application.models.inference import (
     LLMResponseList,
     LLMTextResponse,
 )
 from math_rag.application.types.inference import LLMResponseType
 from math_rag.infrastructure.base import BaseMapping
+from openai import NOT_GIVEN
+from openai.lib._parsing._completions import (
+    parse_chat_completion,
+)
+from openai.types.chat import ChatCompletion
 
 from .llm_response_mapping import LLMResponseMapping
 

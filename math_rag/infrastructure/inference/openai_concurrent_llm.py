@@ -25,7 +25,7 @@ from math_rag.infrastructure.constants.inference import (
     SECONDS_TO_PAUSE_AFTER_RATE_LIMIT_ERROR,
     SECONDS_TO_SLEEP_EACH_LOOP,
 )
-from math_rag.infrastructure.mappings.inference import (
+from math_rag.infrastructure.mappings.inference.openai import (
     LLMRequestMapping,
     LLMResponseListMapping,
 )

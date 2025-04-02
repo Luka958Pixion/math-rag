@@ -15,7 +15,7 @@ from math_rag.application.models.inference import (
     LLMResponseList,
 )
 from math_rag.application.types.inference import LLMResponseType
-from math_rag.infrastructure.mappings.inference import (
+from math_rag.infrastructure.mappings.inference.openai import (
     LLMErrorMapping,
     LLMRequestMapping,
     LLMResponseListMapping,

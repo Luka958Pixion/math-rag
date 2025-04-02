@@ -1,10 +1,6 @@
 from typing import Any, Generic
 from uuid import UUID
 
-from openai.lib._parsing._completions import (
-    type_to_response_format_param,
-)
-
 from math_rag.application.models.inference import (
     LLMParams,
     LLMRequest,
@@ -12,6 +8,9 @@ from math_rag.application.models.inference import (
 )
 from math_rag.application.types.inference import LLMResponseType
 from math_rag.infrastructure.base import BaseMapping
+from openai.lib._parsing._completions import (
+    type_to_response_format_param,
+)
 
 from .llm_conversation_mapping import LLMConversationMapping
 

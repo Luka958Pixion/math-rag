@@ -1,10 +1,9 @@
 from typing import Generic
 
-from openai.types.chat import ChatCompletionMessage, ParsedChatCompletionMessage
-
 from math_rag.application.models.inference import LLMResponse
 from math_rag.application.types.inference import LLMResponseType
 from math_rag.infrastructure.base import BaseMapping
+from openai.types.chat import ChatCompletionMessage, ParsedChatCompletionMessage
 
 
 class LLMResponseMapping(

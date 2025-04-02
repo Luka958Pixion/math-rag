@@ -15,7 +15,7 @@ from math_rag.infrastructure.constants.inference import (
     OPENAI_ERRORS_TO_RAISE,
     OPENAI_ERRORS_TO_RETRY,
 )
-from math_rag.infrastructure.mappings.inference import (
+from math_rag.infrastructure.mappings.inference.openai import (
     LLMRequestMapping,
     LLMResponseListMapping,
 )
