@@ -1,0 +1,90 @@
+import logging
+
+from asyncio import sleep
+
+from math_rag.application.base.inference import BaseBatchLLM
+from math_rag.application.models.inference import (
+    LLMBatchRequest,
+    LLMBatchResult,
+    LLMResponseList,
+)
+from math_rag.application.types.inference import LLMResponseType
+
+
+class PartialBatchLLM(BaseBatchLLM):
+    async def _batch_generate(
+        self,
+        batch_request: LLMBatchRequest[LLMResponseType],
+        response_type: type[LLMResponseType],
+        poll_interval: float,
+    ) -> LLMBatchResult[LLMResponseType]:
+        batch_id = await self.batch_generate_init(batch_request)
+
+        while True:
+            batch_result = await self.batch_generate_result(batch_id, response_type)
+
+            if batch_result is not None:
+                return batch_result
+
+            await sleep(poll_interval)
+
+    async def _batch_generate_retry(
+        self,
+        batch_request: LLMBatchRequest[LLMResponseType],
+        response_type: type[LLMResponseType],
+        *,
+        poll_interval: float,
+        max_num_retries: int,
+    ) -> LLMBatchResult[LLMResponseType]:
+        if max_num_retries < 0:
+            raise ValueError()
+
+        num_total = len(batch_request.requests)
+        response_lists: list[LLMResponseList[LLMResponseType]] = []
+
+        for _ in range(max_num_retries + 1):
+            batch_result = await self._batch_generate(
+                batch_request, response_type, poll_interval
+            )
+            response_lists.extend(batch_result.response_lists)
+
+            if not batch_result.failed_requests:
+                break
+
+            batch_request = LLMBatchRequest(
+                requests=[
+                    failed_request.request
+                    for failed_request in batch_result.failed_requests
+                ]
+            )
+
+        batch_result.response_lists = response_lists
+        num_completed = len(response_lists)
+
+        logging.info(
+            f'Completed {num_completed}/{num_total} requests within {max_num_retries} retries'
+        )
+
+        return batch_result
+
+    async def batch_generate(
+        self,
+        batch_request: LLMBatchRequest[LLMResponseType],
+        response_type: type[LLMResponseType],
+        *,
+        poll_interval: float,
+        num_retries: int,
+    ) -> LLMBatchResult[LLMResponseType]:
+        if num_retries:
+            batch_result = await self._batch_generate_retry(
+                batch_request,
+                response_type,
+                poll_interval=poll_interval,
+                max_num_retries=num_retries,
+            )
+
+        batch_result = await self._batch_generate(
+            batch_request, response_type, poll_interval
+        )
+
+        return batch_result

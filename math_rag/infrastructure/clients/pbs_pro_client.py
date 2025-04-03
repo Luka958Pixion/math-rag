@@ -27,7 +27,7 @@ class PBSProClient(SSHClient):
             row_number=3,
             col_numbers=range(1, 6 + 1),
         )
-        stdout = await self.run(f'qstat {job_id} | {awk_cmd}')
+        stdout = await self.run(f'qstat -x {job_id} | {awk_cmd}')
 
         return PBSProJobMapping.to_source(stdout)
 

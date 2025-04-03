@@ -1,13 +1,11 @@
 import json
 import logging
 
-from asyncio import sleep
 from pathlib import Path
 from uuid import UUID
 
 from huggingface_hub.inference._generated.types import ChatCompletionOutput
 
-from math_rag.application.base.inference import BaseBatchLLM
 from math_rag.application.models.inference import (
     LLMBatchRequest,
     LLMBatchResult,
@@ -16,8 +14,9 @@ from math_rag.application.models.inference import (
     LLMResponseList,
 )
 from math_rag.application.types.inference import LLMResponseType
-from math_rag.infrastructure.clients import HPCClient, PBSProClient, SFTPClient
+from math_rag.infrastructure.clients import PBSProClient, SFTPClient
 from math_rag.infrastructure.enums.hpc.pbs import PBSProJobState
+from math_rag.infrastructure.inference.partials import PartialBatchLLM
 from math_rag.infrastructure.mappings.inference.huggingface import (
     LLMErrorMapping,
     LLMRequestMapping,
@@ -26,114 +25,39 @@ from math_rag.infrastructure.mappings.inference.huggingface import (
 from math_rag.infrastructure.utils import BytesStreamerUtil, FileStreamerUtil
 
 
-class HuggingFaceBatchLLM(BaseBatchLLM):
+class HuggingFaceBatchLLM(PartialBatchLLM):
     def __init__(
         self,
-        hpc_client: HPCClient,
+        pbs_path: Path,
         pbs_pro_client: PBSProClient,
         sftp_client: SFTPClient,
     ):
-        self.hpc_client = hpc_client
+        self.pbs_path = pbs_path
         self.pbs_pro_client = pbs_pro_client
         self.sftp_client = sftp_client
-
-    async def _batch_generate(
-        self,
-        batch_request: LLMBatchRequest[LLMResponseType],
-        response_type: type[LLMResponseType],
-        poll_interval: float,
-    ) -> LLMBatchResult[LLMResponseType]:
-        batch_id = await self.batch_generate_init(batch_request)
-
-        while True:
-            batch_result = await self.batch_generate_result(batch_id, response_type)
-
-            if batch_result is not None:
-                return batch_result
-
-            await sleep(poll_interval)
-
-    async def _batch_generate_retry(
-        self,
-        batch_request: LLMBatchRequest[LLMResponseType],
-        response_type: type[LLMResponseType],
-        *,
-        poll_interval: float,
-        max_num_retries: int,
-    ) -> LLMBatchResult[LLMResponseType]:
-        if max_num_retries < 0:
-            raise ValueError()
-
-        num_total = len(batch_request.requests)
-        response_lists: list[LLMResponseList[LLMResponseType]] = []
-
-        for _ in range(max_num_retries + 1):
-            batch_result = await self._batch_generate(
-                batch_request, response_type, poll_interval
-            )
-            response_lists.extend(batch_result.response_lists)
-
-            if not batch_result.failed_requests:
-                break
-
-            batch_request = LLMBatchRequest(
-                requests=[
-                    failed_request.request
-                    for failed_request in batch_result.failed_requests
-                ]
-            )
-
-        batch_result.response_lists = response_lists
-        num_completed = len(response_lists)
-
-        logging.info(
-            f'Completed {num_completed}/{num_total} requests within {max_num_retries} retries'
-        )
-
-        return batch_result
-
-    async def batch_generate(
-        self,
-        batch_request: LLMBatchRequest[LLMResponseType],
-        response_type: type[LLMResponseType],
-        *,
-        poll_interval: float,
-        num_retries: int,
-    ) -> LLMBatchResult[LLMResponseType]:
-        if num_retries:
-            batch_result = await self._batch_generate_retry(
-                batch_request,
-                response_type,
-                poll_interval=poll_interval,
-                max_num_retries=num_retries,
-            )
-
-        batch_result = await self._batch_generate(
-            batch_request, response_type, poll_interval
-        )
-
-        return batch_result
 
     async def batch_generate_init(
         self,
         batch_request: LLMBatchRequest[LLMResponseType],
     ) -> str:
-        requests = [
+        request_dicts = [
             {
                 'request_id': str(request.id),
                 'request': LLMRequestMapping[LLMResponseType].to_target(request),
             }
             for request in batch_request.requests
         ]
-        lines = [json.dumps(request, separators=(',', ':')) for request in requests]
+        lines = [
+            json.dumps(request_dict, separators=(',', ':'))
+            for request_dict in request_dicts
+        ]
         jsonl_str = '\n'.join(lines)
         jsonl_bytes = jsonl_str.encode('utf-8')
         source = BytesStreamerUtil.stream_bytes(jsonl_bytes)
 
         await self.sftp_client.upload(source)
 
-        pbs_path = ...  # TODO
-        batch_id = await self.pbs_pro_client.queue_submit(pbs_path)
+        batch_id = await self.pbs_pro_client.queue_submit(self.pbs_path)
         status = await self.pbs_pro_client.queue_status(batch_id)
 
         logging.info(f'Batch {batch_id} created with state {status.state}')
@@ -175,9 +99,9 @@ class HuggingFaceBatchLLM(BaseBatchLLM):
         requests_dict: dict[UUID, LLMRequest[LLMResponseType]] = {}
 
         async for data in input_stream:
-            request_id = UUID(data['extra_body']['request_id'])
+            request_id = UUID(data['request_id'])
             request = LLMRequestMapping[LLMResponseType].to_source(
-                data['body'],
+                data['request'],
                 request_id=request_id,
                 response_type=response_type,
             )
@@ -193,13 +117,12 @@ class HuggingFaceBatchLLM(BaseBatchLLM):
             response = data['response']
 
             if response is None:
-                if 'error' in data:
-                    error = LLMErrorMapping.to_source(data['error'])
-                    failed_request = LLMFailedRequest(
-                        request=request,
-                        errors=[error],
-                    )
-                    failed_requests.append(failed_request)
+                error = LLMErrorMapping.to_source(data['error'])
+                failed_request = LLMFailedRequest(
+                    request=request,
+                    errors=[error],
+                )
+                failed_requests.append(failed_request)
 
             else:
                 completion = ChatCompletionOutput(**response)
