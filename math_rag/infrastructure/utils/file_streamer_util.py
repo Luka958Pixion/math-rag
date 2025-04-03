@@ -1,5 +1,7 @@
+import json
+
 from pathlib import Path
-from typing import AsyncGenerator
+from typing import Any, AsyncGenerator
 
 from aiofiles import open
 from asyncssh import SFTPClientFile
@@ -42,3 +44,21 @@ class FileStreamerUtil:
                     break
 
                 await target_file.write(chunk)
+
+    @staticmethod
+    async def read_jsonl_file_stream(
+        stream: AsyncGenerator[bytes, None],
+    ) -> AsyncGenerator[dict[str, Any], None]:
+        buffer: bytes = b''
+
+        async for chunk in stream:
+            buffer += chunk
+
+            while b'\n' in buffer:
+                line, buffer = buffer.split(b'\n', 1)
+
+                if line.strip():
+                    yield json.loads(line)
+
+        if buffer.strip():
+            yield json.loads(buffer)

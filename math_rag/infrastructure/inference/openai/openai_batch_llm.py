@@ -12,6 +12,7 @@ from math_rag.application.models.inference import (
     LLMBatchRequest,
     LLMBatchResult,
     LLMFailedRequest,
+    LLMRequest,
     LLMResponseList,
 )
 from math_rag.application.types.inference import LLMResponseType
@@ -167,14 +168,17 @@ class OpenAIBatchLLM(BaseBatchLLM):
         input_items = [json.loads(line) for line in input_lines]
         output_items = [json.loads(line) for line in output_lines]
 
-        requests_dict = {
-            UUID(data['custom_id']): LLMRequestMapping[LLMResponseType].to_source(
+        requests_dict: dict[UUID, LLMRequest[LLMResponseType]] = {}
+
+        for data in input_items:
+            request_id = UUID(data['custom_id'])
+            request = LLMRequestMapping[LLMResponseType].to_source(
                 data['body'],
-                request_id=UUID(data['custom_id']),
+                request_id=request_id,
                 response_type=response_type,
             )
-            for data in input_items
-        }
+
+            requests_dict[request_id] = request
 
         failed_requests: list[LLMFailedRequest[LLMResponseType]] = []
         response_lists: list[LLMResponseList[LLMResponseType]] = []

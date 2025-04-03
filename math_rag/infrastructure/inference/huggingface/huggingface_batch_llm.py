@@ -2,13 +2,17 @@ import json
 import logging
 
 from asyncio import sleep
+from pathlib import Path
 from uuid import UUID
+
+from huggingface_hub.inference._generated.types import ChatCompletionOutput
 
 from math_rag.application.base.inference import BaseBatchLLM
 from math_rag.application.models.inference import (
     LLMBatchRequest,
     LLMBatchResult,
     LLMFailedRequest,
+    LLMRequest,
     LLMResponseList,
 )
 from math_rag.application.types.inference import LLMResponseType
@@ -19,7 +23,7 @@ from math_rag.infrastructure.mappings.inference.huggingface import (
     LLMRequestMapping,
     LLMResponseListMapping,
 )
-from math_rag.infrastructure.utils import BytesStreamerUtil
+from math_rag.infrastructure.utils import BytesStreamerUtil, FileStreamerUtil
 
 
 class HuggingFaceBatchLLM(BaseBatchLLM):
@@ -158,31 +162,32 @@ class HuggingFaceBatchLLM(BaseBatchLLM):
             case PBSProJobState.FINISHED | PBSProJobState.EXITED:
                 pass
 
-        input_file_content = await self.client.files.content(batch.input_file_id)
-        output_file_content = await self.client.files.content(batch.output_file_id)
+        input_path = Path(...)
+        output_path = Path(...)
+        input_file_stream = await self.sftp_client.download(input_path, None)
+        output_file_stream = await self.sftp_client.download(output_path, None)
+        input_stream = FileStreamerUtil.read_jsonl_file_stream(input_file_stream)
+        output_stream = FileStreamerUtil.read_jsonl_file_stream(output_file_stream)
 
-        input_lines = input_file_content.text.strip().splitlines()
-        output_lines = output_file_content.text.strip().splitlines()
+        requests_dict: dict[UUID, LLMRequest[LLMResponseType]] = {}
 
-        input_items = [json.loads(line) for line in input_lines]
-        output_items = [json.loads(line) for line in output_lines]
-
-        requests_dict = {
-            UUID(data['custom_id']): LLMRequestMapping[LLMResponseType].to_source(
+        async for data in input_stream:
+            request_id = UUID(data['extra_body']['request_id'])
+            request = LLMRequestMapping[LLMResponseType].to_source(
                 data['body'],
-                request_id=UUID(data['custom_id']),
+                request_id=request_id,
                 response_type=response_type,
             )
-            for data in input_items
-        }
+
+            requests_dict[request_id] = request
 
         failed_requests: list[LLMFailedRequest[LLMResponseType]] = []
         response_lists: list[LLMResponseList[LLMResponseType]] = []
 
-        for data in output_items:
-            request_id = UUID(data['custom_id'])
+        async for data in output_stream:
+            request_id = UUID(data['request_id'])
             request = requests_dict[request_id]
-            response = data['response']
+            response = data['body']
 
             if response is None:
                 if 'error' in data:
@@ -194,7 +199,7 @@ class HuggingFaceBatchLLM(BaseBatchLLM):
                     failed_requests.append(failed_request)
 
             else:
-                completion = ChatCompletion(**response['body'])
+                completion = ChatCompletionOutput(**response['body'])
                 response_list = LLMResponseListMapping[LLMResponseType].to_source(
                     completion,
                     request_id=request_id,

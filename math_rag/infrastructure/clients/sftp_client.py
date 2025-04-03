@@ -1,6 +1,6 @@
 from contextlib import AsyncExitStack
 from pathlib import Path
-from typing import AsyncGenerator
+from typing import AsyncGenerator, overload
 
 from math_rag.infrastructure.utils import FileStreamerUtil
 
@@ -26,6 +26,14 @@ class SFTPClient(SSHClient):
 
             async for chunk in source:
                 await file.write(chunk)
+
+    @overload
+    async def download(self, source: Path, target: None) -> AsyncGenerator[bytes, None]:
+        pass
+
+    @overload
+    async def download(self, source: Path, target: Path) -> None:
+        pass
 
     async def download(
         self,
