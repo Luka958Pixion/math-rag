@@ -31,11 +31,11 @@ logger = getLogger(__name__)
 class HuggingFaceBatchLLM(PartialBatchLLM):
     def __init__(
         self,
-        pbs_path: Path,
+        root_path: Path,
         pbs_pro_client: PBSProClient,
         sftp_client: SFTPClient,
     ):
-        self.pbs_path = pbs_path
+        self.root_path = root_path
         self.pbs_pro_client = pbs_pro_client
         self.sftp_client = sftp_client
 
@@ -60,7 +60,8 @@ class HuggingFaceBatchLLM(PartialBatchLLM):
 
         await self.sftp_client.upload(source)
 
-        batch_id = await self.pbs_pro_client.queue_submit(self.pbs_path)
+        pbs_path = self.root_path / 'huggingface_pbs.sh'
+        batch_id = await self.pbs_pro_client.queue_submit(pbs_path)
         status = await self.pbs_pro_client.queue_status(batch_id)
 
         logger.info(f'Batch {batch_id} created with state {status.state}')
@@ -92,10 +93,12 @@ class HuggingFaceBatchLLM(PartialBatchLLM):
             case PBSProJobState.FINISHED | PBSProJobState.EXITED:
                 pass
 
-        input_path = Path(...)
-        output_path = Path(...)
+        input_path = self.root_path / f'input_{batch_id}.jsonl'
+        output_path = self.root_path / f'output_{batch_id}.jsonl'
+
         input_file_stream = await self.sftp_client.download(input_path, None)
         output_file_stream = await self.sftp_client.download(output_path, None)
+
         input_stream = FileStreamerUtil.read_jsonl_file_stream(input_file_stream)
         output_stream = FileStreamerUtil.read_jsonl_file_stream(output_file_stream)
 

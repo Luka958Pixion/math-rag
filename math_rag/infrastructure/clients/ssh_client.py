@@ -28,12 +28,14 @@ class SSHClient:
             stderr = result.stderr.strip()
 
             logger.info(
-                f'Command `{command}` in `{self.run.__name__}` returned stdout: {stdout}'
+                f'Command `{command}` in `{self.run.__name__}` '
+                f'returned stdout: {stdout}'
             )
 
             if stderr:
                 logger.error(
-                    f'Command `{command}` in `{self.run.__name__}` returned stderr: {stderr}'
+                    f'Command `{command}` in `{self.run.__name__}` '
+                    f'returned stderr: {stderr}'
                 )
 
             if result.exit_status != 0:
