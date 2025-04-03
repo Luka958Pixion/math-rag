@@ -26,18 +26,18 @@ from math_rag.infrastructure.utils import BytesStreamerUtil, FileStreamerUtil
 
 
 logger = getLogger(__name__)
-local_root_path = Path(__file__).parents[4]
+local_project_root = Path(__file__).parents[4]
 
 
 class HuggingFaceBatchLLM(PartialBatchLLM):
     def __init__(
         self,
-        remote_root_path: Path,
+        remote_project_root: Path,
         pbs_pro_client: PBSProClient,
         sftp_client: SFTPClient,
         apptainer_client: ApptainerClient,
     ):
-        self.remote_root_path = remote_root_path
+        self.remote_project_root = remote_project_root
         self.pbs_pro_client = pbs_pro_client
         self.sftp_client = sftp_client
         self.apptainer_client = apptainer_client
@@ -45,20 +45,18 @@ class HuggingFaceBatchLLM(PartialBatchLLM):
     async def setup(self, reset: bool = False):
         # TODO check if already updated!
 
-        tgi_def_file_path = local_root_path / 'assets/huggingface/tgi.def'
-        tgi_client_def_file_path = local_root_path / 'assets/huggingface/tgi_client.def'
-
-        tgi_sif_file_stream = await self.apptainer_client.build(tgi_def_file_path)
+        tgi_sif_file_stream = await self.apptainer_client.build(
+            local_project_root / 'assets/huggingface/tgi.def'
+        )
         tgi_client_sif_file_stream = await self.apptainer_client.build(
-            tgi_client_def_file_path
+            local_project_root / 'assets/huggingface/tgi_client.def'
         )
 
-        tgi_sif_file_path = self.remote_root_path / 'tgi.def'
-        tgi_client_sif_file_path = self.remote_root_path / 'tgi_client.def'
-
-        await self.sftp_client.upload(tgi_sif_file_stream, tgi_sif_file_path)
         await self.sftp_client.upload(
-            tgi_client_sif_file_stream, tgi_client_sif_file_path
+            tgi_sif_file_stream, self.remote_project_root / 'tgi.def'
+        )
+        await self.sftp_client.upload(
+            tgi_client_sif_file_stream, self.remote_project_root / 'tgi_client.def'
         )
 
     async def batch_generate_init(
@@ -82,7 +80,7 @@ class HuggingFaceBatchLLM(PartialBatchLLM):
 
         await self.sftp_client.upload(source)
 
-        pbs_path = self.remote_root_path / 'huggingface_pbs.sh'
+        pbs_path = self.remote_project_root / 'huggingface_pbs.sh'
         batch_id = await self.pbs_pro_client.queue_submit(pbs_path)
         status = await self.pbs_pro_client.queue_status(batch_id)
 
@@ -115,8 +113,8 @@ class HuggingFaceBatchLLM(PartialBatchLLM):
             case PBSProJobState.FINISHED | PBSProJobState.EXITED:
                 pass
 
-        input_path = self.remote_root_path / f'input_{batch_id}.jsonl'
-        output_path = self.remote_root_path / f'output_{batch_id}.jsonl'
+        input_path = self.remote_project_root / f'input_{batch_id}.jsonl'
+        output_path = self.remote_project_root / f'output_{batch_id}.jsonl'
 
         input_file_stream = await self.sftp_client.download(input_path, None)
         output_file_stream = await self.sftp_client.download(output_path, None)

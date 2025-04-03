@@ -1,3 +1,5 @@
+from pathlib import Path
+
 from math_rag.infrastructure.mappings.hpc import (
     HPCGPUStatisticsMapping,
     HPCJobStatisticsMapping,
@@ -53,3 +55,11 @@ class HPCClient(SSHClient):
         stdout = await self.run('job_tmp_size')
 
         return HPCJobTemporarySizeMapping.to_source(stdout)
+
+    async def has_file_path(self, file_path: Path) -> bool:
+        stdout = await self.run(f'test -f {file_path} && echo "true" || echo "false"')
+
+        return stdout == 'true'
+
+    async def has_file_changed(self, file_path: Path) -> bool:
+        stdout = await self.run(...)  # TODO
