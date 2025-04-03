@@ -14,7 +14,7 @@ from math_rag.application.models.inference import (
     LLMResponseList,
 )
 from math_rag.application.types.inference import LLMResponseType
-from math_rag.infrastructure.clients import PBSProClient, SFTPClient
+from math_rag.infrastructure.clients import ApptainerClient, PBSProClient, SFTPClient
 from math_rag.infrastructure.enums.hpc.pbs import PBSProJobState
 from math_rag.infrastructure.inference.partials import PartialBatchLLM
 from math_rag.infrastructure.mappings.inference.huggingface import (
@@ -26,29 +26,40 @@ from math_rag.infrastructure.utils import BytesStreamerUtil, FileStreamerUtil
 
 
 logger = getLogger(__name__)
+local_root_path = Path(__file__).parents[4]
 
 
 class HuggingFaceBatchLLM(PartialBatchLLM):
     def __init__(
         self,
-        root_path: Path,
+        remote_root_path: Path,
         pbs_pro_client: PBSProClient,
         sftp_client: SFTPClient,
-        apptainer_service,
+        apptainer_client: ApptainerClient,
     ):
-        self.root_path = root_path
+        self.remote_root_path = remote_root_path
         self.pbs_pro_client = pbs_pro_client
         self.sftp_client = sftp_client
+        self.apptainer_client = apptainer_client
 
-        from math_rag.infrastructure.clients import ApptainerClient
-        from math_rag.infrastructure.services import ApptainerService
+    async def setup(self, reset: bool = False):
+        # TODO check if already updated!
 
-        apptainer_client = ApptainerClient()
+        tgi_def_file_path = local_root_path / 'assets/huggingface/tgi.def'
+        tgi_client_def_file_path = local_root_path / 'assets/huggingface/tgi_client.def'
 
-        def_file_path = Path(...)  # TODO update when placed in some file
-        sif_file_stream = await apptainer_service.build(def_file_path)
+        tgi_sif_file_stream = await self.apptainer_client.build(tgi_def_file_path)
+        tgi_client_sif_file_stream = await self.apptainer_client.build(
+            tgi_client_def_file_path
+        )
 
-        # TODO build image and upload
+        tgi_sif_file_path = self.remote_root_path / 'tgi.def'
+        tgi_client_sif_file_path = self.remote_root_path / 'tgi_client.def'
+
+        await self.sftp_client.upload(tgi_sif_file_stream, tgi_sif_file_path)
+        await self.sftp_client.upload(
+            tgi_client_sif_file_stream, tgi_client_sif_file_path
+        )
 
     async def batch_generate_init(
         self,
@@ -71,7 +82,7 @@ class HuggingFaceBatchLLM(PartialBatchLLM):
 
         await self.sftp_client.upload(source)
 
-        pbs_path = self.root_path / 'huggingface_pbs.sh'
+        pbs_path = self.remote_root_path / 'huggingface_pbs.sh'
         batch_id = await self.pbs_pro_client.queue_submit(pbs_path)
         status = await self.pbs_pro_client.queue_status(batch_id)
 
@@ -104,8 +115,8 @@ class HuggingFaceBatchLLM(PartialBatchLLM):
             case PBSProJobState.FINISHED | PBSProJobState.EXITED:
                 pass
 
-        input_path = self.root_path / f'input_{batch_id}.jsonl'
-        output_path = self.root_path / f'output_{batch_id}.jsonl'
+        input_path = self.remote_root_path / f'input_{batch_id}.jsonl'
+        output_path = self.remote_root_path / f'output_{batch_id}.jsonl'
 
         input_file_stream = await self.sftp_client.download(input_path, None)
         output_file_stream = await self.sftp_client.download(output_path, None)
