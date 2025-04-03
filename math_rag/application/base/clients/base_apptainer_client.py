@@ -11,7 +11,7 @@ from math_rag.application.enums import (
 
 class BaseApptainerClient(ABC):
     @abstractmethod
-    async def build(self, def_file_path: Path) -> UUID:
+    async def build_init(self, def_file_path: Path) -> UUID:
         pass
 
     @abstractmethod
@@ -23,7 +23,13 @@ class BaseApptainerClient(ABC):
         pass
 
     @abstractmethod
-    async def overlay_create(self, fakeroot: bool, size: int) -> UUID:
+    async def build(
+        self, def_file_path: Path, *, max_retries: int, poll_interval: float
+    ) -> AsyncGenerator[bytes, None]:
+        pass
+
+    @abstractmethod
+    async def overlay_create_init(self, fakeroot: bool, size: int) -> UUID:
         pass
 
     @abstractmethod
@@ -34,4 +40,10 @@ class BaseApptainerClient(ABC):
 
     @abstractmethod
     async def overlay_create_result(self, task_id: UUID) -> AsyncGenerator[bytes, None]:
+        pass
+
+    @abstractmethod
+    async def overlay_create(
+        self, fakeroot: bool, size: int, *, max_retries: int, poll_interval: float
+    ) -> AsyncGenerator[bytes, None]:
         pass

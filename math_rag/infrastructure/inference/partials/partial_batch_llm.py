@@ -75,14 +75,14 @@ class PartialBatchLLM(BaseBatchLLM):
         response_type: type[LLMResponseType],
         *,
         poll_interval: float,
-        num_retries: int,
+        max_num_retries: int,
     ) -> LLMBatchResult[LLMResponseType]:
-        if num_retries:
+        if max_num_retries:
             batch_result = await self._batch_generate_retry(
                 batch_request,
                 response_type,
                 poll_interval=poll_interval,
-                max_num_retries=num_retries,
+                max_num_retries=max_num_retries,
             )
 
         batch_result = await self._batch_generate(

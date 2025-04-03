@@ -34,10 +34,21 @@ class HuggingFaceBatchLLM(PartialBatchLLM):
         root_path: Path,
         pbs_pro_client: PBSProClient,
         sftp_client: SFTPClient,
+        apptainer_service,
     ):
         self.root_path = root_path
         self.pbs_pro_client = pbs_pro_client
         self.sftp_client = sftp_client
+
+        from math_rag.infrastructure.clients import ApptainerClient
+        from math_rag.infrastructure.services import ApptainerService
+
+        apptainer_client = ApptainerClient()
+
+        def_file_path = Path(...)  # TODO update when placed in some file
+        sif_file_stream = await apptainer_service.build(def_file_path)
+
+        # TODO build image and upload
 
     async def batch_generate_init(
         self,
