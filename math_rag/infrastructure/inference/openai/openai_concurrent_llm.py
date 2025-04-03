@@ -1,7 +1,6 @@
-import logging
-
 from asyncio import Queue, create_task, sleep
 from collections import deque
+from logging import getLogger
 from time import ctime, perf_counter
 
 from openai import AsyncOpenAI, RateLimitError
@@ -30,6 +29,9 @@ from math_rag.infrastructure.mappings.inference.openai import (
     LLMResponseListMapping,
 )
 from math_rag.infrastructure.utils import TokenCounterUtil
+
+
+logger = getLogger(__name__)
 
 
 class OpenAIConcurrentLLM(BaseConcurrentLLM):
@@ -71,7 +73,7 @@ class OpenAIConcurrentLLM(BaseConcurrentLLM):
             status_tracker.num_api_errors += 1
 
         except (*OPENAI_ERRORS_TO_RAISE, Exception) as e:
-            logging.error(f'Uncaught exception {type(e).__class__}: {e}')
+            logger.error(f'Uncaught exception {type(e).__class__}: {e}')
 
             raise
 
@@ -91,7 +93,7 @@ class OpenAIConcurrentLLM(BaseConcurrentLLM):
                 status_tracker.num_tasks_in_progress -= 1
                 status_tracker.num_tasks_failed += 1
 
-                logging.error(
+                logger.error(
                     f'Request {request_tracker.request.id} failed after all retries'
                 )
 
@@ -129,7 +131,7 @@ class OpenAIConcurrentLLM(BaseConcurrentLLM):
             if next_request is None:
                 if not retry_queue.empty():
                     next_request = retry_queue.get_nowait()
-                    logging.debug(f'Retrying request {next_request.request.id}')
+                    logger.debug(f'Retrying request {next_request.request.id}')
 
                 elif requests_not_empty:
                     if requests:
@@ -202,15 +204,15 @@ class OpenAIConcurrentLLM(BaseConcurrentLLM):
                     status_tracker.time_of_last_rate_limit_error
                     + SECONDS_TO_PAUSE_AFTER_RATE_LIMIT_ERROR
                 )
-                logging.warning(f'Pausing to cool down until {wait_until}')
+                logger.warning(f'Pausing to cool down until {wait_until}')
 
         if status_tracker.num_tasks_failed > 0:
-            logging.warning(
+            logger.warning(
                 f'{status_tracker.num_tasks_failed} / {status_tracker.num_tasks_started} requests failed'
             )
 
         if status_tracker.num_rate_limit_errors > 0:
-            logging.warning(
+            logger.warning(
                 f'{status_tracker.num_rate_limit_errors} rate limit errors received'
             )
 

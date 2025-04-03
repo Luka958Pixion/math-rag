@@ -1,6 +1,5 @@
-import logging
-
 from asyncio import sleep
+from logging import getLogger
 
 from math_rag.application.base.inference import BaseBatchLLM
 from math_rag.application.models.inference import (
@@ -9,6 +8,9 @@ from math_rag.application.models.inference import (
     LLMResponseList,
 )
 from math_rag.application.types.inference import LLMResponseType
+
+
+logger = getLogger(__name__)
 
 
 class PartialBatchLLM(BaseBatchLLM):
@@ -61,7 +63,7 @@ class PartialBatchLLM(BaseBatchLLM):
         batch_result.response_lists = response_lists
         num_completed = len(response_lists)
 
-        logging.info(
+        logger.info(
             f'Completed {num_completed}/{num_total} requests within {max_num_retries} retries'
         )
 

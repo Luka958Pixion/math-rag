@@ -1,8 +1,11 @@
-import logging
+from logging import getLogger
 
 from asyncssh import ConnectionLost, SSHClientConnection, connect, read_private_key
 from asyncssh.misc import async_context_manager
 from backoff import expo, on_exception
+
+
+logger = getLogger(__name__)
 
 
 class SSHClient:
@@ -24,12 +27,12 @@ class SSHClient:
             stdout = result.stdout.strip()
             stderr = result.stderr.strip()
 
-            logging.info(
+            logger.info(
                 f'Command `{command}` in `{self.run.__name__}` returned stdout: {stdout}'
             )
 
             if stderr:
-                logging.error(
+                logger.error(
                     f'Command `{command}` in `{self.run.__name__}` returned stderr: {stderr}'
                 )
 

@@ -1,6 +1,6 @@
 import json
-import logging
 
+from logging import getLogger
 from uuid import UUID
 
 from openai import AsyncOpenAI
@@ -20,6 +20,9 @@ from math_rag.infrastructure.mappings.inference.openai import (
     LLMRequestMapping,
     LLMResponseListMapping,
 )
+
+
+logger = getLogger(__name__)
 
 
 class OpenAIBatchLLM(PartialBatchLLM):
@@ -57,7 +60,7 @@ class OpenAIBatchLLM(PartialBatchLLM):
             completion_window='24h',
             metadata=None,
         )
-        logging.info(f'Batch {batch.id} created with status {batch.status}')
+        logger.info(f'Batch {batch.id} created with status {batch.status}')
 
         return batch.id
 
@@ -66,7 +69,7 @@ class OpenAIBatchLLM(PartialBatchLLM):
     ) -> LLMBatchResult[LLMResponseType] | None:
         batch = await self.client.batches.retrieve(batch_id)
 
-        logging.info(
+        logger.info(
             f'Batch {batch.id} status {batch.status}\n'
             f'Batch {batch.id} requests - '
             f'completed: {batch.request_counts.completed}, '

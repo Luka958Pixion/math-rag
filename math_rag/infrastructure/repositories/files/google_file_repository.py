@@ -1,16 +1,17 @@
-import logging
-
 from io import BytesIO
+from logging import getLogger
 from pathlib import Path
 
+from google.auth.transport.requests import Request
+from google.oauth2.credentials import Credentials
 from google_auth_oauthlib.flow import InstalledAppFlow
 from googleapiclient.discovery import Resource, build
 from googleapiclient.http import MediaIoBaseDownload
 
-from google.auth.transport.requests import Request
-from google.oauth2.credentials import Credentials
 from math_rag.application.base.repositories.files import BaseFileRepository
 
+
+logger = getLogger(__name__)
 
 SCOPES = ['https://www.googleapis.com/auth/drive']
 
@@ -51,7 +52,7 @@ class GoogleFileRepository(BaseFileRepository):
         folders = folder_results.get('files', [])
 
         if not folders:
-            logging.info(f'Folder {folder_name} not found')
+            logger.info(f'Folder {folder_name} not found')
             return None
 
         folder_id = folders[0]['id']
@@ -64,7 +65,7 @@ class GoogleFileRepository(BaseFileRepository):
         files = file_results.get('files', [])
 
         if not files:
-            logging.info(f'File {file_name} not found in directory {folder_name}')
+            logger.info(f'File {file_name} not found in directory {folder_name}')
             return None
 
         return files[0]['id']

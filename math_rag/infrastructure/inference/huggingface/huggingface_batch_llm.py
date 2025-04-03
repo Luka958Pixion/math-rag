@@ -1,6 +1,6 @@
 import json
-import logging
 
+from logging import getLogger
 from pathlib import Path
 from uuid import UUID
 
@@ -23,6 +23,9 @@ from math_rag.infrastructure.mappings.inference.huggingface import (
     LLMResponseListMapping,
 )
 from math_rag.infrastructure.utils import BytesStreamerUtil, FileStreamerUtil
+
+
+logger = getLogger(__name__)
 
 
 class HuggingFaceBatchLLM(PartialBatchLLM):
@@ -60,7 +63,7 @@ class HuggingFaceBatchLLM(PartialBatchLLM):
         batch_id = await self.pbs_pro_client.queue_submit(self.pbs_path)
         status = await self.pbs_pro_client.queue_status(batch_id)
 
-        logging.info(f'Batch {batch_id} created with state {status.state}')
+        logger.info(f'Batch {batch_id} created with state {status.state}')
 
         return batch_id
 
@@ -69,7 +72,7 @@ class HuggingFaceBatchLLM(PartialBatchLLM):
     ) -> LLMBatchResult[LLMResponseType] | None:
         status = await self.pbs_pro_client.queue_status(batch_id)
 
-        logging.info(f'Batch {batch_id} state {status.state}')
+        logger.info(f'Batch {batch_id} state {status.state}')
 
         match status.state:
             case (
