@@ -119,9 +119,12 @@ class HuggingFaceBatchLLM(BaseBatchLLM):
         batch_request: LLMBatchRequest[LLMResponseType],
     ) -> str:
         requests = [
-            LLMRequestMapping.to_target(request) for request in batch_request.requests
+            {
+                'request_id': str(request.id),
+                'request': LLMRequestMapping[LLMResponseType].to_target(request),
+            }
+            for request in batch_request.requests
         ]
-
         lines = [json.dumps(request, separators=(',', ':')) for request in requests]
         jsonl_str = '\n'.join(lines)
         jsonl_bytes = jsonl_str.encode('utf-8')
@@ -187,7 +190,7 @@ class HuggingFaceBatchLLM(BaseBatchLLM):
         async for data in output_stream:
             request_id = UUID(data['request_id'])
             request = requests_dict[request_id]
-            response = data['body']
+            response = data['response']
 
             if response is None:
                 if 'error' in data:
@@ -199,7 +202,7 @@ class HuggingFaceBatchLLM(BaseBatchLLM):
                     failed_requests.append(failed_request)
 
             else:
-                completion = ChatCompletionOutput(**response['body'])
+                completion = ChatCompletionOutput(**response)
                 response_list = LLMResponseListMapping[LLMResponseType].to_source(
                     completion,
                     request_id=request_id,

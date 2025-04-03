@@ -47,7 +47,7 @@ def on_backoff_handler(details: dict):
 )
 async def safe_chat_completion(client: AsyncInferenceClient, request: dict) -> dict:
     output = await client.chat_completion(**request['body'])
-    response = {'request_id': request['id'], 'body': output}
+    response = {'request_id': request['id'], 'response': output, 'error': None}
 
     return response
 
@@ -69,7 +69,7 @@ async def process_input_line(
                 f'Failed processing line after {MAX_RETRIES} retries: '
                 f'{input_line} - Error: {e}'
             )
-            response = {'request_id': request['id'], 'error': e}
+            response = {'request_id': request['id'], 'response': None, 'error': e}
 
         finally:
             output_line = json.dumps(response)
