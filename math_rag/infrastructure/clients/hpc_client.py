@@ -1,3 +1,4 @@
+from hashlib import sha256
 from pathlib import Path
 
 from math_rag.infrastructure.mappings.hpc import (
@@ -61,5 +62,15 @@ class HPCClient(SSHClient):
 
         return stdout == 'true'
 
-    async def has_file_changed(self, file_path: Path) -> bool:
-        stdout = await self.run(...)  # TODO
+    async def has_file_changed(
+        self, local_file_path: Path, remote_file_path: Path
+    ) -> bool:
+        with open(local_file_path, 'rb') as local_file:
+            local_file_bytes = local_file.read()
+
+        local_file_hash = sha256(local_file_bytes).hexdigest()
+        remote_file_hash = await self.run(
+            f"sha256sum {remote_file_path} | awk '{{print $1}}'"
+        )
+
+        return local_file_hash == remote_file_hash
