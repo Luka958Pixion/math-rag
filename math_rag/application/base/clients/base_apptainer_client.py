@@ -47,3 +47,7 @@ class BaseApptainerClient(ABC):
         self, fakeroot: bool, size: int, *, max_retries: int, poll_interval: float
     ) -> AsyncGenerator[bytes, None]:
         pass
+
+    @abstractmethod
+    async def health(self) -> bool:
+        pass

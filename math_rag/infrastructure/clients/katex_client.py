@@ -7,8 +7,11 @@ from math_rag.application.models import KatexValidationResult
 
 
 class KatexClient(BaseKatexClient):
+    def __init__(self, port: int):
+        self.base_url = f'http://host.docker.internal:{port}'
+
     async def validate(self, katex: str) -> KatexValidationResult:
-        url = 'http://localhost:7025/validate'
+        url = self.base_url + '/validate'
 
         async with AsyncClient() as client:
             response = await client.post(
@@ -21,7 +24,7 @@ class KatexClient(BaseKatexClient):
             return KatexValidationResult(**result)
 
     async def validate_many(self, katexes: list[str]) -> list[KatexValidationResult]:
-        url = 'http://localhost:7025/validate-many'
+        url = self.base_url + '/validate-many'
 
         async with AsyncClient() as client:
             response = await client.post(
@@ -44,3 +47,12 @@ class KatexClient(BaseKatexClient):
         results = [result for batch in batch_results for result in batch]
 
         return results
+
+    async def health(self) -> bool:
+        url = self.base_url + '/health'
+
+        async with AsyncClient() as client:
+            response = await client.get(url)
+            result = response.json()
+
+            return result['status'] == 'ok'

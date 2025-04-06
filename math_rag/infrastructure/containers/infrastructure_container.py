@@ -20,6 +20,7 @@ from math_rag.application.containers import ApplicationContainer
 from math_rag.infrastructure.clients import (
     ApptainerClient,
     ArxivClient,
+    HPCClient,
     KatexClient,
     PBSProClient,
     SFTPClient,
@@ -146,6 +147,9 @@ class InfrastructureContainer(DeclarativeContainer):
         host=config.hpc.host,
         passphrase=config.hpc.passphrase,
     )
+
+    # HPC
+    hpc_client = Factory(HPCClient, ssh_client=ssh_client)
 
     ## SFTP
     sftp_client = Factory(SFTPClient, ssh_client=ssh_client)

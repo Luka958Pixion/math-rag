@@ -17,3 +17,7 @@ class BaseKatexClient(ABC):
         self, katexes: list[str], *, batch_size: int
     ) -> list[KatexValidationResult]:
         pass
+
+    @abstractmethod
+    async def health(self) -> bool:
+        pass

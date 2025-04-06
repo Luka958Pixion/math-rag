@@ -13,8 +13,11 @@ from math_rag.application.enums import (
 
 
 class ApptainerClient(BaseApptainerClient):
+    def __init__(self, port: int):
+        self.base_url = f'http://host.docker.internal:{port}'
+
     async def build_init(self, def_file_path: Path) -> UUID:
-        url = 'http://localhost:7015/apptainer/build'
+        url = self.base_url + '/apptainer/build'
 
         with def_file_path.open('rb') as file:
             files = {'def_file': (def_file_path.name, file, 'application/octet-stream')}
@@ -27,7 +30,7 @@ class ApptainerClient(BaseApptainerClient):
                 return task_id
 
     async def build_status(self, task_id: UUID) -> ApptainerBuildStatus:
-        url = 'http://localhost:7015/apptainer/build/status'
+        url = self.base_url + '/apptainer/build/status'
         payload = {'task_id': str(task_id)}
 
         async with AsyncClient() as client:
@@ -38,7 +41,7 @@ class ApptainerClient(BaseApptainerClient):
             return status
 
     async def build_result(self, task_id: UUID) -> AsyncGenerator[bytes, None]:
-        url = 'http://localhost:7015/apptainer/build/result'
+        url = self.base_url + '/apptainer/build/result'
         payload = {'task_id': str(task_id)}
 
         async with AsyncClient() as client:
@@ -77,7 +80,7 @@ class ApptainerClient(BaseApptainerClient):
         return result
 
     async def overlay_create_init(self, fakeroot: bool, size: int) -> UUID:
-        url = 'http://localhost:7015/overlay/create/build'
+        url = self.base_url + '/overlay/create/build'
         payload = {'fakeroot': fakeroot, 'size': size}
 
         async with AsyncClient() as client:
@@ -90,7 +93,7 @@ class ApptainerClient(BaseApptainerClient):
     async def overlay_create_status(
         self, task_id: UUID
     ) -> ApptainerOverlayCreateStatus:
-        url = 'http://localhost:7015/apptainer/overlay/create/status'
+        url = self.base_url + '/apptainer/overlay/create/status'
         payload = {'task_id': str(task_id)}
 
         async with AsyncClient() as client:
@@ -101,7 +104,7 @@ class ApptainerClient(BaseApptainerClient):
             return status
 
     async def overlay_create_result(self, task_id: UUID) -> AsyncGenerator[bytes, None]:
-        url = 'http://localhost:7015/apptainer/overlay/create/result'
+        url = self.base_url + '/apptainer/overlay/create/result'
         payload = {'task_id': str(task_id)}
 
         async with AsyncClient() as client:
@@ -141,3 +144,12 @@ class ApptainerClient(BaseApptainerClient):
         result = await self.overlay_create_result(task_id)
 
         return result
+
+    async def health(self) -> bool:
+        url = self.base_url + '/health'
+
+        async with AsyncClient() as client:
+            response = await client.get(url)
+            result = response.json()
+
+            return result['status'] == 'ok'
