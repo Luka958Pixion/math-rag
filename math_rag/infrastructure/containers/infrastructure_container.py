@@ -17,7 +17,14 @@ from math_rag.application.assistants import (
     MECAssistant,
 )
 from math_rag.application.containers import ApplicationContainer
-from math_rag.infrastructure.clients import ArxivClient, KatexClient
+from math_rag.infrastructure.clients import (
+    ApptainerClient,
+    ArxivClient,
+    KatexClient,
+    PBSProClient,
+    SFTPClient,
+    SSHClient,
+)
 from math_rag.infrastructure.inference.openai import OpenAIUnifiedLLM
 from math_rag.infrastructure.repositories.documents import (
     LLMFailedRequestRepository,
@@ -127,6 +134,27 @@ class InfrastructureContainer(DeclarativeContainer):
 
     # KaTeX
     katex_client = Factory(KatexClient)
+
+    ## SSH
+    config.hpc.user.from_env('HPC_USER')
+    config.hpc.host.from_env('HPC_HOST')
+    config.hpc.passphrase.from_env('HPC_PASSPHRASE')
+
+    ssh_client = Factory(
+        SSHClient,
+        user=config.hpc.user,
+        host=config.hpc.host,
+        passphrase=config.hpc.passphrase,
+    )
+
+    ## SFTP
+    sftp_client = Factory(SFTPClient, ssh_client=ssh_client)
+
+    # PBS Pro
+    pbs_pro_client = Factory(PBSProClient, ssh_client=ssh_client)
+
+    # Apptainer
+    apptainer_client = Factory(ApptainerClient)
 
     # -----------
     # Application

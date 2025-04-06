@@ -7,9 +7,9 @@ from math_rag.infrastructure.utils import FileStreamerUtil
 from .ssh_client import SSHClient
 
 
-class SFTPClient(SSHClient):
-    def __init__(self, host: str, user: str, passphrase: str):
-        super().__init__(host, user, passphrase)
+class SFTPClient:
+    def __init__(self, ssh_client: SSHClient):
+        self.ssh_client = ssh_client
 
     async def upload(
         self,
@@ -20,7 +20,7 @@ class SFTPClient(SSHClient):
             source = FileStreamerUtil.read_file_stream(source)
 
         async with AsyncExitStack() as stack:
-            conn = await stack.enter_async_context(self.connect())
+            conn = await stack.enter_async_context(self.ssh_client.connect())
             sftp = await stack.enter_async_context(conn.start_sftp_client())
             file = await stack.enter_async_context(sftp.open(str(target), 'wb'))
 
@@ -41,7 +41,7 @@ class SFTPClient(SSHClient):
         target: Path | None,
     ) -> AsyncGenerator[bytes, None] | None:
         async with AsyncExitStack() as stack:
-            conn = await stack.enter_async_context(self.connect())
+            conn = await stack.enter_async_context(self.ssh_client.connect())
             sftp = await stack.enter_async_context(conn.start_sftp_client())
             file = await stack.enter_async_context(sftp.open(str(source), 'rb'))
 
