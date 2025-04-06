@@ -3,6 +3,7 @@ from pathlib import Path
 from arxiv import Client
 from dependency_injector.containers import DeclarativeContainer
 from dependency_injector.providers import (
+    Callable,
     Configuration,
     Container,
     Factory,
@@ -134,7 +135,13 @@ class InfrastructureContainer(DeclarativeContainer):
     latex_visitor_service = Factory(LatexVisitorService)
 
     # KaTeX
-    katex_client = Factory(KatexClient)
+    config.katex.port.from_env('KATEX_PORT')
+    katex_client = Factory(
+        KatexClient,
+        base_url=Callable(
+            lambda port: f'http://host.docker.internal:{port}', config.katex.port
+        ),
+    )
 
     ## SSH
     config.hpc.user.from_env('HPC_USER')
@@ -158,7 +165,13 @@ class InfrastructureContainer(DeclarativeContainer):
     pbs_pro_client = Factory(PBSProClient, ssh_client=ssh_client)
 
     # Apptainer
-    apptainer_client = Factory(ApptainerClient)
+    config.apptainer.port.from_env('APPTAINER_PORT')
+    apptainer_client = Factory(
+        ApptainerClient,
+        base_url=Callable(
+            lambda port: f'http://host.docker.internal:{port}', config.apptainer.port
+        ),
+    )
 
     # -----------
     # Application

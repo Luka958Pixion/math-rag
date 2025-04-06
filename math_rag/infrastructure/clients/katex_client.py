@@ -7,8 +7,8 @@ from math_rag.application.models import KatexValidationResult
 
 
 class KatexClient(BaseKatexClient):
-    def __init__(self, port: int):
-        self.base_url = f'http://host.docker.internal:{port}'
+    def __init__(self, base_url: str):
+        self.base_url = base_url
 
     async def validate(self, katex: str) -> KatexValidationResult:
         url = self.base_url + '/validate'
