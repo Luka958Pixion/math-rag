@@ -1,7 +1,6 @@
 from typing import AsyncGenerator
 
-
-CHUNK_SIZE = 8192
+from math_rag.infrastructure.constants.utils import CHUNK_SIZE
 
 
 class BytesStreamerUtil:

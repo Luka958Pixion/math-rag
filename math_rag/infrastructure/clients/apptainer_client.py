@@ -75,7 +75,7 @@ class ApptainerClient(BaseApptainerClient):
                     else:
                         raise Exception('Max retries reached')
 
-        result = await self.build_result(task_id)
+        result = self.build_result(task_id)
 
         return result
 
@@ -141,7 +141,7 @@ class ApptainerClient(BaseApptainerClient):
                     else:
                         raise Exception('Max retries reached')
 
-        result = await self.overlay_create_result(task_id)
+        result = self.overlay_create_result(task_id)
 
         return result
 

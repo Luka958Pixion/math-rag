@@ -6,8 +6,7 @@ from typing import Any, AsyncGenerator
 from aiofiles import open
 from asyncssh import SFTPClientFile
 
-
-CHUNK_SIZE = 8192
+from math_rag.infrastructure.constants.utils import CHUNK_SIZE
 
 
 class FileStreamerUtil:
