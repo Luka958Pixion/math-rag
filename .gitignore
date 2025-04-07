@@ -179,3 +179,4 @@ jupyter_sessions/
 .ssh/
 .tmp/*
 !.tmp/.gitkeep
+.env.hpc.hf.tgi

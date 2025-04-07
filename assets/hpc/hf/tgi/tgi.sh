@@ -10,7 +10,7 @@
 cd "${PBS_O_WORKDIR:-""}"
 
 set -a
-source .env
+source .env.hpc.hf.tgi
 set +a
 
 export PYTHONUNBUFFERED=1
@@ -18,6 +18,9 @@ export PYTHONUNBUFFERED=1
 export http_proxy="http://10.150.1.1:3128"
 export https_proxy="http://10.150.1.1:3128"
 
+echo "here $PWD"
+
+mkdir -p data
 apptainer run --nv --bind $PWD/data:/data  hf_cli.sif
 
 unset http_proxy

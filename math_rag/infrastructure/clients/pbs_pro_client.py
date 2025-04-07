@@ -19,8 +19,14 @@ class PBSProClient:
     def __init__(self, ssh_client: SSHClient):
         self.ssh_client = ssh_client
 
-    async def queue_submit(self, pbs_path: Path) -> str:
-        return await self.ssh_client.run(f'qsub {pbs_path}')
+    async def queue_submit(
+        self, pbs_path: Path, project_root_dir_path: Path | None
+    ) -> str:
+        return await self.ssh_client.run(
+            f'cd {project_root_dir_path} && qsub {pbs_path}'
+            if project_root_dir_path
+            else f'qsub {pbs_path}'
+        )
 
     async def queue_status(self, job_id: str) -> PBSProJob:
         awk_cmd = AwkCmdBuilderUtil.build(

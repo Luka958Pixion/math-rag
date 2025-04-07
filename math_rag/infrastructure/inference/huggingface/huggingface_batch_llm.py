@@ -14,7 +14,12 @@ from math_rag.application.models.inference import (
     LLMResponseList,
 )
 from math_rag.application.types.inference import LLMResponseType
-from math_rag.infrastructure.clients import ApptainerClient, PBSProClient, SFTPClient
+from math_rag.infrastructure.clients import (
+    ApptainerClient,
+    HPCClient,
+    PBSProClient,
+    SFTPClient,
+)
 from math_rag.infrastructure.enums.hpc.pbs import PBSProJobState
 from math_rag.infrastructure.inference.partials import PartialBatchLLM
 from math_rag.infrastructure.mappings.inference.huggingface import (
@@ -30,49 +35,79 @@ from math_rag.infrastructure.utils import (
 
 
 logger = getLogger(__name__)
-local_project_root = Path(__file__).parents[4]
 
 
 class HuggingFaceBatchLLM(PartialBatchLLM):
     def __init__(
         self,
         remote_project_root: Path,
+        hpc_client: HPCClient,
         pbs_pro_client: PBSProClient,
         sftp_client: SFTPClient,
         apptainer_client: ApptainerClient,
     ):
+        self.local_project_root = Path(__file__).parents[4]
         self.remote_project_root = remote_project_root
+        self.hpc_client = hpc_client
         self.pbs_pro_client = pbs_pro_client
         self.sftp_client = sftp_client
         self.apptainer_client = apptainer_client
 
     async def init_resources(self, reset: bool = False):
         # TODO check if already updated!
-        tmp_path = Path(local_project_root / '.tmp')
-        def_paths = (
-            Path(local_project_root / 'assets/hpc/hf/tgi/tgi_server.def'),
-            Path(local_project_root / 'assets/hpc/hf/tgi/tgi_client.def'),
-            Path(local_project_root / 'assets/hpc/hf/hf_cli.def'),
+        hf_path = self.local_project_root / 'assets/hpc/hf'
+        tgi_path = hf_path / 'tgi'
+        def_local_paths = (
+            Path(tgi_path / 'tgi_server.def'),
+            Path(tgi_path / 'tgi_client.def'),
+            Path(hf_path / 'hf_cli.def'),
         )
 
-        for def_path in def_paths:
-            assert def_path.exists()
+        for def_local_path in def_local_paths:
+            assert def_local_path.exists()
 
-        for def_path in def_paths:
-            sif_stream = await self.apptainer_client.build(def_path)
-            FileWriterUtil.write(sif_stream, tmp_path)
+        tmp_path = self.local_project_root / '.tmp'
 
-        # TODO save to .tmp
-        tgi_client_sif_file_stream = await self.apptainer_client.build(
-            local_project_root / 'assets/huggingface/tgi_client.def'
+        for def_local_path in def_local_paths:
+            def_remote_path = self.remote_project_root / def_local_path.name
+            # TODO check hash
+            if await self.hpc_client.has_file_path(
+                def_remote_path
+            ) and not await self.hpc_client.has_file_changed(
+                def_local_path, def_remote_path
+            ):
+                continue
+
+            sif_stream = await self.apptainer_client.build(def_local_path)
+
+            sif_local_path = tmp_path / def_local_path.stem / '.sif'
+            await FileWriterUtil.write(sif_stream, sif_local_path)
+
+            sif_remote_path = self.remote_project_root / sif_local_path.name
+            await self.sftp_client.upload(sif_local_path, sif_remote_path)
+
+        other_local_paths = (
+            Path(tgi_path / 'tgi.py'),
+            Path(tgi_path / 'tgi.sh'),
+            Path(self.local_project_root / '.env.hpc.hf.tgi'),
         )
 
-        await self.sftp_client.upload(
-            tgi_sif_file_stream, self.remote_project_root / 'tgi.def'
-        )
-        await self.sftp_client.upload(
-            tgi_client_sif_file_stream, self.remote_project_root / 'tgi_client.def'
-        )
+        for other_local_path in other_local_paths:
+            assert other_local_path.exists()
+
+        for other_local_path in other_local_paths:
+            other_remote_path = self.remote_project_root / other_local_path.name
+            # TODO check hash
+            if await self.hpc_client.has_file_path(
+                other_remote_path
+            ) and not await self.hpc_client.has_file_changed(
+                other_local_path, other_remote_path
+            ):
+                continue
+
+            await self.sftp_client.upload(other_local_path, other_remote_path)
+
+        # TODO mkdir -p data
 
     async def batch_generate_init(
         self,
