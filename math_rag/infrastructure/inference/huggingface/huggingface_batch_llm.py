@@ -30,8 +30,8 @@ from math_rag.infrastructure.mappings.inference.huggingface import (
 )
 from math_rag.infrastructure.utils import (
     BytesStreamerUtil,
-    FileStreamerUtil,
-    FileWriterUtil,
+    FileStreamReaderUtil,
+    FileStreamWriterUtil,
 )
 
 
@@ -88,7 +88,7 @@ class HuggingFaceBatchLLM(PartialBatchLLM):
                 sif_stream = await self.apptainer_client.build(local_path)
 
                 sif_local_path = tmp_path / local_path.stem / '.sif'
-                await FileWriterUtil.write(sif_stream, sif_local_path)
+                await FileStreamWriterUtil.write(sif_stream, sif_local_path)
 
                 sif_remote_path = self.remote_project_root / sif_local_path.name
                 await self.sftp_client.upload(sif_local_path, sif_remote_path)
@@ -110,7 +110,7 @@ class HuggingFaceBatchLLM(PartialBatchLLM):
         ]
         jsonl_str = '\n'.join(lines)
         jsonl_bytes = jsonl_str.encode('utf-8')
-        jsonl_stream = BytesStreamerUtil.stream_bytes(jsonl_bytes)
+        jsonl_stream = BytesStreamerUtil.stream(jsonl_bytes)
         input_path = self.remote_project_root / 'input.jsonl'
         await self.sftp_client.upload(jsonl_stream, input_path)
 
@@ -161,8 +161,8 @@ class HuggingFaceBatchLLM(PartialBatchLLM):
         input_file_stream = await self.sftp_client.download(input_path, None)
         output_file_stream = await self.sftp_client.download(output_path, None)
 
-        input_stream = FileStreamerUtil.read_jsonl_file_stream(input_file_stream)
-        output_stream = FileStreamerUtil.read_jsonl_file_stream(output_file_stream)
+        input_stream = FileStreamReaderUtil.read_jsonl(input_file_stream)
+        output_stream = FileStreamReaderUtil.read_jsonl(output_file_stream)
 
         requests_dict: dict[UUID, LLMRequest[LLMResponseType]] = {}
 

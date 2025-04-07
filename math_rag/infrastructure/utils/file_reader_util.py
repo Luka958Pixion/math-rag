@@ -3,15 +3,15 @@ from pathlib import Path
 
 class FileReaderUtil:
     @staticmethod
-    def read(file: Path | bytes) -> str:
+    def read(source: Path | bytes) -> str:
         for encoding in ('utf-8', 'latin1', 'cp1252'):
             try:
-                if isinstance(file, Path):
-                    with open(file, 'r', encoding=encoding) as f:
-                        return f.read()
+                if isinstance(source, Path):
+                    with open(source, 'r', encoding=encoding) as file:
+                        return file.read()
 
-                elif isinstance(file, bytes):
-                    return file.decode(encoding)
+                elif isinstance(source, bytes):
+                    return source.decode(encoding)
 
             except UnicodeDecodeError:
                 continue
