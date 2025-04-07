@@ -80,3 +80,6 @@ class HPCClient:
     async def remove_files(self, file_paths: list[Path]):
         paths = ' '.join(str(path) for path in file_paths)
         await self.ssh_client.run(f'rm -f {paths}')
+
+    async def make_directory(self, dir_path: Path):
+        await self.ssh_client.run(f'mkdir -p {dir_path}')

@@ -56,6 +56,7 @@ class HuggingFaceBatchLLM(PartialBatchLLM):
         self.apptainer_client = apptainer_client
 
     async def init_resources(self):
+        tmp_path = self.local_project_root / '.tmp'
         hf_path = self.local_project_root / 'assets/hpc/hf'
         tgi_path = hf_path / 'tgi'
         local_paths = [
@@ -70,7 +71,7 @@ class HuggingFaceBatchLLM(PartialBatchLLM):
         for local_path in local_paths:
             assert local_path.exists()
 
-        tmp_path = self.local_project_root / '.tmp'
+        await self.hpc_client.make_directory(self.remote_project_root)
 
         for local_path in local_paths:
             remote_path = self.remote_project_root / local_path.name

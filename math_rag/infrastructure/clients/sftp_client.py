@@ -36,19 +36,14 @@ class SFTPClient:
                 attrs = await sftp.stat(target_str)
                 offset = attrs.size
 
+                if offset is None:
+                    raise ValueError()
+
             target_file = await stack.enter_async_context(
                 sftp.open(target_str, 'ab' if offset > 0 else 'wb')
             )
             source_stream = FileStreamerUtil.stream(source, offset)
             await FileStreamWriterUtil.write(source_stream, target_file)
-
-            # with source.open('rb') as f:
-            #     f.seek(offset)
-            #     while True:
-            #         chunk = f.read(32768)
-            #         if not chunk:
-            #             break
-            #         await file.write(chunk)
 
     @overload
     async def download(self, source: Path, target: None) -> AsyncGenerator[bytes, None]:
