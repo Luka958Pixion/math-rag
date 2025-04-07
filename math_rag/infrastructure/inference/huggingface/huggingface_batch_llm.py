@@ -1,5 +1,6 @@
 import json
 
+from datetime import timedelta
 from logging import getLogger
 from pathlib import Path
 from uuid import UUID
@@ -113,8 +114,16 @@ class HuggingFaceBatchLLM(PartialBatchLLM):
         input_path = self.remote_project_root / 'input.jsonl'
         await self.sftp_client.upload(jsonl_stream, input_path)
 
-        pbs_path = self.remote_project_root / 'huggingface_pbs.sh'
-        batch_id = await self.pbs_pro_client.queue_submit(pbs_path)
+        pbs_path = Path('tgi.sh')
+        batch_id = await self.pbs_pro_client.queue_submit(
+            self.remote_project_root,
+            pbs_path,
+            num_chunks=1,
+            num_cpus=8,
+            num_gpus=1,
+            mem=16 * 1024**3,
+            walltime=timedelta(minutes=20),
+        )
         status = await self.pbs_pro_client.queue_status(batch_id)
 
         logger.info(f'Batch {batch_id} created with state {status.state}')
