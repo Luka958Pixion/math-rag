@@ -1,3 +1,4 @@
+from datetime import timedelta
 from pathlib import Path
 
 from math_rag.infrastructure.mappings.hpc.pbs import (
@@ -20,12 +21,22 @@ class PBSProClient:
         self.ssh_client = ssh_client
 
     async def queue_submit(
-        self, pbs_path: Path, project_root_dir_path: Path | None
+        self,
+        project_root_path: Path,
+        pbs_path: Path,
+        *num_chunks: int,
+        num_cpus: int,
+        num_gpus: int,
+        mem: int,
+        walltime: timedelta,
     ) -> str:
         return await self.ssh_client.run(
-            f'cd {project_root_dir_path} && qsub {pbs_path}'
-            if project_root_dir_path
-            else f'qsub {pbs_path}'
+            f'cd {project_root_path} && '
+            f'qsub '
+            f'-l '
+            f'select={num_chunks}:ncpus={num_cpus}:mem={mem}b:ngpus={num_gpus},'
+            f'walltime={walltime} '
+            f'{pbs_path}'
         )
 
     async def queue_status(self, job_id: str) -> PBSProJob:

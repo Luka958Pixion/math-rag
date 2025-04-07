@@ -9,6 +9,9 @@
 
 cd "${PBS_O_WORKDIR:-""}"
 
+# exit immediately if a command exits with a non-zero status
+set -e
+
 set -a
 source .env.hpc.hf.tgi
 set +a
@@ -18,9 +21,7 @@ export PYTHONUNBUFFERED=1
 export http_proxy="http://10.150.1.1:3128"
 export https_proxy="http://10.150.1.1:3128"
 
-echo "here $PWD"
-
-mkdir -p data
+mkdir -p data/$TGI_MODEL
 apptainer run --nv --bind $PWD/data:/data  hf_cli.sif
 
 unset http_proxy
@@ -31,7 +32,8 @@ apptainer run --nv --bind $PWD/data/$TGI_MODEL:/model tgi_server.sif
 echo "Waiting for the TGI server to become healthy..."
 
 while true; do
-    response=$(curl -s -o /dev/null -w "%{http_code}" http://0.0.0.0:8000/health)
+    # || true ensures zero exit status even if command fails because of the set -e
+    response=$(curl -s -o /dev/null -w "%{http_code}" http://0.0.0.0:8000/health || true)
 
     if [ "$response" -eq 200 ]; then
         echo "TGI server is healthy."

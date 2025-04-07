@@ -5,7 +5,6 @@ from logging import INFO, basicConfig, getLogger
 from pathlib import Path
 from queue import Full, Queue
 from threading import Thread
-from uuid import UUID
 
 from backoff import expo, full_jitter, on_exception
 from decouple import config
@@ -169,9 +168,9 @@ def write_output_file(output_file_path: Path, output_queue: Queue[str | None]):
         logger.info('Writer thread exiting')
 
 
-def main(batch_id: UUID):
-    input_file_path = WORKDIR / f'input_{batch_id}.jsonl'
-    output_file_path = WORKDIR / f'output_{batch_id}.jsonl'
+def main():
+    input_file_path = WORKDIR / 'input.jsonl'
+    output_file_path = WORKDIR / 'output.jsonl'
 
     client = AsyncInferenceClient(
         base_url=TGI_BASE_URL, model=TGI_MODEL, provider='hf-inference', timeout=None

@@ -48,66 +48,49 @@ class HuggingFaceBatchLLM(PartialBatchLLM):
     ):
         self.local_project_root = Path(__file__).parents[4]
         self.remote_project_root = remote_project_root
+
         self.hpc_client = hpc_client
         self.pbs_pro_client = pbs_pro_client
         self.sftp_client = sftp_client
         self.apptainer_client = apptainer_client
 
-    async def init_resources(self, reset: bool = False):
-        # TODO check if already updated!
+    async def init_resources(self):
         hf_path = self.local_project_root / 'assets/hpc/hf'
         tgi_path = hf_path / 'tgi'
-        def_local_paths = (
-            Path(tgi_path / 'tgi_server.def'),
-            Path(tgi_path / 'tgi_client.def'),
-            Path(hf_path / 'hf_cli.def'),
-        )
+        local_paths = [
+            tgi_path / 'tgi_server.def',
+            tgi_path / 'tgi_client.def',
+            hf_path / 'hf_cli.def',
+            tgi_path / 'tgi.py',
+            tgi_path / 'tgi.sh',
+            self.local_project_root / '.env.hpc.hf.tgi',
+        ]
 
-        for def_local_path in def_local_paths:
-            assert def_local_path.exists()
+        for local_path in local_paths:
+            assert local_path.exists()
 
         tmp_path = self.local_project_root / '.tmp'
 
-        for def_local_path in def_local_paths:
-            def_remote_path = self.remote_project_root / def_local_path.name
-            # TODO check hash
-            if await self.hpc_client.has_file_path(
-                def_remote_path
-            ) and not await self.hpc_client.has_file_changed(
-                def_local_path, def_remote_path
-            ):
+        for local_path in local_paths:
+            remote_path = self.remote_project_root / local_path.name
+            has_file_path = await self.hpc_client.has_file_path(remote_path)
+            has_file_changed = await self.hpc_client.has_file_changed(
+                local_path, remote_path
+            )
+
+            if has_file_path and not has_file_changed:
                 continue
 
-            sif_stream = await self.apptainer_client.build(def_local_path)
+            await self.sftp_client.upload(local_path, remote_path)
 
-            sif_local_path = tmp_path / def_local_path.stem / '.sif'
-            await FileWriterUtil.write(sif_stream, sif_local_path)
+            if local_path.suffix == '.def':
+                sif_stream = await self.apptainer_client.build(local_path)
 
-            sif_remote_path = self.remote_project_root / sif_local_path.name
-            await self.sftp_client.upload(sif_local_path, sif_remote_path)
+                sif_local_path = tmp_path / local_path.stem / '.sif'
+                await FileWriterUtil.write(sif_stream, sif_local_path)
 
-        other_local_paths = (
-            Path(tgi_path / 'tgi.py'),
-            Path(tgi_path / 'tgi.sh'),
-            Path(self.local_project_root / '.env.hpc.hf.tgi'),
-        )
-
-        for other_local_path in other_local_paths:
-            assert other_local_path.exists()
-
-        for other_local_path in other_local_paths:
-            other_remote_path = self.remote_project_root / other_local_path.name
-            # TODO check hash
-            if await self.hpc_client.has_file_path(
-                other_remote_path
-            ) and not await self.hpc_client.has_file_changed(
-                other_local_path, other_remote_path
-            ):
-                continue
-
-            await self.sftp_client.upload(other_local_path, other_remote_path)
-
-        # TODO mkdir -p data
+                sif_remote_path = self.remote_project_root / sif_local_path.name
+                await self.sftp_client.upload(sif_local_path, sif_remote_path)
 
     async def batch_generate_init(
         self,
@@ -126,9 +109,9 @@ class HuggingFaceBatchLLM(PartialBatchLLM):
         ]
         jsonl_str = '\n'.join(lines)
         jsonl_bytes = jsonl_str.encode('utf-8')
-        source = BytesStreamerUtil.stream_bytes(jsonl_bytes)
-
-        await self.sftp_client.upload(source)
+        jsonl_stream = BytesStreamerUtil.stream_bytes(jsonl_bytes)
+        input_path = self.remote_project_root / 'input.jsonl'
+        await self.sftp_client.upload(jsonl_stream, input_path)
 
         pbs_path = self.remote_project_root / 'huggingface_pbs.sh'
         batch_id = await self.pbs_pro_client.queue_submit(pbs_path)
@@ -163,8 +146,8 @@ class HuggingFaceBatchLLM(PartialBatchLLM):
             case PBSProJobState.FINISHED | PBSProJobState.EXITED:
                 pass
 
-        input_path = self.remote_project_root / f'input_{batch_id}.jsonl'
-        output_path = self.remote_project_root / f'output_{batch_id}.jsonl'
+        input_path = self.remote_project_root / 'input.jsonl'
+        output_path = self.remote_project_root / 'output.jsonl'
 
         input_file_stream = await self.sftp_client.download(input_path, None)
         output_file_stream = await self.sftp_client.download(output_path, None)
@@ -213,5 +196,7 @@ class HuggingFaceBatchLLM(PartialBatchLLM):
         batch_result = LLMBatchResult(
             response_lists=response_lists, failed_requests=failed_requests
         )
+
+        await self.hpc_client.remove_files([input_path, output_path])
 
         return batch_result
