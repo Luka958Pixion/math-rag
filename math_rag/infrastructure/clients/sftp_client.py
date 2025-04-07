@@ -27,12 +27,12 @@ class SFTPClient:
         target_str = str(target)
 
         async with AsyncExitStack() as stack:
-            conn = await stack.enter_async_context(self.ssh_client.connect(retry=False))
+            conn = await stack.enter_async_context(self.ssh_client.connect())
             sftp = await stack.enter_async_context(conn.start_sftp_client())
 
             offset = 0
 
-            if sftp.exists(target):
+            if await sftp.exists(target):
                 attrs = await sftp.stat(target_str)
                 offset = attrs.size
 

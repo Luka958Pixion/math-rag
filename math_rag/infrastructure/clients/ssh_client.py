@@ -20,23 +20,19 @@ class SSHClient:
         self.user = user
         self.private_key = read_private_key('/.ssh/id_ed25519', passphrase)
 
-    async def _connect(self) -> SSHClientConnection:
+    @async_context_manager
+    async def connect(self) -> SSHClientConnection:
         return await connect(
             self.host, username=self.user, client_keys=[self.private_key]
         )
 
-    @async_context_manager
-    async def connect(self, *, retry: bool) -> SSHClientConnection:
-        if retry:
-            connect_retry = on_exception(
-                expo, (ConnectionLost, DisconnectError), max_tries=4
-            )(self._connect)
-            return await connect_retry()
-
-        return self._connect()
+    async def connect_retry(self) -> SSHClientConnection:
+        return await on_exception(expo, (ConnectionLost, DisconnectError), max_tries=4)(
+            self.connect
+        )()
 
     async def run(self, command: str) -> str:
-        async with await self.connect(retry=True) as connection:
+        async with await self.connect_retry() as connection:
             result = await connection.run(command, check=False)
             stdout = result.stdout.strip()
             stderr = result.stderr.strip()

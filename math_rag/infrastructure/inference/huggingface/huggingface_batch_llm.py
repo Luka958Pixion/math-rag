@@ -121,7 +121,7 @@ class HuggingFaceBatchLLM(PartialBatchLLM):
             num_chunks=1,
             num_cpus=8,
             num_gpus=1,
-            mem=16 * 1024**3,
+            mem=32 * 1024**3,
             walltime=timedelta(minutes=20),
         )
         status = await self.pbs_pro_client.queue_status(batch_id)

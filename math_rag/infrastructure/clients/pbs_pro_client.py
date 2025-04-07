@@ -35,7 +35,7 @@ class PBSProClient:
             f'cd {project_root_path} && '
             f'qsub '
             f'-l '
-            f'select={num_chunks}:ncpus={num_cpus}:mem={mem}b:ngpus={num_gpus},'
+            f'select={num_chunks}:ncpus={num_cpus}:mem={mem}B:ngpus={num_gpus},'
             f'walltime={walltime} '
             f'{pbs_path}'
         )
