@@ -177,4 +177,3 @@ cython_debug/
 secrets/
 jupyter_sessions/
 .ssh/
-.tmp/

@@ -50,9 +50,9 @@ class HuggingFaceBatchLLM(PartialBatchLLM):
         # TODO check if already updated!
         tmp_path = Path(local_project_root / '.tmp')
         def_paths = (
-            Path(local_project_root / 'assets/huggingface/tgi/tgi_server.def'),
-            Path(local_project_root / 'assets/huggingface/tgi/tgi_client.def'),
-            Path(local_project_root / 'assets/huggingface/hf_cli.def'),
+            Path(local_project_root / 'assets/hpc/hf/tgi/tgi_server.def'),
+            Path(local_project_root / 'assets/hpc/hf/tgi/tgi_client.def'),
+            Path(local_project_root / 'assets/hpc/hf/hf_cli.def'),
         )
 
         for def_path in def_paths:
@@ -60,9 +60,7 @@ class HuggingFaceBatchLLM(PartialBatchLLM):
 
         for def_path in def_paths:
             sif_stream = await self.apptainer_client.build(def_path)
-            FileWriterUtil.write(
-                sif_stream,
-            )
+            FileWriterUtil.write(sif_stream, tmp_path)
 
         # TODO save to .tmp
         tgi_client_sif_file_stream = await self.apptainer_client.build(
