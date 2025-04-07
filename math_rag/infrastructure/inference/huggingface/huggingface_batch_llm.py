@@ -22,7 +22,11 @@ from math_rag.infrastructure.mappings.inference.huggingface import (
     LLMRequestMapping,
     LLMResponseListMapping,
 )
-from math_rag.infrastructure.utils import BytesStreamerUtil, FileStreamerUtil
+from math_rag.infrastructure.utils import (
+    BytesStreamerUtil,
+    FileStreamerUtil,
+    FileWriterUtil,
+)
 
 
 logger = getLogger(__name__)
@@ -42,12 +46,25 @@ class HuggingFaceBatchLLM(PartialBatchLLM):
         self.sftp_client = sftp_client
         self.apptainer_client = apptainer_client
 
-    async def setup(self, reset: bool = False):
+    async def init_resources(self, reset: bool = False):
         # TODO check if already updated!
-
-        tgi_sif_file_stream = await self.apptainer_client.build(
-            local_project_root / 'assets/huggingface/tgi.def'
+        tmp_path = Path(local_project_root / '.tmp')
+        def_paths = (
+            Path(local_project_root / 'assets/huggingface/tgi/tgi_server.def'),
+            Path(local_project_root / 'assets/huggingface/tgi/tgi_client.def'),
+            Path(local_project_root / 'assets/huggingface/hf_cli.def'),
         )
+
+        for def_path in def_paths:
+            assert def_path.exists()
+
+        for def_path in def_paths:
+            sif_stream = await self.apptainer_client.build(def_path)
+            FileWriterUtil.write(
+                sif_stream,
+            )
+
+        # TODO save to .tmp
         tgi_client_sif_file_stream = await self.apptainer_client.build(
             local_project_root / 'assets/huggingface/tgi_client.def'
         )

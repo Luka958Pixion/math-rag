@@ -18,7 +18,7 @@ From: ghcr.io/huggingface/text-embeddings-inference:latest
         A server for Text Embeddings Inference (TGI) from Hugging Face.
 
     Build:
-        apptainer build tei.sif tei.def
+        apptainer build tei_server.sif tei_server.def
 
     Usage:
-        apptainer run --nv --bind $PWD/data/BAAI/bge-large-en-v1.5:/model tei.sif
+        apptainer run --nv --bind $PWD/data/BAAI/bge-large-en-v1.5:/model tei_server.sif

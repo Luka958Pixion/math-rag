@@ -26,5 +26,9 @@ From: python:3.11
     Build:
         apptainer build hf_cli.sif hf_cli.def
 
+    Environment:
+        - HF_TOKEN
+        - TGI_MODEL
+
     Usage:
-        apptainer run --nv --bind $PWD/data:/data --env TGI_MODEL="$TGI_MODEL" hf_cli.sif
+        apptainer run --nv --bind $PWD/data:/data hf_cli.sif

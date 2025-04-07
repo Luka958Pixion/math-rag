@@ -3,11 +3,9 @@ From: ghcr.io/huggingface/text-generation-inference:latest
 
 %environment
     export PYTHONUNBUFFERED=1
-    export TGI_PORT=8000
-    export TGI_HOSTNAME=0.0.0.0
 
 %runscript
-    exec text-generation-launcher --model-id /model --port $TGI_PORT --hostname $TGI_HOSTNAME
+    exec text-generation-launcher --model-id /model --port 8000 --hostname 0.0.0.0
 
 %labels
     Author luka.panic@pixion.co
@@ -18,7 +16,10 @@ From: ghcr.io/huggingface/text-generation-inference:latest
         A server for Text Generation Inference (TGI) from Hugging Face.
 
     Build:
-        apptainer build tgi.sif tgi.def
+        apptainer build tgi_server.sif tgi_server.def
+
+    Environment:
+        - TGI_MODEL
 
     Usage:
-        apptainer run --nv --bind $PWD/data/$TGI_MODEL:/model tgi.sif
+        apptainer run --nv --bind $PWD/data/$TGI_MODEL:/model tgi_server.sif

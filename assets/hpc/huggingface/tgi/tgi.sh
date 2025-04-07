@@ -9,17 +9,21 @@
 
 cd "${PBS_O_WORKDIR:-""}"
 
+set -a
+source .env
+set +a
+
 export PYTHONUNBUFFERED=1
 
 export http_proxy="http://10.150.1.1:3128"
 export https_proxy="http://10.150.1.1:3128"
 
-apptainer run --nv --bind $PWD/data:/data --env MODEL="$MODEL" hf_cli.sif
+apptainer run --nv --bind $PWD/data:/data  hf_cli.sif
 
 unset http_proxy
 unset https_proxy
 
-apptainer run --nv --bind $PWD/data/meta-llama/Llama-3.2-3B:/model tgi.sif
+apptainer run --nv --bind $PWD/data/$TGI_MODEL:/model tgi_server.sif
 
 echo "Waiting for the TGI server to become healthy..."
 

@@ -16,11 +16,12 @@ from huggingface_hub.errors import TextGenerationError
 # PBS environment
 WORKDIR = config('PBS_O_WORKDIR', cast=Path)
 
-TGI_BASE_URL = config('TGI_BASE_URL')
 TGI_MODEL = config('TGI_MODEL')
 MAX_QUEUE_SIZE = config('MAX_QUEUE_SIZE', cast=int, default=5)
 NUM_CONCURRENT_REQUESTS = config('NUM_CONCURRENT_REQUESTS', cast=int, default=5)
 MAX_RETRIES = config('MAX_RETRIES', cast=int, default=3)
+
+TGI_BASE_URL = 'http://0.0.0.0:8000'
 
 
 basicConfig(
@@ -143,7 +144,7 @@ def process_lines(client, input_queue: Queue[str], output_queue: Queue[str | Non
 
     finally:
         output_queue.put(None)
-        logger.info('Processor thread exiting')  # TODO
+        logger.info('Processor thread exiting')
 
 
 def write_output_file(output_file_path: Path, output_queue: Queue[str | None]):
