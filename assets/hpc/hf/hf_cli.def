@@ -12,8 +12,8 @@ From: python:3.11
     pip install huggingface_hub hf_transfer
 
 %runscript
-    exec huggingface-cli login --token "$HF_TOKEN" --add-to-git-credential
-    exec huggingface-cli download "$TGI_MODEL" --local-dir "/data/$TGI_MODEL" --local-dir-use-symlinks False
+    huggingface-cli login
+    huggingface-cli download "$TGI_MODEL" --local-dir "/data/$TGI_MODEL" --local-dir-use-symlinks False
 
 %labels
     Author luka.panic@pixion.co

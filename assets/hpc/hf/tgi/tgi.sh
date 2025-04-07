@@ -22,7 +22,7 @@ export http_proxy="http://10.150.1.1:3128"
 export https_proxy="http://10.150.1.1:3128"
 
 mkdir -p data/$TGI_MODEL
-apptainer run --nv --bind $PWD/data:/data  hf_cli.sif
+apptainer run --nv --bind $PWD/data:/data hf_cli.sif
 
 unset http_proxy
 unset https_proxy
@@ -45,4 +45,4 @@ while true; do
     fi
 done
 
-apptainer run tgi_client.sif
+apptainer run --env-file .env.hpc.hf.tgi tgi_client.sif

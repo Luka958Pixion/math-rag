@@ -7,7 +7,7 @@ From: ghcr.io/huggingface/text-embeddings-inference:latest
     export TEI_HOSTNAME=0.0.0.0
 
 %runscript
-    exec text-embeddings-router --model-id /model --port $TEI_PORT --hostname $TEI_HOSTNAME
+    text-embeddings-router --model-id /model --port $TEI_PORT --hostname $TEI_HOSTNAME
 
 %labels
     Author luka.panic@pixion.co

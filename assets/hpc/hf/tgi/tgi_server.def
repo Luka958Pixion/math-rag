@@ -5,7 +5,7 @@ From: ghcr.io/huggingface/text-generation-inference:latest
     export PYTHONUNBUFFERED=1
 
 %runscript
-    exec text-generation-launcher --model-id /model --port 8000 --hostname 0.0.0.0
+    text-generation-launcher --model-id /model --port 8000 --hostname 0.0.0.0
 
 %labels
     Author luka.panic@pixion.co

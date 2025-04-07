@@ -9,7 +9,7 @@ From: python:3.11
     pip install text-generation
 
 %runscript
-    exec --env-file .env.hpc python tgi.py
+    python tgi.py
 
 %labels
     Author luka.panic@pixion.co
@@ -26,4 +26,4 @@ From: python:3.11
         - .env.hpc
 
     Usage:
-        apptainer run tgi_client.sif
+        apptainer run --env-file .env.hpc.hf.tgi tgi_client.sif
