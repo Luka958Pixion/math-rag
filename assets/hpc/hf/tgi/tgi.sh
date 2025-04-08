@@ -15,6 +15,7 @@ source .env.hpc.hf.tgi
 set +a
 
 export PYTHONUNBUFFERED=1
+export TGI_BASE_URL="http://0.0.0.0:8000"
 
 export http_proxy="http://10.150.1.1:3128"
 export https_proxy="http://10.150.1.1:3128"

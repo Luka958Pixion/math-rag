@@ -12,14 +12,13 @@ from huggingface_hub import AsyncInferenceClient
 from huggingface_hub.errors import TextGenerationError
 
 
-# PBS environment
-WORKDIR = config('PBS_O_WORKDIR', cast=Path)
-
+PBS_O_WORKDIR = config('PBS_O_WORKDIR', cast=Path)  # PBS environment
+TGI_BASE_URL = config('TGI_BASE_URL', default=None)
+TGI_API_KEY = config('TGI_API_KEY', default=None)
 MODEL_HUB_ID = config('MODEL_HUB_ID')
-NUM_CONCURRENT_REQUESTS = 128  # max for TGI
 MAX_RETRIES = config('MAX_RETRIES', cast=int, default=3)
 
-TGI_BASE_URL = 'http://0.0.0.0:8000'
+NUM_CONCURRENT_REQUESTS = 128  # max for TGI
 
 
 basicConfig(
@@ -45,8 +44,8 @@ def on_backoff_handler(details: dict):
     on_backoff=on_backoff_handler,
 )
 async def safe_chat_completion(client: AsyncInferenceClient, request: dict) -> dict:
-    output = await client.chat_completion(**request['body'])
-    response = {'request_id': request['id'], 'response': output, 'error': None}
+    output = await client.chat_completion(**request['request'])
+    response = {'request_id': request['request_id'], 'response': output, 'error': None}
 
     return response
 
@@ -68,7 +67,11 @@ async def process_input_line(
                 f'Failed processing line after {MAX_RETRIES} retries: '
                 f'{input_line} - Error: {e}'
             )
-            response = {'request_id': request['id'], 'response': None, 'error': e}
+            response = {
+                'request_id': request['request_id'],
+                'response': None,
+                'error': e,
+            }
 
         finally:
             output_line = json.dumps(response)
@@ -168,11 +171,15 @@ def write_output_file(output_file_path: Path, output_queue: Queue[str | None]):
 
 
 def main():
-    input_file_path = WORKDIR / 'input.jsonl'
-    output_file_path = WORKDIR / 'output.jsonl'
+    input_file_path = PBS_O_WORKDIR / 'input.jsonl'
+    output_file_path = PBS_O_WORKDIR / 'output.jsonl'
 
     client = AsyncInferenceClient(
-        base_url=TGI_BASE_URL, model=MODEL_HUB_ID, provider='hf-inference', timeout=None
+        base_url=TGI_BASE_URL,
+        api_key=TGI_API_KEY,
+        model=MODEL_HUB_ID,
+        provider='hf-inference',
+        timeout=None,
     )
 
     input_queue: Queue[str | None] = Queue(maxsize=NUM_CONCURRENT_REQUESTS)
