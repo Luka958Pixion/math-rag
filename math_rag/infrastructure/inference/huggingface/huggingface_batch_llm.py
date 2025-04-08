@@ -32,6 +32,7 @@ from math_rag.infrastructure.utils import (
     BytesStreamerUtil,
     FileStreamReaderUtil,
     FileStreamWriterUtil,
+    FileWriterUtil,
 )
 
 
@@ -78,14 +79,16 @@ class HuggingFaceBatchLLM(PartialBatchLLM):
 
             if await self.hpc_client.has_file_path(remote_path):
                 if not await self.hpc_client.has_file_changed(local_path, remote_path):
+                    # TODO logging here
                     continue
 
+            # TODO logging here
             await self.sftp_client.upload(local_path, remote_path)
 
             if local_path.suffix == '.def':
                 sif_stream = await self.apptainer_client.build(local_path)
 
-                sif_local_path = tmp_path / local_path.stem / '.sif'
+                sif_local_path = tmp_path / f'{local_path.stem}.sif'
                 await FileStreamWriterUtil.write(sif_stream, sif_local_path)
 
                 sif_remote_path = self.remote_project_root / sif_local_path.name
@@ -108,14 +111,21 @@ class HuggingFaceBatchLLM(PartialBatchLLM):
         ]
         jsonl_str = '\n'.join(lines)
         jsonl_bytes = jsonl_str.encode('utf-8')
-        jsonl_stream = BytesStreamerUtil.stream(jsonl_bytes)
-        input_path = self.remote_project_root / 'input.jsonl'
-        await self.sftp_client.upload(jsonl_stream, input_path)
+
+        input_local_path = self.local_project_root / '.tmp' / 'input.jsonl'
+        await FileWriterUtil.write(jsonl_bytes, input_local_path)
+
+        input_remote_path = self.remote_project_root / input_local_path.name
+        await self.sftp_client.upload(input_local_path, input_remote_path)
 
         pbs_path = Path('tgi.sh')
+        env_vars = {
+            'MODEL_HUB_ID': 'meta-llama/Llama-3.2-3B'
+        }  # TODO, defined on request!
         batch_id = await self.pbs_pro_client.queue_submit(
             self.remote_project_root,
             pbs_path,
+            env_vars,
             num_chunks=1,
             num_cpus=8,
             num_gpus=1,
