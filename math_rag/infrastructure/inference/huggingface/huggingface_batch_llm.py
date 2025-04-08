@@ -65,6 +65,7 @@ class HuggingFaceBatchLLM(PartialBatchLLM):
             hf_path / 'hf_cli.def',
             tgi_path / 'tgi.py',
             tgi_path / 'tgi.sh',
+            tgi_path / 'requirements.txt',
             self.local_project_root / '.env.hpc.hf.tgi',
         ]
 

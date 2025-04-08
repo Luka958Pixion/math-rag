@@ -6,7 +6,7 @@ From: python:3.11
 
 %post
     pip install --upgrade pip
-    pip install text-generation
+    pip install -r requirements.txt
 
 %runscript
     python tgi.py
@@ -23,7 +23,7 @@ From: python:3.11
         apptainer build tgi_client.sif tgi_client.def
 
     Environment:
-        - .env.hpc
+        - .env.hpc.hf.tgi
 
     Usage:
         apptainer run --env-file .env.hpc.hf.tgi tgi_client.sif
