@@ -12,8 +12,15 @@ From: python:3.11
     pip install huggingface_hub hf_transfer
 
 %runscript
-    huggingface-cli login --token "$HF_TOKEN"
-    huggingface-cli download "$TGI_MODEL" --local-dir "/data/$TGI_MODEL" --local-dir-use-symlinks False
+    MODEL_DIR="/data/$MODEL_HUB_ID"
+
+    if [ -d "$MODEL_DIR" ] && [ "$(ls -A "$MODEL_DIR")" ]; then
+        echo "Download skipped"
+    else
+        echo "Download started"
+        huggingface-cli login --token "$HF_TOKEN"
+        huggingface-cli download "$MODEL_HUB_ID" --local-dir "$MODEL_DIR" --local-dir-use-symlinks False
+    fi
 
 %labels
     Author luka.panic@pixion.co
@@ -28,7 +35,7 @@ From: python:3.11
 
     Environment:
         - HF_TOKEN
-        - TGI_MODEL
+        - MODEL_HUB_ID
 
     Usage:
         apptainer run --nv --bind $PWD/data:/data hf_cli.sif

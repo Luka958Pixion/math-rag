@@ -24,6 +24,7 @@ class PBSProClient:
         self,
         project_root_path: Path,
         pbs_path: Path,
+        env_vars: dict[str, str] | None,
         *,
         num_chunks: int,
         num_cpus: int,
@@ -31,9 +32,12 @@ class PBSProClient:
         mem: int,
         walltime: timedelta,
     ) -> str:
+        env_vars_str = ','.join(f'{key}={value}' for key, value in env_vars.items())
+
         return await self.ssh_client.run(
             f'cd {project_root_path} && '
             f'qsub '
+            f'-v {env_vars_str} '
             f'-l '
             f'select={num_chunks}:ncpus={num_cpus}:mem={mem}B:ngpus={num_gpus},'
             f'walltime={walltime} '

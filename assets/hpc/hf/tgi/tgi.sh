@@ -4,8 +4,6 @@
 #PBS -o output.log
 #PBS -e error.log
 #PBS -q gpu
-#PBS -l ngpus=1
-#PBS -l ncpus=8
 
 cd "${PBS_O_WORKDIR:-""}"
 
@@ -21,13 +19,13 @@ export PYTHONUNBUFFERED=1
 export http_proxy="http://10.150.1.1:3128"
 export https_proxy="http://10.150.1.1:3128"
 
-mkdir -p data/$TGI_MODEL
+mkdir -p data/$MODEL_HUB_ID
 apptainer run --nv --bind $PWD/data:/data hf_cli.sif
 
 unset http_proxy
 unset https_proxy
 
-apptainer run --nv --bind $PWD/data/$TGI_MODEL:/model tgi_server.sif
+apptainer run --nv --bind $PWD/data/$MODEL_HUB_ID:/model tgi_server.sif
 
 echo "Waiting for the TGI server to become healthy..."
 

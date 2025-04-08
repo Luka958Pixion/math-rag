@@ -19,7 +19,7 @@ From: ghcr.io/huggingface/text-generation-inference:latest
         apptainer build tgi_server.sif tgi_server.def
 
     Environment:
-        - TGI_MODEL
+        - MODEL_HUB_ID
 
     Usage:
-        apptainer run --nv --bind $PWD/data/$TGI_MODEL:/model tgi_server.sif
+        apptainer run --nv --bind $PWD/data/$MODEL_HUB_ID:/model tgi_server.sif

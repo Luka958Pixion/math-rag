@@ -15,7 +15,7 @@ from huggingface_hub.errors import TextGenerationError
 # PBS environment
 WORKDIR = config('PBS_O_WORKDIR', cast=Path)
 
-TGI_MODEL = config('TGI_MODEL')
+MODEL_HUB_ID = config('MODEL_HUB_ID')
 MAX_QUEUE_SIZE = config('MAX_QUEUE_SIZE', cast=int, default=5)
 NUM_CONCURRENT_REQUESTS = config('NUM_CONCURRENT_REQUESTS', cast=int, default=5)
 MAX_RETRIES = config('MAX_RETRIES', cast=int, default=3)
@@ -173,7 +173,7 @@ def main():
     output_file_path = WORKDIR / 'output.jsonl'
 
     client = AsyncInferenceClient(
-        base_url=TGI_BASE_URL, model=TGI_MODEL, provider='hf-inference', timeout=None
+        base_url=TGI_BASE_URL, model=MODEL_HUB_ID, provider='hf-inference', timeout=None
     )
 
     input_queue: Queue[str | None] = Queue(maxsize=MAX_QUEUE_SIZE)
