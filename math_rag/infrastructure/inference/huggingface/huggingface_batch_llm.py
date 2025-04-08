@@ -29,7 +29,6 @@ from math_rag.infrastructure.mappings.inference.huggingface import (
     LLMResponseListMapping,
 )
 from math_rag.infrastructure.utils import (
-    BytesStreamerUtil,
     FileStreamReaderUtil,
     FileStreamWriterUtil,
     FileWriterUtil,
@@ -79,10 +78,10 @@ class HuggingFaceBatchLLM(PartialBatchLLM):
 
             if await self.hpc_client.has_file_path(remote_path):
                 if not await self.hpc_client.has_file_changed(local_path, remote_path):
-                    # TODO logging here
+                    logger.info(f'Upload skipped: {local_path} unchanged')
                     continue
 
-            # TODO logging here
+            logger.info(f'Upload started: {local_path}')
             await self.sftp_client.upload(local_path, remote_path)
 
             if local_path.suffix == '.def':
@@ -119,9 +118,7 @@ class HuggingFaceBatchLLM(PartialBatchLLM):
         await self.sftp_client.upload(input_local_path, input_remote_path)
 
         pbs_path = Path('tgi.sh')
-        env_vars = {
-            'MODEL_HUB_ID': 'meta-llama/Llama-3.2-3B'
-        }  # TODO, defined on request!
+        env_vars = {'MODEL_HUB_ID': batch_request.requests[0].params.model}
         batch_id = await self.pbs_pro_client.queue_submit(
             self.remote_project_root,
             pbs_path,

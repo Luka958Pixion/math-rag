@@ -13,7 +13,7 @@ class FileStreamerUtil:
     ) -> AsyncGenerator[bytes, None]:
         async with open(source, 'rb') as source_file:
             if offset:
-                await source_file.seek(offset, whence=0)
+                await source_file.seek(offset, 0)
 
             while True:
                 chunk = await source_file.read(CHUNK_SIZE)
