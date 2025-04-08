@@ -12,13 +12,13 @@ from huggingface_hub import AsyncInferenceClient
 from huggingface_hub.errors import TextGenerationError
 
 
-PBS_O_WORKDIR = config('PBS_O_WORKDIR', cast=Path)  # PBS environment
+PBS_O_WORKDIR = config('PBS_O_WORKDIR', cast=Path)
 TGI_BASE_URL = config('TGI_BASE_URL', default=None)
 TGI_API_KEY = config('TGI_API_KEY', default=None)
 MODEL_HUB_ID = config('MODEL_HUB_ID')
 MAX_RETRIES = config('MAX_RETRIES', cast=int, default=3)
 
-NUM_CONCURRENT_REQUESTS = 128  # max for TGI
+MAX_CONCURRENT_REQUESTS = 128  # max for TGI
 
 
 basicConfig(
@@ -29,10 +29,12 @@ logger = getLogger(__name__)
 
 def on_backoff_handler(details: dict):
     line = details['args'][1] if len(details['args']) > 1 else str()
+    retries = details['tries']
+    exception = details['exception']
     logger.error(
         f'Error processing line {line} '
-        f'(attempt {details['tries']}/{MAX_RETRIES}): '
-        f'{details['exception']}'
+        f'(attempt {retries}/{MAX_RETRIES}): '
+        f'{exception}'
     )
 
 
@@ -90,7 +92,7 @@ async def process_input_lines(
     client: AsyncInferenceClient,
     output_queue: Queue[str | None],
 ):
-    semaphore = Semaphore(NUM_CONCURRENT_REQUESTS)
+    semaphore = Semaphore(MAX_CONCURRENT_REQUESTS)
 
     try:
         async with TaskGroup() as task_group:
@@ -182,8 +184,8 @@ def main():
         timeout=None,
     )
 
-    input_queue: Queue[str | None] = Queue(maxsize=NUM_CONCURRENT_REQUESTS)
-    output_queue: Queue[str | None] = Queue(maxsize=NUM_CONCURRENT_REQUESTS)
+    input_queue: Queue[str | None] = Queue(maxsize=MAX_CONCURRENT_REQUESTS)
+    output_queue: Queue[str | None] = Queue(maxsize=MAX_CONCURRENT_REQUESTS)
 
     reader_thread = Thread(
         target=read_input_file, args=(input_file_path, input_queue), name='ReaderThread'

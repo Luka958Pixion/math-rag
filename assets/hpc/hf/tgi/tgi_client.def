@@ -9,7 +9,7 @@ From: python:3.11
     pip install text-generation
 
 %runscript
-    exec python tgi.py
+    python tgi.py
 
 %labels
     Author luka.panic@pixion.co
