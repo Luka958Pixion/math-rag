@@ -77,6 +77,9 @@ class HPCClient:
 
         return local_file_hash != remote_file_hash
 
+    async def remove_file(self, file_path: Path):
+        await self.ssh_client.run(f'rm -f {file_path}')
+
     async def remove_files(self, file_paths: list[Path]):
         paths = ' '.join(str(path) for path in file_paths)
         await self.ssh_client.run(f'rm -f {paths}')

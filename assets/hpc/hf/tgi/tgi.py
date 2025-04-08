@@ -16,8 +16,7 @@ from huggingface_hub.errors import TextGenerationError
 WORKDIR = config('PBS_O_WORKDIR', cast=Path)
 
 MODEL_HUB_ID = config('MODEL_HUB_ID')
-MAX_QUEUE_SIZE = config('MAX_QUEUE_SIZE', cast=int, default=5)
-NUM_CONCURRENT_REQUESTS = config('NUM_CONCURRENT_REQUESTS', cast=int, default=5)
+NUM_CONCURRENT_REQUESTS = 128  # max for TGI
 MAX_RETRIES = config('MAX_RETRIES', cast=int, default=3)
 
 TGI_BASE_URL = 'http://0.0.0.0:8000'
@@ -176,8 +175,8 @@ def main():
         base_url=TGI_BASE_URL, model=MODEL_HUB_ID, provider='hf-inference', timeout=None
     )
 
-    input_queue: Queue[str | None] = Queue(maxsize=MAX_QUEUE_SIZE)
-    output_queue: Queue[str | None] = Queue(maxsize=MAX_QUEUE_SIZE)
+    input_queue: Queue[str | None] = Queue(maxsize=NUM_CONCURRENT_REQUESTS)
+    output_queue: Queue[str | None] = Queue(maxsize=NUM_CONCURRENT_REQUESTS)
 
     reader_thread = Thread(
         target=read_input_file, args=(input_file_path, input_queue), name='ReaderThread'

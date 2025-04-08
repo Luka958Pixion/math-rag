@@ -81,6 +81,8 @@ class HuggingFaceBatchLLM(PartialBatchLLM):
                     logger.info(f'Upload skipped: {local_path} unchanged')
                     continue
 
+                await self.hpc_client.remove_file(remote_path)
+
             logger.info(f'Upload started: {local_path}')
             await self.sftp_client.upload(local_path, remote_path)
 
@@ -127,7 +129,7 @@ class HuggingFaceBatchLLM(PartialBatchLLM):
             num_cpus=8,
             num_gpus=1,
             mem=32 * 1024**3,
-            walltime=timedelta(minutes=20),
+            walltime=timedelta(minutes=60),
         )
         status = await self.pbs_pro_client.queue_status(batch_id)
 
