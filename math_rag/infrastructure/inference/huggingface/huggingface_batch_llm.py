@@ -76,12 +76,10 @@ class HuggingFaceBatchLLM(PartialBatchLLM):
         for local_path in local_paths:
             remote_path = self.remote_project_root / local_path.name
             has_file_path = await self.hpc_client.has_file_path(remote_path)
-            has_file_changed = await self.hpc_client.has_file_changed(
-                local_path, remote_path
-            )
 
-            if has_file_path and not has_file_changed:
-                continue
+            if await self.hpc_client.has_file_path(remote_path):
+                if not await self.hpc_client.has_file_changed(local_path, remote_path):
+                    continue
 
             await self.sftp_client.upload(local_path, remote_path)
 
