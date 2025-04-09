@@ -82,6 +82,7 @@ class HuggingFaceBatchLLM(PartialBatchLLM):
             if await self.hpc_client.has_file_path(remote_path):
                 if await self.hpc_client.has_file_changed(local_path, remote_path):
                     await self.hpc_client.remove_file(remote_path)
+
                     logger.info(f'Upload started: {local_path}')
 
                 else:
@@ -100,6 +101,10 @@ class HuggingFaceBatchLLM(PartialBatchLLM):
                 await FileStreamWriterUtil.write(sif_stream, sif_local_path)
 
                 sif_remote_path = self.remote_project_root / sif_local_path.name
+
+                if await self.hpc_client.has_file_path(sif_remote_path):
+                    await self.hpc_client.remove_file(sif_remote_path)
+
                 await self.sftp_client.upload(sif_local_path, sif_remote_path)
 
             await self.sftp_client.upload(local_path, remote_path)

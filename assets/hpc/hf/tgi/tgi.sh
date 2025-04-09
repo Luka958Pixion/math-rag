@@ -27,7 +27,8 @@ unset http_proxy
 unset https_proxy
 
 # uses & to run in the background
-apptainer run --nv --bind $PWD/data/$MODEL_HUB_ID:/model tgi_server.sif &
+#apptainer run --nv --bind $PWD/data/$MODEL_HUB_ID:/model tgi_server.sif &
+apptainer instance start --nv --bind $PWD/data/$MODEL_HUB_ID:/model tgi_server.sif tgi_server_instance
 
 
 echo "Waiting for the TGI server to become healthy..."
@@ -48,3 +49,4 @@ done
 
 # uses 'exec' in %runscript so it doesn't block this script
 apptainer run --env-file .env.hpc.hf.tgi tgi_client.sif
+apptainer instance stop tgi_server_instance

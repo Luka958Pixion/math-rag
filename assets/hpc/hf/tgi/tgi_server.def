@@ -4,7 +4,7 @@ From: ghcr.io/huggingface/text-generation-inference:latest
 %environment
     export PYTHONUNBUFFERED=1
 
-%runscript
+%startscript
     text-generation-launcher --model-id /model --port 8000 --hostname 0.0.0.0
 
 %labels
