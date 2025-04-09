@@ -16,18 +16,29 @@ class ApptainerClient(BaseApptainerClient):
     def __init__(self, base_url: str):
         self.base_url = base_url
 
-    async def build_init(self, def_file_path: Path) -> UUID:
-        url = self.base_url + '/apptainer/build'
+    async def build_init(self, def_path: Path, requirements_path: Path | None) -> UUID:
+        url = self.base_url + '/apptainer/build/init'
 
-        with def_file_path.open('rb') as file:
-            files = {'def_file': (def_file_path.name, file, 'application/octet-stream')}
+        async with AsyncClient() as client:
+            with def_path.open('rb') as def_file:
+                files = {
+                    'def_file': (def_path.name, def_file, 'application/octet-stream')
+                }
 
-            async with AsyncClient() as client:
-                response = await client.post(url, files=files)
-                result = response.json()
-                task_id = UUID(result['task_id'])
+                if requirements_path:
+                    with requirements_path.open('rb') as req_file:
+                        files['requirements_file'] = (
+                            requirements_path.name,
+                            req_file,
+                            'application/octet-stream',
+                        )
+                        response = await client.post(url, files=files)
+                else:
+                    response = await client.post(url, files=files)
 
-                return task_id
+            result = response.json()
+
+            return UUID(result['task_id'])
 
     async def build_status(self, task_id: UUID) -> ApptainerBuildStatus:
         url = self.base_url + '/apptainer/build/status'
@@ -52,9 +63,14 @@ class ApptainerClient(BaseApptainerClient):
                     yield chunk
 
     async def build(
-        self, def_file_path: Path, *, max_retries: int = 3, poll_interval: float = 5
+        self,
+        def_path: Path,
+        requirements_path: Path | None = None,
+        *,
+        max_retries: int = 3,
+        poll_interval: float = 5,
     ) -> AsyncGenerator[bytes, None]:
-        task_id = await self.build_init(def_file_path)
+        task_id = await self.build_init(def_path, requirements_path)
         retries = 0
 
         while True:
@@ -69,7 +85,7 @@ class ApptainerClient(BaseApptainerClient):
 
                 case ApptainerBuildStatus.FAILED:
                     if retries < max_retries:
-                        task_id = await self.build_init(def_file_path)
+                        task_id = await self.build_init(def_path, requirements_path)
                         retries += 1
 
                     else:
@@ -80,7 +96,7 @@ class ApptainerClient(BaseApptainerClient):
         return result
 
     async def overlay_create_init(self, fakeroot: bool, size: int) -> UUID:
-        url = self.base_url + '/overlay/create/build'
+        url = self.base_url + '/overlay/create/build/init'
         payload = {'fakeroot': fakeroot, 'size': size}
 
         async with AsyncClient() as client:

@@ -11,7 +11,9 @@ from math_rag.application.enums import (
 
 class BaseApptainerClient(ABC):
     @abstractmethod
-    async def build_init(self, def_file_path: Path) -> UUID:
+    async def build_init(
+        self, def_path: Path, requirements_path: Path | None = None
+    ) -> UUID:
         pass
 
     @abstractmethod
@@ -24,7 +26,12 @@ class BaseApptainerClient(ABC):
 
     @abstractmethod
     async def build(
-        self, def_file_path: Path, *, max_retries: int, poll_interval: float
+        self,
+        def_path: Path,
+        requirements_path: Path | None = None,
+        *,
+        max_retries: int,
+        poll_interval: float,
     ) -> AsyncGenerator[bytes, None]:
         pass
 

@@ -59,13 +59,15 @@ class HuggingFaceBatchLLM(PartialBatchLLM):
         tmp_path = self.local_project_root / '.tmp'
         hf_path = self.local_project_root / 'assets/hpc/hf'
         tgi_path = hf_path / 'tgi'
+
+        # NOTE: order matters, e.g. tgi_client.def requires requirements.txt to build tgi_client.sif
         local_paths = [
+            tgi_path / 'requirements.txt',
             tgi_path / 'tgi_server.def',
             tgi_path / 'tgi_client.def',
             hf_path / 'hf_cli.def',
             tgi_path / 'tgi.py',
             tgi_path / 'tgi.sh',
-            tgi_path / 'requirements.txt',
             self.local_project_root / '.env.hpc.hf.tgi',
         ]
 
@@ -78,23 +80,29 @@ class HuggingFaceBatchLLM(PartialBatchLLM):
             remote_path = self.remote_project_root / local_path.name
 
             if await self.hpc_client.has_file_path(remote_path):
-                if not await self.hpc_client.has_file_changed(local_path, remote_path):
+                if await self.hpc_client.has_file_changed(local_path, remote_path):
+                    await self.hpc_client.remove_file(remote_path)
+                    logger.info(f'Upload started: {local_path}')
+
+                else:
                     logger.info(f'Upload skipped: {local_path} unchanged')
                     continue
 
-                await self.hpc_client.remove_file(remote_path)
-
-            logger.info(f'Upload started: {local_path}')
-            await self.sftp_client.upload(local_path, remote_path)
-
             if local_path.suffix == '.def':
-                sif_stream = await self.apptainer_client.build(local_path)
+                sif_stream = await self.apptainer_client.build(
+                    local_path,
+                    tgi_path / 'requirements.txt'
+                    if local_path.name == 'tgi_client.def'
+                    else None,
+                )
 
                 sif_local_path = tmp_path / f'{local_path.stem}.sif'
                 await FileStreamWriterUtil.write(sif_stream, sif_local_path)
 
                 sif_remote_path = self.remote_project_root / sif_local_path.name
                 await self.sftp_client.upload(sif_local_path, sif_remote_path)
+
+            await self.sftp_client.upload(local_path, remote_path)
 
     async def batch_generate_init(
         self,
