@@ -18,7 +18,7 @@ class LLMRequestMapping(
     @staticmethod
     def to_source(target: dict[str, Any], **kwargs) -> LLMRequest[LLMResponseType]:
         request_id = kwargs['request_id']
-        input_id = UUID(target['metadata']['input_id'])
+        input_id = UUID(target['extra_body']['input_id'])
         response_type = kwargs['response_type'].bind(input_id)
 
         return LLMRequest(

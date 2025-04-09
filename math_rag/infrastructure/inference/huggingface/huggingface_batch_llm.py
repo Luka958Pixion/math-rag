@@ -29,7 +29,7 @@ from math_rag.infrastructure.mappings.inference.huggingface import (
     LLMResponseListMapping,
 )
 from math_rag.infrastructure.utils import (
-    FileStreamReaderUtil,
+    FileReaderUtil,
     FileStreamWriterUtil,
     FileWriterUtil,
 )
@@ -176,14 +176,15 @@ class HuggingFaceBatchLLM(PartialBatchLLM):
             case PBSProJobState.FINISHED | PBSProJobState.EXITED:
                 pass
 
-        input_path = self.remote_project_root / 'input.jsonl'
-        output_path = self.remote_project_root / 'output.jsonl'
+        input_local_path = self.local_project_root / '.tmp' / 'input.jsonl'
+        output_local_path = self.local_project_root / '.tmp' / 'output.jsonl'
+        input_remote_path = self.remote_project_root / 'output.jsonl'
+        output_remote_path = self.remote_project_root / 'output.jsonl'
 
-        input_file_stream = await self.sftp_client.download(input_path, None)
-        output_file_stream = await self.sftp_client.download(output_path, None)
+        await self.sftp_client.download(output_remote_path, output_local_path)
 
-        input_stream = FileStreamReaderUtil.read_jsonl(input_file_stream)
-        output_stream = FileStreamReaderUtil.read_jsonl(output_file_stream)
+        input_stream = FileReaderUtil.read_jsonl(input_local_path)
+        output_stream = FileReaderUtil.read_jsonl(output_local_path)
 
         requests_dict: dict[UUID, LLMRequest[LLMResponseType]] = {}
 
@@ -227,6 +228,7 @@ class HuggingFaceBatchLLM(PartialBatchLLM):
             response_lists=response_lists, failed_requests=failed_requests
         )
 
-        await self.hpc_client.remove_files([input_path, output_path])
+        await self.hpc_client.remove_files([input_remote_path, output_remote_path])
+        # TODO remove local files as well
 
         return batch_result

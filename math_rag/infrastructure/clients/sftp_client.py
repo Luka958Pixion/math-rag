@@ -1,13 +1,11 @@
 from contextlib import AsyncExitStack
 from pathlib import Path
-from typing import AsyncGenerator, overload
 
 from asyncssh import ConnectionLost, DisconnectError
 from backoff import constant, on_exception
 
 from math_rag.infrastructure.utils import (
     FileStreamerUtil,
-    FileStreamReaderUtil,
     FileStreamWriterUtil,
 )
 
@@ -45,27 +43,14 @@ class SFTPClient:
             source_stream = FileStreamerUtil.stream(source, offset)
             await FileStreamWriterUtil.write(source_stream, target_file)
 
-    @overload
-    async def download(self, source: Path, target: None) -> AsyncGenerator[bytes, None]:
-        pass
-
-    @overload
-    async def download(self, source: Path, target: Path) -> None:
-        pass
-
     async def download(
         self,
         source: Path,
-        target: Path | None,
-    ) -> AsyncGenerator[bytes, None] | None:
+        target: Path,
+    ):
         async with AsyncExitStack() as stack:
             conn = await stack.enter_async_context(self.ssh_client.connect())
             sftp = await stack.enter_async_context(conn.start_sftp_client())
-            file = await stack.enter_async_context(sftp.open(str(source), 'rb'))
+            source_file = await stack.enter_async_context(sftp.open(str(source), 'rb'))
 
-            if target:
-                await FileStreamWriterUtil.write_sftp(file, target)
-
-                return
-
-            return FileStreamReaderUtil.read_sftp(file)
+            await FileStreamWriterUtil.write_sftp(source_file, target)

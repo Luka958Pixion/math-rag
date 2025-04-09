@@ -1,4 +1,9 @@
+import json
+
 from pathlib import Path
+from typing import Any, AsyncGenerator
+
+import aiofiles
 
 
 class FileReaderUtil:
@@ -15,3 +20,12 @@ class FileReaderUtil:
 
             except UnicodeDecodeError:
                 continue
+
+    @staticmethod
+    async def read_jsonl(source: Path) -> AsyncGenerator[dict[str, Any], None]:
+        async with aiofiles.open(source, mode='r', encoding='utf-8') as source_file:
+            async for line in source_file:
+                stripped_line = line.strip()
+
+                if stripped_line:
+                    yield json.loads(stripped_line)
