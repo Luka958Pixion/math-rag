@@ -8,7 +8,7 @@ from time import sleep
 from types import FrameType
 
 from decouple import config
-from httpx import Client, RequestError
+from httpx import Client
 
 
 PBS_O_WORKDIR = config('PBS_O_WORKDIR', cast=Path)
