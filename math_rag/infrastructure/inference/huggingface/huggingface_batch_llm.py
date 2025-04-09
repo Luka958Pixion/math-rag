@@ -33,6 +33,7 @@ from math_rag.infrastructure.utils import (
     FileStreamWriterUtil,
     FileWriterUtil,
 )
+from math_rag.shared.utils import DataclassUtil
 
 
 logger = getLogger(__name__)
@@ -204,7 +205,7 @@ class HuggingFaceBatchLLM(PartialBatchLLM):
         async for data in output_stream:
             request_id = UUID(data['request_id'])
             request = requests_dict[request_id]
-            response = data['response']
+            response: dict | None = data['response']
 
             if response is None:
                 error = LLMErrorMapping.to_source(data['error'])
@@ -215,7 +216,8 @@ class HuggingFaceBatchLLM(PartialBatchLLM):
                 failed_requests.append(failed_request)
 
             else:
-                completion = ChatCompletionOutput(**response)
+                response.pop('object')
+                completion = DataclassUtil.from_dict(ChatCompletionOutput, response)
                 response_list = LLMResponseListMapping[LLMResponseType].to_source(
                     completion,
                     request_id=request_id,
