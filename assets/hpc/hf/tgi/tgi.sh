@@ -47,6 +47,5 @@ while true; do
     fi
 done
 
-# uses 'exec' in %runscript so it doesn't block this script
-apptainer run --env-file .env.hpc.hf.tgi tgi_client.sif
+env -u MODEL_HUB_ID apptainer run --env-file .env.hpc.hf.tgi tgi_client.sif
 apptainer instance stop tgi_server_instance

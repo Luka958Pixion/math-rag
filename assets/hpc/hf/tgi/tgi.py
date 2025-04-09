@@ -15,7 +15,7 @@ from huggingface_hub.errors import TextGenerationError
 PBS_O_WORKDIR = config('PBS_O_WORKDIR', cast=Path)
 TGI_BASE_URL = config('TGI_BASE_URL', default=None)
 TGI_API_KEY = config('TGI_API_KEY', default=None)
-MODEL_HUB_ID = config('MODEL_HUB_ID')
+MODEL_HUB_ID = config('MODEL_HUB_ID', default=None)
 MAX_RETRIES = config('MAX_RETRIES', cast=int, default=3)
 
 MAX_CONCURRENT_REQUESTS = 128  # max for TGI

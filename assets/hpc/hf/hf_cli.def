@@ -1,5 +1,5 @@
 Bootstrap: docker
-From: python:3.11
+From: python:3.12
 
 %environment
     export PYTHONUNBUFFERED=1
