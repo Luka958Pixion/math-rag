@@ -3522,6 +3522,17 @@ files = [
 ]
 
 [[package]]
+name = "python-decouple-typed"
+version = "3.11.0"
+description = "Typed strict separation of settings from code."
+optional = false
+python-versions = ">=3.8.0"
+groups = ["main"]
+files = [
+    {file = "python_decouple_typed-3.11.0-py3-none-any.whl", hash = "sha256:967665073aec7a861844e0d9d21768324d3d819311574702cf5be7403a18da58"},
+]
+
+[[package]]
 name = "python-json-logger"
 version = "3.2.1"
 description = "JSON Log Formatter for the Python Logging Package"
@@ -4706,4 +4717,4 @@ propcache = ">=0.2.0"
 [metadata]
 lock-version = "2.1"
 python-versions = ">=3.12,<4.0"
-content-hash = "018cded13a032d8656c45a0ec714b3e24c43405b0b2282219cd417ff1224e2e8"
+content-hash = "2c8faa901050c2321ad65e7ff29c4b30ac37438a363daf13051c91a3f98b2efc"
