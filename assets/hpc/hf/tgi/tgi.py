@@ -22,50 +22,56 @@ basicConfig(level=INFO, format='%(asctime)s - %(levelname)s - %(message)s')
 logger = getLogger(__name__)
 
 
-def download_model():
-    env = environ.copy()
-    env['http_proxy'] = HTTP_PROXY
-    env['https_proxy'] = HTTPS_PROXY
+class HuggingFaceCLI:
+    @staticmethod
+    def download_model():
+        env = environ.copy()
+        env['http_proxy'] = HTTP_PROXY
+        env['https_proxy'] = HTTPS_PROXY
 
-    bind = f'{WORKDIR}/data:/data'
-    cmd = f'apptainer run --nv --bind {bind} hf_cli.sif'
-    subprocess.run(cmd, check=True, capture_output=False, shell=True, env=env)
-
-
-def start_tgi_server_instance(data_path: Path):
-    bind = f'{data_path}:/model'
-    cmd = f'apptainer instance start --nv --bind {bind} tgi_server.sif tgi_server_instance'
-    subprocess.run(cmd, check=True, capture_output=False, shell=True)
+        bind = f'{WORKDIR}/data:/data'
+        cmd = f'apptainer run --nv --bind {bind} hf_cli.sif'
+        subprocess.run(cmd, check=True, capture_output=False, shell=True, env=env)
 
 
-def wait_tgi_server_instance(client: Client):
-    logger.info('Waiting for the TGI server to become healthy...')
+class TGIServerInstance:
+    @staticmethod
+    def start(data_path: Path, client: Client):
+        logger.info('Starting TGI server...')
 
-    while True:
-        response = client.get('http://0.0.0.0:8000/health', timeout=2)
+        bind = f'{data_path}:/model'
+        cmd = f'apptainer instance start --nv --bind {bind} tgi_server.sif tgi_server_instance'
+        subprocess.run(cmd, check=True, capture_output=False, shell=True)
 
-        if response.status_code == 200:
-            logger.info('TGI server is healthy.')
-            break
+        logger.info('Waiting for TGI server to become healthy...')
 
-        logger.info(
-            f'Health check returned status {response.status_code}. Retrying in 5s...'
-        )
-        sleep(5)
+        while True:
+            response = client.get(TGI_BASE_URL + '/health', timeout=3)
+
+            if response.status_code == 200:
+                logger.info('TGI server is healthy.')
+                break
+
+            logger.info(
+                f'Health check returned status {response.status_code}. Retrying in 5s...'
+            )
+            sleep(5)
+
+    @staticmethod
+    def stop():
+        cmd = f'apptainer instance stop tgi_server_instance'
+        subprocess.run(cmd, check=True, capture_output=False, shell=True)
 
 
-def stop_tgi_server_instance():
-    cmd = f'apptainer instance stop tgi_server_instance'
-    subprocess.run(cmd, check=True, capture_output=False, shell=True)
+class TGIClient:
+    @staticmethod
+    def run():
+        env = environ.copy()
+        env['TGI_BASE_URL'] = TGI_BASE_URL
+        env.pop('MODEL_HUB_ID')
 
-
-def start_tgi_client():
-    env = environ.copy()
-    env['TGI_BASE_URL'] = TGI_BASE_URL
-    env.pop('MODEL_HUB_ID')
-
-    cmd = 'apptainer run --env-file .env.hpc.hf.tgi tgi_client.sif'
-    subprocess.run(cmd, check=True, capture_output=False, shell=True, env=env)
+        cmd = 'apptainer run --env-file .env.hpc.hf.tgi tgi_client.sif'
+        subprocess.run(cmd, check=True, capture_output=False, shell=True, env=env)
 
 
 def handle_sigusr1(signum: int, frame: FrameType | None):
@@ -73,8 +79,8 @@ def handle_sigusr1(signum: int, frame: FrameType | None):
     logger.info('signum: ', signum)
     logger.info('frame: ', frame)
 
-    start_tgi_client()
-    stop_tgi_server_instance()
+    TGIClient.run()
+    TGIServerInstance.stop()
 
     exit(0)
 
@@ -86,16 +92,13 @@ def main():
     data_path = WORKDIR / 'data' / MODEL_HUB_ID
     data_path.mkdir(parents=True, exist_ok=True)
 
-    download_model()
-    start_tgi_server_instance(data_path)
+    HuggingFaceCLI.download_model()
 
     client = Client()
-    wait_tgi_server_instance(client)
+    TGIServerInstance.start(data_path, client)
 
     logger.info(f'Waiting for SIGUSR1 (pid {getpid()}) to start TGI client...')
     signal.pause()
-
-    stop_tgi_server_instance()
 
 
 if __name__ == '__main__':

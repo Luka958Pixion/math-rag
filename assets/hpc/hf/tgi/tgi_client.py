@@ -12,18 +12,14 @@ from huggingface_hub import AsyncInferenceClient
 from huggingface_hub.errors import TextGenerationError
 
 
-DEPLOYMENT = config('DEPLOYMENT', default='develop')
-
-# develop
+# NOTE: running locally requires TGI_BASE_URL
+# NOTE: running remotely requires TGI_API_KEY and MODEL_HUB_ID
+TGI_BASE_URL = config('TGI_BASE_URL', default=None)
 TGI_API_KEY = config('TGI_API_KEY', default=None)
 MODEL_HUB_ID = config('MODEL_HUB_ID', default=None)
+WORKDIR = config('PBS_O_WORKDIR', cast=Path)
 
-# production
-WORKDIR = config('PBS_O_WORKDIR', cast=Path, default=Path.cwd())
-TGI_BASE_URL = config('TGI_BASE_URL', default=None)
-
-MAX_RETRIES = config('MAX_RETRIES', cast=int, default=3)
-
+MAX_RETRIES = 3
 MAX_CONCURRENT_REQUESTS = 128  # max for TGI
 
 
