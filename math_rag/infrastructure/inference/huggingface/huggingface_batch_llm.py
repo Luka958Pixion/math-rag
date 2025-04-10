@@ -231,6 +231,7 @@ class HuggingFaceBatchLLM(PartialBatchLLM):
         )
 
         await self.hpc_client.remove_files([input_remote_path, output_remote_path])
-        # TODO remove local files as well
+        input_local_path.unlink()
+        output_local_path.unlink()
 
         return batch_result
