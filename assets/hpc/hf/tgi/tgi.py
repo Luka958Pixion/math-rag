@@ -1,221 +1,101 @@
-import json
+import signal
+import subprocess
 
-from asyncio import Semaphore, TaskGroup, run, sleep
 from logging import INFO, basicConfig, getLogger
+from os import chdir, environ, getpid
 from pathlib import Path
-from queue import Full, Queue
-from threading import Thread
+from time import sleep
+from types import FrameType
 
-from backoff import expo, full_jitter, on_exception
 from decouple import config
-from huggingface_hub import AsyncInferenceClient
-from huggingface_hub.errors import TextGenerationError
+from httpx import Client
 
 
-DEPLOYMENT = config('DEPLOYMENT', default='develop')
+WORKDIR = config('PBS_O_WORKDIR', cast=Path, default=Path.cwd())
+MODEL_HUB_ID = config('MODEL_HUB_ID')
 
-# develop
-TGI_API_KEY = config('TGI_API_KEY', default=None)
-MODEL_HUB_ID = config('MODEL_HUB_ID', default=None)
+HTTP_PROXY = 'http://10.150.1.1:3128'
+HTTPS_PROXY = 'http://10.150.1.1:3128'
+TGI_BASE_URL = 'http://0.0.0.0:8000'
 
-# production
-PBS_O_WORKDIR = config('PBS_O_WORKDIR', cast=Path)
-TGI_BASE_URL = config('TGI_BASE_URL', default=None)
-
-MAX_RETRIES = config('MAX_RETRIES', cast=int, default=3)
-
-MAX_CONCURRENT_REQUESTS = 128  # max for TGI
-
-
-basicConfig(
-    level=INFO, format='%(asctime)s [%(threadName)s] %(levelname)s: %(message)s'
-)
+basicConfig(level=INFO, format='%(asctime)s - %(levelname)s - %(message)s')
 logger = getLogger(__name__)
 
 
-def on_backoff_handler(details: dict):
-    line = details['args'][1] if len(details['args']) > 1 else str()
-    retries = details['tries']
-    exception = details['exception']
-    logger.error(
-        f'Error processing line {line} '
-        f'(attempt {retries}/{MAX_RETRIES}): '
-        f'{exception}'
-    )
+def download_model():
+    env = environ.copy()
+    env['http_proxy'] = HTTP_PROXY
+    env['https_proxy'] = HTTPS_PROXY
+
+    bind = f'{WORKDIR}/data:/data'
+    cmd = f'apptainer run --nv --bind {bind} hf_cli.sif'
+    subprocess.run(cmd, check=True, capture_output=False, shell=True, env=env)
 
 
-@on_exception(
-    expo,
-    TextGenerationError,
-    max_tries=MAX_RETRIES,
-    jitter=full_jitter,
-    on_backoff=on_backoff_handler,
-)
-async def safe_chat_completion(client: AsyncInferenceClient, request: dict) -> dict:
-    output = await client.chat_completion(**request['request'])
-    response = {'request_id': request['request_id'], 'response': output, 'error': None}
-
-    return response
+def start_tgi_server_instance(data_path: Path):
+    bind = f'{data_path}:/model'
+    cmd = f'apptainer instance start --nv --bind {bind} tgi_server.sif tgi_server_instance'
+    subprocess.run(cmd, check=True, capture_output=False, shell=True)
 
 
-async def process_input_line(
-    semaphore: Semaphore,
-    input_line: str,
-    client: AsyncInferenceClient,
-    output_queue: Queue[str | None],
-):
-    async with semaphore:
-        request = json.loads(input_line)
+def wait_tgi_server_instance(client: Client):
+    logger.info('Waiting for the TGI server to become healthy...')
 
-        try:
-            response = await safe_chat_completion(client, request)
+    while True:
+        response = client.get('http://0.0.0.0:8000/health', timeout=2)
 
-        except Exception as e:
-            logger.error(
-                f'Failed processing line after {MAX_RETRIES} retries: '
-                f'{input_line} - Error: {e}'
-            )
-            response = {
-                'request_id': request['request_id'],
-                'response': None,
-                'error': e,
-            }
+        if response.status_code == 200:
+            logger.info('TGI server is healthy.')
+            break
 
-        finally:
-            output_line = json.dumps(response)
-
-        while True:
-            try:
-                output_queue.put_nowait(output_line)
-                break
-
-            except Full:
-                await sleep(0.1)
+        logger.info(
+            f'Health check returned status {response.status_code}. Retrying in 5s...'
+        )
+        sleep(5)
 
 
-async def process_input_lines(
-    input_lines: list[str],
-    client: AsyncInferenceClient,
-    output_queue: Queue[str | None],
-):
-    semaphore = Semaphore(MAX_CONCURRENT_REQUESTS)
-
-    try:
-        async with TaskGroup() as task_group:
-            for input_line in input_lines:
-                task_group.create_task(
-                    process_input_line(semaphore, input_line, client, output_queue)
-                )
-
-    except Exception as e:
-        logger.exception(f'Error in TaskGroup: {e}')
+def stop_tgi_server_instance():
+    cmd = f'apptainer instance stop tgi_server_instance'
+    subprocess.run(cmd, check=True, capture_output=False, shell=True)
 
 
-def read_input_file(input_file_path: Path, input_queue: Queue[str | None]):
-    logger.info('Reader thread started')
+def start_tgi_client():
+    env = environ.copy()
+    env['TGI_BASE_URL'] = TGI_BASE_URL
+    env.pop('MODEL_HUB_ID')
 
-    try:
-        with open(input_file_path, 'r') as input_file:
-            for line in input_file:
-                line = line.strip()
-
-                if line:
-                    input_queue.put(line)
-
-        logger.info('Finished reading input file')
-
-    except Exception as e:
-        logger.exception(f'Error reading input file: {e}')
-
-    finally:
-        input_queue.put(None)
-        logger.info('Reader thread exiting')
+    cmd = 'apptainer run --env-file .env.hpc.hf.tgi tgi_client.sif'
+    subprocess.run(cmd, check=True, capture_output=False, shell=True, env=env)
 
 
-def process_lines(client, input_queue: Queue[str], output_queue: Queue[str | None]):
-    logger.info('Processor thread started')
+def handle_sigusr1(signum: int, frame: FrameType | None):
+    logger.info('Received SIGUSR1. Running TGI client...')
+    logger.info('signum: ', signum)
+    logger.info('frame: ', frame)
 
-    try:
-        input_lines: list[str] = []
+    start_tgi_client()
+    stop_tgi_server_instance()
 
-        while True:
-            input_line = input_queue.get()
-
-            if input_line is None:
-                break
-
-            input_lines.append(input_line)
-
-        run(process_input_lines(input_lines, client, output_queue))
-
-    except Exception as e:
-        logger.exception(f'Error processing lines in asyncio loop: {e}')
-
-    finally:
-        output_queue.put(None)
-        logger.info('Processor thread exiting')
-
-
-def write_output_file(output_file_path: Path, output_queue: Queue[str | None]):
-    logger.info('Writer thread started')
-
-    try:
-        with open(output_file_path, 'w') as output_file:
-            while True:
-                line = output_queue.get()
-
-                if line is None:
-                    break
-
-                output_file.write(line + '\n')
-
-        logger.info('Finished writing output file')
-
-    except Exception as e:
-        logger.exception(f'Error writing output file: {e}')
-
-    finally:
-        logger.info('Writer thread exiting')
+    exit(0)
 
 
 def main():
-    input_file_path = PBS_O_WORKDIR / 'input.jsonl'
-    output_file_path = PBS_O_WORKDIR / 'output.jsonl'
+    chdir(WORKDIR)
+    signal.signal(signal.SIGUSR1, handle_sigusr1)
 
-    client = AsyncInferenceClient(
-        base_url=TGI_BASE_URL,
-        api_key=TGI_API_KEY,
-        model=MODEL_HUB_ID,
-        provider='hf-inference',
-        timeout=None,
-    )
+    data_path = WORKDIR / 'data' / MODEL_HUB_ID
+    data_path.mkdir(parents=True, exist_ok=True)
 
-    input_queue: Queue[str | None] = Queue(maxsize=MAX_CONCURRENT_REQUESTS)
-    output_queue: Queue[str | None] = Queue(maxsize=MAX_CONCURRENT_REQUESTS)
+    download_model()
+    start_tgi_server_instance(data_path)
 
-    reader_thread = Thread(
-        target=read_input_file, args=(input_file_path, input_queue), name='ReaderThread'
-    )
-    processor_thread = Thread(
-        target=process_lines,
-        args=(client, input_queue, output_queue),
-        name='ProcessorThread',
-    )
-    writer_thread = Thread(
-        target=write_output_file,
-        args=(output_file_path, output_queue),
-        name='WriterThread',
-    )
+    client = Client()
+    wait_tgi_server_instance(client)
 
-    reader_thread.start()
-    processor_thread.start()
-    writer_thread.start()
+    logger.info(f'Waiting for SIGUSR1 (pid {getpid()}) to start TGI client...')
+    signal.pause()
 
-    reader_thread.join()
-    processor_thread.join()
-    writer_thread.join()
-
-    logger.info('All threads have completed')
+    stop_tgi_server_instance()
 
 
 if __name__ == '__main__':

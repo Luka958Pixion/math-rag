@@ -12,7 +12,7 @@ From: python:3.12
     pip install -r requirements.txt
 
 %runscript
-    python tgi.py
+    python tgi_client.py
 
 %labels
     Author luka.panic@pixion.co
