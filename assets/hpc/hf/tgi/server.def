@@ -22,4 +22,4 @@ From: ghcr.io/huggingface/text-generation-inference:latest
         - MODEL_HUB_ID
 
     Usage:
-        apptainer run --nv --bind $PWD/data/$MODEL_HUB_ID:/model server.sif
+        apptainer run --nv --bind $PWD/mount/$MODEL_HUB_ID:/model server.sif

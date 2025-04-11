@@ -6,6 +6,7 @@ import subprocess
 from enum import Enum
 from logging import INFO, basicConfig, getLogger
 from pathlib import Path
+from threading import Event
 from time import sleep
 from types import FrameType
 
@@ -14,13 +15,13 @@ from httpx import Client
 
 
 WORKDIR = config('PBS_O_WORKDIR', cast=Path, default=Path.cwd())
-MODEL_HUB_ID = config('MODEL_HUB_ID')
 
 HTTP_PROXY = 'http://10.150.1.1:3128'
 HTTPS_PROXY = 'http://10.150.1.1:3128'
-TGI_BASE_URL = 'http://0.0.0.0:8000'
 
-TGI_STATUS_PATH = Path('tgi_status.json')
+TGI_BASE_URL = 'http://0.0.0.0:8000'
+TGI_METADATA_PATH = Path('metadata.json')
+TGI_STATUS_PATH = Path('status.json')
 TGI_STATUS_TMP_PATH = TGI_STATUS_PATH.with_suffix('.tmp')
 
 basicConfig(level=INFO, format='%(asctime)s - %(levelname)s - %(message)s')
@@ -41,6 +42,7 @@ class TGIStatusTracker:
     def set_status(self, task_id: str, status: TGIStatus):
         self._statuses[task_id] = status
 
+        # atomic writing
         with TGI_STATUS_TMP_PATH.open('w') as file:
             json.dump({'status': status.value}, file)
 
@@ -56,22 +58,22 @@ class TGIStatusTracker:
 
 class HuggingFaceCLI:
     @staticmethod
-    def download_model():
+    def download_model(model_hub_id: str):
         env = os.environ.copy()
         env['http_proxy'] = HTTP_PROXY
         env['https_proxy'] = HTTPS_PROXY
 
         bind = f'{WORKDIR}/data:/data'
-        cmd = f'apptainer run --nv --bind {bind} hf_cli.sif'
+        cmd = f'apptainer run --nv --bind {bind} --env MODEL_HUB_ID={model_hub_id} hf_cli.sif'
         subprocess.run(cmd, check=True, capture_output=False, shell=True, env=env)
 
 
 class TGIServerInstance:
     @staticmethod
-    def start(data_path: Path, client: Client):
+    def start(mount_path: Path, client: Client):
         logger.info('Starting TGI server...')
 
-        bind = f'{data_path}:/model'
+        bind = f'{mount_path}:/model'
         cmd = f'apptainer instance start --nv --bind {bind} server.sif tgi_server_instance'
         subprocess.run(cmd, check=True, capture_output=False, shell=True)
 
@@ -100,34 +102,47 @@ class TGIClient:
     def run():
         env = os.environ.copy()
         env['TGI_BASE_URL'] = TGI_BASE_URL
-        env.pop('MODEL_HUB_ID')
 
         cmd = 'apptainer run --env-file .env.hpc.hf.tgi client.sif'
         subprocess.run(cmd, check=True, capture_output=False, shell=True, env=env)
 
 
-def handle_sigusr1(signum: int, frame: FrameType | None):
-    logger.info('Received SIGUSR1. Running TGI client...')
-    logger.info('signum: ', signum)
-    logger.info('frame: ', frame)
+def handle_sigusr1(event: Event):
+    def _handle_sigusr1(signum: int, frame: FrameType | None):
+        logger.info('Received SIGUSR1. Running TGI client...')
+        logger.info('signum: ', signum)
+        logger.info('frame: ', frame)
 
-    TGIClient.run()
-    TGIServerInstance.stop()
+        TGIClient.run()
+        TGIServerInstance.stop()
 
-    exit(0)
+        event.set()
+
+    return _handle_sigusr1
 
 
 def main():
     os.chdir(WORKDIR)
-    signal.signal(signal.SIGUSR1, handle_sigusr1)
 
-    data_path = WORKDIR / 'data' / MODEL_HUB_ID
-    data_path.mkdir(parents=True, exist_ok=True)
+    sigusr1_event = Event()
+    signal.signal(signal.SIGUSR1, handle_sigusr1(sigusr1_event))
 
-    HuggingFaceCLI.download_model()
+    # TODO wait in a loop until signal is sent
+    while not sigusr1_event.is_set():
+        signal.pause()
+
+    # TODO read model_hub_id
+    with TGI_METADATA_PATH.open('r') as file:
+        data = json.load(file)
+        model_hub_id = str(data['model_hub_id'])
+
+    mount_path = WORKDIR / 'mount' / model_hub_id
+    mount_path.mkdir(parents=True, exist_ok=True)
+
+    HuggingFaceCLI.download_model(model_hub_id)
 
     client = Client()
-    TGIServerInstance.start(data_path, client)
+    TGIServerInstance.start(mount_path, client)
 
     logger.info(f'Waiting for SIGUSR1 (pid {os.getpid()}) to start TGI client...')
     signal.pause()

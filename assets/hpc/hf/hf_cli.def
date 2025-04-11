@@ -7,12 +7,12 @@ From: python:3.12
     export HF_HUB_DOWNLOAD_TIMEOUT=300
 
 %post
-    mkdir -p /data
+    mkdir -p /mount
     pip install --upgrade pip
     pip install huggingface_hub hf_transfer
 
 %runscript
-    MODEL_DIR="/data/$MODEL_HUB_ID"
+    MODEL_DIR="/mount/$MODEL_HUB_ID"
 
     if [ -d "$MODEL_DIR" ] && [ "$(ls -A "$MODEL_DIR")" ]; then
         echo "Download skipped"
@@ -38,4 +38,4 @@ From: python:3.12
         - MODEL_HUB_ID
 
     Usage:
-        apptainer run --nv --bind $PWD/data:/data hf_cli.sif
+        apptainer run --nv --bind $PWD/mount:/mount --env MODEL_HUB_ID=<MODEL_HUB_ID> hf_cli.sif
