@@ -80,7 +80,7 @@ class ApptainerClient(BaseApptainerClient):
                 case ApptainerBuildStatus.PENDING | ApptainerBuildStatus.RUNNING:
                     await sleep(poll_interval)
 
-                case ApptainerBuildStatus.DONE:
+                case ApptainerBuildStatus.FINISHED:
                     break
 
                 case ApptainerBuildStatus.FAILED:
@@ -146,7 +146,7 @@ class ApptainerClient(BaseApptainerClient):
                 ):
                     await sleep(poll_interval)
 
-                case ApptainerOverlayCreateStatus.DONE:
+                case ApptainerOverlayCreateStatus.FINISHED:
                     break
 
                 case ApptainerOverlayCreateStatus.FAILED:

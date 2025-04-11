@@ -23,7 +23,7 @@ class PBSProClient:
     async def queue_submit(
         self,
         project_root_path: Path,
-        pbs_path: Path,
+        job_name: str,
         env_vars: dict[str, str] | None,
         *,
         num_chunks: int,
@@ -41,8 +41,16 @@ class PBSProClient:
             f'-l '
             f'select={num_chunks}:ncpus={num_cpus}:mem={mem}B:ngpus={num_gpus},'
             f'walltime={walltime} '
-            f'{pbs_path}'
+            f'-N {job_name} '
+            f'{job_name}.sh'
         )
+
+    async def queue_select(self, job_name: str) -> str | None:
+        stdout = await self.ssh_client.run(
+            f'qselect -u {self.ssh_client.user} -N {job_name}'
+        )
+
+        return stdout or None
 
     async def queue_status(self, job_id: str) -> PBSProJob:
         awk_cmd = AwkCmdBuilderUtil.build(

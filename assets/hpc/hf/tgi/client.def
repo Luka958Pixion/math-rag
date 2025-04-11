@@ -12,7 +12,7 @@ From: python:3.12
     pip install -r requirements.txt
 
 %runscript
-    python tgi_client.py
+    python client.py
 
 %labels
     Author luka.panic@pixion.co
@@ -23,10 +23,10 @@ From: python:3.12
         A client for Text Generation Inference (TGI) from Hugging Face.
 
     Build:
-        apptainer build tgi_client.sif tgi_client.def
+        apptainer build client.sif client.def
 
     Environment:
         - .env.hpc.hf.tgi
 
     Usage:
-        apptainer run --env-file .env.hpc.hf.tgi tgi_client.sif
+        apptainer run --env-file .env.hpc.hf.tgi client.sif

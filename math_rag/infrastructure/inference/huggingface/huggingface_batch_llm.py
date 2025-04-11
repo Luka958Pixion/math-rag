@@ -67,6 +67,7 @@ class HuggingFaceBatchLLM(PartialBatchLLM):
             tgi_path / 'tgi_server.def',
             tgi_path / 'tgi_client.def',
             hf_path / 'hf_cli.def',
+            tgi_path / 'tgi_client.py',
             tgi_path / 'tgi.py',
             tgi_path / 'tgi.sh',
             self.local_project_root / '.env.hpc.hf.tgi',
@@ -128,38 +129,52 @@ class HuggingFaceBatchLLM(PartialBatchLLM):
         jsonl_str = '\n'.join(lines)
         jsonl_bytes = jsonl_str.encode('utf-8')
 
-        input_local_path = self.local_project_root / '.tmp' / 'input.jsonl'
+        input_local_path = (
+            self.local_project_root / '.tmp' / f'input_{batch_request.id}.jsonl'
+        )
         await FileWriterUtil.write(jsonl_bytes, input_local_path)
 
         input_remote_path = self.remote_project_root / input_local_path.name
         await self.sftp_client.upload(input_local_path, input_remote_path)
 
-        pbs_path = Path('tgi.sh')
-        env_vars = {'MODEL_HUB_ID': batch_request.requests[0].params.model}
-        batch_id = await self.pbs_pro_client.queue_submit(
-            self.remote_project_root,
-            pbs_path,
-            env_vars,
-            num_chunks=1,
-            num_cpus=8,
-            num_gpus=1,
-            mem=32 * 1024**3,
-            walltime=timedelta(minutes=60),
+        # TODO check if job already exists
+        job_name = 'tgi'
+        job_id = self.pbs_pro_client.queue_select(job_name)
+
+        if job_id is None:
+            env_vars = {'MODEL_HUB_ID': batch_request.requests[0].params.model}
+            job_id = await self.pbs_pro_client.queue_submit(
+                self.remote_project_root,
+                job_name,
+                env_vars,
+                num_chunks=1,
+                num_cpus=8,
+                num_gpus=1,
+                mem=32 * 1024**3,
+                walltime=timedelta(minutes=60),  # TODO how to determine these params
+            )
+            # TODO what if job expires soon? -> check remaining time
+
+        job = await self.pbs_pro_client.queue_status(job_id)
+
+        # TODO how to tell PBS script to run processing
+
+        logger.info(
+            f'Job {job_id} obtained for batch {batch_request.id} with state {job.state}'
         )
-        status = await self.pbs_pro_client.queue_status(batch_id)
 
-        logger.info(f'Batch {batch_id} created with state {status.state}')
-
-        return batch_id
+        return job_id
 
     async def batch_generate_result(
         self, batch_id: str, response_type: type[LLMResponseType]
     ) -> LLMBatchResult[LLMResponseType] | None:
-        status = await self.pbs_pro_client.queue_status(batch_id)
+        # TODO send singal instead
+        # TODO automatically shut down job after 15 minutes of inactivity
+        job = await self.pbs_pro_client.queue_status(batch_id)
 
-        logger.info(f'Batch {batch_id} state {status.state}')
+        logger.info(f'Batch {batch_id} state {job.state}')
 
-        match status.state:
+        match job.state:
             case (
                 PBSProJobState.BEGUN
                 | PBSProJobState.QUEUED

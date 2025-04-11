@@ -16,10 +16,10 @@ From: ghcr.io/huggingface/text-generation-inference:latest
         A server for Text Generation Inference (TGI) from Hugging Face.
 
     Build:
-        apptainer build tgi_server.sif tgi_server.def
+        apptainer build server.sif server.def
 
     Environment:
         - MODEL_HUB_ID
 
     Usage:
-        apptainer run --nv --bind $PWD/data/$MODEL_HUB_ID:/model tgi_server.sif
+        apptainer run --nv --bind $PWD/data/$MODEL_HUB_ID:/model server.sif

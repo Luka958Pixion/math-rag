@@ -4,5 +4,5 @@ from enum import Enum
 class ApptainerOverlayCreateStatus(str, Enum):
     PENDING = 'pending'
     RUNNING = 'running'
-    DONE = 'done'
+    FINISHED = 'finished'
     FAILED = 'failed'

@@ -1,8 +1,10 @@
+import json
+import os
 import signal
 import subprocess
 
+from enum import Enum
 from logging import INFO, basicConfig, getLogger
-from os import chdir, environ, getpid
 from pathlib import Path
 from time import sleep
 from types import FrameType
@@ -18,14 +20,44 @@ HTTP_PROXY = 'http://10.150.1.1:3128'
 HTTPS_PROXY = 'http://10.150.1.1:3128'
 TGI_BASE_URL = 'http://0.0.0.0:8000'
 
+TGI_STATUS_PATH = Path('tgi_status.json')
+TGI_STATUS_TMP_PATH = TGI_STATUS_PATH.with_suffix('.tmp')
+
 basicConfig(level=INFO, format='%(asctime)s - %(levelname)s - %(message)s')
 logger = getLogger(__name__)
+
+
+class TGIStatus(str, Enum):
+    PENDING = 'pending'
+    RUNNING = 'running'
+    FINISHED = 'finished'
+    FAILED = 'failed'
+
+
+class TGIStatusTracker:
+    def __init__(self):
+        self._statuses: dict[str, TGIStatus] = {}
+
+    def set_status(self, task_id: str, status: TGIStatus):
+        self._statuses[task_id] = status
+
+        with TGI_STATUS_TMP_PATH.open('w') as file:
+            json.dump({'status': status.value}, file)
+
+        os.replace(TGI_STATUS_TMP_PATH, TGI_STATUS_PATH)
+
+    def get_status(self, task_id: str) -> TGIStatus | None:
+        return self._statuses.get(task_id)
+
+    def remove_status(self, task_id: str):
+        if task_id in self._statuses:
+            del self._statuses[task_id]
 
 
 class HuggingFaceCLI:
     @staticmethod
     def download_model():
-        env = environ.copy()
+        env = os.environ.copy()
         env['http_proxy'] = HTTP_PROXY
         env['https_proxy'] = HTTPS_PROXY
 
@@ -40,7 +72,7 @@ class TGIServerInstance:
         logger.info('Starting TGI server...')
 
         bind = f'{data_path}:/model'
-        cmd = f'apptainer instance start --nv --bind {bind} tgi_server.sif tgi_server_instance'
+        cmd = f'apptainer instance start --nv --bind {bind} server.sif tgi_server_instance'
         subprocess.run(cmd, check=True, capture_output=False, shell=True)
 
         logger.info('Waiting for TGI server to become healthy...')
@@ -66,11 +98,11 @@ class TGIServerInstance:
 class TGIClient:
     @staticmethod
     def run():
-        env = environ.copy()
+        env = os.environ.copy()
         env['TGI_BASE_URL'] = TGI_BASE_URL
         env.pop('MODEL_HUB_ID')
 
-        cmd = 'apptainer run --env-file .env.hpc.hf.tgi tgi_client.sif'
+        cmd = 'apptainer run --env-file .env.hpc.hf.tgi client.sif'
         subprocess.run(cmd, check=True, capture_output=False, shell=True, env=env)
 
 
@@ -86,7 +118,7 @@ def handle_sigusr1(signum: int, frame: FrameType | None):
 
 
 def main():
-    chdir(WORKDIR)
+    os.chdir(WORKDIR)
     signal.signal(signal.SIGUSR1, handle_sigusr1)
 
     data_path = WORKDIR / 'data' / MODEL_HUB_ID
@@ -97,7 +129,7 @@ def main():
     client = Client()
     TGIServerInstance.start(data_path, client)
 
-    logger.info(f'Waiting for SIGUSR1 (pid {getpid()}) to start TGI client...')
+    logger.info(f'Waiting for SIGUSR1 (pid {os.getpid()}) to start TGI client...')
     signal.pause()
 
 
