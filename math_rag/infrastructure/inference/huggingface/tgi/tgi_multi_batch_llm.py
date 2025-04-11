@@ -164,9 +164,31 @@ class TGIMultiBatchLLM(PartialBatchLLM):
 
         if job_id:
             # TODO check state
-            state = await self.hpc_client.concatenate(Path('state.json'))
+            status_str = await self.hpc_client.concatenate(Path('status.json'))
 
-            pass
+            from math_rag.infrastructure.enums.inference.huggingface.tgi import (
+                TGIBatchJobStatus,
+            )
+
+            status = TGIBatchJobStatus(status_str)
+
+            while True:
+                match status:
+                    case TGIBatchJobStatus.READY:
+                        pass
+
+                    case TGIBatchJobStatus.PENDING | TGIBatchJobStatus.RUNNING:
+                        # TODO we are not allowed to wait here!
+                        # if jobs that user is pushing dont finish within walltime, they will just get failed requests
+                        # when signal is sent, tgi.py reads batch id and puts it to the queue
+                        pass
+
+                    case TGIBatchJobStatus.FINISHED:
+                        break
+
+                    case TGIBatchJobStatus.FAILED:
+                        # TODO
+                        pass
 
         if job_id is None:
             job_id = await self.pbs_pro_client.queue_submit(

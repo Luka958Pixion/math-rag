@@ -3,14 +3,18 @@ import os
 import signal
 import subprocess
 
+from datetime import timedelta
 from enum import Enum
 from logging import INFO, basicConfig, getLogger
 from pathlib import Path
+from queue import Queue
 from time import sleep
 from types import FrameType
+from uuid import UUID
 
 from decouple import config
 from httpx import Client
+from pydantic import BaseModel
 
 
 WORKDIR = config('PBS_O_WORKDIR', cast=Path, default=Path.cwd())
@@ -23,8 +27,15 @@ TGI_METADATA_PATH = Path('metadata.json')
 TGI_STATUS_PATH = Path('status.json')
 TGI_STATUS_TMP_PATH = TGI_STATUS_PATH.with_suffix('.tmp')
 
+WALLTIME_THRESHOLD = timedelta(minutes=10)
+
 basicConfig(level=INFO, format='%(asctime)s - %(levelname)s - %(message)s')
 logger = getLogger(__name__)
+
+
+class TGIMetadata(BaseModel):
+    batch_id: UUID
+    model_hub_id: str
 
 
 class TGIBatchJobStatus(str, Enum):
@@ -115,12 +126,12 @@ def handle_sigusr1(signum: int, frame: FrameType | None):
 
     with TGI_METADATA_PATH.open('r') as file:
         data = json.load(file)
-        model_hub_id = str(data['model_hub_id'])
+        metadata = TGIMetadata.model_validate_json(data)
 
-    mount_path = WORKDIR / 'mount' / model_hub_id
+    mount_path = WORKDIR / 'mount' / metadata.model_hub_id
     mount_path.mkdir(parents=True, exist_ok=True)
 
-    HuggingFaceCLI.download_model(model_hub_id)
+    HuggingFaceCLI.download_model(metadata.model_hub_id)
 
     TGIServerInstance.start(mount_path)
 
@@ -134,6 +145,18 @@ def handle_sigalrm(signum: int, frame: FrameType | None):
 
     # TODO check remaining time
     # if remaining time < threshold, exit(0)
+    job_id = ...
+
+    cmd = f"qstat -f {job_id} | awk -F'= ' '/Resource_List.walltime|resources_used.walltime/ {{print $2}}'"
+    result = subprocess.run(cmd, check=True, capture_output=True, text=True, shell=True)
+
+    walltimes = result.stdout.strip().splitlines()
+    walltime = timedelta(walltimes[0])
+    walltime_used = timedelta(walltimes[1])
+
+    if walltime - walltime_used < WALLTIME_THRESHOLD:
+        # TODO stop
+        pass
 
 
 def main():
