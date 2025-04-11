@@ -86,3 +86,6 @@ class HPCClient:
 
     async def make_directory(self, dir_path: Path):
         await self.ssh_client.run(f'mkdir -p {dir_path}')
+
+    async def concatenate(self, file_path: Path) -> str:
+        await self.ssh_client.run(f'cat {file_path}')

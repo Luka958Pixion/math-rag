@@ -1,0 +1,2 @@
+class TGIBatchLLM:
+    pass

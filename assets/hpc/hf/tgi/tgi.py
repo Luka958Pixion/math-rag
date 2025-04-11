@@ -27,18 +27,19 @@ basicConfig(level=INFO, format='%(asctime)s - %(levelname)s - %(message)s')
 logger = getLogger(__name__)
 
 
-class TGIStatus(str, Enum):
+class TGIBatchJobStatus(str, Enum):
+    READY = 'ready'
     PENDING = 'pending'
     RUNNING = 'running'
     FINISHED = 'finished'
     FAILED = 'failed'
 
 
-class TGIStatusTracker:
+class TGIBatchJobStatusTracker:
     def __init__(self):
-        self._statuses: dict[str, TGIStatus] = {}
+        self._statuses: dict[str, TGIBatchJobStatus] = {}
 
-    def set_status(self, task_id: str, status: TGIStatus):
+    def set_status(self, task_id: str, status: TGIBatchJobStatus):
         self._statuses[task_id] = status
 
         # atomic writing
@@ -47,7 +48,7 @@ class TGIStatusTracker:
 
         os.replace(TGI_STATUS_TMP_PATH, TGI_STATUS_PATH)
 
-    def get_status(self, task_id: str) -> TGIStatus | None:
+    def get_status(self, task_id: str) -> TGIBatchJobStatus | None:
         return self._statuses.get(task_id)
 
     def remove_status(self, task_id: str):

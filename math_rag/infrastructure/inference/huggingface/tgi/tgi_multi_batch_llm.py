@@ -39,7 +39,7 @@ from math_rag.shared.utils import DataclassUtil
 logger = getLogger(__name__)
 
 
-class HuggingFaceBatchLLM(PartialBatchLLM):
+class TGIMultiBatchLLM(PartialBatchLLM):
     def __init__(
         self,
         remote_project_root: Path,
@@ -115,6 +115,7 @@ class HuggingFaceBatchLLM(PartialBatchLLM):
         self,
         batch_request: LLMBatchRequest[LLMResponseType],
     ) -> str:
+        # map requests
         request_dicts = [
             {
                 'request_id': str(request.id),
@@ -122,6 +123,8 @@ class HuggingFaceBatchLLM(PartialBatchLLM):
             }
             for request in batch_request.requests
         ]
+
+        # create in-memory input.jsonl
         lines = [
             json.dumps(request_dict, separators=(',', ':'))
             for request_dict in request_dicts
@@ -129,24 +132,46 @@ class HuggingFaceBatchLLM(PartialBatchLLM):
         jsonl_str = '\n'.join(lines)
         jsonl_bytes = jsonl_str.encode('utf-8')
 
-        input_local_path = (
-            self.local_project_root / '.tmp' / f'input_{batch_request.id}.jsonl'
-        )
+        # write input.jsonl
+        input_local_path = self.local_project_root / '.tmp' / 'input.jsonl'
         await FileWriterUtil.write(jsonl_bytes, input_local_path)
 
+        # upload input.jsonl
         input_remote_path = self.remote_project_root / input_local_path.name
         await self.sftp_client.upload(input_local_path, input_remote_path)
+
+        # create in-memory metadata.json
+        metadata = {
+            'model_hub_id': batch_request.requests[0].params.model,
+            'batch_request_id': str(batch_request.id),
+        }
+        json_str = json.dumps(metadata)
+        json_bytes = json_str.encode('utf-8')
+
+        # write metadata.json
+        metadata_local_path = self.local_project_root / '.tmp' / 'metadata.json'
+        await FileWriterUtil.write(json_bytes, metadata_local_path)
+
+        # upload metadata.json
+        metadata_remote_path = self.remote_project_root / metadata_local_path.name
+        await self.sftp_client.upload(metadata_local_path, metadata_remote_path)
+
+        # TODO you cant upload if something else is already running!
 
         # TODO check if job already exists
         job_name = 'tgi'
         job_id = self.pbs_pro_client.queue_select(job_name)
 
+        if job_id:
+            # TODO check state
+            state = await self.hpc_client.concatenate(Path('state.json'))
+
+            pass
+
         if job_id is None:
-            env_vars = {'MODEL_HUB_ID': batch_request.requests[0].params.model}
             job_id = await self.pbs_pro_client.queue_submit(
                 self.remote_project_root,
                 job_name,
-                env_vars,
                 num_chunks=1,
                 num_cpus=8,
                 num_gpus=1,
