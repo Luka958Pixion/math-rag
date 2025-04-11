@@ -6,7 +6,6 @@ import subprocess
 from enum import Enum
 from logging import INFO, basicConfig, getLogger
 from pathlib import Path
-from threading import Event
 from time import sleep
 from types import FrameType
 
@@ -70,7 +69,7 @@ class HuggingFaceCLI:
 
 class TGIServerInstance:
     @staticmethod
-    def start(mount_path: Path, client: Client):
+    def start(mount_path: Path):
         logger.info('Starting TGI server...')
 
         bind = f'{mount_path}:/model'
@@ -78,6 +77,7 @@ class TGIServerInstance:
         subprocess.run(cmd, check=True, capture_output=False, shell=True)
 
         logger.info('Waiting for TGI server to become healthy...')
+        client = Client()
 
         while True:
             response = client.get(TGI_BASE_URL + '/health', timeout=3)
@@ -107,31 +107,11 @@ class TGIClient:
         subprocess.run(cmd, check=True, capture_output=False, shell=True, env=env)
 
 
-def handle_sigusr1(event: Event):
-    def _handle_sigusr1(signum: int, frame: FrameType | None):
-        logger.info('Received SIGUSR1. Running TGI client...')
-        logger.info('signum: ', signum)
-        logger.info('frame: ', frame)
+def handle_sigusr1(signum: int, frame: FrameType | None):
+    logger.info('Received SIGUSR1. Running TGI client...')
+    logger.info('signum: ', signum)
+    logger.info('frame: ', frame)
 
-        TGIClient.run()
-        TGIServerInstance.stop()
-
-        event.set()
-
-    return _handle_sigusr1
-
-
-def main():
-    os.chdir(WORKDIR)
-
-    sigusr1_event = Event()
-    signal.signal(signal.SIGUSR1, handle_sigusr1(sigusr1_event))
-
-    # TODO wait in a loop until signal is sent
-    while not sigusr1_event.is_set():
-        signal.pause()
-
-    # TODO read model_hub_id
     with TGI_METADATA_PATH.open('r') as file:
         data = json.load(file)
         model_hub_id = str(data['model_hub_id'])
@@ -141,11 +121,30 @@ def main():
 
     HuggingFaceCLI.download_model(model_hub_id)
 
-    client = Client()
-    TGIServerInstance.start(mount_path, client)
+    TGIServerInstance.start(mount_path)
 
-    logger.info(f'Waiting for SIGUSR1 (pid {os.getpid()}) to start TGI client...')
-    signal.pause()
+    TGIClient.run()
+    TGIServerInstance.stop()
+
+
+def handle_sigalrm(signum: int, frame: FrameType | None):
+    logger.info('signum: ', signum)
+    logger.info('frame: ', frame)
+
+    # TODO check remaining time
+    # if remaining time < threshold, exit(0)
+
+
+def main():
+    os.chdir(WORKDIR)
+
+    signal.signal(signal.SIGUSR1, handle_sigusr1)
+    signal.signal(signal.SIGALRM, handle_sigalrm)
+
+    signal.setitimer(signal.ITIMER_REAL, 1, 5 * 60)  # TODO
+
+    while True:
+        signal.pause()
 
 
 if __name__ == '__main__':
