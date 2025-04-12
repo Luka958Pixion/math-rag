@@ -89,3 +89,6 @@ class HPCClient:
 
     async def concatenate(self, file_path: Path) -> str:
         await self.ssh_client.run(f'cat {file_path}')
+
+    async def move(self, source: Path, target: Path):
+        await self.ssh_client.run(f'mv {source} {target}')

@@ -52,6 +52,9 @@ class PBSProClient:
 
         return stdout or None
 
+    async def queue_signal(self, job_id: str):
+        await self.ssh_client.run(f'qsig -s USR1 {job_id}')
+
     async def queue_status(self, job_id: str) -> PBSProJob:
         awk_cmd = AwkCmdBuilderUtil.build(
             row_number=3,

@@ -1,6 +1,6 @@
 import json
 
-from datetime import timedelta
+from datetime import datetime, timedelta
 from logging import getLogger
 from pathlib import Path
 from uuid import UUID
@@ -22,6 +22,7 @@ from math_rag.infrastructure.clients import (
     SFTPClient,
 )
 from math_rag.infrastructure.enums.hpc.pbs import PBSProJobState
+from math_rag.infrastructure.enums.inference.huggingface import TGIBatchJobStatus
 from math_rag.infrastructure.inference.partials import PartialBatchLLM
 from math_rag.infrastructure.mappings.inference.huggingface import (
     LLMErrorMapping,
@@ -39,7 +40,7 @@ from math_rag.shared.utils import DataclassUtil
 logger = getLogger(__name__)
 
 
-class TGIMultiBatchLLM(PartialBatchLLM):
+class TGIBatchLLM(PartialBatchLLM):
     def __init__(
         self,
         remote_project_root: Path,
@@ -124,7 +125,7 @@ class TGIMultiBatchLLM(PartialBatchLLM):
             for request in batch_request.requests
         ]
 
-        # create in-memory input.jsonl
+        # create in-memory input file
         lines = [
             json.dumps(request_dict, separators=(',', ':'))
             for request_dict in request_dicts
@@ -132,65 +133,48 @@ class TGIMultiBatchLLM(PartialBatchLLM):
         jsonl_str = '\n'.join(lines)
         jsonl_bytes = jsonl_str.encode('utf-8')
 
-        # write input.jsonl
-        input_local_path = self.local_project_root / '.tmp' / 'input.jsonl'
+        # write input file
+        input_local_path = (
+            self.local_project_root / '.tmp' / f'input_{batch_request.id}.jsonl'
+        )
         await FileWriterUtil.write(jsonl_bytes, input_local_path)
 
-        # upload input.jsonl
+        # upload input file and avoid race-conditions
         input_remote_path = self.remote_project_root / input_local_path.name
-        await self.sftp_client.upload(input_local_path, input_remote_path)
+        input_remote_part_path = input_remote_path.with_name(
+            input_remote_path.name + '.part'
+        )
+        await self.sftp_client.upload(input_local_path, input_remote_part_path)
+        await self.hpc_client.move(input_remote_part_path, input_remote_path)
 
-        # create in-memory metadata.json
+        # create in-memory metadata file
         metadata = {
-            'model_hub_id': batch_request.requests[0].params.model,
             'batch_request_id': str(batch_request.id),
+            'model_hub_id': batch_request.requests[0].params.model,
+            'timestamp': int(datetime.now().timestamp()),
         }
         json_str = json.dumps(metadata)
         json_bytes = json_str.encode('utf-8')
 
-        # write metadata.json
-        metadata_local_path = self.local_project_root / '.tmp' / 'metadata.json'
+        # write metadata file
+        metadata_local_path = (
+            self.local_project_root / '.tmp' / f'metadata_{batch_request.id}.json'
+        )
         await FileWriterUtil.write(json_bytes, metadata_local_path)
 
-        # upload metadata.json
+        # upload metadata file and avoid race-conditions
         metadata_remote_path = self.remote_project_root / metadata_local_path.name
+        metadata_remote_part_path = metadata_remote_path.with_name(
+            metadata_remote_path.name + '.part'
+        )
         await self.sftp_client.upload(metadata_local_path, metadata_remote_path)
+        await self.hpc_client.move(metadata_remote_part_path, metadata_remote_path)
 
-        # TODO you cant upload if something else is already running!
-
-        # TODO check if job already exists
+        # select job by name or create a new one
         job_name = 'tgi'
         job_id = self.pbs_pro_client.queue_select(job_name)
 
-        if job_id:
-            # TODO check state
-            status_str = await self.hpc_client.concatenate(Path('status.json'))
-
-            from math_rag.infrastructure.enums.inference.huggingface.tgi import (
-                TGIBatchJobStatus,
-            )
-
-            status = TGIBatchJobStatus(status_str)
-
-            while True:
-                match status:
-                    case TGIBatchJobStatus.READY:
-                        pass
-
-                    case TGIBatchJobStatus.PENDING | TGIBatchJobStatus.RUNNING:
-                        # TODO we are not allowed to wait here!
-                        # if jobs that user is pushing dont finish within walltime, they will just get failed requests
-                        # when signal is sent, tgi.py reads batch id and puts it to the queue
-                        pass
-
-                    case TGIBatchJobStatus.FINISHED:
-                        break
-
-                    case TGIBatchJobStatus.FAILED:
-                        # TODO
-                        pass
-
-        if job_id is None:
+        if not job_id:
             job_id = await self.pbs_pro_client.queue_submit(
                 self.remote_project_root,
                 job_name,
@@ -200,11 +184,8 @@ class TGIMultiBatchLLM(PartialBatchLLM):
                 mem=32 * 1024**3,
                 walltime=timedelta(minutes=60),  # TODO how to determine these params
             )
-            # TODO what if job expires soon? -> check remaining time
 
         job = await self.pbs_pro_client.queue_status(job_id)
-
-        # TODO how to tell PBS script to run processing
 
         logger.info(
             f'Job {job_id} obtained for batch {batch_request.id} with state {job.state}'
@@ -215,8 +196,6 @@ class TGIMultiBatchLLM(PartialBatchLLM):
     async def batch_generate_result(
         self, batch_id: str, response_type: type[LLMResponseType]
     ) -> LLMBatchResult[LLMResponseType] | None:
-        # TODO send singal instead
-        # TODO automatically shut down job after 15 minutes of inactivity
         job = await self.pbs_pro_client.queue_status(batch_id)
 
         logger.info(f'Batch {batch_id} state {job.state}')
@@ -238,6 +217,8 @@ class TGIMultiBatchLLM(PartialBatchLLM):
 
             case PBSProJobState.FINISHED | PBSProJobState.EXITED:
                 pass
+
+        # TODO - PBSProJobState.RUNNING
 
         input_local_path = self.local_project_root / '.tmp' / 'input.jsonl'
         output_local_path = self.local_project_root / '.tmp' / 'output.jsonl'

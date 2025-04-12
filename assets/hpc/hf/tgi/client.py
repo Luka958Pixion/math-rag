@@ -1,6 +1,6 @@
+import asyncio
 import json
 
-from asyncio import Semaphore, TaskGroup, run, sleep
 from logging import INFO, basicConfig, getLogger
 from pathlib import Path
 from queue import Full, Queue
@@ -55,7 +55,7 @@ async def safe_chat_completion(client: AsyncInferenceClient, request: dict) -> d
 
 
 async def process_input_line(
-    semaphore: Semaphore,
+    semaphore: asyncio.Semaphore,
     input_line: str,
     client: AsyncInferenceClient,
     output_queue: Queue[str | None],
@@ -86,7 +86,7 @@ async def process_input_line(
                 break
 
             except Full:
-                await sleep(0.1)
+                await asyncio.sleep(0.1)
 
 
 async def process_input_lines(
@@ -94,10 +94,10 @@ async def process_input_lines(
     client: AsyncInferenceClient,
     output_queue: Queue[str | None],
 ):
-    semaphore = Semaphore(MAX_CONCURRENT_REQUESTS)
+    semaphore = asyncio.Semaphore(MAX_CONCURRENT_REQUESTS)
 
     try:
-        async with TaskGroup() as task_group:
+        async with asyncio.TaskGroup() as task_group:
             for input_line in input_lines:
                 task_group.create_task(
                     process_input_line(semaphore, input_line, client, output_queue)
@@ -142,7 +142,7 @@ def process_lines(client, input_queue: Queue[str], output_queue: Queue[str | Non
 
             input_lines.append(input_line)
 
-        run(process_input_lines(input_lines, client, output_queue))
+        asyncio.run(process_input_lines(input_lines, client, output_queue))
 
     except Exception as e:
         logger.exception(f'Error processing lines in asyncio loop: {e}')
