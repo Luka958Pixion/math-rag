@@ -150,7 +150,6 @@ def watch_walltime():
         "'/Resource_List.walltime|resources_used.walltime/ { print $2 }'"
     )
     result = subprocess.run(cmd, check=True, capture_output=True, text=True, shell=True)
-
     walltimes = result.stdout.strip().splitlines()
     walltime = timedelta(walltimes[0])
     walltime_used = timedelta(walltimes[1])
@@ -165,7 +164,7 @@ def read_batch_job_file(
     batch_job_status_tracker: BatchJobStatusTracker,
 ):
     while True:
-        # read metadata files
+        # read batch job files
         batch_job_file_paths = WORKDIR.glob(BATCH_JOB_PATH_PATTERN)
 
         for batch_job_file_path in batch_job_file_paths:
@@ -179,7 +178,7 @@ def read_batch_job_file(
                     batch_job.batch_request_id, BatchJobStatus.WAITING
                 )
 
-            # delete metadata files after reading
+            # delete batch job files after reading
             batch_job_file_path.unlink()
 
         sleep(60)
@@ -216,11 +215,7 @@ def process_batch_request(
 
 def main():
     # TODO automatically shut down job after 15 minutes of inactivity
-
-    # TODO
-    status = TGIStatus()
-    status_json = status.model_dump_json()  # TODO
-    STATUS_PATH.write_text(status_json)
+    # TODO reset status.json at the end
 
     batch_job_queue: PriorityQueue[BatchJob] = PriorityQueue()
     previous_batch_job: BatchJob | None = None

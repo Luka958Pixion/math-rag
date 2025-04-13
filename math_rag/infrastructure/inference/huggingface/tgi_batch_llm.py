@@ -22,7 +22,7 @@ from math_rag.infrastructure.clients import (
     SFTPClient,
 )
 from math_rag.infrastructure.enums.hpc.pbs import PBSProJobState
-from math_rag.infrastructure.enums.inference.huggingface import TGIBatchJobStatus
+from math_rag.infrastructure.enums.inference.huggingface import BatchJobStatus
 from math_rag.infrastructure.inference.partials import PartialBatchLLM
 from math_rag.infrastructure.mappings.inference.huggingface import (
     LLMErrorMapping,
@@ -36,6 +36,8 @@ from math_rag.infrastructure.utils import (
 )
 from math_rag.shared.utils import DataclassUtil
 
+
+JOB_NAME = 'tgi'
 
 logger = getLogger(__name__)
 
@@ -148,37 +150,36 @@ class TGIBatchLLM(PartialBatchLLM):
         await self.sftp_client.upload(input_local_path, input_remote_part_path)
         await self.hpc_client.move(input_remote_part_path, input_remote_path)
 
-        # create in-memory metadata file
-        metadata = {
+        # create in-memory batch job file
+        batch_job = {
             'batch_request_id': str(batch_request.id),
             'model_hub_id': batch_request.requests[0].params.model,
             'timestamp': int(datetime.now().timestamp()),
         }
-        json_str = json.dumps(metadata)
+        json_str = json.dumps(batch_job)
         json_bytes = json_str.encode('utf-8')
 
-        # write metadata file
-        metadata_local_path = (
+        # write batch job file
+        batch_job_local_path = (
             self.local_project_root / '.tmp' / f'metadata_{batch_request.id}.json'
         )
-        await FileWriterUtil.write(json_bytes, metadata_local_path)
+        await FileWriterUtil.write(json_bytes, batch_job_local_path)
 
-        # upload metadata file and avoid race-conditions
-        metadata_remote_path = self.remote_project_root / metadata_local_path.name
-        metadata_remote_part_path = metadata_remote_path.with_name(
-            metadata_remote_path.name + '.part'
+        # upload batch job file and avoid race-conditions
+        batch_job_remote_path = self.remote_project_root / batch_job_local_path.name
+        batch_job_remote_part_path = batch_job_remote_path.with_name(
+            batch_job_remote_path.name + '.part'
         )
-        await self.sftp_client.upload(metadata_local_path, metadata_remote_path)
-        await self.hpc_client.move(metadata_remote_part_path, metadata_remote_path)
+        await self.sftp_client.upload(batch_job_local_path, batch_job_remote_path)
+        await self.hpc_client.move(batch_job_remote_part_path, batch_job_remote_path)
 
         # select job by name or create a new one
-        job_name = 'tgi'
-        job_id = self.pbs_pro_client.queue_select(job_name)
+        job_id = self.pbs_pro_client.queue_select(JOB_NAME)
 
         if not job_id:
             job_id = await self.pbs_pro_client.queue_submit(
                 self.remote_project_root,
-                job_name,
+                JOB_NAME,
                 num_chunks=1,
                 num_cpus=8,
                 num_gpus=1,
@@ -197,7 +198,8 @@ class TGIBatchLLM(PartialBatchLLM):
     async def batch_generate_result(
         self, batch_id: str, response_type: type[LLMResponseType]
     ) -> LLMBatchResult[LLMResponseType] | None:
-        job = await self.pbs_pro_client.queue_status(batch_id)
+        job_id = self.pbs_pro_client.queue_select(JOB_NAME)
+        job = await self.pbs_pro_client.queue_status(job_id)
 
         logger.info(f'Batch {batch_id} state {job.state}')
 
@@ -205,7 +207,6 @@ class TGIBatchLLM(PartialBatchLLM):
             case (
                 PBSProJobState.BEGUN
                 | PBSProJobState.QUEUED
-                | PBSProJobState.RUNNING
                 | PBSProJobState.EXITING
                 | PBSProJobState.WAITING
                 | PBSProJobState.TRANSITING
@@ -216,10 +217,25 @@ class TGIBatchLLM(PartialBatchLLM):
             ):
                 return None
 
-            case PBSProJobState.FINISHED | PBSProJobState.EXITED:
+            case (
+                PBSProJobState.RUNNING
+                | PBSProJobState.FINISHED
+                | PBSProJobState.EXITED
+            ):
                 pass
 
-        # TODO - PBSProJobState.RUNNING
+        status_remote_path = self.remote_project_root / 'status.jsonl'
+        status_json = await self.hpc_client.concatenate(status_remote_path)
+        status_dict: dict = json.loads(status_json)
+        batch_id_to_status = {
+            UUID(key): BatchJobStatus(value) for key, value in status_dict.items()
+        }
+
+        if batch_id not in batch_id_to_status:
+            return None
+
+        if batch_id_to_status[batch_id] == BatchJobStatus.RUNNING:
+            return None
 
         input_local_path = self.local_project_root / '.tmp' / 'input.jsonl'
         output_local_path = self.local_project_root / '.tmp' / 'output.jsonl'

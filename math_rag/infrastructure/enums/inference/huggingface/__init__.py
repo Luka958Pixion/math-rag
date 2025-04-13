@@ -1,4 +1,4 @@
-from .tgi_batch_job_status import TGIBatchJobStatus
+from .batch_job_status import BatchJobStatus
 
 
-__all__ = ['TGIBatchJobStatus']
+__all__ = ['BatchJobStatus']
