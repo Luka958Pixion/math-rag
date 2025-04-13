@@ -2,7 +2,7 @@ from tiktoken import get_encoding
 
 from math_rag.application.models.inference import LLMRequest
 from math_rag.application.types.inference import LLMResponseType
-from math_rag.infrastructure.constants.inference import (
+from math_rag.infrastructure.constants.inference.openai import (
     ENCODING_NAME,
     MAX_COMPLETION_TOKENS,
 )

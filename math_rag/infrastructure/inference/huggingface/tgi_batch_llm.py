@@ -21,6 +21,7 @@ from math_rag.infrastructure.clients import (
     PBSProClient,
     SFTPClient,
 )
+from math_rag.infrastructure.constants.inference.huggingface import DEFAULT_TGI_SETTINGS
 from math_rag.infrastructure.enums.hpc.pbs import PBSProJobState
 from math_rag.infrastructure.enums.inference.huggingface import BatchJobStatus
 from math_rag.infrastructure.inference.partials import PartialBatchLLM
@@ -64,13 +65,13 @@ class TGIBatchLLM(PartialBatchLLM):
         hf_path = self.local_project_root / 'assets/hpc/hf'
         tgi_path = hf_path / 'tgi'
 
-        # NOTE: order matters, e.g. tgi_client.def requires requirements.txt to build tgi_client.sif
+        # NOTE: order matters, e.g. client.def requires requirements.txt to build client.sif
         local_paths = [
             hf_path / 'cli.def',
             tgi_path / 'requirements.txt',
-            tgi_path / 'tgi_server.def',
-            tgi_path / 'tgi_client.def',
-            tgi_path / 'tgi_client.py',
+            tgi_path / 'server.def',
+            tgi_path / 'client.def',
+            tgi_path / 'client.py',
             tgi_path / 'tgi.py',
             tgi_path / 'tgi.sh',
             tgi_path / 'status.json',
@@ -99,7 +100,7 @@ class TGIBatchLLM(PartialBatchLLM):
                 sif_stream = await self.apptainer_client.build(
                     local_path,
                     tgi_path / 'requirements.txt'
-                    if local_path.name == 'tgi_client.def'
+                    if local_path.name == 'client.def'
                     else None,
                 )
 
@@ -180,15 +181,14 @@ class TGIBatchLLM(PartialBatchLLM):
             job_id = await self.pbs_pro_client.queue_submit(
                 self.remote_project_root,
                 JOB_NAME,
-                num_chunks=1,
-                num_cpus=8,
-                num_gpus=1,
-                mem=32 * 1024**3,
-                walltime=timedelta(minutes=60),  # TODO how to determine these params
+                num_chunks=DEFAULT_TGI_SETTINGS.num_chunks,
+                num_cpus=DEFAULT_TGI_SETTINGS.num_cpus,
+                num_gpus=DEFAULT_TGI_SETTINGS.num_gpus,
+                mem=DEFAULT_TGI_SETTINGS.mem,
+                walltime=DEFAULT_TGI_SETTINGS.walltime,
             )
 
         job = await self.pbs_pro_client.queue_status(job_id)
-
         logger.info(
             f'Job {job_id} obtained for batch {batch_request.id} with state {job.state}'
         )

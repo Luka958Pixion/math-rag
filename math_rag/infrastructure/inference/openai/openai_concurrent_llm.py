@@ -18,7 +18,7 @@ from math_rag.application.models.inference import (
     LLMTextResponse,
 )
 from math_rag.application.types.inference import LLMResponseType
-from math_rag.infrastructure.constants.inference import (
+from math_rag.infrastructure.constants.inference.openai import (
     OPENAI_ERRORS_TO_RAISE,
     OPENAI_ERRORS_TO_RETRY_NO_RATE_LIMIT,
     SECONDS_TO_PAUSE_AFTER_RATE_LIMIT_ERROR,
