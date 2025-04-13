@@ -1,0 +1,41 @@
+Bootstrap: docker
+From: python:3.12
+
+%environment
+    export PYTHONUNBUFFERED=1
+    export HF_HUB_ENABLE_HF_TRANSFER=1
+    export HF_HUB_DOWNLOAD_TIMEOUT=300
+
+%post
+    mkdir -p /mount
+    pip install --upgrade pip
+    pip install huggingface_hub hf_transfer
+
+%runscript
+    MODEL_DIR="/mount/$MODEL_HUB_ID"
+
+    if [ -d "$MODEL_DIR" ] && [ "$(ls -A "$MODEL_DIR")" ]; then
+        echo "Download skipped"
+    else
+        echo "Download started"
+        huggingface-cli login --token "$HF_TOKEN"
+        huggingface-cli download "$MODEL_HUB_ID" --local-dir "$MODEL_DIR" --local-dir-use-symlinks False
+    fi
+
+%labels
+    Author luka.panic@pixion.co
+    Version v0.0.1
+
+%help
+    Description:
+        A client for Hugging Face Hub.
+
+    Build:
+        apptainer build cli.sif cli.def
+
+    Environment:
+        - HF_TOKEN
+        - MODEL_HUB_ID
+
+    Usage:
+        apptainer run --nv --bind $PWD/mount:/mount --env MODEL_HUB_ID=<MODEL_HUB_ID> cli.sif
