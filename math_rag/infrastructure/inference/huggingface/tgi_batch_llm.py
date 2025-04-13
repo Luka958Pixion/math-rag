@@ -286,6 +286,24 @@ class TGIBatchLLM(PartialBatchLLM):
                 )
                 response_lists.append(response_list)
 
+        failed_request_ids = [
+            failed_request.request.id for failed_request in failed_requests
+        ]
+        finished_request_ids = [
+            response_list.request_id for response_list in response_lists
+        ]
+        obtained_request_ids = failed_request_ids + finished_request_ids
+        skipped_request_ids = [
+            id for id in requests_dict.keys() if id not in obtained_request_ids
+        ]
+
+        for request_id in skipped_request_ids:
+            failed_request = LLMFailedRequest(
+                request=requests_dict[request_id],
+                errors=[],
+            )
+            failed_requests.append(failed_request)
+
         batch_result = LLMBatchResult(
             response_lists=response_lists, failed_requests=failed_requests
         )
