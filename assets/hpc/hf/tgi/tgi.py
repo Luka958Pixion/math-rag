@@ -27,7 +27,6 @@ STATUS_PATH = Path('status.json')
 STATUS_TMP_PATH = STATUS_PATH.with_suffix('.tmp')
 BATCH_JOB_PATH_PATTERN = 'batch_job_*.json'
 
-WALLTIME_THRESHOLD = timedelta(minutes=30)
 INACTIVE_THRESHOLD = timedelta(minutes=15)
 
 basicConfig(level=INFO, format='%(asctime)s - %(levelname)s - %(message)s')
@@ -146,11 +145,10 @@ class TGIClient:
 def read_batch_job_file(
     batch_job_queue: PriorityQueue[BatchJob],
     batch_job_status_tracker: BatchJobStatusTracker,
-    walltime_stop_event: Event,
-    inactive_stop_event: Event,
+    stop_event: Event,
 ):
     while True:
-        if walltime_stop_event.is_set() or inactive_stop_event.is_set():
+        if stop_event.is_set():
             break
 
         # read batch job files
@@ -173,37 +171,11 @@ def read_batch_job_file(
         sleep(60)
 
 
-def watch_walltime(walltime_stop_event: Event, inactive_stop_event: Event):
-    cmd = (
-        f'qstat -f {PBS_JOB_ID} | '
-        "awk -F'= ' "
-        "'/Resource_List.walltime|resources_used.walltime/ { print $2 }'"
-    )
-
-    while True:
-        if inactive_stop_event.is_set():
-            break
-
-        result = subprocess.run(
-            cmd, check=True, capture_output=True, text=True, shell=True
-        )
-        walltimes = result.stdout.strip().splitlines()
-        walltime = timedelta(walltimes[0])
-        walltime_used = timedelta(walltimes[1])
-
-        if walltime - walltime_used < WALLTIME_THRESHOLD:
-            walltime_stop_event.set()
-            break
-
-        sleep(60)
-
-
 def process_batch_request(
     batch_job_queue: PriorityQueue[BatchJob],
     previous_batch_job: BatchJob | None,
     batch_job_status_tracker: BatchJobStatusTracker,
-    walltime_stop_event: Event,
-    inactive_stop_event: Event,
+    stop_event: Event,
 ):
     DELAY = 30
     time_inactive = timedelta()
@@ -211,11 +183,8 @@ def process_batch_request(
 
     while True:
         if time_inactive >= INACTIVE_THRESHOLD:
-            inactive_stop_event.set()
-            break
-
-        if walltime_stop_event.is_set():
             batch_job_status_tracker.clear()
+            stop_event.set()
             break
 
         try:
@@ -259,23 +228,16 @@ def main():
     batch_job_queue: PriorityQueue[BatchJob] = PriorityQueue()
     previous_batch_job: BatchJob | None = None
     batch_job_status_tracker = BatchJobStatusTracker()
-    walltime_stop_event = Event()
-    inactive_stop_event = Event()
+    stop_event = Event()
 
     batch_job_reader_thread = Thread(
         target=read_batch_job_file,
         args=(
             batch_job_queue,
             batch_job_status_tracker,
-            walltime_stop_event,
-            inactive_stop_event,
+            stop_event,
         ),
         name='BatchJobReaderThread',
-    )
-    walltime_watcher_thread = Thread(
-        target=watch_walltime,
-        args=(walltime_stop_event, inactive_stop_event),
-        name='WalltimeWatcherThread',
     )
     batch_request_processor_thread = Thread(
         target=process_batch_request,
@@ -283,20 +245,19 @@ def main():
             batch_job_queue,
             previous_batch_job,
             batch_job_status_tracker,
-            walltime_stop_event,
-            inactive_stop_event,
+            stop_event,
         ),
         name='BatchRequestProcessorThread',
     )
 
     batch_job_reader_thread.start()
-    walltime_watcher_thread.start()
     batch_request_processor_thread.start()
 
     batch_job_reader_thread.join()
-    walltime_watcher_thread.join()
     batch_request_processor_thread.join()
 
 
 if __name__ == '__main__':
     main()
+
+# TODO how to stop client program form executing
