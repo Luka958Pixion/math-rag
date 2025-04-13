@@ -5,6 +5,7 @@
 #PBS -e error.log
 #PBS -q gpu
 
+module load utils/python/3.12.2
 cd "${PBS_O_WORKDIR:-""}"
 
 export PYTHONUNBUFFERED=1

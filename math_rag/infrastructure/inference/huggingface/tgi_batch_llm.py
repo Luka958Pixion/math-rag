@@ -294,7 +294,9 @@ class TGIBatchLLM(PartialBatchLLM):
         ]
         obtained_request_ids = failed_request_ids + finished_request_ids
         skipped_request_ids = [
-            id for id in requests_dict.keys() if id not in obtained_request_ids
+            request_id
+            for request_id in requests_dict.keys()
+            if request_id not in obtained_request_ids
         ]
 
         for request_id in skipped_request_ids:
