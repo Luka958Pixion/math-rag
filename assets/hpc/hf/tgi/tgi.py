@@ -17,14 +17,15 @@ from uuid import UUID
 
 PBS_JOB_ID = os.environ['PBS_JOBID']
 
-WORKDIR = Path('.')
-
 HTTP_PROXY = 'http://10.150.1.1:3128'
 HTTPS_PROXY = 'http://10.150.1.1:3128'
 
 TGI_BASE_URL = 'http://0.0.0.0:8000'
-TGI_STATUS_PATH = Path('status.json')
-TGI_STATUS_TMP_PATH = TGI_STATUS_PATH.with_suffix('.tmp')
+
+WORKDIR = Path('.')
+STATUS_PATH = Path('status.json')
+STATUS_TMP_PATH = STATUS_PATH.with_suffix('.tmp')
+BATCH_JOB_PATH_PATTERN = 'batch_job_*.json'
 
 WALLTIME_THRESHOLD = timedelta(minutes=10)
 
@@ -41,10 +42,9 @@ class BatchJob:
 
 class BatchJobStatus(str, Enum):
     WAITING = 'waiting'
-    PENDING = 'pending'
     RUNNING = 'running'
     FINISHED = 'finished'
-    FAILED = 'failed'
+    # FAILED = 'failed'
 
 
 class BatchJobStatusTracker:
@@ -64,7 +64,7 @@ class BatchJobStatusTracker:
             self._atomic_write_statuses()
 
     def _atomic_write_statuses(self):
-        with TGI_STATUS_TMP_PATH.open('w') as file:
+        with STATUS_TMP_PATH.open('w') as file:
             statuses_json_dict = {
                 str(key): str(value) for key, value in self._statuses.items()
             }
@@ -72,7 +72,7 @@ class BatchJobStatusTracker:
             file.flush()
             os.fsync(file.fileno())
 
-        os.replace(TGI_STATUS_TMP_PATH, TGI_STATUS_PATH)
+        os.replace(STATUS_TMP_PATH, STATUS_PATH)
 
 
 class HuggingFaceCLI:
@@ -83,7 +83,7 @@ class HuggingFaceCLI:
         env['https_proxy'] = HTTPS_PROXY
 
         bind = f'{WORKDIR}/mount:/mount'
-        cmd = f'apptainer run --nv --bind {bind} --env MODEL_HUB_ID={model_hub_id} hf_cli.sif'
+        cmd = f'apptainer run --nv --bind {bind} --env MODEL_HUB_ID={model_hub_id} cli.sif'
         subprocess.run(cmd, check=True, capture_output=False, shell=True, env=env)
 
 
@@ -160,10 +160,13 @@ def watch_walltime():
         pass
 
 
-def read_batch_job_file(batch_job_queue: PriorityQueue[BatchJob]):
+def read_batch_job_file(
+    batch_job_queue: PriorityQueue[BatchJob],
+    batch_job_status_tracker: BatchJobStatusTracker,
+):
     while True:
         # read metadata files
-        batch_job_file_paths = WORKDIR.glob('batch_job_*.json')
+        batch_job_file_paths = WORKDIR.glob(BATCH_JOB_PATH_PATTERN)
 
         for batch_job_file_path in batch_job_file_paths:
             with batch_job_file_path.open('r') as file:
@@ -172,31 +175,43 @@ def read_batch_job_file(batch_job_queue: PriorityQueue[BatchJob]):
                 batch_job = BatchJob(**data)
                 batch_job_queue.put((batch_job.timestamp, batch_job))
 
+                batch_job_status_tracker.set_status(
+                    batch_job.batch_request_id, BatchJobStatus.WAITING
+                )
+
             # delete metadata files after reading
             batch_job_file_path.unlink()
 
         sleep(60)
 
 
-def process_batch_request(metadata_queue: PriorityQueue[BatchJob]):
-    metadata = metadata_queue.get()
-    mount_path = WORKDIR / 'mount' / metadata.model_hub_id
+def process_batch_request(
+    batch_job_queue: PriorityQueue[BatchJob],
+    previous_batch_job: BatchJob | None,
+    batch_job_status_tracker: BatchJobStatusTracker,
+):
+    batch_job = batch_job_queue.get()
+    batch_job_status_tracker.set_status(
+        batch_job.batch_request_id, BatchJobStatus.RUNNING
+    )
+    mount_path = WORKDIR / 'mount' / batch_job.model_hub_id
 
     if not mount_path.exists():
         mount_path.mkdir(parents=True)
-        HuggingFaceCLI.download_model(metadata.model_hub_id)
+        HuggingFaceCLI.download_model(batch_job.model_hub_id)
 
-    # TODO: check if instance with the same model is running from previous batch
-    previous_metadata: BatchJob | None = ...
-
-    if not previous_metadata:
+    if not previous_batch_job:
         TGIServerInstance.start(mount_path)
 
-    elif previous_metadata.model_hub_id != metadata.model_hub_id:
+    elif previous_batch_job.model_hub_id != batch_job.model_hub_id:
         TGIServerInstance.stop()
         TGIServerInstance.start(mount_path)
 
     TGIClient.run()
+    previous_batch_job = batch_job
+    batch_job_status_tracker.set_status(
+        batch_job.batch_request_id, BatchJobStatus.FINISHED
+    )
 
 
 def main():
@@ -205,19 +220,23 @@ def main():
     # TODO
     status = TGIStatus()
     status_json = status.model_dump_json()  # TODO
-    TGI_STATUS_PATH.write_text(status_json)
+    STATUS_PATH.write_text(status_json)
 
     batch_job_queue: PriorityQueue[BatchJob] = PriorityQueue()
+    previous_batch_job: BatchJob | None = None
+    batch_job_status_tracker = BatchJobStatusTracker()
 
     batch_job_reader_thread = Thread(
-        target=read_batch_job_file, args=(batch_job_queue), name='BatchJobReaderThread'
+        target=read_batch_job_file,
+        args=(batch_job_queue, batch_job_status_tracker),
+        name='BatchJobReaderThread',
     )
     walltime_watcher_thread = Thread(
         target=watch_walltime, name='WalltimeWatcherThread'
     )
     batch_request_processor_thread = Thread(
         target=process_batch_request,
-        args=(batch_job_queue),
+        args=(batch_job_queue, previous_batch_job, batch_job_status_tracker),
         name='BatchRequestProcessorThread',
     )
 

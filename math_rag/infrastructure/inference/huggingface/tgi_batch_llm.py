@@ -64,13 +64,14 @@ class TGIBatchLLM(PartialBatchLLM):
 
         # NOTE: order matters, e.g. tgi_client.def requires requirements.txt to build tgi_client.sif
         local_paths = [
+            hf_path / 'cli.def',
             tgi_path / 'requirements.txt',
             tgi_path / 'tgi_server.def',
             tgi_path / 'tgi_client.def',
-            hf_path / 'hf_cli.def',
             tgi_path / 'tgi_client.py',
             tgi_path / 'tgi.py',
             tgi_path / 'tgi.sh',
+            tgi_path / 'status.json',
             self.local_project_root / '.env.hpc.hf.tgi',
         ]
 
