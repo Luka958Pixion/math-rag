@@ -1,6 +1,6 @@
 import json
 
-from datetime import datetime, timedelta
+from datetime import datetime
 from logging import getLogger
 from pathlib import Path
 from uuid import UUID

@@ -8,8 +8,8 @@ from enum import Enum
 from http.client import HTTPConnection
 from logging import INFO, basicConfig, getLogger
 from pathlib import Path
-from queue import PriorityQueue
-from threading import Thread
+from queue import Empty, PriorityQueue
+from threading import Event, Thread
 from time import sleep
 from urllib.parse import urlparse
 from uuid import UUID
@@ -27,7 +27,8 @@ STATUS_PATH = Path('status.json')
 STATUS_TMP_PATH = STATUS_PATH.with_suffix('.tmp')
 BATCH_JOB_PATH_PATTERN = 'batch_job_*.json'
 
-WALLTIME_THRESHOLD = timedelta(minutes=10)
+WALLTIME_THRESHOLD = timedelta(minutes=30)
+INACTIVE_THRESHOLD = timedelta(minutes=15)
 
 basicConfig(level=INFO, format='%(asctime)s - %(levelname)s - %(message)s')
 logger = getLogger(__name__)
@@ -58,10 +59,9 @@ class BatchJobStatusTracker:
         self._statuses[batch_id] = status
         self._atomic_write_statuses()
 
-    def remove_status(self, batch_id: UUID):
-        if batch_id in self._statuses:
-            del self._statuses[batch_id]
-            self._atomic_write_statuses()
+    def clear(self):
+        self._statuses = {}
+        self._atomic_write_statuses()
 
     def _atomic_write_statuses(self):
         with STATUS_TMP_PATH.open('w') as file:
@@ -143,27 +143,16 @@ class TGIClient:
         subprocess.run(cmd, check=True, capture_output=False, shell=True, env=env)
 
 
-def watch_walltime():
-    cmd = (
-        f'qstat -f {PBS_JOB_ID} | '
-        "awk -F'= ' "
-        "'/Resource_List.walltime|resources_used.walltime/ { print $2 }'"
-    )
-    result = subprocess.run(cmd, check=True, capture_output=True, text=True, shell=True)
-    walltimes = result.stdout.strip().splitlines()
-    walltime = timedelta(walltimes[0])
-    walltime_used = timedelta(walltimes[1])
-
-    if walltime - walltime_used < WALLTIME_THRESHOLD:
-        # TODO stop and controlled exit
-        pass
-
-
 def read_batch_job_file(
     batch_job_queue: PriorityQueue[BatchJob],
     batch_job_status_tracker: BatchJobStatusTracker,
+    walltime_stop_event: Event,
+    inactive_stop_event: Event,
 ):
     while True:
+        if walltime_stop_event.is_set() or inactive_stop_event.is_set():
+            break
+
         # read batch job files
         batch_job_file_paths = WORKDIR.glob(BATCH_JOB_PATH_PATTERN)
 
@@ -184,54 +173,119 @@ def read_batch_job_file(
         sleep(60)
 
 
+def watch_walltime(walltime_stop_event: Event, inactive_stop_event: Event):
+    cmd = (
+        f'qstat -f {PBS_JOB_ID} | '
+        "awk -F'= ' "
+        "'/Resource_List.walltime|resources_used.walltime/ { print $2 }'"
+    )
+
+    while True:
+        if inactive_stop_event.is_set():
+            break
+
+        result = subprocess.run(
+            cmd, check=True, capture_output=True, text=True, shell=True
+        )
+        walltimes = result.stdout.strip().splitlines()
+        walltime = timedelta(walltimes[0])
+        walltime_used = timedelta(walltimes[1])
+
+        if walltime - walltime_used < WALLTIME_THRESHOLD:
+            walltime_stop_event.set()
+            break
+
+        sleep(60)
+
+
 def process_batch_request(
     batch_job_queue: PriorityQueue[BatchJob],
     previous_batch_job: BatchJob | None,
     batch_job_status_tracker: BatchJobStatusTracker,
+    walltime_stop_event: Event,
+    inactive_stop_event: Event,
 ):
-    batch_job = batch_job_queue.get()
-    batch_job_status_tracker.set_status(
-        batch_job.batch_request_id, BatchJobStatus.RUNNING
-    )
-    mount_path = WORKDIR / 'mount' / batch_job.model_hub_id
+    DELAY = 30
+    time_inactive = timedelta()
+    is_server_instance_running = False
 
-    if not mount_path.exists():
-        mount_path.mkdir(parents=True)
-        HuggingFaceCLI.download_model(batch_job.model_hub_id)
+    while True:
+        if time_inactive >= INACTIVE_THRESHOLD:
+            inactive_stop_event.set()
+            break
 
-    if not previous_batch_job:
-        TGIServerInstance.start(mount_path)
+        if walltime_stop_event.is_set():
+            batch_job_status_tracker.clear()
+            break
 
-    elif previous_batch_job.model_hub_id != batch_job.model_hub_id:
+        try:
+            batch_job = batch_job_queue.get_nowait()
+            time_inactive = timedelta()
+
+        except Empty:
+            sleep(DELAY)
+            time_inactive += timedelta(seconds=DELAY)
+            continue
+
+        batch_job_status_tracker.set_status(
+            batch_job.batch_request_id, BatchJobStatus.RUNNING
+        )
+        mount_path = WORKDIR / 'mount' / batch_job.model_hub_id
+
+        if not mount_path.exists():
+            mount_path.mkdir(parents=True)
+            HuggingFaceCLI.download_model(batch_job.model_hub_id)
+
+        if not previous_batch_job:
+            TGIServerInstance.start(mount_path)
+            is_server_instance_running = True
+
+        elif previous_batch_job.model_hub_id != batch_job.model_hub_id:
+            TGIServerInstance.stop()
+            TGIServerInstance.start(mount_path)
+            is_server_instance_running = True
+
+        TGIClient.run()
+        previous_batch_job = batch_job
+        batch_job_status_tracker.set_status(
+            batch_job.batch_request_id, BatchJobStatus.FINISHED
+        )
+
+    if is_server_instance_running:
         TGIServerInstance.stop()
-        TGIServerInstance.start(mount_path)
-
-    TGIClient.run()
-    previous_batch_job = batch_job
-    batch_job_status_tracker.set_status(
-        batch_job.batch_request_id, BatchJobStatus.FINISHED
-    )
 
 
 def main():
-    # TODO automatically shut down job after 15 minutes of inactivity
-    # TODO reset status.json at the end
-
     batch_job_queue: PriorityQueue[BatchJob] = PriorityQueue()
     previous_batch_job: BatchJob | None = None
     batch_job_status_tracker = BatchJobStatusTracker()
+    walltime_stop_event = Event()
+    inactive_stop_event = Event()
 
     batch_job_reader_thread = Thread(
         target=read_batch_job_file,
-        args=(batch_job_queue, batch_job_status_tracker),
+        args=(
+            batch_job_queue,
+            batch_job_status_tracker,
+            walltime_stop_event,
+            inactive_stop_event,
+        ),
         name='BatchJobReaderThread',
     )
     walltime_watcher_thread = Thread(
-        target=watch_walltime, name='WalltimeWatcherThread'
+        target=watch_walltime,
+        args=(walltime_stop_event, inactive_stop_event),
+        name='WalltimeWatcherThread',
     )
     batch_request_processor_thread = Thread(
         target=process_batch_request,
-        args=(batch_job_queue, previous_batch_job, batch_job_status_tracker),
+        args=(
+            batch_job_queue,
+            previous_batch_job,
+            batch_job_status_tracker,
+            walltime_stop_event,
+            inactive_stop_event,
+        ),
         name='BatchRequestProcessorThread',
     )
 
