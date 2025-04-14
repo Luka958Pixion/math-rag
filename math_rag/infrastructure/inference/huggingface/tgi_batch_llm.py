@@ -194,11 +194,12 @@ class TGIBatchLLM(PartialBatchLLM):
             f'Job {job_id} obtained for batch {batch_request.id} with state {job.state}'
         )
 
-        return job_id
+        return str(batch_request.id)
 
     async def batch_generate_result(
         self, batch_id: str, response_type: type[LLMResponseType]
     ) -> LLMBatchResult[LLMResponseType] | None:
+        batch_id = UUID(batch_id)
         job_id = await self.pbs_pro_client.queue_select(JOB_NAME)
         job = await self.pbs_pro_client.queue_status(job_id)
 
@@ -238,13 +239,12 @@ class TGIBatchLLM(PartialBatchLLM):
         if batch_id_to_status[batch_id] == BatchJobStatus.RUNNING:
             return None
 
-        # TODO update these paths!! to _batch_id
         input_local_path = self.local_project_root / '.tmp' / f'input_{batch_id}.jsonl'
         output_local_path = (
             self.local_project_root / '.tmp' / f'output_{batch_id}.jsonl'
         )
-        input_remote_path = self.remote_project_root / 'output.jsonl'
-        output_remote_path = self.remote_project_root / 'output.jsonl'
+        input_remote_path = self.remote_project_root / input_local_path.name
+        output_remote_path = self.remote_project_root / output_local_path.name
 
         await self.sftp_client.download(output_remote_path, output_local_path)
 

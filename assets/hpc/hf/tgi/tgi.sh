@@ -6,7 +6,8 @@
 #PBS -q gpu
 
 cd "${PBS_O_WORKDIR:-""}"
+module load utils/python/3.12.2
 
 export PYTHONUNBUFFERED=1
 
-apptainer run tgi.sif
+python3 tgi.py

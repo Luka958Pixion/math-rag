@@ -21,11 +21,17 @@ HTTP_PROXY = 'http://10.150.1.1:3128'
 HTTPS_PROXY = 'http://10.150.1.1:3128'
 
 TGI_BASE_URL = 'http://0.0.0.0:8000'
+TGI_SERVER_INSTANCE_NAME = 'tgi_server_instance'
+BATCH_JOB_PATH_PATTERN = 'batch_job_*.json'
 
 WORKDIR = Path('.')
 STATUS_PATH = Path('status.json')
 STATUS_TMP_PATH = STATUS_PATH.with_suffix('.tmp')
-BATCH_JOB_PATH_PATTERN = 'batch_job_*.json'
+ENV_HPC_HF_TGI_PATH = Path('.env.hpc.hf.tgi')
+CLIENT_SIF_PATH = Path('client.sif')
+SERVER_SIF_PATH = Path('server.sif')
+CLI_SIF_PATH = Path('cli.sif')
+
 
 INACTIVE_THRESHOLD = timedelta(minutes=15)
 
@@ -82,7 +88,14 @@ class HuggingFaceCLI:
         env['https_proxy'] = HTTPS_PROXY
 
         bind = f'{WORKDIR}/mount:/mount'
-        cmd = f'apptainer run --nv --bind {bind} --env-file .env.hpc.hf.tgi --env MODEL_HUB_ID={model_hub_id} cli.sif'
+        cmd = (
+            'apptainer run '
+            '--nv '
+            f'--bind {bind} '
+            f'--env-file {ENV_HPC_HF_TGI_PATH} '
+            f'--env MODEL_HUB_ID={model_hub_id} '
+            f'{CLIENT_SIF_PATH}'
+        )
         subprocess.run(cmd, check=True, capture_output=False, shell=True, env=env)
 
 
@@ -92,7 +105,13 @@ class TGIServerInstance:
         logger.info('Starting TGI server...')
 
         bind = f'{mount_path}:/model'
-        cmd = f'apptainer instance start --nv --bind {bind} server.sif tgi_server_instance'
+        cmd = (
+            'apptainer instance start '
+            '--nv '
+            f'--bind {bind} '
+            f'{SERVER_SIF_PATH} '
+            f'{TGI_SERVER_INSTANCE_NAME}'
+        )
         subprocess.run(cmd, check=True, capture_output=False, shell=True)
 
         POLL_INTERVAL = 5
@@ -101,11 +120,11 @@ class TGIServerInstance:
         if not parsed_url.port:
             raise ValueError('TGI_BASE_URL does not include a port')
 
-        client = HTTPConnection(parsed_url.hostname, parsed_url.port, timeout=3)
         logger.info('Waiting for TGI server to become healthy...')
 
         while True:
             try:
+                client = HTTPConnection(parsed_url.hostname, parsed_url.port)
                 client.request('GET', '/health')
                 response = client.getresponse()
 
@@ -128,7 +147,7 @@ class TGIServerInstance:
 
     @staticmethod
     def stop():
-        cmd = f'apptainer instance stop tgi_server_instance'
+        cmd = f'apptainer instance stop {TGI_SERVER_INSTANCE_NAME}'
         subprocess.run(cmd, check=True, capture_output=False, shell=True)
 
 
@@ -137,9 +156,9 @@ class TGIClient:
     def run(batch_request_id: UUID):
         env = os.environ.copy()
         env['TGI_BASE_URL'] = TGI_BASE_URL
-        env['BATCH_REQUEST_ID'] = batch_request_id
+        env['BATCH_REQUEST_ID'] = str(batch_request_id)
 
-        cmd = 'apptainer run --env-file .env.hpc.hf.tgi client.sif'
+        cmd = 'apptainer run ' f'--env-file {ENV_HPC_HF_TGI_PATH} ' f'{CLIENT_SIF_PATH}'
         subprocess.run(cmd, check=True, capture_output=False, shell=True, env=env)
 
 
