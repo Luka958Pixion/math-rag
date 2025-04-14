@@ -24,7 +24,7 @@ class PBSProClient:
         self,
         project_root_path: Path,
         job_name: str,
-        env_vars: dict[str, str] | None,
+        env_vars: dict[str, str] | None = None,
         *,
         num_chunks: int,
         num_cpus: int,
@@ -32,18 +32,21 @@ class PBSProClient:
         mem: int,
         walltime: timedelta,
     ) -> str:
-        env_vars_str = ','.join(f'{key}={value}' for key, value in env_vars.items())
+        cmd = f'cd {project_root_path} && qsub '
 
-        return await self.ssh_client.run(
-            f'cd {project_root_path} && '
-            f'qsub '
-            f'-v {env_vars_str} '
+        if env_vars:
+            env_vars_str = ','.join(f'{key}={value}' for key, value in env_vars.items())
+            cmd += f'-v {env_vars_str} '
+
+        cmd += (
             f'-l '
             f'select={num_chunks}:ncpus={num_cpus}:mem={mem}B:ngpus={num_gpus},'
             f'walltime={walltime} '
             f'-N {job_name} '
             f'{job_name}.sh'
         )
+
+        return await self.ssh_client.run(cmd)
 
     async def queue_select(self, job_name: str) -> str | None:
         stdout = await self.ssh_client.run(

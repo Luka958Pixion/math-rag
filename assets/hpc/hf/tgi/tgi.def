@@ -1,0 +1,25 @@
+Bootstrap: docker
+From: python:3.12
+
+%environment
+    export PYTHONUNBUFFERED=1
+
+%post
+    pip install --upgrade pip
+
+%runscript
+    python tgi.py
+
+%labels
+    Author luka.panic@pixion.co
+    Version v0.0.1
+
+%help
+    Description:
+        Apptainer image for the main tgi.py script.
+
+    Build:
+        apptainer build tgi.sif tgi.def
+
+    Usage:
+        apptainer run tgi.sif

@@ -5,6 +5,7 @@ from logging import INFO, basicConfig, getLogger
 from pathlib import Path
 from queue import Full, Queue
 from threading import Thread
+from uuid import UUID
 
 from backoff import expo, full_jitter, on_exception
 from decouple import config
@@ -17,6 +18,7 @@ from huggingface_hub.errors import TextGenerationError
 TGI_BASE_URL = config('TGI_BASE_URL', default=None)
 TGI_API_KEY = config('TGI_API_KEY', default=None)
 MODEL_HUB_ID = config('MODEL_HUB_ID', default=None)
+BATCH_REQUEST_ID = config('BATCH_REQUEST_ID', cast=UUID)
 WORKDIR = config('PBS_O_WORKDIR', cast=Path)
 
 MAX_RETRIES = 3
@@ -175,8 +177,8 @@ def write_output_file(output_file_path: Path, output_queue: Queue[str | None]):
 
 
 def main():
-    input_file_path = WORKDIR / 'input.jsonl'
-    output_file_path = WORKDIR / 'output.jsonl'
+    input_file_path = WORKDIR / f'input_{BATCH_REQUEST_ID}.jsonl'
+    output_file_path = WORKDIR / f'output_{BATCH_REQUEST_ID}.jsonl'
 
     client = AsyncInferenceClient(
         base_url=TGI_BASE_URL,

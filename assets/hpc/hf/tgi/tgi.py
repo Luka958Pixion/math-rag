@@ -65,7 +65,7 @@ class BatchJobStatusTracker:
     def _atomic_write_statuses(self):
         with STATUS_TMP_PATH.open('w') as file:
             statuses_json_dict = {
-                str(key): str(value) for key, value in self._statuses.items()
+                str(key): str(value.value) for key, value in self._statuses.items()
             }
             json.dump(statuses_json_dict, file)
             file.flush()
@@ -134,16 +134,17 @@ class TGIServerInstance:
 
 class TGIClient:
     @staticmethod
-    def run():
+    def run(batch_request_id: UUID):
         env = os.environ.copy()
         env['TGI_BASE_URL'] = TGI_BASE_URL
+        env['BATCH_REQUEST_ID'] = batch_request_id
 
         cmd = 'apptainer run --env-file .env.hpc.hf.tgi client.sif'
         subprocess.run(cmd, check=True, capture_output=False, shell=True, env=env)
 
 
 def read_batch_job_file(
-    batch_job_queue: PriorityQueue[BatchJob],
+    batch_job_queue: PriorityQueue[tuple[int, BatchJob]],
     batch_job_status_tracker: BatchJobStatusTracker,
     stop_event: Event,
 ):
@@ -172,7 +173,7 @@ def read_batch_job_file(
 
 
 def process_batch_request(
-    batch_job_queue: PriorityQueue[BatchJob],
+    batch_job_queue: PriorityQueue[tuple[int, BatchJob]],
     previous_batch_job: BatchJob | None,
     batch_job_status_tracker: BatchJobStatusTracker,
     stop_event: Event,
@@ -188,7 +189,7 @@ def process_batch_request(
             break
 
         try:
-            batch_job = batch_job_queue.get_nowait()
+            _, batch_job = batch_job_queue.get_nowait()
             time_inactive = timedelta()
 
         except Empty:
@@ -214,7 +215,7 @@ def process_batch_request(
             TGIServerInstance.start(mount_path)
             is_server_instance_running = True
 
-        TGIClient.run()
+        TGIClient.run(batch_job.batch_request_id)
         previous_batch_job = batch_job
         batch_job_status_tracker.set_status(
             batch_job.batch_request_id, BatchJobStatus.FINISHED
@@ -225,7 +226,7 @@ def process_batch_request(
 
 
 def main():
-    batch_job_queue: PriorityQueue[BatchJob] = PriorityQueue()
+    batch_job_queue: PriorityQueue[tuple[int, BatchJob]] = PriorityQueue()
     previous_batch_job: BatchJob | None = None
     batch_job_status_tracker = BatchJobStatusTracker()
     stop_event = Event()

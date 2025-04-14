@@ -72,6 +72,7 @@ class TGIBatchLLM(PartialBatchLLM):
             tgi_path / 'server.def',
             tgi_path / 'client.def',
             tgi_path / 'client.py',
+            tgi_path / 'tgi.def',
             tgi_path / 'tgi.py',
             tgi_path / 'tgi.sh',
             tgi_path / 'status.json',
@@ -162,7 +163,7 @@ class TGIBatchLLM(PartialBatchLLM):
 
         # write batch job file
         batch_job_local_path = (
-            self.local_project_root / '.tmp' / f'metadata_{batch_request.id}.json'
+            self.local_project_root / '.tmp' / f'batch_job_{batch_request.id}.json'
         )
         await FileWriterUtil.write(json_bytes, batch_job_local_path)
 
@@ -171,11 +172,11 @@ class TGIBatchLLM(PartialBatchLLM):
         batch_job_remote_part_path = batch_job_remote_path.with_name(
             batch_job_remote_path.name + '.part'
         )
-        await self.sftp_client.upload(batch_job_local_path, batch_job_remote_path)
+        await self.sftp_client.upload(batch_job_local_path, batch_job_remote_part_path)
         await self.hpc_client.move(batch_job_remote_part_path, batch_job_remote_path)
 
         # select job by name or create a new one
-        job_id = self.pbs_pro_client.queue_select(JOB_NAME)
+        job_id = await self.pbs_pro_client.queue_select(JOB_NAME)
 
         if not job_id:
             job_id = await self.pbs_pro_client.queue_submit(
@@ -198,7 +199,7 @@ class TGIBatchLLM(PartialBatchLLM):
     async def batch_generate_result(
         self, batch_id: str, response_type: type[LLMResponseType]
     ) -> LLMBatchResult[LLMResponseType] | None:
-        job_id = self.pbs_pro_client.queue_select(JOB_NAME)
+        job_id = await self.pbs_pro_client.queue_select(JOB_NAME)
         job = await self.pbs_pro_client.queue_status(job_id)
 
         logger.info(f'Batch {batch_id} state {job.state}')
@@ -224,8 +225,11 @@ class TGIBatchLLM(PartialBatchLLM):
             ):
                 pass
 
-        status_remote_path = self.remote_project_root / 'status.jsonl'
+        status_remote_path = self.remote_project_root / 'status.json'
         status_json = await self.hpc_client.concatenate(status_remote_path)
+        print('status_json')
+        print(status_json)
+        print('status_json')
         status_dict: dict = json.loads(status_json)
         batch_id_to_status = {
             UUID(key): BatchJobStatus(value) for key, value in status_dict.items()
@@ -237,8 +241,11 @@ class TGIBatchLLM(PartialBatchLLM):
         if batch_id_to_status[batch_id] == BatchJobStatus.RUNNING:
             return None
 
-        input_local_path = self.local_project_root / '.tmp' / 'input.jsonl'
-        output_local_path = self.local_project_root / '.tmp' / 'output.jsonl'
+        # TODO update these paths!! to _batch_id
+        input_local_path = self.local_project_root / '.tmp' / f'input_{batch_id}.jsonl'
+        output_local_path = (
+            self.local_project_root / '.tmp' / f'output_{batch_id}.jsonl'
+        )
         input_remote_path = self.remote_project_root / 'output.jsonl'
         output_remote_path = self.remote_project_root / 'output.jsonl'
 
