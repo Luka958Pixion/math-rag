@@ -227,9 +227,6 @@ class TGIBatchLLM(PartialBatchLLM):
 
         status_remote_path = self.remote_project_root / 'status.json'
         status_json = await self.hpc_client.concatenate(status_remote_path)
-        print('status_json')
-        print(status_json)
-        print('status_json')
         status_dict: dict = json.loads(status_json)
         batch_id_to_status = {
             UUID(key): BatchJobStatus(value) for key, value in status_dict.items()

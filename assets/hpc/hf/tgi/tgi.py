@@ -82,7 +82,7 @@ class HuggingFaceCLI:
         env['https_proxy'] = HTTPS_PROXY
 
         bind = f'{WORKDIR}/mount:/mount'
-        cmd = f'apptainer run --nv --bind {bind} --env MODEL_HUB_ID={model_hub_id} cli.sif'
+        cmd = f'apptainer run --nv --bind {bind} --env-file .env.hpc.hf.tgi --env MODEL_HUB_ID={model_hub_id} cli.sif'
         subprocess.run(cmd, check=True, capture_output=False, shell=True, env=env)
 
 
