@@ -72,7 +72,6 @@ class TGIBatchLLM(PartialBatchLLM):
             tgi_path / 'server.def',
             tgi_path / 'client.def',
             tgi_path / 'client.py',
-            tgi_path / 'tgi.def',
             tgi_path / 'tgi.py',
             tgi_path / 'tgi.sh',
             tgi_path / 'status.json',
