@@ -2,7 +2,7 @@ import json
 import os
 import subprocess
 
-from dataclasses import dataclass
+from dataclasses import asdict, dataclass
 from datetime import timedelta
 from enum import Enum
 from http.client import HTTPConnection
@@ -11,6 +11,7 @@ from pathlib import Path
 from queue import Empty, PriorityQueue, Queue
 from threading import Condition, Event, Lock, Thread
 from time import sleep
+from typing import cast
 from urllib.parse import urlparse
 from uuid import UUID
 
@@ -25,8 +26,8 @@ TGI_SERVER_INSTANCE_NAME = 'tgi_server_instance'
 BATCH_JOB_PATH_PATTERN = 'batch_job_*.json'
 
 WORKDIR = Path('.')
-STATUS_PATH = Path('status.json')
-STATUS_TMP_PATH = STATUS_PATH.with_suffix('.tmp')
+STATUS_TRACKER_PATH = Path(f'status_tracker_{PBS_JOB_ID}.json')
+STATUS_TRACKER_TMP_PATH = STATUS_TRACKER_PATH.with_suffix('.tmp')
 ENV_HPC_HF_TGI_PATH = Path('.env.hpc.hf.tgi')
 CLIENT_SIF_PATH = Path('client.sif')
 SERVER_SIF_PATH = Path('server.sif')
@@ -35,6 +36,7 @@ CLI_SIF_PATH = Path('cli.sif')
 
 INACTIVE_THRESHOLD = timedelta(minutes=15)
 WALLTIME_THRESHOLD = timedelta(minutes=5)
+INITIALIZE_THRESHOLD = timedelta(minutes=10)
 
 basicConfig(
     level=INFO, format='%(asctime)s [%(threadName)s] %(levelname)s: %(message)s'
@@ -49,6 +51,19 @@ class BatchJob:
     timestamp: int
 
 
+@dataclass
+class BatchJobRequest:
+    source_batch_request_id: UUID
+    target_pbs_job_id: str
+
+
+@dataclass
+class BatchJobResponse:
+    source_pbs_job_id: str
+    target_batch_request_id: UUID
+    allowed: bool
+
+
 class BatchJobStatus(str, Enum):
     WAITING = 'waiting'
     RUNNING = 'running'
@@ -56,9 +71,9 @@ class BatchJobStatus(str, Enum):
     UNFINISHED = 'unfinished'
 
 
-class StatusResource:
+class BatchJobStatusTrackerResource:
     """
-    Preserves thread access order to status.json
+    Preserves thread access order to status file
     """
 
     def __init__(self):
@@ -86,26 +101,62 @@ class StatusResource:
 
 class BatchJobStatusTracker:
     def __init__(self):
-        self._pbs_job_finished = False
-        self._statuses: dict[UUID, BatchJobStatus] = {}
+        self._is_status_update_allowed = True
+        self._id_to_status: dict[UUID, BatchJobStatus] = {}
+
+    @property
+    def is_status_update_allowed(self) -> bool:
+        return self._is_status_update_allowed
+
+    @is_status_update_allowed.setter
+    def is_status_update_allowed(self, value: bool):
+        self._is_status_update_allowed = value
+        self._atomic_write()
+
+    @property
+    def id_to_status(self) -> dict[UUID, BatchJobStatus]:
+        return self._id_to_status
 
     def get_status(self, batch_id: UUID) -> BatchJobStatus | None:
-        return self._statuses.get(batch_id)
+        return self._id_to_status.get(batch_id)
 
     def set_status(self, batch_id: UUID, status: BatchJobStatus):
-        self._statuses[batch_id] = status
-        self._atomic_write_statuses()
+        if self._is_status_update_allowed:
+            self._id_to_status[batch_id] = status
+            self._atomic_write()
 
-    def _atomic_write_statuses(self):
-        with STATUS_TMP_PATH.open('w') as file:
-            statuses_json_dict = {
-                str(key): str(value.value) for key, value in self._statuses.items()
-            }
-            json.dump(statuses_json_dict, file)
+    def _atomic_write(self):
+        with STATUS_TRACKER_TMP_PATH.open('w') as file:
+            json_dict = self.to_json()
+            json.dump(json_dict, file)
             file.flush()
             os.fsync(file.fileno())
 
-        os.replace(STATUS_TMP_PATH, STATUS_PATH)
+        os.replace(STATUS_TRACKER_TMP_PATH, STATUS_TRACKER_PATH)
+
+    def to_json(self) -> str:
+        def encoder(obj):
+            if isinstance(obj, UUID):
+                return str(obj)
+
+            if isinstance(obj, Enum):
+                return obj.value
+
+            raise TypeError(f'Type {type(obj)} not serializable')
+
+        return json.dumps(asdict(self), default=encoder)
+
+    @staticmethod
+    def from_json(data: str) -> 'BatchJobStatusTracker':
+        json_dict = json.loads(data)
+
+        return BatchJobStatusTracker(
+            is_status_update_allowed=json_dict['pbs_job_running'],
+            id_to_status={
+                UUID(key): BatchJobStatus(value)
+                for key, value in cast(dict, json_dict['statuses']).items()
+            },
+        )
 
 
 class HuggingFaceCLI:
@@ -190,17 +241,51 @@ class TGIClient:
         subprocess.run(cmd, check=True, capture_output=False, shell=True, env=env)
 
 
-def read_batch_job_file(
+def initialize_batch_job(
+    status_tracker: BatchJobStatusTracker,
+    status_tracker_resource: BatchJobStatusTrackerResource,
+    inactive_stop_event: Event,
+    walltime_stop_event: Event,
+):
+    DELAY = 15
+    cmd = (
+        f'qstat -f {PBS_JOB_ID} | '
+        "awk -F'= ' "
+        "'/Resource_List.walltime|resources_used.walltime/ { print $2 }'"
+    )
+
+    while True:
+        if inactive_stop_event.is_set() or walltime_stop_event.is_set():
+            break
+
+        result = subprocess.run(
+            cmd, check=True, capture_output=True, text=True, shell=True
+        )
+        walltimes = result.stdout.strip().splitlines()
+        walltime = timedelta(walltimes[0])
+        walltime_used = timedelta(walltimes[1])
+
+        if walltime - walltime_used < INITIALIZE_THRESHOLD:
+            break
+
+        # TODO
+        # implement handshake
+        # disable read_batch_job if it didnt pass a handshake?
+
+        sleep(DELAY)
+
+
+def read_batch_job(
     batch_job_queue: PriorityQueue[tuple[int, BatchJob]],
     status_tracker: BatchJobStatusTracker,
-    status_resource: StatusResource,
+    status_tracker_resource: BatchJobStatusTrackerResource,
     inactive_stop_event: Event,
     walltime_stop_event: Event,
 ):
     DELAY = 60
 
     while True:
-        if inactive_stop_event.is_set():
+        if inactive_stop_event.is_set() or walltime_stop_event.is_set():
             break
 
         # read batch job files
@@ -209,17 +294,19 @@ def read_batch_job_file(
                 data = json.load(file)
                 data['batch_request_id'] = UUID(data['batch_request_id'])
                 batch_job = BatchJob(**data)
-                batch_job_queue.put((batch_job.timestamp, batch_job))
 
-                # critical section
-                status_resource.acquire()
+            # critical section
+            status_tracker_resource.acquire()
+
+            if status_tracker.is_status_update_allowed:
+                batch_job_queue.put((batch_job.timestamp, batch_job))
                 status_tracker.set_status(
                     batch_job.batch_request_id, BatchJobStatus.WAITING
                 )
-                status_resource.release()
+                # delete batch job files after reading
+                path.unlink()
 
-            # delete batch job files after reading
-            path.unlink()
+            status_tracker_resource.release()
 
         sleep(DELAY)
 
@@ -228,7 +315,7 @@ def process_batch_request(
     batch_job_queue: PriorityQueue[tuple[int, BatchJob]],
     previous_batch_job: BatchJob | None,
     status_tracker: BatchJobStatusTracker,
-    status_resource: StatusResource,
+    status_tracker_resource: BatchJobStatusTrackerResource,
     inactive_stop_event: Event,
     walltime_stop_event: Event,
 ):
@@ -237,11 +324,16 @@ def process_batch_request(
     is_server_instance_running = False
 
     while True:
-        if walltime_stop_event.is_set():  # TODO
+        if walltime_stop_event.is_set():
             break
 
         if time_inactive >= INACTIVE_THRESHOLD:
             inactive_stop_event.set()
+
+            # critical section
+            status_tracker_resource.acquire()
+            status_tracker.is_status_update_allowed = False
+            status_tracker_resource.release()
             break
 
         try:
@@ -253,7 +345,11 @@ def process_batch_request(
             time_inactive += timedelta(seconds=DELAY)
             continue
 
+        # critical section
+        status_tracker_resource.acquire()
         status_tracker.set_status(batch_job.batch_request_id, BatchJobStatus.RUNNING)
+        status_tracker_resource.release()
+
         mount_path = WORKDIR / 'mount' / batch_job.model_hub_id
 
         if not mount_path.exists():
@@ -271,7 +367,11 @@ def process_batch_request(
 
         TGIClient.run(batch_job.batch_request_id)
         previous_batch_job = batch_job
+
+        # critical section
+        status_tracker_resource.acquire()
         status_tracker.set_status(batch_job.batch_request_id, BatchJobStatus.FINISHED)
+        status_tracker_resource.release()
 
     if is_server_instance_running:
         TGIServerInstance.stop()
@@ -279,7 +379,7 @@ def process_batch_request(
 
 def track_walltime(
     status_tracker: BatchJobStatusTracker,
-    status_resource: StatusResource,
+    status_tracker_resource: BatchJobStatusTrackerResource,
     inactive_stop_event: Event,
     walltime_stop_event: Event,
 ):
@@ -303,25 +403,43 @@ def track_walltime(
 
         if walltime - walltime_used < WALLTIME_THRESHOLD:
             walltime_stop_event.set()
+
+            # critical section
+            status_tracker_resource.acquire()
+            status_tracker.is_status_update_allowed = False
+
+            for id, status in status_tracker.id_to_status.items():
+                if status != BatchJobStatus.FINISHED:
+                    status_tracker.set_status(id, BatchJobStatus.UNFINISHED)
+
+            status_tracker_resource.release()
             break
 
         sleep(DELAY)
 
 
 def main():
+    # initialization
     batch_job_queue: PriorityQueue[tuple[int, BatchJob]] = PriorityQueue()
     previous_batch_job: BatchJob | None = None
     status_tracker = BatchJobStatusTracker()
-    status_resource = StatusResource()
+    status_tracker_resource = BatchJobStatusTrackerResource()
     inactive_stop_event = Event()
     walltime_stop_event = Event()
 
+    # create status file
+    with STATUS_TRACKER_PATH.open('w') as file:
+        json_dict = status_tracker.to_json()
+        json.dump(json_dict, file)
+        file.flush()
+
+    # threads
     batch_job_reader_thread = Thread(
-        target=read_batch_job_file,
+        target=read_batch_job,
         args=(
             batch_job_queue,
             status_tracker,
-            status_resource,
+            status_tracker_resource,
             inactive_stop_event,
             walltime_stop_event,
         ),
@@ -333,7 +451,7 @@ def main():
             batch_job_queue,
             previous_batch_job,
             status_tracker,
-            status_resource,
+            status_tracker_resource,
             inactive_stop_event,
             walltime_stop_event,
         ),
@@ -343,7 +461,7 @@ def main():
         target=track_walltime,
         args=(
             status_tracker,
-            status_resource,
+            status_tracker_resource,
             inactive_stop_event,
             walltime_stop_event,
         ),

@@ -57,13 +57,6 @@ class HPCClient:
 
         return HPCJobTemporarySizeMapping.to_source(stdout)
 
-    async def has_file_path(self, file_path: Path) -> bool:
-        stdout = await self.ssh_client.run(
-            f'test -f {file_path} && echo "true" || echo "false"'
-        )
-
-        return stdout == 'true'
-
     async def has_file_changed(
         self, local_file_path: Path, remote_file_path: Path
     ) -> bool:
@@ -76,19 +69,3 @@ class HPCClient:
         )
 
         return local_file_hash != remote_file_hash
-
-    async def remove_file(self, file_path: Path):
-        await self.ssh_client.run(f'rm -f {file_path}')
-
-    async def remove_files(self, file_paths: list[Path]):
-        paths = ' '.join(str(path) for path in file_paths)
-        await self.ssh_client.run(f'rm -f {paths}')
-
-    async def make_directory(self, dir_path: Path):
-        await self.ssh_client.run(f'mkdir -p {dir_path}')
-
-    async def concatenate(self, file_path: Path) -> str:
-        return await self.ssh_client.run(f'cat {file_path}')
-
-    async def move(self, source: Path, target: Path):
-        await self.ssh_client.run(f'mv {source} {target}')

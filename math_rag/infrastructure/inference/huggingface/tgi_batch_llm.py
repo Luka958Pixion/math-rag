@@ -3,7 +3,7 @@ import json
 from datetime import datetime
 from logging import getLogger
 from pathlib import Path
-from uuid import UUID
+from uuid import UUID, uuid4
 
 from huggingface_hub.inference._generated.types import ChatCompletionOutput
 
@@ -30,6 +30,12 @@ from math_rag.infrastructure.mappings.inference.huggingface import (
     LLMRequestMapping,
     LLMResponseListMapping,
 )
+from math_rag.infrastructure.models.inference.huggingface import (
+    BatchJob,
+    BatchJobRequest,
+    BatchJobResponse,
+    BatchJobStatusTracker,
+)
 from math_rag.infrastructure.utils import (
     FileReaderUtil,
     FileStreamWriterUtil,
@@ -46,14 +52,15 @@ logger = getLogger(__name__)
 class TGIBatchLLM(PartialBatchLLM):
     def __init__(
         self,
-        remote_project_root: Path,
+        remote: Path,
         hpc_client: HPCClient,
         pbs_pro_client: PBSProClient,
         sftp_client: SFTPClient,
         apptainer_client: ApptainerClient,
     ):
-        self.local_project_root = Path(__file__).parents[4]
-        self.remote_project_root = remote_project_root
+        # local and remote project roots
+        self.local = Path(__file__).parents[4]
+        self.remote = remote
 
         self.hpc_client = hpc_client
         self.pbs_pro_client = pbs_pro_client
@@ -61,8 +68,8 @@ class TGIBatchLLM(PartialBatchLLM):
         self.apptainer_client = apptainer_client
 
     async def init_resources(self):
-        tmp_path = self.local_project_root / '.tmp'
-        hf_path = self.local_project_root / 'assets/hpc/hf'
+        tmp_path = self.local / '.tmp'
+        hf_path = self.local / 'assets/hpc/hf'
         tgi_path = hf_path / 'tgi'
 
         # NOTE: order matters, e.g. client.def requires requirements.txt to build client.sif
@@ -74,21 +81,20 @@ class TGIBatchLLM(PartialBatchLLM):
             tgi_path / 'client.py',
             tgi_path / 'tgi.py',
             tgi_path / 'tgi.sh',
-            tgi_path / 'status.json',
-            self.local_project_root / '.env.hpc.hf.tgi',
+            self.local / '.env.hpc.hf.tgi',
         ]
 
         for local_path in local_paths:
             assert local_path.exists()
 
-        await self.hpc_client.make_directory(self.remote_project_root)
+        await self.hpc_client.make_directory(self.remote)
 
         for local_path in local_paths:
-            remote_path = self.remote_project_root / local_path.name
+            remote_path = self.remote / local_path.name
 
-            if await self.hpc_client.has_file_path(remote_path):
+            if await self.hpc_client.test(remote_path):
                 if await self.hpc_client.has_file_changed(local_path, remote_path):
-                    await self.hpc_client.remove_file(remote_path)
+                    await self.hpc_client.remove(remote_path)
 
                     logger.info(f'Upload started: {local_path}')
 
@@ -107,10 +113,10 @@ class TGIBatchLLM(PartialBatchLLM):
                 sif_local_path = tmp_path / f'{local_path.stem}.sif'
                 await FileStreamWriterUtil.write(sif_stream, sif_local_path)
 
-                sif_remote_path = self.remote_project_root / sif_local_path.name
+                sif_remote_path = self.remote / sif_local_path.name
 
-                if await self.hpc_client.has_file_path(sif_remote_path):
-                    await self.hpc_client.remove_file(sif_remote_path)
+                if await self.hpc_client.test(sif_remote_path):
+                    await self.hpc_client.remove(sif_remote_path)
 
                 await self.sftp_client.upload(sif_local_path, sif_remote_path)
 
@@ -134,17 +140,15 @@ class TGIBatchLLM(PartialBatchLLM):
             json.dumps(request_dict, separators=(',', ':'))
             for request_dict in request_dicts
         ]
-        jsonl_str = '\n'.join(lines)
-        jsonl_bytes = jsonl_str.encode('utf-8')
+        input_jsonl_str = '\n'.join(lines)
+        input_jsonl_bytes = input_jsonl_str.encode('utf-8')
 
         # write input file
-        input_local_path = (
-            self.local_project_root / '.tmp' / f'input_{batch_request.id}.jsonl'
-        )
-        await FileWriterUtil.write(jsonl_bytes, input_local_path)
+        input_local_path = self.local / '.tmp' / f'input_{batch_request.id}.jsonl'
+        await FileWriterUtil.write(input_jsonl_bytes, input_local_path)
 
         # upload input file and avoid race-conditions
-        input_remote_path = self.remote_project_root / input_local_path.name
+        input_remote_path = self.remote / input_local_path.name
         input_remote_part_path = input_remote_path.with_name(
             input_remote_path.name + '.part'
         )
@@ -152,22 +156,22 @@ class TGIBatchLLM(PartialBatchLLM):
         await self.hpc_client.move(input_remote_part_path, input_remote_path)
 
         # create in-memory batch job file
-        batch_job = {
-            'batch_request_id': str(batch_request.id),
-            'model_hub_id': batch_request.requests[0].params.model,
-            'timestamp': int(datetime.now().timestamp()),
-        }
-        json_str = json.dumps(batch_job)
-        json_bytes = json_str.encode('utf-8')
+        batch_job = BatchJob(
+            batch_request_id=batch_request.id,
+            model_hub_id=batch_request.requests[0].params.model,
+            timestamp=int(datetime.now().timestamp()),
+        )
+        batch_job_json_str = batch_job.model_dump_json()
+        batch_job_json_bytes = batch_job_json_str.encode('utf-8')
 
         # write batch job file
         batch_job_local_path = (
-            self.local_project_root / '.tmp' / f'batch_job_{batch_request.id}.json'
+            self.local / '.tmp' / f'batch_job_{batch_request.id}.json'
         )
-        await FileWriterUtil.write(json_bytes, batch_job_local_path)
+        await FileWriterUtil.write(batch_job_json_bytes, batch_job_local_path)
 
         # upload batch job file and avoid race-conditions
-        batch_job_remote_path = self.remote_project_root / batch_job_local_path.name
+        batch_job_remote_path = self.remote / batch_job_local_path.name
         batch_job_remote_part_path = batch_job_remote_path.with_name(
             batch_job_remote_path.name + '.part'
         )
@@ -177,9 +181,38 @@ class TGIBatchLLM(PartialBatchLLM):
         # select job by name or create a new one
         job_id = await self.pbs_pro_client.queue_select(JOB_NAME)
 
-        if not job_id:
+        if job_id:
+            # create in-memory batch job request file
+            batch_job_request = BatchJobRequest(
+                source_batch_request_id=batch_request.id, target_pbs_job_id=job_id
+            )
+            request_json_str = batch_job_request.model_dump_json()
+            request_json_bytes = request_json_str.encode('utf-8')
+
+            # write batch job request file
+            request_local_path = (
+                self.local / '.tmp' / f'batch_job_request_{batch_request.id}.json'
+            )
+            await FileWriterUtil.write(request_json_bytes, request_local_path)
+
+            # upload batch job request file and avoid race-conditions
+            request_remote_path = self.remote / request_local_path.name
+            request_remote_part_path = request_remote_path.with_name(
+                request_remote_path.name + '.part'
+            )
+            await self.sftp_client.upload(request_local_path, request_remote_part_path)
+            await self.hpc_client.move(request_remote_part_path, request_remote_path)
+
+            # TODO wait for answer: test + cat
+            allowed = ...
+
+            if not allowed:
+                # queue_submit new job
+                pass
+
+        else:
             job_id = await self.pbs_pro_client.queue_submit(
-                self.remote_project_root,
+                self.remote,
                 JOB_NAME,
                 num_chunks=DEFAULT_TGI_SETTINGS.num_chunks,
                 num_cpus=DEFAULT_TGI_SETTINGS.num_cpus,
@@ -228,41 +261,28 @@ class TGIBatchLLM(PartialBatchLLM):
             ):
                 pass
 
-        status_remote_path = self.remote_project_root / 'status.json'
-        status_json = await self.hpc_client.concatenate(status_remote_path)
-        status_dict: dict = json.loads(status_json)
-        batch_id_to_status = {
-            UUID(key): BatchJobStatus(value) for key, value in status_dict.items()
-        }
+        status_tracker_remote_path = self.remote / f'status_tracker_{job_id}.json'
+        status_tracker_json = await self.hpc_client.concatenate(
+            status_tracker_remote_path
+        )
+        status_tracker = BatchJobStatusTracker.model_validate_json(status_tracker_json)
 
-        if batch_id not in batch_id_to_status:
+        if batch_id not in status_tracker.id_to_status:
             return None
 
-        status = batch_id_to_status[batch_id]
+        status = status_tracker.id_to_status[batch_id]
 
         match status:
-            case BatchJobStatus.WAITING:
-                # TODO if pbs is FINISHED or EXITED, then pass
-                # TODO
-                pass
-
-            case BatchJobStatus.RUNNING:
+            case BatchJobStatus.WAITING | BatchJobStatus.RUNNING:
                 return None
 
-            case BatchJobStatus.FINISHED:
-                # TODO
+            case BatchJobStatus.FINISHED | BatchJobStatus.UNFINISHED:
                 pass
 
-            case BatchJobStatus.UNFINISHED:
-                # TODO
-                pass
-
-        input_local_path = self.local_project_root / '.tmp' / f'input_{batch_id}.jsonl'
-        output_local_path = (
-            self.local_project_root / '.tmp' / f'output_{batch_id}.jsonl'
-        )
-        input_remote_path = self.remote_project_root / input_local_path.name
-        output_remote_path = self.remote_project_root / output_local_path.name
+        input_local_path = self.local / '.tmp' / f'input_{batch_id}.jsonl'
+        output_local_path = self.local / '.tmp' / f'output_{batch_id}.jsonl'
+        input_remote_path = self.remote / input_local_path.name
+        output_remote_path = self.remote / output_local_path.name
 
         await self.sftp_client.download(output_remote_path, output_local_path)
 
@@ -308,20 +328,21 @@ class TGIBatchLLM(PartialBatchLLM):
                 )
                 response_lists.append(response_list)
 
+        # find unfinished requests
         failed_request_ids = [
             failed_request.request.id for failed_request in failed_requests
         ]
         finished_request_ids = [
             response_list.request_id for response_list in response_lists
         ]
-        obtained_request_ids = failed_request_ids + finished_request_ids
-        skipped_request_ids = [
+        finished_request_ids.extend(failed_request_ids)
+        unfinished_request_ids = [
             request_id
             for request_id in requests_dict.keys()
-            if request_id not in obtained_request_ids
+            if request_id not in finished_request_ids
         ]
 
-        for request_id in skipped_request_ids:
+        for request_id in unfinished_request_ids:
             failed_request = LLMFailedRequest(
                 request=requests_dict[request_id],
                 errors=[],
@@ -334,7 +355,7 @@ class TGIBatchLLM(PartialBatchLLM):
             failed_requests=failed_requests,
         )
 
-        await self.hpc_client.remove_files([input_remote_path, output_remote_path])
+        await self.hpc_client.remove([input_remote_path, output_remote_path])
         input_local_path.unlink()
         output_local_path.unlink()
 
