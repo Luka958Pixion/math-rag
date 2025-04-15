@@ -1,0 +1,32 @@
+Bootstrap: docker
+From: python:3.12
+
+%files
+    requirements.txt /requirements.txt
+
+%environment
+    export PYTHONUNBUFFERED=1
+
+%post
+    pip install --upgrade pip
+    pip install -r requirements.txt
+
+%runscript
+    python client.py
+
+%labels
+    Author luka.panic@pixion.co
+    Version v0.0.1
+
+%help
+    Description:
+        A client for Text Embeddings Inference (TEI) from Hugging Face.
+
+    Build:
+        apptainer build client.sif client.def
+
+    Environment:
+        - .env.hpc.hf.tei
+
+    Usage:
+        apptainer run --env-file .env.hpc.hf.tei client.sif
