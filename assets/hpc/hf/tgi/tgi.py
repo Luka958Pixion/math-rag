@@ -8,8 +8,8 @@ from enum import Enum
 from http.client import HTTPConnection
 from logging import INFO, basicConfig, getLogger
 from pathlib import Path
-from queue import Empty, PriorityQueue
-from threading import Event, Lock, Thread
+from queue import Empty, PriorityQueue, Queue
+from threading import Condition, Event, Lock, Thread
 from time import sleep
 from urllib.parse import urlparse
 from uuid import UUID
@@ -36,7 +36,9 @@ CLI_SIF_PATH = Path('cli.sif')
 INACTIVE_THRESHOLD = timedelta(minutes=15)
 WALLTIME_THRESHOLD = timedelta(minutes=5)
 
-basicConfig(level=INFO, format='%(asctime)s - %(levelname)s - %(message)s')
+basicConfig(
+    level=INFO, format='%(asctime)s [%(threadName)s] %(levelname)s: %(message)s'
+)
 logger = getLogger(__name__)
 
 
@@ -52,6 +54,34 @@ class BatchJobStatus(str, Enum):
     RUNNING = 'running'
     FINISHED = 'finished'
     UNFINISHED = 'unfinished'
+
+
+class StatusResource:
+    """
+    Preserves thread access order to status.json
+    """
+
+    def __init__(self):
+        self.waiting = Queue()
+        self.lock = Lock()
+        self.condition = Condition()
+
+    def acquire(self):
+        turn = object()
+
+        with self.condition:
+            self.waiting.put(turn)
+
+            while self.waiting.queue[0] is not turn:
+                self.condition.wait()
+
+            self.lock.acquire()
+
+    def release(self):
+        with self.condition:
+            self.lock.release()
+            self.waiting.get()
+            self.condition.notify_all()
 
 
 class BatchJobStatusTracker:
@@ -161,31 +191,32 @@ class TGIClient:
 
 def read_batch_job_file(
     batch_job_queue: PriorityQueue[tuple[int, BatchJob]],
-    batch_job_status_tracker: BatchJobStatusTracker,
+    status_tracker: BatchJobStatusTracker,
+    status_resource: StatusResource,
     inactive_stop_event: Event,
     walltime_stop_event: Event,
-    status_lock: Lock,
 ):
     while True:
         if inactive_stop_event.is_set():
             break
 
         # read batch job files
-        batch_job_file_paths = WORKDIR.glob(BATCH_JOB_PATH_PATTERN)
-
-        for batch_job_file_path in batch_job_file_paths:
-            with batch_job_file_path.open('r') as file:
+        for path in WORKDIR.glob(BATCH_JOB_PATH_PATTERN):
+            with path.open('r') as file:
                 data = json.load(file)
                 data['batch_request_id'] = UUID(data['batch_request_id'])
                 batch_job = BatchJob(**data)
                 batch_job_queue.put((batch_job.timestamp, batch_job))
 
-                batch_job_status_tracker.set_status(
+                # critical section
+                status_resource.acquire()
+                status_tracker.set_status(
                     batch_job.batch_request_id, BatchJobStatus.WAITING
                 )
+                status_resource.release()
 
             # delete batch job files after reading
-            batch_job_file_path.unlink()
+            path.unlink()
 
         sleep(60)
 
@@ -193,10 +224,10 @@ def read_batch_job_file(
 def process_batch_request(
     batch_job_queue: PriorityQueue[tuple[int, BatchJob]],
     previous_batch_job: BatchJob | None,
-    batch_job_status_tracker: BatchJobStatusTracker,
+    status_tracker: BatchJobStatusTracker,
+    status_resource: StatusResource,
     inactive_stop_event: Event,
     walltime_stop_event: Event,
-    status_lock: Lock,
 ):
     DELAY = 30
     time_inactive = timedelta()
@@ -219,9 +250,7 @@ def process_batch_request(
             time_inactive += timedelta(seconds=DELAY)
             continue
 
-        batch_job_status_tracker.set_status(
-            batch_job.batch_request_id, BatchJobStatus.RUNNING
-        )
+        status_tracker.set_status(batch_job.batch_request_id, BatchJobStatus.RUNNING)
         mount_path = WORKDIR / 'mount' / batch_job.model_hub_id
 
         if not mount_path.exists():
@@ -239,19 +268,17 @@ def process_batch_request(
 
         TGIClient.run(batch_job.batch_request_id)
         previous_batch_job = batch_job
-        batch_job_status_tracker.set_status(
-            batch_job.batch_request_id, BatchJobStatus.FINISHED
-        )
+        status_tracker.set_status(batch_job.batch_request_id, BatchJobStatus.FINISHED)
 
     if is_server_instance_running:
         TGIServerInstance.stop()
 
 
 def track_walltime(
-    batch_job_status_tracker: BatchJobStatusTracker,
+    status_tracker: BatchJobStatusTracker,
+    status_resource: StatusResource,
     inactive_stop_event: Event,
     walltime_stop_event: Event,
-    status_lock: Lock,
 ):
     cmd = (
         f'qstat -f {PBS_JOB_ID} | '
@@ -280,8 +307,8 @@ def track_walltime(
 def main():
     batch_job_queue: PriorityQueue[tuple[int, BatchJob]] = PriorityQueue()
     previous_batch_job: BatchJob | None = None
-    batch_job_status_tracker = BatchJobStatusTracker()
-    status_lock = Lock()
+    status_tracker = BatchJobStatusTracker()
+    status_resource = StatusResource()
     inactive_stop_event = Event()
     walltime_stop_event = Event()
 
@@ -289,7 +316,8 @@ def main():
         target=read_batch_job_file,
         args=(
             batch_job_queue,
-            batch_job_status_tracker,
+            status_tracker,
+            status_resource,
             inactive_stop_event,
             walltime_stop_event,
         ),
@@ -300,7 +328,8 @@ def main():
         args=(
             batch_job_queue,
             previous_batch_job,
-            batch_job_status_tracker,
+            status_tracker,
+            status_resource,
             inactive_stop_event,
             walltime_stop_event,
         ),
@@ -308,7 +337,12 @@ def main():
     )
     walltime_tracker_thread = Thread(
         target=track_walltime,
-        args=(batch_job_status_tracker, inactive_stop_event, walltime_stop_event),
+        args=(
+            status_tracker,
+            status_resource,
+            inactive_stop_event,
+            walltime_stop_event,
+        ),
         name='WalltimeTrackerThread',
     )
 

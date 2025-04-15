@@ -217,7 +217,9 @@ class OpenAIConcurrentLLM(BaseConcurrentLLM):
             )
 
         concurrent_result = LLMConcurrentResult(
-            response_lists=response_lists, failed_requests=failed_requests
+            concurrent_request_id=concurrent_request.id,
+            response_lists=response_lists,
+            failed_requests=failed_requests,
         )
 
         return concurrent_result

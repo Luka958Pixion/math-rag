@@ -11,5 +11,6 @@ from .llm_response_list import LLMResponseList
 
 class LLMBatchResult(BaseModel, Generic[LLMResponseType]):
     id: UUID = Field(default_factory=uuid4)
+    batch_request_id: UUID
     response_lists: list[LLMResponseList[LLMResponseType]]
     failed_requests: list[LLMFailedRequest[LLMResponseType]]

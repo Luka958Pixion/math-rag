@@ -11,5 +11,6 @@ from .llm_response_list import LLMResponseList
 
 class LLMResult(BaseModel, Generic[LLMResponseType]):
     id: UUID = Field(default_factory=uuid4)
+    request_id: UUID
     response_list: LLMResponseList[LLMResponseType]
     failed_request: LLMFailedRequest[LLMResponseType] | None

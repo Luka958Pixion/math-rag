@@ -23,7 +23,9 @@ class PartialBatchLLM(BaseBatchLLM):
         batch_id = await self.batch_generate_init(batch_request)
 
         while True:
-            batch_result = await self.batch_generate_result(batch_id, response_type)
+            batch_result = await self.batch_generate_result(
+                batch_id, batch_request.id, response_type
+            )
 
             if batch_result is not None:
                 return batch_result

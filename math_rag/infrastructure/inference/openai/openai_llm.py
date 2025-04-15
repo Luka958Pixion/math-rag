@@ -71,6 +71,10 @@ class OpenAILLM(BaseLLM):
         except OPENAI_ERRORS_TO_RAISE:
             raise
 
-        result = LLMResult(response_list=response_list, failed_request=failed_request)
+        result = LLMResult(
+            request_id=request.id,
+            response_list=response_list,
+            failed_request=failed_request,
+        )
 
         return result

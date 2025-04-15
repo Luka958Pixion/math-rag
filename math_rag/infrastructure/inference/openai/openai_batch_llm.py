@@ -65,7 +65,10 @@ class OpenAIBatchLLM(PartialBatchLLM):
         return batch.id
 
     async def batch_generate_result(
-        self, batch_id: str, response_type: type[LLMResponseType]
+        self,
+        batch_id: str,
+        batch_request_id: UUID,
+        response_type: type[LLMResponseType],
     ) -> LLMBatchResult[LLMResponseType] | None:
         batch = await self.client.batches.retrieve(batch_id)
 
@@ -135,7 +138,9 @@ class OpenAIBatchLLM(PartialBatchLLM):
                 response_lists.append(response_list)
 
         batch_result = LLMBatchResult(
-            response_lists=response_lists, failed_requests=failed_requests
+            batch_request_id=batch_request_id,
+            response_lists=response_lists,
+            failed_requests=failed_requests,
         )
 
         await self.client.files.delete(batch.input_file_id)

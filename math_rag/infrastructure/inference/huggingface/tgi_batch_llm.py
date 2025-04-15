@@ -196,7 +196,10 @@ class TGIBatchLLM(PartialBatchLLM):
         return str(batch_request.id)
 
     async def batch_generate_result(
-        self, batch_id: str, response_type: type[LLMResponseType]
+        self,
+        batch_id: str,
+        batch_request_id: UUID,
+        response_type: type[LLMResponseType],
     ) -> LLMBatchResult[LLMResponseType] | None:
         batch_id = UUID(batch_id)
         job_id = await self.pbs_pro_client.queue_select(JOB_NAME)
@@ -235,8 +238,24 @@ class TGIBatchLLM(PartialBatchLLM):
         if batch_id not in batch_id_to_status:
             return None
 
-        if batch_id_to_status[batch_id] == BatchJobStatus.RUNNING:
-            return None
+        status = batch_id_to_status[batch_id]
+
+        match status:
+            case BatchJobStatus.WAITING:
+                # TODO if pbs is FINISHED or EXITED, then pass
+                # TODO
+                pass
+
+            case BatchJobStatus.RUNNING:
+                return None
+
+            case BatchJobStatus.FINISHED:
+                # TODO
+                pass
+
+            case BatchJobStatus.UNFINISHED:
+                # TODO
+                pass
 
         input_local_path = self.local_project_root / '.tmp' / f'input_{batch_id}.jsonl'
         output_local_path = (
@@ -310,7 +329,9 @@ class TGIBatchLLM(PartialBatchLLM):
             failed_requests.append(failed_request)
 
         batch_result = LLMBatchResult(
-            response_lists=response_lists, failed_requests=failed_requests
+            batch_request_id=batch_request_id,
+            response_lists=response_lists,
+            failed_requests=failed_requests,
         )
 
         await self.hpc_client.remove_files([input_remote_path, output_remote_path])

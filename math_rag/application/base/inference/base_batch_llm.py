@@ -1,4 +1,5 @@
 from abc import ABC, abstractmethod
+from uuid import UUID
 
 from math_rag.application.models.inference import (
     LLMBatchRequest,
@@ -28,6 +29,9 @@ class BaseBatchLLM(ABC):
 
     @abstractmethod
     async def batch_generate_result(
-        self, batch_id: str, response_type: type[LLMResponseType]
+        self,
+        batch_id: str,
+        batch_request_id: UUID,
+        response_type: type[LLMResponseType],
     ) -> LLMBatchResult[LLMResponseType] | None:
         pass
