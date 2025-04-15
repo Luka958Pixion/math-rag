@@ -3,7 +3,7 @@ import json
 from datetime import datetime
 from logging import getLogger
 from pathlib import Path
-from uuid import UUID, uuid4
+from uuid import UUID
 
 from huggingface_hub.inference._generated.types import ChatCompletionOutput
 
@@ -184,7 +184,7 @@ class TGIBatchLLM(PartialBatchLLM):
         if job_id:
             # create in-memory batch job request file
             batch_job_request = BatchJobRequest(
-                source_batch_request_id=batch_request.id, target_pbs_job_id=job_id
+                batch_request_id=batch_request.id, pbs_job_id=job_id
             )
             request_json_str = batch_job_request.model_dump_json()
             request_json_bytes = request_json_str.encode('utf-8')
@@ -208,6 +208,7 @@ class TGIBatchLLM(PartialBatchLLM):
 
             if not allowed:
                 # queue_submit new job
+                # TODO -> queue_submit with option after current job exits (depend on)
                 pass
 
         else:

@@ -1,6 +1,3 @@
-from hashlib import sha256
-from pathlib import Path
-
 from math_rag.infrastructure.mappings.hpc import (
     HPCGPUStatisticsMapping,
     HPCJobStatisticsMapping,
@@ -56,16 +53,3 @@ class HPCClient:
         stdout = await self.ssh_client.run('job_tmp_size')
 
         return HPCJobTemporarySizeMapping.to_source(stdout)
-
-    async def has_file_changed(
-        self, local_file_path: Path, remote_file_path: Path
-    ) -> bool:
-        with open(local_file_path, 'rb') as local_file:
-            local_file_bytes = local_file.read()
-
-        local_file_hash = sha256(local_file_bytes).hexdigest()
-        remote_file_hash = await self.ssh_client.run(
-            f"sha256sum {remote_file_path} | awk '{{print $1}}'"
-        )
-
-        return local_file_hash != remote_file_hash

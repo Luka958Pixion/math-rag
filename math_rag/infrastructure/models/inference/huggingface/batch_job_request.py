@@ -4,5 +4,5 @@ from pydantic import BaseModel
 
 
 class BatchJobRequest(BaseModel):
-    source_batch_request_id: UUID
-    target_pbs_job_id: str
+    batch_request_id: UUID
+    pbs_job_id: str

@@ -1,5 +1,6 @@
 from .awk_cmd_builder_util import AwkCmdBuilderUtil
 from .bytes_streamer_util import BytesStreamerUtil
+from .file_hasher_util import FileHasherUtil
 from .file_reader_util import FileReaderUtil
 from .file_stream_reader_util import FileStreamReaderUtil
 from .file_stream_writer_util import FileStreamWriterUtil
@@ -14,6 +15,7 @@ from .uuid_encoder_util import UUIDEncoderUtil
 __all__ = [
     'AwkCmdBuilderUtil',
     'BytesStreamerUtil',
+    'FileHasherUtil',
     'FileReaderUtil',
     'FileWriterUtil',
     'GzipExtractorUtil',

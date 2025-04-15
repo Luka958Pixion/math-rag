@@ -16,15 +16,18 @@ from urllib.parse import urlparse
 from uuid import UUID
 
 
+# current job
 PBS_JOB_ID = os.environ['PBS_JOBID']
 
+# squid proxy
 HTTP_PROXY = 'http://10.150.1.1:3128'
 HTTPS_PROXY = 'http://10.150.1.1:3128'
 
+# text generation inference
 TGI_BASE_URL = 'http://0.0.0.0:8000'
 TGI_SERVER_INSTANCE_NAME = 'tgi_server_instance'
-BATCH_JOB_PATH_PATTERN = 'batch_job_*.json'
 
+# paths
 WORKDIR = Path('.')
 STATUS_TRACKER_PATH = Path(f'status_tracker_{PBS_JOB_ID}.json')
 STATUS_TRACKER_TMP_PATH = STATUS_TRACKER_PATH.with_suffix('.tmp')
@@ -33,7 +36,14 @@ CLIENT_SIF_PATH = Path('client.sif')
 SERVER_SIF_PATH = Path('server.sif')
 CLI_SIF_PATH = Path('cli.sif')
 
+# path patterns and templates
+BATCH_JOB_PATH_PATTERN = 'batch_job_*.json'
+BATCH_JOB_REQUEST_PATH_PATTERN = f'batch_job_request_{PBS_JOB_ID}_*.json'
+BATCH_JOB_RESPONSE_PATH_TEMPLATE = (
+    'batch_job_response_{pbs_job_id}_{batch_request_id}.json'
+)
 
+# thresholds
 INACTIVE_THRESHOLD = timedelta(minutes=15)
 WALLTIME_THRESHOLD = timedelta(minutes=5)
 INITIALIZE_THRESHOLD = timedelta(minutes=10)
@@ -53,14 +63,14 @@ class BatchJob:
 
 @dataclass
 class BatchJobRequest:
-    source_batch_request_id: UUID
-    target_pbs_job_id: str
+    batch_request_id: UUID
+    pbs_job_id: str
 
 
 @dataclass
 class BatchJobResponse:
-    source_pbs_job_id: str
-    target_batch_request_id: UUID
+    batch_request_id: UUID
+    pbs_job_id: str
     allowed: bool
 
 
@@ -255,22 +265,67 @@ def initialize_batch_job(
     )
 
     while True:
-        if inactive_stop_event.is_set() or walltime_stop_event.is_set():
+        if inactive_stop_event.is_set():
             break
 
+        # read requests
+        batch_job_requests: list[BatchJobRequest] = []
+
+        for path in WORKDIR.glob(BATCH_JOB_REQUEST_PATH_PATTERN):
+            with path.open('r') as file:
+                json_dict = json.load(file)
+                json_dict['batch_request_id'] = UUID(json_dict['batch_request_id'])
+                batch_job_request = BatchJobRequest(**json_dict)
+                batch_job_requests.append(batch_job_request)
+
+        # read walltime
         result = subprocess.run(
             cmd, check=True, capture_output=True, text=True, shell=True
         )
         walltimes = result.stdout.strip().splitlines()
         walltime = timedelta(walltimes[0])
         walltime_used = timedelta(walltimes[1])
+        time_left = walltime - walltime_used
 
-        if walltime - walltime_used < INITIALIZE_THRESHOLD:
+        if time_left < WALLTIME_THRESHOLD:
+            walltime_stop_event.set()
+
+            # critical section
+            status_tracker_resource.acquire()
+            status_tracker.is_status_update_allowed = False
+
+            for id, status in status_tracker.id_to_status.items():
+                if status != BatchJobStatus.FINISHED:
+                    status_tracker.set_status(id, BatchJobStatus.UNFINISHED)
+
+            status_tracker_resource.release()
             break
 
-        # TODO
-        # implement handshake
-        # disable read_batch_job if it didnt pass a handshake?
+        elif time_left < 2 * WALLTIME_THRESHOLD:
+            for batch_job_request in batch_job_requests:
+                batch_job_response = BatchJobResponse(
+                    batch_request_id=batch_job_request.batch_request_id,
+                    pbs_job_id=batch_job_request.pbs_job_id,
+                    allowed=True,
+                )
+                batch_job_response_path = Path(
+                    BATCH_JOB_RESPONSE_PATH_TEMPLATE.format(
+                        pbs_job_id=batch_job_response.pbs_job_id,
+                        batch_request_id=batch_job_response.batch_request_id,
+                    )
+                )
+                batch_job_response_tmp_path = batch_job_response_path.with_suffix(
+                    '.tmp'
+                )
+
+                # atomic write
+                with batch_job_response_tmp_path.open('w') as file:
+                    json_dict = json.dump(batch_job_response)
+                    json.dump(json_dict, file)
+                    file.flush()
+                    os.fsync(file.fileno())
+
+                os.replace(batch_job_response_tmp_path, batch_job_response_path)
 
         sleep(DELAY)
 
@@ -291,9 +346,9 @@ def read_batch_job(
         # read batch job files
         for path in WORKDIR.glob(BATCH_JOB_PATH_PATTERN):
             with path.open('r') as file:
-                data = json.load(file)
-                data['batch_request_id'] = UUID(data['batch_request_id'])
-                batch_job = BatchJob(**data)
+                json_dict = json.load(file)
+                json_dict['batch_request_id'] = UUID(json_dict['batch_request_id'])
+                batch_job = BatchJob(**json_dict)
 
             # critical section
             status_tracker_resource.acquire()
@@ -311,7 +366,7 @@ def read_batch_job(
         sleep(DELAY)
 
 
-def process_batch_request(
+def process_batch_job(
     batch_job_queue: PriorityQueue[tuple[int, BatchJob]],
     previous_batch_job: BatchJob | None,
     status_tracker: BatchJobStatusTracker,
@@ -377,47 +432,6 @@ def process_batch_request(
         TGIServerInstance.stop()
 
 
-def track_walltime(
-    status_tracker: BatchJobStatusTracker,
-    status_tracker_resource: BatchJobStatusTrackerResource,
-    inactive_stop_event: Event,
-    walltime_stop_event: Event,
-):
-    DELAY = 180
-    cmd = (
-        f'qstat -f {PBS_JOB_ID} | '
-        "awk -F'= ' "
-        "'/Resource_List.walltime|resources_used.walltime/ { print $2 }'"
-    )
-
-    while True:
-        if inactive_stop_event.is_set():
-            break
-
-        result = subprocess.run(
-            cmd, check=True, capture_output=True, text=True, shell=True
-        )
-        walltimes = result.stdout.strip().splitlines()
-        walltime = timedelta(walltimes[0])
-        walltime_used = timedelta(walltimes[1])
-
-        if walltime - walltime_used < WALLTIME_THRESHOLD:
-            walltime_stop_event.set()
-
-            # critical section
-            status_tracker_resource.acquire()
-            status_tracker.is_status_update_allowed = False
-
-            for id, status in status_tracker.id_to_status.items():
-                if status != BatchJobStatus.FINISHED:
-                    status_tracker.set_status(id, BatchJobStatus.UNFINISHED)
-
-            status_tracker_resource.release()
-            break
-
-        sleep(DELAY)
-
-
 def main():
     # initialization
     batch_job_queue: PriorityQueue[tuple[int, BatchJob]] = PriorityQueue()
@@ -434,6 +448,16 @@ def main():
         file.flush()
 
     # threads
+    batch_job_initializer_thread = Thread(
+        target=initialize_batch_job,
+        args=(
+            status_tracker,
+            status_tracker_resource,
+            inactive_stop_event,
+            walltime_stop_event,
+        ),
+        name='BatchJobInitializerThread',
+    )
     batch_job_reader_thread = Thread(
         target=read_batch_job,
         args=(
@@ -445,8 +469,8 @@ def main():
         ),
         name='BatchJobReaderThread',
     )
-    batch_request_processor_thread = Thread(
-        target=process_batch_request,
+    batch_job_processor_thread = Thread(
+        target=process_batch_job,
         args=(
             batch_job_queue,
             previous_batch_job,
@@ -455,26 +479,16 @@ def main():
             inactive_stop_event,
             walltime_stop_event,
         ),
-        name='BatchRequestProcessorThread',
-    )
-    walltime_tracker_thread = Thread(
-        target=track_walltime,
-        args=(
-            status_tracker,
-            status_tracker_resource,
-            inactive_stop_event,
-            walltime_stop_event,
-        ),
-        name='WalltimeTrackerThread',
+        name='BatchJobProcessorThread',
     )
 
+    batch_job_initializer_thread.start()
     batch_job_reader_thread.start()
-    batch_request_processor_thread.start()
-    walltime_tracker_thread.start()
+    batch_job_processor_thread.start()
 
+    batch_job_initializer_thread.join()
     batch_job_reader_thread.join()
-    batch_request_processor_thread.join()
-    walltime_tracker_thread.join()
+    batch_job_processor_thread.join()
 
 
 if __name__ == '__main__':
