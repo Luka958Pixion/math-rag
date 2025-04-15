@@ -6,3 +6,4 @@ from pydantic import BaseModel, Field
 class EMConcurrentResult(BaseModel):
     id: UUID = Field(default_factory=uuid4)
     concurrent_request_id: UUID
+    embeddings: list[list[float]]

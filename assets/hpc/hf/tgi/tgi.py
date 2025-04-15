@@ -86,6 +86,7 @@ class StatusResource:
 
 class BatchJobStatusTracker:
     def __init__(self):
+        self._pbs_job_finished = False
         self._statuses: dict[UUID, BatchJobStatus] = {}
 
     def get_status(self, batch_id: UUID) -> BatchJobStatus | None:
@@ -196,6 +197,8 @@ def read_batch_job_file(
     inactive_stop_event: Event,
     walltime_stop_event: Event,
 ):
+    DELAY = 60
+
     while True:
         if inactive_stop_event.is_set():
             break
@@ -218,7 +221,7 @@ def read_batch_job_file(
             # delete batch job files after reading
             path.unlink()
 
-        sleep(60)
+        sleep(DELAY)
 
 
 def process_batch_request(
@@ -280,6 +283,7 @@ def track_walltime(
     inactive_stop_event: Event,
     walltime_stop_event: Event,
 ):
+    DELAY = 180
     cmd = (
         f'qstat -f {PBS_JOB_ID} | '
         "awk -F'= ' "
@@ -301,7 +305,7 @@ def track_walltime(
             walltime_stop_event.set()
             break
 
-        sleep(180)
+        sleep(DELAY)
 
 
 def main():
