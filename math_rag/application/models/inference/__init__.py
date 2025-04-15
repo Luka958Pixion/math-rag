@@ -1,3 +1,11 @@
+from .em_batch_request import EMBatchRequest
+from .em_batch_result import EMBatchResult
+from .em_concurrent_request import EMConcurrentRequest
+from .em_concurrent_result import EMConcurrentResult
+from .em_error import EMError
+from .em_params import EMParams
+from .em_request import EMRequest
+from .em_result import EMResult
 from .llm_batch_request import LLMBatchRequest
 from .llm_batch_result import LLMBatchResult
 from .llm_concurrent_request import LLMConcurrentRequest
@@ -18,6 +26,14 @@ from .llm_text_response import LLMTextResponse
 
 
 __all__ = [
+    'EMBatchRequest',
+    'EMBatchResult',
+    'EMConcurrentRequest',
+    'EMConcurrentResult',
+    'EMError',
+    'EMParams',
+    'EMRequest',
+    'EMResult',
     'LLMConversation',
     'LLMError',
     'LLMFailedRequest',

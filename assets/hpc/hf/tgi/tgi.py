@@ -9,7 +9,7 @@ from http.client import HTTPConnection
 from logging import INFO, basicConfig, getLogger
 from pathlib import Path
 from queue import Empty, PriorityQueue
-from threading import Event, Thread
+from threading import Event, Lock, Thread
 from time import sleep
 from urllib.parse import urlparse
 from uuid import UUID
@@ -34,6 +34,7 @@ CLI_SIF_PATH = Path('cli.sif')
 
 
 INACTIVE_THRESHOLD = timedelta(minutes=15)
+WALLTIME_THRESHOLD = timedelta(minutes=5)
 
 basicConfig(level=INFO, format='%(asctime)s - %(levelname)s - %(message)s')
 logger = getLogger(__name__)
@@ -50,7 +51,7 @@ class BatchJobStatus(str, Enum):
     WAITING = 'waiting'
     RUNNING = 'running'
     FINISHED = 'finished'
-    # FAILED = 'failed'
+    UNFINISHED = 'unfinished'
 
 
 class BatchJobStatusTracker:
@@ -62,10 +63,6 @@ class BatchJobStatusTracker:
 
     def set_status(self, batch_id: UUID, status: BatchJobStatus):
         self._statuses[batch_id] = status
-        self._atomic_write_statuses()
-
-    def clear(self):
-        self._statuses = {}
         self._atomic_write_statuses()
 
     def _atomic_write_statuses(self):
@@ -165,10 +162,12 @@ class TGIClient:
 def read_batch_job_file(
     batch_job_queue: PriorityQueue[tuple[int, BatchJob]],
     batch_job_status_tracker: BatchJobStatusTracker,
-    stop_event: Event,
+    inactive_stop_event: Event,
+    walltime_stop_event: Event,
+    status_lock: Lock,
 ):
     while True:
-        if stop_event.is_set():
+        if inactive_stop_event.is_set():
             break
 
         # read batch job files
@@ -195,16 +194,20 @@ def process_batch_request(
     batch_job_queue: PriorityQueue[tuple[int, BatchJob]],
     previous_batch_job: BatchJob | None,
     batch_job_status_tracker: BatchJobStatusTracker,
-    stop_event: Event,
+    inactive_stop_event: Event,
+    walltime_stop_event: Event,
+    status_lock: Lock,
 ):
     DELAY = 30
     time_inactive = timedelta()
     is_server_instance_running = False
 
     while True:
+        if walltime_stop_event.is_set():  # TODO
+            break
+
         if time_inactive >= INACTIVE_THRESHOLD:
-            batch_job_status_tracker.clear()
-            stop_event.set()
+            inactive_stop_event.set()
             break
 
         try:
@@ -244,18 +247,51 @@ def process_batch_request(
         TGIServerInstance.stop()
 
 
+def track_walltime(
+    batch_job_status_tracker: BatchJobStatusTracker,
+    inactive_stop_event: Event,
+    walltime_stop_event: Event,
+    status_lock: Lock,
+):
+    cmd = (
+        f'qstat -f {PBS_JOB_ID} | '
+        "awk -F'= ' "
+        "'/Resource_List.walltime|resources_used.walltime/ { print $2 }'"
+    )
+
+    while True:
+        if inactive_stop_event.is_set():
+            break
+
+        result = subprocess.run(
+            cmd, check=True, capture_output=True, text=True, shell=True
+        )
+        walltimes = result.stdout.strip().splitlines()
+        walltime = timedelta(walltimes[0])
+        walltime_used = timedelta(walltimes[1])
+
+        if walltime - walltime_used < WALLTIME_THRESHOLD:
+            walltime_stop_event.set()
+            break
+
+        sleep(180)
+
+
 def main():
     batch_job_queue: PriorityQueue[tuple[int, BatchJob]] = PriorityQueue()
     previous_batch_job: BatchJob | None = None
     batch_job_status_tracker = BatchJobStatusTracker()
-    stop_event = Event()
+    status_lock = Lock()
+    inactive_stop_event = Event()
+    walltime_stop_event = Event()
 
     batch_job_reader_thread = Thread(
         target=read_batch_job_file,
         args=(
             batch_job_queue,
             batch_job_status_tracker,
-            stop_event,
+            inactive_stop_event,
+            walltime_stop_event,
         ),
         name='BatchJobReaderThread',
     )
@@ -265,16 +301,24 @@ def main():
             batch_job_queue,
             previous_batch_job,
             batch_job_status_tracker,
-            stop_event,
+            inactive_stop_event,
+            walltime_stop_event,
         ),
         name='BatchRequestProcessorThread',
+    )
+    walltime_tracker_thread = Thread(
+        target=track_walltime,
+        args=(batch_job_status_tracker, inactive_stop_event, walltime_stop_event),
+        name='WalltimeTrackerThread',
     )
 
     batch_job_reader_thread.start()
     batch_request_processor_thread.start()
+    walltime_tracker_thread.start()
 
     batch_job_reader_thread.join()
     batch_request_processor_thread.join()
+    walltime_tracker_thread.join()
 
 
 if __name__ == '__main__':
