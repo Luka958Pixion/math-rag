@@ -41,7 +41,7 @@ STATUS_TRACKER_TMP_PATH = STATUS_TRACKER_PATH.with_suffix('.tmp')
 BATCH_JOB_PATH_PATTERN = f'batch_job_{PBS_JOB_ID}_*.json'
 
 # thresholds
-INACTIVE_THRESHOLD = timedelta(minutes=10)  # TODO, move to 15
+INACTIVE_THRESHOLD = timedelta(minutes=15)
 WALLTIME_THRESHOLD = timedelta(minutes=5)
 
 basicConfig(
@@ -183,10 +183,6 @@ class HuggingFaceCLI:
     def download_model(cli_state: ProcessState, model_hub_id: str):
         logger.info(f'Starting {model_hub_id} download...')
 
-        env = os.environ.copy()
-        env['http_proxy'] = HTTP_PROXY
-        env['https_proxy'] = HTTPS_PROXY
-
         bind = f'{WORKDIR}/mount:/mount'
         cmd = (
             'apptainer run '
@@ -194,10 +190,14 @@ class HuggingFaceCLI:
             f'--bind {bind} '
             f'--env-file {ENV_PATH} '
             f'--env MODEL_HUB_ID={model_hub_id} '
+            f'--env http_proxy={HTTP_PROXY} '
+            f'--env https_proxy={HTTPS_PROXY} '
             f'{CLIENT_SIF_PATH}'
         )
-        process = Popen(cmd, shell=True, env=env)
+        process = Popen(cmd, shell=True)
         cli_state.wait_process(process)
+
+        logger.info(f'Downloaded {model_hub_id}')
 
 
 class ServerInstance:
@@ -242,7 +242,7 @@ class ServerInstance:
 
             except Exception as e:
                 logger.info(
-                    f'Health check failed: {e}, ' f'retrying in {POLL_INTERVAL}s...'
+                    f'Health check failed: {e}, retrying in {POLL_INTERVAL}s...'
                 )
 
             sleep(POLL_INTERVAL)
@@ -258,12 +258,14 @@ class Client:
     def run(client_state: ProcessState, batch_request_id: UUID):
         logger.info('Starting client...')
 
-        env = os.environ.copy()
-        env['TGI_BASE_URL'] = TGI_BASE_URL
-        env['BATCH_REQUEST_ID'] = str(batch_request_id)
-
-        cmd = 'apptainer run ' f'--env-file {ENV_PATH} ' f'{CLIENT_SIF_PATH}'
-        process = Popen(cmd, shell=True, env=env)
+        cmd = (
+            'apptainer run '
+            f'--env-file {ENV_PATH} '
+            f'--env TGI_BASE_URL={TGI_BASE_URL} '
+            f'--env BATCH_REQUEST_ID={batch_request_id} '
+            f'{CLIENT_SIF_PATH}'
+        )
+        process = Popen(cmd, shell=True)
         client_state.wait_process(process)
 
 
