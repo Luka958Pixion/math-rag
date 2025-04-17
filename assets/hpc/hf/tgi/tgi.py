@@ -30,12 +30,12 @@ TGI_SERVER_INSTANCE_NAME = 'tgi_server_instance'
 
 # paths
 WORKDIR = Path('.')
-STATUS_TRACKER_PATH = Path(f'status_tracker_{PBS_JOB_ID}.json')
-STATUS_TRACKER_TMP_PATH = STATUS_TRACKER_PATH.with_suffix('.tmp')
-ENV_HPC_HF_TGI_PATH = Path('.env.hpc.hf.tgi')
+ENV_PATH = Path('.env.hpc.hf.tgi')
+CLI_SIF_PATH = Path('cli.sif')
 CLIENT_SIF_PATH = Path('client.sif')
 SERVER_SIF_PATH = Path('server.sif')
-CLI_SIF_PATH = Path('cli.sif')
+STATUS_TRACKER_PATH = Path(f'status_tracker_{PBS_JOB_ID}.json')
+STATUS_TRACKER_TMP_PATH = STATUS_TRACKER_PATH.with_suffix('.tmp')
 
 # path patterns
 BATCH_JOB_PATH_PATTERN = 'batch_job_{PBS_JOB_ID}_*.json'
@@ -53,8 +53,27 @@ logger = getLogger(__name__)
 
 class ProcessState:
     def __init__(self):
-        self.lock: Lock = Lock()
-        self.process: Popen | None = None
+        self._lock: Lock = Lock()
+        self._process: Popen | None = None
+
+    def wait_process(self, process: Popen):
+        with self._lock:
+            self._process = process
+
+        self._process.wait()
+
+    def stop_process(self):
+        with self._lock:
+            process = self._process
+
+        if process and process.poll() is None:
+            process.terminate()
+
+            try:
+                process.wait(timeout=5)
+
+            except TimeoutExpired:
+                process.kill()
 
 
 @dataclass
@@ -167,22 +186,18 @@ class HuggingFaceCLI:
             'apptainer run '
             '--nv '
             f'--bind {bind} '
-            f'--env-file {ENV_HPC_HF_TGI_PATH} '
+            f'--env-file {ENV_PATH} '
             f'--env MODEL_HUB_ID={model_hub_id} '
             f'{CLIENT_SIF_PATH}'
         )
         process = Popen(cmd, check=True, capture_output=False, shell=True, env=env)
-
-        with cli_state.lock:
-            cli_state.process = process
-
-        process.wait()
+        cli_state.wait_process(process)
 
 
 class ServerInstance:
     @staticmethod
     def start(server_state: ProcessState, mount_path: Path):
-        logger.info('Starting TGI server...')
+        logger.info(f'Starting {TGI_SERVER_INSTANCE_NAME}...')
 
         bind = f'{mount_path}:/model'
         cmd = (
@@ -193,11 +208,7 @@ class ServerInstance:
             f'{TGI_SERVER_INSTANCE_NAME}'
         )
         process = Popen(cmd, check=True, capture_output=False, shell=True)
-
-        with server_state.lock:
-            server_state.process = process
-
-        process.wait()
+        server_state.wait_process(process)
 
         POLL_INTERVAL = 5
         parsed_url = urlparse(TGI_BASE_URL)
@@ -205,7 +216,7 @@ class ServerInstance:
         if not parsed_url.port:
             raise ValueError('TGI_BASE_URL does not include a port')
 
-        logger.info('Waiting for TGI server to become healthy...')
+        logger.info(f'Waiting for {TGI_SERVER_INSTANCE_NAME} to become healthy...')
 
         while True:
             try:
@@ -214,18 +225,18 @@ class ServerInstance:
                 response = connection.getresponse()
 
                 if response.status == 200:
-                    logger.info('TGI server is healthy.')
+                    logger.info(f'{TGI_SERVER_INSTANCE_NAME} is healthy')
                     break
 
                 else:
                     logger.info(
-                        f'Health check returned status {response.status}. '
-                        f'Retrying in {POLL_INTERVAL}s...'
+                        f'Health check returned status {response.status}, '
+                        f'retrying in {POLL_INTERVAL}s...'
                     )
 
             except Exception as e:
                 logger.info(
-                    f'Health check failed: {e}. Retrying in {POLL_INTERVAL}s...'
+                    f'Health check failed: {e}, ' f'retrying in {POLL_INTERVAL}s...'
                 )
 
             sleep(POLL_INTERVAL)
@@ -243,13 +254,9 @@ class Client:
         env['TGI_BASE_URL'] = TGI_BASE_URL
         env['BATCH_REQUEST_ID'] = str(batch_request_id)
 
-        cmd = 'apptainer run ' f'--env-file {ENV_HPC_HF_TGI_PATH} ' f'{CLIENT_SIF_PATH}'
+        cmd = 'apptainer run ' f'--env-file {ENV_PATH} ' f'{CLIENT_SIF_PATH}'
         process = Popen(cmd, check=True, capture_output=False, shell=True, env=env)
-
-        with client_state.lock:
-            client_state.process = process
-
-        process.wait()
+        client_state.wait_process(process)
 
 
 def read_batch_job(
@@ -333,21 +340,25 @@ def process_batch_job(
         status_tracker.set_status(batch_job.batch_request_id, BatchJobStatus.RUNNING)
         status_tracker_resource.release()
 
+        # download model if it's not downloaded already
         mount_path = WORKDIR / 'mount' / batch_job.model_hub_id
 
         if not mount_path.exists():
             mount_path.mkdir(parents=True)
             HuggingFaceCLI.download_model(cli_state, batch_job.model_hub_id)
 
+        # start server instance
         if not previous_batch_job:
             ServerInstance.start(server_state, mount_path)
             is_server_instance_running = True
 
+        # restart server instance with another model
         elif previous_batch_job.model_hub_id != batch_job.model_hub_id:
             ServerInstance.stop()
             ServerInstance.start(mount_path)
             is_server_instance_running = True
 
+        # run client
         Client.run(client_state, batch_job.batch_request_id)
         previous_batch_job = batch_job
 
@@ -392,24 +403,13 @@ def track_walltime(
         walltime = timedelta(walltimes[0])
         walltime_used = timedelta(walltimes[1])
         walltime_left = walltime - walltime_used
-        is_threshold_reached = walltime_left < WALLTIME_THRESHOLD
 
-        if is_threshold_reached:
+        if walltime_left < WALLTIME_THRESHOLD:
             walltime_stop_event.set()
 
             # stop long running processes
             for state in (cli_state, client_state, server_state):
-                with state.lock:
-                    process = state.process
-
-                if process and process.poll() is None:
-                    process.terminate()
-
-                    try:
-                        process.wait(timeout=5)
-
-                    except TimeoutExpired:
-                        process.kill()
+                state.stop_process()
 
             # wait for other threads to stop
             reader_thread_finished_event.wait()

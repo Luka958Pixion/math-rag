@@ -60,7 +60,11 @@ class OpenAIBatchLLM(PartialBatchLLM):
             completion_window='24h',
             metadata=None,
         )
-        logger.info(f'Batch {batch.id} created with status {batch.status}')
+        logger.info(
+            f'Batch {batch.id} created for '
+            f'batch request {batch_request.id} '
+            f'with status {batch.status}'
+        )
 
         return batch.id
 

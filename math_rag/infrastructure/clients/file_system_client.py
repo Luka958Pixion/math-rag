@@ -1,7 +1,7 @@
 import shlex
 
 from pathlib import Path
-from typing import overload
+from typing import Iterable, overload
 
 from .ssh_client import SSHClient
 
@@ -22,14 +22,14 @@ class FileSystemClient:
         pass
 
     @overload
-    async def remove(self, file_path: list[Path]):
+    async def remove(self, file_path: Iterable[Path]):
         pass
 
-    async def remove(self, file_path: Path | list[Path]):
+    async def remove(self, file_path: Path | Iterable[Path]):
         if isinstance(file_path, Path):
             cmd = f'rm -f {file_path}'
 
-        elif isinstance(file_path, list):
+        elif isinstance(file_path, Iterable):
             if not all(isinstance(p, Path) for p in file_path):
                 raise TypeError()
 

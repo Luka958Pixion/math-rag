@@ -42,7 +42,9 @@ from math_rag.infrastructure.utils import (
 from math_rag.shared.utils import DataclassUtil
 
 
-JOB_NAME = 'tgi'
+PBS_JOB_NAME = 'tgi'
+
+# must be greater than WALLTIME_THRESHOLD in tgi.py
 WALLTIME_THRESHOLD = timedelta(minutes=10)
 
 logger = getLogger(__name__)
@@ -157,14 +159,7 @@ class TGIBatchLLM(PartialBatchLLM):
         await self.file_system_client.move(input_remote_part_path, input_remote_path)
 
         # select job by name or create a new one
-        job_id = await self.pbs_pro_client.queue_select(JOB_NAME)
-        queue_submit_kwargs = {
-            'num_chunks': DEFAULT_TGI_SETTINGS.num_chunks,
-            'num_cpus': DEFAULT_TGI_SETTINGS.num_cpus,
-            'num_gpus': DEFAULT_TGI_SETTINGS.num_gpus,
-            'mem': DEFAULT_TGI_SETTINGS.mem,
-            'walltime': DEFAULT_TGI_SETTINGS.walltime,
-        }
+        job_id = await self.pbs_pro_client.queue_select(PBS_JOB_NAME)
 
         if job_id:
             try:
@@ -180,19 +175,32 @@ class TGIBatchLLM(PartialBatchLLM):
 
             if not walltime_left or walltime_left < WALLTIME_THRESHOLD:
                 job_id = await self.pbs_pro_client.queue_submit(
-                    self.remote, JOB_NAME, **queue_submit_kwargs, depend_job_id=job_id
+                    self.remote,
+                    PBS_JOB_NAME,
+                    num_chunks=DEFAULT_TGI_SETTINGS.num_chunks,
+                    num_cpus=DEFAULT_TGI_SETTINGS.num_cpus,
+                    num_gpus=DEFAULT_TGI_SETTINGS.num_gpus,
+                    mem=DEFAULT_TGI_SETTINGS.mem,
+                    walltime=DEFAULT_TGI_SETTINGS.walltime,
+                    depend_job_id=job_id,
                 )
 
         else:
             job_id = await self.pbs_pro_client.queue_submit(
                 self.remote,
-                JOB_NAME,
-                **queue_submit_kwargs,
+                PBS_JOB_NAME,
+                num_chunks=DEFAULT_TGI_SETTINGS.num_chunks,
+                num_cpus=DEFAULT_TGI_SETTINGS.num_cpus,
+                num_gpus=DEFAULT_TGI_SETTINGS.num_gpus,
+                mem=DEFAULT_TGI_SETTINGS.mem,
+                walltime=DEFAULT_TGI_SETTINGS.walltime,
             )
 
         job = await self.pbs_pro_client.queue_status(job_id)
         logger.info(
-            f'Job {job_id} obtained for batch {batch_request.id} with state {job.state}'
+            f'Job {job_id} obtained for '
+            f'batch request {batch_request.id} '
+            f'with state {job.state}'
         )
 
         # create in-memory batch job file
@@ -206,7 +214,7 @@ class TGIBatchLLM(PartialBatchLLM):
 
         # write batch job file
         batch_job_local_path = (
-            self.local / '.tmp' / f'batch_job_{batch_request.id}.json'
+            self.local / '.tmp' / f'batch_job_{job_id}_{batch_request.id}.json'
         )
         await FileWriterUtil.write(batch_job_json_bytes, batch_job_local_path)
 
@@ -220,7 +228,7 @@ class TGIBatchLLM(PartialBatchLLM):
             batch_job_remote_part_path, batch_job_remote_path
         )
 
-        return job_id, batch_request.id
+        return job_id
 
     async def batch_generate_result(
         self,
