@@ -167,14 +167,17 @@ class TGIBatchLLM(PartialBatchLLM):
 
         if job_id:
             try:
-                walltime_left = await self.pbs_pro_client.queue_status_walltime_left(
-                    job_id
-                )
+                (
+                    walltime,
+                    walltime_used,
+                ) = await self.pbs_pro_client.queue_status_walltimes(job_id)
 
-                if walltime_left is None:
+                if walltime_used is None:
                     raise ValueError(
-                        'Walltime left can not be None because job is running'
+                        'Walltime used can not be None because job is running'
                     )
+
+                walltime_left = walltime - walltime_used
 
             except Exception as e:
                 logger.error(

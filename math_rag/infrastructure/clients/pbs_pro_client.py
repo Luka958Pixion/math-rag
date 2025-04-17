@@ -85,21 +85,24 @@ class PBSProClient:
 
         return PBSProJobFullMapping.to_source(stdout)
 
-    async def queue_status_walltime_left(self, job_id: str) -> timedelta | None:
+    async def queue_status_walltimes(
+        self, job_id: str
+    ) -> tuple[timedelta, timedelta | None]:
         awk_cmd = AwkCmdBuilderUtil.build_walltimes()
         stdout = await self.ssh_client.run(f'qstat -f {job_id} | {awk_cmd}')
         walltimes = stdout.strip().splitlines()
 
-        if len(walltimes) == 1:
-            return None
-
         hours, minutes, seconds = map(int, walltimes[0].split(':'))
         walltime = timedelta(hours=hours, minutes=minutes, seconds=seconds)
-        hours, minutes, seconds = map(int, walltimes[1].split(':'))
-        walltime_used = timedelta(hours=hours, minutes=minutes, seconds=seconds)
-        walltime_left = walltime - walltime_used
 
-        return walltime_left
+        if len(walltimes) == 2:
+            hours, minutes, seconds = map(int, walltimes[1].split(':'))
+            walltime_used = timedelta(hours=hours, minutes=minutes, seconds=seconds)
+
+        else:
+            walltime_used = None
+
+        return walltime, walltime_used
 
     async def queue_delete(self, job_id: str, *, force: bool):
         await self.ssh_client.run(
