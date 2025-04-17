@@ -4,7 +4,7 @@ from pathlib import Path
 
 class FileHasherUtil:
     @staticmethod
-    def hash(hash_function_name: str, file_path: Path) -> str:
+    def hash(file_path: Path, hash_function_name: str) -> str:
         with open(file_path, 'rb') as file:
             file_bytes = file.read()
 

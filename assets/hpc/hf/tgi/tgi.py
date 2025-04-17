@@ -115,9 +115,13 @@ class BatchJobStatusTrackerResource:
 
 
 class BatchJobStatusTracker:
-    def __init__(self):
-        self._is_status_update_allowed = True
-        self._id_to_status: dict[UUID, BatchJobStatus] = {}
+    def __init__(
+        self,
+        is_status_update_allowed: bool = True,
+        id_to_status: dict[UUID, BatchJobStatus] | None = None,
+    ):
+        self._is_status_update_allowed = is_status_update_allowed
+        self._id_to_status = id_to_status or {}
 
     @property
     def is_status_update_allowed(self) -> bool:
@@ -150,26 +154,24 @@ class BatchJobStatusTracker:
         os.replace(STATUS_TRACKER_TMP_PATH, STATUS_TRACKER_PATH)
 
     def to_json(self) -> str:
-        def encoder(obj):
-            if isinstance(obj, UUID):
-                return str(obj)
+        json_dict = {
+            'is_status_update_allowed': self._is_status_update_allowed,
+            'id_to_status': {
+                str(key): value.value for key, value in self._id_to_status.items()
+            },
+        }
 
-            if isinstance(obj, Enum):
-                return obj.value
-
-            raise TypeError(f'Type {type(obj)} not serializable')
-
-        return json.dumps(asdict(self), default=encoder)
+        return json.dumps(json_dict)
 
     @staticmethod
     def from_json(data: str) -> 'BatchJobStatusTracker':
         json_dict = json.loads(data)
 
         return BatchJobStatusTracker(
-            is_status_update_allowed=json_dict['pbs_job_running'],
+            is_status_update_allowed=json_dict['is_status_update_allowed'],
             id_to_status={
                 UUID(key): BatchJobStatus(value)
-                for key, value in cast(dict, json_dict['statuses']).items()
+                for key, value in cast(dict, json_dict['id_to_status']).items()
             },
         )
 

@@ -35,6 +35,7 @@ from math_rag.infrastructure.models.inference.huggingface import (
     BatchJobStatusTracker,
 )
 from math_rag.infrastructure.utils import (
+    FileHasherUtil,
     FileReaderUtil,
     FileStreamWriterUtil,
     FileWriterUtil,
@@ -94,9 +95,12 @@ class TGIBatchLLM(PartialBatchLLM):
             remote_path = self.remote / local_path.name
 
             if await self.file_system_client.test(remote_path):
-                if await self.file_system_client.has_file_changed(
-                    local_path, remote_path
-                ):
+                local_hash = FileHasherUtil.hash(local_path, 'sha256')
+                remote_hash = await self.file_system_client.hash(
+                    remote_path, 'sha256sum'
+                )
+
+                if local_hash != remote_hash:
                     await self.file_system_client.remove(remote_path)
 
                     logger.info(f'Upload started: {local_path}')
@@ -261,9 +265,7 @@ class TGIBatchLLM(PartialBatchLLM):
             ):
                 pass
 
-        status_tracker_remote_path = (
-            self.remote / f'status_tracker_{batch_request_id}.json'
-        )
+        status_tracker_remote_path = self.remote / f'status_tracker_{batch_id}.json'
         status_tracker_json = await self.file_system_client.concatenate(
             status_tracker_remote_path
         )
