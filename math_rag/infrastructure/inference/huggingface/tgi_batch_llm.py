@@ -171,6 +171,11 @@ class TGIBatchLLM(PartialBatchLLM):
                     job_id
                 )
 
+                if walltime_left is None:
+                    raise ValueError(
+                        'Walltime left can not be None because job is running'
+                    )
+
             except Exception as e:
                 logger.error(
                     f'Failed to get walltime because job {job_id} terminated: {e}'

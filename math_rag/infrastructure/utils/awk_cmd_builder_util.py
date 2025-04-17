@@ -24,5 +24,8 @@ class AwkCmdBuilderUtil:
     @staticmethod
     def build_walltimes() -> str:
         return (
-            "awk -F'= ' '/Resource_List.walltime|resources_used.walltime/ { print $2 }'"
+            "awk -F'= ' "
+            "'/Resource_List.walltime/ { walltime = $2 } "
+            '/resources_used.walltime/ { used = $2 } '
+            'END { print walltime "\\n" used }\''
         )

@@ -109,71 +109,100 @@ async def process_input_lines(
         logger.exception(f'Error in TaskGroup: {e}')
 
 
-def read_input_file(input_file_path: Path, input_queue: Queue[str | None]):
-    logger.info('Reader thread started')
+class ReaderThread(Thread):
+    def __init__(self, input_file_path: Path, input_queue: Queue[str | None]):
+        super().__init__(name=self.__class__.__name__)
 
-    try:
-        with open(input_file_path, 'r') as input_file:
-            for line in input_file:
-                line = line.strip()
+        self.input_file_path = input_file_path
+        self.input_queue = input_queue
 
-                if line:
-                    input_queue.put(line)
+    def run(self):
+        logger.info(f'{self.__class__.__name__} started')
 
-        logger.info('Finished reading input file')
+        try:
+            with open(self.input_file_path, 'r') as input_file:
+                for line in input_file:
+                    line = line.strip()
 
-    except Exception as e:
-        logger.exception(f'Error reading input file: {e}')
+                    if line:
+                        self.input_queue.put(line)
 
-    finally:
-        input_queue.put(None)
-        logger.info('Reader thread exiting')
+            logger.info('Finished reading input file')
 
+        except Exception as e:
+            logger.exception(f'Error reading input file: {e}')
 
-def process_lines(client, input_queue: Queue[str], output_queue: Queue[str | None]):
-    logger.info('Processor thread started')
-
-    try:
-        input_lines: list[str] = []
-
-        while True:
-            input_line = input_queue.get()
-
-            if input_line is None:
-                break
-
-            input_lines.append(input_line)
-
-        asyncio.run(process_input_lines(input_lines, client, output_queue))
-
-    except Exception as e:
-        logger.exception(f'Error processing lines in asyncio loop: {e}')
-
-    finally:
-        output_queue.put(None)
-        logger.info('Processor thread exiting')
+        finally:
+            self.input_queue.put(None)
+            logger.info(f'{self.__class__.__name__} exited')
 
 
-def write_output_file(output_file_path: Path, output_queue: Queue[str | None]):
-    logger.info('Writer thread started')
+class ProcessorThread(Thread):
+    def __init__(
+        self,
+        client: AsyncInferenceClient,
+        input_queue: Queue[str],
+        output_queue: Queue[str | None],
+    ):
+        super().__init__(name=self.__class__.__name__)
 
-    try:
-        with open(output_file_path, 'w') as output_file:
+        self.client = client
+        self.input_queue = input_queue
+        self.output_queue = output_queue
+
+    def run(self):
+        logger.info(f'{self.__class__.__name__} started')
+
+        try:
+            input_lines: list[str] = []
+
             while True:
-                line = output_queue.get()
+                input_line = self.input_queue.get()
 
-                if line is None:
+                if input_line is None:
                     break
 
-                output_file.write(line + '\n')
+                input_lines.append(input_line)
 
-        logger.info('Finished writing output file')
+            asyncio.run(
+                process_input_lines(input_lines, self.client, self.output_queue)
+            )
 
-    except Exception as e:
-        logger.exception(f'Error writing output file: {e}')
+        except Exception as e:
+            logger.exception(f'Error processing lines in asyncio loop: {e}')
 
-    finally:
-        logger.info('Writer thread exiting')
+        finally:
+            self.output_queue.put(None)
+            logger.info(f'{self.__class__.__name__} exited')
+
+
+class WriterThread(Thread):
+    def __init__(self, output_file_path: Path, output_queue: Queue[str | None]):
+        super().__init__(name=self.__class__.__name__)
+
+        self.output_file_path = output_file_path
+        self.output_queue = output_queue
+
+    def run(self):
+        logger.info(f'{self.__class__.__name__} started')
+
+        try:
+            with open(self.output_file_path, 'w') as output_file:
+                while True:
+                    line = self.output_queue.get()
+
+                    if line is None:
+                        break
+
+                    output_file.write(line + '\n')
+
+            logger.info('Finished writing output file')
+
+        except Exception as e:
+            logger.exception(f'Error writing output file: {e}')
+
+        finally:
+            logger.info(f'{self.__class__.__name__} exited')
 
 
 def main():
@@ -191,19 +220,9 @@ def main():
     input_queue: Queue[str | None] = Queue(maxsize=MAX_CONCURRENT_REQUESTS)
     output_queue: Queue[str | None] = Queue(maxsize=MAX_CONCURRENT_REQUESTS)
 
-    reader_thread = Thread(
-        target=read_input_file, args=(input_file_path, input_queue), name='ReaderThread'
-    )
-    processor_thread = Thread(
-        target=process_lines,
-        args=(client, input_queue, output_queue),
-        name='ProcessorThread',
-    )
-    writer_thread = Thread(
-        target=write_output_file,
-        args=(output_file_path, output_queue),
-        name='WriterThread',
-    )
+    reader_thread = ReaderThread(input_file_path, input_queue)
+    processor_thread = ProcessorThread(client, input_queue, output_queue)
+    writer_thread = WriterThread(output_file_path, output_queue)
 
     reader_thread.start()
     processor_thread.start()
@@ -213,7 +232,7 @@ def main():
     processor_thread.join()
     writer_thread.join()
 
-    logger.info('All threads have completed')
+    logger.info('All threads have exited')
 
 
 if __name__ == '__main__':
