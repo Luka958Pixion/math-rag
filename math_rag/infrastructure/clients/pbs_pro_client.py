@@ -31,12 +31,16 @@ class PBSProClient:
         num_gpus: int,
         mem: int,
         walltime: timedelta,
+        depend_job_id: str | None = None,
     ) -> str:
         cmd = f'cd {project_root_path} && qsub '
 
         if env_vars:
             env_vars_str = ','.join(f'{key}={value}' for key, value in env_vars.items())
             cmd += f'-v {env_vars_str} '
+
+        if depend_job_id:
+            cmd += f'-W depend=afterok:{depend_job_id} '
 
         cmd += (
             f'-l '
@@ -80,6 +84,16 @@ class PBSProClient:
         stdout = await self.ssh_client.run(f'qstat -f {job_id}')
 
         return PBSProJobFullMapping.to_source(stdout)
+
+    async def queue_status_walltime_left(self, job_id: str) -> timedelta:
+        awk_cmd = AwkCmdBuilderUtil.build_walltimes()
+        stdout = await self.ssh_client.run(f'qstat -f {job_id} | {awk_cmd}')
+        walltimes = stdout.strip().splitlines()
+        walltime = timedelta(walltimes[0])
+        walltime_used = timedelta(walltimes[1])
+        walltime_left = walltime - walltime_used
+
+        return walltime_left
 
     async def queue_delete(self, job_id: str, *, force: bool):
         await self.ssh_client.run(

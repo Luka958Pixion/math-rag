@@ -21,6 +21,7 @@ from math_rag.application.containers import ApplicationContainer
 from math_rag.infrastructure.clients import (
     ApptainerClient,
     ArxivClient,
+    FileSystemClient,
     HPCClient,
     KatexClient,
     PBSProClient,
@@ -154,6 +155,9 @@ class InfrastructureContainer(DeclarativeContainer):
         host=config.hpc.host,
         passphrase=config.hpc.passphrase,
     )
+
+    # file system
+    file_system_client = Factory(FileSystemClient, ssh_client=ssh_client)
 
     # HPC
     hpc_client = Factory(HPCClient, ssh_client=ssh_client)

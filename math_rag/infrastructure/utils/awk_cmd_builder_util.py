@@ -20,3 +20,9 @@ class AwkCmdBuilderUtil:
         print_args = separator.join(f'${i}' for i in col_numbers).strip()
 
         return f"awk 'NR{operator}{row_number} {{print {print_args}}}'"
+
+    @staticmethod
+    def build_walltimes() -> str:
+        return (
+            "awk -F'= ' '/Resource_List.walltime|resources_used.walltime/ { print $2 }'"
+        )

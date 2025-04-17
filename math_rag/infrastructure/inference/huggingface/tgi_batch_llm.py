@@ -1,6 +1,6 @@
 import json
 
-from datetime import datetime
+from datetime import datetime, timedelta
 from logging import getLogger
 from pathlib import Path
 from uuid import UUID
@@ -17,7 +17,7 @@ from math_rag.application.models.inference import (
 from math_rag.application.types.inference import LLMResponseType
 from math_rag.infrastructure.clients import (
     ApptainerClient,
-    HPCClient,
+    FileSystemClient,
     PBSProClient,
     SFTPClient,
 )
@@ -32,8 +32,6 @@ from math_rag.infrastructure.mappings.inference.huggingface import (
 )
 from math_rag.infrastructure.models.inference.huggingface import (
     BatchJob,
-    BatchJobRequest,
-    BatchJobResponse,
     BatchJobStatusTracker,
 )
 from math_rag.infrastructure.utils import (
@@ -45,6 +43,7 @@ from math_rag.shared.utils import DataclassUtil
 
 
 JOB_NAME = 'tgi'
+WALLTIME_THRESHOLD = timedelta(minutes=10)
 
 logger = getLogger(__name__)
 
@@ -53,7 +52,7 @@ class TGIBatchLLM(PartialBatchLLM):
     def __init__(
         self,
         remote: Path,
-        hpc_client: HPCClient,
+        file_system_client: FileSystemClient,
         pbs_pro_client: PBSProClient,
         sftp_client: SFTPClient,
         apptainer_client: ApptainerClient,
@@ -62,7 +61,7 @@ class TGIBatchLLM(PartialBatchLLM):
         self.local = Path(__file__).parents[4]
         self.remote = remote
 
-        self.hpc_client = hpc_client
+        self.file_system_client = file_system_client
         self.pbs_pro_client = pbs_pro_client
         self.sftp_client = sftp_client
         self.apptainer_client = apptainer_client
@@ -87,14 +86,16 @@ class TGIBatchLLM(PartialBatchLLM):
         for local_path in local_paths:
             assert local_path.exists()
 
-        await self.hpc_client.make_directory(self.remote)
+        await self.file_system_client.make_directory(self.remote)
 
         for local_path in local_paths:
             remote_path = self.remote / local_path.name
 
-            if await self.hpc_client.test(remote_path):
-                if await self.hpc_client.has_file_changed(local_path, remote_path):
-                    await self.hpc_client.remove(remote_path)
+            if await self.file_system_client.test(remote_path):
+                if await self.file_system_client.has_file_changed(
+                    local_path, remote_path
+                ):
+                    await self.file_system_client.remove(remote_path)
 
                     logger.info(f'Upload started: {local_path}')
 
@@ -115,8 +116,8 @@ class TGIBatchLLM(PartialBatchLLM):
 
                 sif_remote_path = self.remote / sif_local_path.name
 
-                if await self.hpc_client.test(sif_remote_path):
-                    await self.hpc_client.remove(sif_remote_path)
+                if await self.file_system_client.test(sif_remote_path):
+                    await self.file_system_client.remove(sif_remote_path)
 
                 await self.sftp_client.upload(sif_local_path, sif_remote_path)
 
@@ -153,7 +154,46 @@ class TGIBatchLLM(PartialBatchLLM):
             input_remote_path.name + '.part'
         )
         await self.sftp_client.upload(input_local_path, input_remote_part_path)
-        await self.hpc_client.move(input_remote_part_path, input_remote_path)
+        await self.file_system_client.move(input_remote_part_path, input_remote_path)
+
+        # select job by name or create a new one
+        job_id = await self.pbs_pro_client.queue_select(JOB_NAME)
+        queue_submit_kwargs = {
+            'num_chunks': DEFAULT_TGI_SETTINGS.num_chunks,
+            'num_cpus': DEFAULT_TGI_SETTINGS.num_cpus,
+            'num_gpus': DEFAULT_TGI_SETTINGS.num_gpus,
+            'mem': DEFAULT_TGI_SETTINGS.mem,
+            'walltime': DEFAULT_TGI_SETTINGS.walltime,
+        }
+
+        if job_id:
+            try:
+                walltime_left = await self.pbs_pro_client.queue_status_walltime_left(
+                    job_id
+                )
+
+            except Exception as e:
+                logger.error(
+                    f'Failed to get walltime because job {job_id} terminated: {e}'
+                )
+                walltime_left = None
+
+            if not walltime_left or walltime_left < WALLTIME_THRESHOLD:
+                job_id = await self.pbs_pro_client.queue_submit(
+                    self.remote, JOB_NAME, **queue_submit_kwargs, depend_job_id=job_id
+                )
+
+        else:
+            job_id = await self.pbs_pro_client.queue_submit(
+                self.remote,
+                JOB_NAME,
+                **queue_submit_kwargs,
+            )
+
+        job = await self.pbs_pro_client.queue_status(job_id)
+        logger.info(
+            f'Job {job_id} obtained for batch {batch_request.id} with state {job.state}'
+        )
 
         # create in-memory batch job file
         batch_job = BatchJob(
@@ -176,58 +216,11 @@ class TGIBatchLLM(PartialBatchLLM):
             batch_job_remote_path.name + '.part'
         )
         await self.sftp_client.upload(batch_job_local_path, batch_job_remote_part_path)
-        await self.hpc_client.move(batch_job_remote_part_path, batch_job_remote_path)
-
-        # select job by name or create a new one
-        job_id = await self.pbs_pro_client.queue_select(JOB_NAME)
-
-        if job_id:
-            # create in-memory batch job request file
-            batch_job_request = BatchJobRequest(
-                batch_request_id=batch_request.id, pbs_job_id=job_id
-            )
-            request_json_str = batch_job_request.model_dump_json()
-            request_json_bytes = request_json_str.encode('utf-8')
-
-            # write batch job request file
-            request_local_path = (
-                self.local / '.tmp' / f'batch_job_request_{batch_request.id}.json'
-            )
-            await FileWriterUtil.write(request_json_bytes, request_local_path)
-
-            # upload batch job request file and avoid race-conditions
-            request_remote_path = self.remote / request_local_path.name
-            request_remote_part_path = request_remote_path.with_name(
-                request_remote_path.name + '.part'
-            )
-            await self.sftp_client.upload(request_local_path, request_remote_part_path)
-            await self.hpc_client.move(request_remote_part_path, request_remote_path)
-
-            # TODO wait for answer: test + cat
-            allowed = ...
-
-            if not allowed:
-                # queue_submit new job
-                # TODO -> queue_submit with option after current job exits (depend on)
-                pass
-
-        else:
-            job_id = await self.pbs_pro_client.queue_submit(
-                self.remote,
-                JOB_NAME,
-                num_chunks=DEFAULT_TGI_SETTINGS.num_chunks,
-                num_cpus=DEFAULT_TGI_SETTINGS.num_cpus,
-                num_gpus=DEFAULT_TGI_SETTINGS.num_gpus,
-                mem=DEFAULT_TGI_SETTINGS.mem,
-                walltime=DEFAULT_TGI_SETTINGS.walltime,
-            )
-
-        job = await self.pbs_pro_client.queue_status(job_id)
-        logger.info(
-            f'Job {job_id} obtained for batch {batch_request.id} with state {job.state}'
+        await self.file_system_client.move(
+            batch_job_remote_part_path, batch_job_remote_path
         )
 
-        return str(batch_request.id)
+        return job_id, batch_request.id
 
     async def batch_generate_result(
         self,
@@ -235,9 +228,7 @@ class TGIBatchLLM(PartialBatchLLM):
         batch_request_id: UUID,
         response_type: type[LLMResponseType],
     ) -> LLMBatchResult[LLMResponseType] | None:
-        batch_id = UUID(batch_id)
-        job_id = await self.pbs_pro_client.queue_select(JOB_NAME)
-        job = await self.pbs_pro_client.queue_status(job_id)
+        job = await self.pbs_pro_client.queue_status(batch_id)
 
         logger.info(f'Batch {batch_id} state {job.state}')
 
@@ -262,8 +253,10 @@ class TGIBatchLLM(PartialBatchLLM):
             ):
                 pass
 
-        status_tracker_remote_path = self.remote / f'status_tracker_{job_id}.json'
-        status_tracker_json = await self.hpc_client.concatenate(
+        status_tracker_remote_path = (
+            self.remote / f'status_tracker_{batch_request_id}.json'
+        )
+        status_tracker_json = await self.file_system_client.concatenate(
             status_tracker_remote_path
         )
         status_tracker = BatchJobStatusTracker.model_validate_json(status_tracker_json)
@@ -356,7 +349,7 @@ class TGIBatchLLM(PartialBatchLLM):
             failed_requests=failed_requests,
         )
 
-        await self.hpc_client.remove([input_remote_path, output_remote_path])
+        await self.file_system_client.remove([input_remote_path, output_remote_path])
         input_local_path.unlink()
         output_local_path.unlink()
 

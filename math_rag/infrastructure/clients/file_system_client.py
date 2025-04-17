@@ -55,3 +55,8 @@ class FileSystemClient:
             content = shlex.quote(content)
 
         await self.ssh_client.run(f'echo {content} > {file_path}')
+
+    async def hash(self, hash_function_name: str, file_path: Path) -> str:
+        return await self.ssh_client.run(
+            f"{hash_function_name} {file_path} | awk '{{print $1}}'"
+        )

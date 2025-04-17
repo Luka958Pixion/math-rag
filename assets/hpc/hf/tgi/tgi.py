@@ -9,6 +9,7 @@ from http.client import HTTPConnection
 from logging import INFO, basicConfig, getLogger
 from pathlib import Path
 from queue import Empty, PriorityQueue, Queue
+from subprocess import Popen, TimeoutExpired
 from threading import Condition, Event, Lock, Thread
 from time import sleep
 from typing import cast
@@ -36,12 +37,8 @@ CLIENT_SIF_PATH = Path('client.sif')
 SERVER_SIF_PATH = Path('server.sif')
 CLI_SIF_PATH = Path('cli.sif')
 
-# path patterns and templates
-BATCH_JOB_PATH_PATTERN = 'batch_job_*.json'
-BATCH_JOB_REQUEST_PATH_PATTERN = f'batch_job_request_{PBS_JOB_ID}_*.json'
-BATCH_JOB_RESPONSE_PATH_TEMPLATE = (
-    'batch_job_response_{pbs_job_id}_{batch_request_id}.json'
-)
+# path patterns
+BATCH_JOB_PATH_PATTERN = 'batch_job_{PBS_JOB_ID}_*.json'
 
 # thresholds
 INACTIVE_THRESHOLD = timedelta(minutes=15)
@@ -54,24 +51,17 @@ basicConfig(
 logger = getLogger(__name__)
 
 
+class ProcessState:
+    def __init__(self):
+        self.lock: Lock = Lock()
+        self.process: Popen | None = None
+
+
 @dataclass
 class BatchJob:
     batch_request_id: UUID
     model_hub_id: str
     timestamp: int
-
-
-@dataclass
-class BatchJobRequest:
-    batch_request_id: UUID
-    pbs_job_id: str
-
-
-@dataclass
-class BatchJobResponse:
-    batch_request_id: UUID
-    pbs_job_id: str
-    allowed: bool
 
 
 class BatchJobStatus(str, Enum):
@@ -82,10 +72,6 @@ class BatchJobStatus(str, Enum):
 
 
 class BatchJobStatusTrackerResource:
-    """
-    Preserves thread access order to status file
-    """
-
     def __init__(self):
         self.waiting = Queue()
         self.lock = Lock()
@@ -171,7 +157,7 @@ class BatchJobStatusTracker:
 
 class HuggingFaceCLI:
     @staticmethod
-    def download_model(model_hub_id: str):
+    def download_model(cli_state: ProcessState, model_hub_id: str):
         env = os.environ.copy()
         env['http_proxy'] = HTTP_PROXY
         env['https_proxy'] = HTTPS_PROXY
@@ -185,12 +171,17 @@ class HuggingFaceCLI:
             f'--env MODEL_HUB_ID={model_hub_id} '
             f'{CLIENT_SIF_PATH}'
         )
-        subprocess.run(cmd, check=True, capture_output=False, shell=True, env=env)
+        process = Popen(cmd, check=True, capture_output=False, shell=True, env=env)
+
+        with cli_state.lock:
+            cli_state.process = process
+
+        process.wait()
 
 
-class TGIServerInstance:
+class ServerInstance:
     @staticmethod
-    def start(mount_path: Path):
+    def start(server_state: ProcessState, mount_path: Path):
         logger.info('Starting TGI server...')
 
         bind = f'{mount_path}:/model'
@@ -201,7 +192,12 @@ class TGIServerInstance:
             f'{SERVER_SIF_PATH} '
             f'{TGI_SERVER_INSTANCE_NAME}'
         )
-        subprocess.run(cmd, check=True, capture_output=False, shell=True)
+        process = Popen(cmd, check=True, capture_output=False, shell=True)
+
+        with server_state.lock:
+            server_state.process = process
+
+        process.wait()
 
         POLL_INTERVAL = 5
         parsed_url = urlparse(TGI_BASE_URL)
@@ -213,9 +209,9 @@ class TGIServerInstance:
 
         while True:
             try:
-                client = HTTPConnection(parsed_url.hostname, parsed_url.port)
-                client.request('GET', '/health')
-                response = client.getresponse()
+                connection = HTTPConnection(parsed_url.hostname, parsed_url.port)
+                connection.request('GET', '/health')
+                response = connection.getresponse()
 
                 if response.status == 200:
                     logger.info('TGI server is healthy.')
@@ -240,94 +236,20 @@ class TGIServerInstance:
         subprocess.run(cmd, check=True, capture_output=False, shell=True)
 
 
-class TGIClient:
+class Client:
     @staticmethod
-    def run(batch_request_id: UUID):
+    def run(client_state: ProcessState, batch_request_id: UUID):
         env = os.environ.copy()
         env['TGI_BASE_URL'] = TGI_BASE_URL
         env['BATCH_REQUEST_ID'] = str(batch_request_id)
 
         cmd = 'apptainer run ' f'--env-file {ENV_HPC_HF_TGI_PATH} ' f'{CLIENT_SIF_PATH}'
-        subprocess.run(cmd, check=True, capture_output=False, shell=True, env=env)
+        process = Popen(cmd, check=True, capture_output=False, shell=True, env=env)
 
+        with client_state.lock:
+            client_state.process = process
 
-def initialize_batch_job(
-    status_tracker: BatchJobStatusTracker,
-    status_tracker_resource: BatchJobStatusTrackerResource,
-    inactive_stop_event: Event,
-    walltime_stop_event: Event,
-):
-    DELAY = 15
-    cmd = (
-        f'qstat -f {PBS_JOB_ID} | '
-        "awk -F'= ' "
-        "'/Resource_List.walltime|resources_used.walltime/ { print $2 }'"
-    )
-
-    while True:
-        if inactive_stop_event.is_set():
-            break
-
-        # read requests
-        batch_job_requests: list[BatchJobRequest] = []
-
-        for path in WORKDIR.glob(BATCH_JOB_REQUEST_PATH_PATTERN):
-            with path.open('r') as file:
-                json_dict = json.load(file)
-                json_dict['batch_request_id'] = UUID(json_dict['batch_request_id'])
-                batch_job_request = BatchJobRequest(**json_dict)
-                batch_job_requests.append(batch_job_request)
-
-        # read walltime
-        result = subprocess.run(
-            cmd, check=True, capture_output=True, text=True, shell=True
-        )
-        walltimes = result.stdout.strip().splitlines()
-        walltime = timedelta(walltimes[0])
-        walltime_used = timedelta(walltimes[1])
-        time_left = walltime - walltime_used
-
-        if time_left < WALLTIME_THRESHOLD:
-            walltime_stop_event.set()
-
-            # critical section
-            status_tracker_resource.acquire()
-            status_tracker.is_status_update_allowed = False
-
-            for id, status in status_tracker.id_to_status.items():
-                if status != BatchJobStatus.FINISHED:
-                    status_tracker.set_status(id, BatchJobStatus.UNFINISHED)
-
-            status_tracker_resource.release()
-            break
-
-        elif time_left < 2 * WALLTIME_THRESHOLD:
-            for batch_job_request in batch_job_requests:
-                batch_job_response = BatchJobResponse(
-                    batch_request_id=batch_job_request.batch_request_id,
-                    pbs_job_id=batch_job_request.pbs_job_id,
-                    allowed=True,
-                )
-                batch_job_response_path = Path(
-                    BATCH_JOB_RESPONSE_PATH_TEMPLATE.format(
-                        pbs_job_id=batch_job_response.pbs_job_id,
-                        batch_request_id=batch_job_response.batch_request_id,
-                    )
-                )
-                batch_job_response_tmp_path = batch_job_response_path.with_suffix(
-                    '.tmp'
-                )
-
-                # atomic write
-                with batch_job_response_tmp_path.open('w') as file:
-                    json_dict = json.dump(batch_job_response)
-                    json.dump(json_dict, file)
-                    file.flush()
-                    os.fsync(file.fileno())
-
-                os.replace(batch_job_response_tmp_path, batch_job_response_path)
-
-        sleep(DELAY)
+        process.wait()
 
 
 def read_batch_job(
@@ -336,6 +258,7 @@ def read_batch_job(
     status_tracker_resource: BatchJobStatusTrackerResource,
     inactive_stop_event: Event,
     walltime_stop_event: Event,
+    reader_thread_finished_event: Event,
 ):
     DELAY = 60
 
@@ -358,12 +281,13 @@ def read_batch_job(
                 status_tracker.set_status(
                     batch_job.batch_request_id, BatchJobStatus.WAITING
                 )
-                # delete batch job files after reading
                 path.unlink()
 
             status_tracker_resource.release()
 
         sleep(DELAY)
+
+    reader_thread_finished_event.set()
 
 
 def process_batch_job(
@@ -373,6 +297,10 @@ def process_batch_job(
     status_tracker_resource: BatchJobStatusTrackerResource,
     inactive_stop_event: Event,
     walltime_stop_event: Event,
+    processor_thread_finished_event: Event,
+    cli_state: ProcessState,
+    client_state: ProcessState,
+    server_state: ProcessState,
 ):
     DELAY = 30
     time_inactive = timedelta()
@@ -409,18 +337,18 @@ def process_batch_job(
 
         if not mount_path.exists():
             mount_path.mkdir(parents=True)
-            HuggingFaceCLI.download_model(batch_job.model_hub_id)
+            HuggingFaceCLI.download_model(cli_state, batch_job.model_hub_id)
 
         if not previous_batch_job:
-            TGIServerInstance.start(mount_path)
+            ServerInstance.start(server_state, mount_path)
             is_server_instance_running = True
 
         elif previous_batch_job.model_hub_id != batch_job.model_hub_id:
-            TGIServerInstance.stop()
-            TGIServerInstance.start(mount_path)
+            ServerInstance.stop()
+            ServerInstance.start(mount_path)
             is_server_instance_running = True
 
-        TGIClient.run(batch_job.batch_request_id)
+        Client.run(client_state, batch_job.batch_request_id)
         previous_batch_job = batch_job
 
         # critical section
@@ -429,17 +357,91 @@ def process_batch_job(
         status_tracker_resource.release()
 
     if is_server_instance_running:
-        TGIServerInstance.stop()
+        ServerInstance.stop()
+
+    processor_thread_finished_event.set()
+
+
+def track_walltime(
+    status_tracker: BatchJobStatusTracker,
+    status_tracker_resource: BatchJobStatusTrackerResource,
+    inactive_stop_event: Event,
+    walltime_stop_event: Event,
+    reader_thread_finished_event: Event,
+    processor_thread_finished_event: Event,
+    cli_state: ProcessState,
+    client_state: ProcessState,
+    server_state: ProcessState,
+):
+    DELAY = 5 * 60
+    cmd = (
+        f'qstat -f {PBS_JOB_ID} | '
+        "awk -F'= ' "
+        "'/Resource_List.walltime|resources_used.walltime/ { print $2 }'"
+    )
+
+    while True:
+        if inactive_stop_event.is_set():
+            break
+
+        # read walltime
+        result = subprocess.run(
+            cmd, check=True, capture_output=True, text=True, shell=True
+        )
+        walltimes = result.stdout.strip().splitlines()
+        walltime = timedelta(walltimes[0])
+        walltime_used = timedelta(walltimes[1])
+        walltime_left = walltime - walltime_used
+        is_threshold_reached = walltime_left < WALLTIME_THRESHOLD
+
+        if is_threshold_reached:
+            walltime_stop_event.set()
+
+            # stop long running processes
+            for state in (cli_state, client_state, server_state):
+                with state.lock:
+                    process = state.process
+
+                if process and process.poll() is None:
+                    process.terminate()
+
+                    try:
+                        process.wait(timeout=5)
+
+                    except TimeoutExpired:
+                        process.kill()
+
+            # wait for other threads to stop
+            reader_thread_finished_event.wait()
+            processor_thread_finished_event.wait()
+
+            # critical section
+            status_tracker_resource.acquire()
+            status_tracker.is_status_update_allowed = False
+
+            for id, status in status_tracker.id_to_status.items():
+                if status != BatchJobStatus.FINISHED:
+                    status_tracker.set_status(id, BatchJobStatus.UNFINISHED)
+
+            status_tracker_resource.release()
+            break
+
+        sleep(DELAY)
 
 
 def main():
     # initialization
-    batch_job_queue: PriorityQueue[tuple[int, BatchJob]] = PriorityQueue()
+    batch_job_queue: Queue[BatchJob] = Queue()
     previous_batch_job: BatchJob | None = None
     status_tracker = BatchJobStatusTracker()
     status_tracker_resource = BatchJobStatusTrackerResource()
     inactive_stop_event = Event()
     walltime_stop_event = Event()
+    reader_thread_finished_event = Event()
+    processor_thread_finished_event = Event()
+    cli_state = ProcessState()
+    client_state = ProcessState()
+    server_state = ProcessState()
 
     # create status file
     with STATUS_TRACKER_PATH.open('w') as file:
@@ -448,16 +450,6 @@ def main():
         file.flush()
 
     # threads
-    batch_job_initializer_thread = Thread(
-        target=initialize_batch_job,
-        args=(
-            status_tracker,
-            status_tracker_resource,
-            inactive_stop_event,
-            walltime_stop_event,
-        ),
-        name='BatchJobInitializerThread',
-    )
     batch_job_reader_thread = Thread(
         target=read_batch_job,
         args=(
@@ -466,6 +458,7 @@ def main():
             status_tracker_resource,
             inactive_stop_event,
             walltime_stop_event,
+            reader_thread_finished_event,
         ),
         name='BatchJobReaderThread',
     )
@@ -478,17 +471,36 @@ def main():
             status_tracker_resource,
             inactive_stop_event,
             walltime_stop_event,
+            processor_thread_finished_event,
+            cli_state,
+            client_state,
+            server_state,
         ),
         name='BatchJobProcessorThread',
     )
+    walltime_tracker_thread = Thread(
+        target=track_walltime,
+        args=(
+            status_tracker,
+            status_tracker_resource,
+            inactive_stop_event,
+            walltime_stop_event,
+            reader_thread_finished_event,
+            processor_thread_finished_event,
+            cli_state,
+            client_state,
+            server_state,
+        ),
+        name='WalltimeTrackerThread',
+    )
 
-    batch_job_initializer_thread.start()
     batch_job_reader_thread.start()
     batch_job_processor_thread.start()
+    walltime_tracker_thread.start()
 
-    batch_job_initializer_thread.join()
     batch_job_reader_thread.join()
     batch_job_processor_thread.join()
+    walltime_tracker_thread.join()
 
 
 if __name__ == '__main__':
