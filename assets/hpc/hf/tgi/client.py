@@ -56,76 +56,23 @@ async def safe_chat_completion(client: AsyncInferenceClient, request: dict) -> d
     return response
 
 
-async def process_input_line(
-    semaphore: asyncio.Semaphore,
-    input_line: str,
-    client: AsyncInferenceClient,
-    output_queue: Queue[str | None],
-):
-    async with semaphore:
-        request = json.loads(input_line)
-
-        try:
-            response = await safe_chat_completion(client, request)
-
-        except Exception as e:
-            logger.error(
-                f'Failed processing line after {MAX_RETRIES} retries: '
-                f'{input_line} - Error: {e}'
-            )
-            response = {
-                'request_id': request['request_id'],
-                'response': None,
-                'error': e,
-            }
-
-        finally:
-            output_line = json.dumps(response)
-
-        while True:
-            try:
-                output_queue.put_nowait(output_line)
-                break
-
-            except Full:
-                await asyncio.sleep(0.1)
-
-
-async def process_input_lines(
-    input_lines: list[str],
-    client: AsyncInferenceClient,
-    output_queue: Queue[str | None],
-):
-    semaphore = asyncio.Semaphore(MAX_CONCURRENT_REQUESTS)
-
-    try:
-        async with asyncio.TaskGroup() as task_group:
-            for input_line in input_lines:
-                task_group.create_task(
-                    process_input_line(semaphore, input_line, client, output_queue)
-                )
-
-    except Exception as e:
-        logger.exception(f'Error in TaskGroup: {e}')
-
-
 class ReaderThread(Thread):
     def __init__(self, input_file_path: Path, input_queue: Queue[str | None]):
         super().__init__(name=self.__class__.__name__)
 
-        self.input_file_path = input_file_path
-        self.input_queue = input_queue
+        self._input_file_path = input_file_path
+        self._input_queue = input_queue
 
     def run(self):
         logger.info(f'{self.__class__.__name__} started')
 
         try:
-            with open(self.input_file_path, 'r') as input_file:
+            with open(self._input_file_path, 'r') as input_file:
                 for line in input_file:
                     line = line.strip()
 
                     if line:
-                        self.input_queue.put(line)
+                        self._input_queue.put(line)
 
             logger.info('Finished reading input file')
 
@@ -133,7 +80,7 @@ class ReaderThread(Thread):
             logger.exception(f'Error reading input file: {e}')
 
         finally:
-            self.input_queue.put(None)
+            self._input_queue.put(None)
             logger.info(f'{self.__class__.__name__} exited')
 
 
@@ -146,9 +93,9 @@ class ProcessorThread(Thread):
     ):
         super().__init__(name=self.__class__.__name__)
 
-        self.client = client
-        self.input_queue = input_queue
-        self.output_queue = output_queue
+        self._client = client
+        self._input_queue = input_queue
+        self._output_queue = output_queue
 
     def run(self):
         logger.info(f'{self.__class__.__name__} started')
@@ -157,39 +104,86 @@ class ProcessorThread(Thread):
             input_lines: list[str] = []
 
             while True:
-                input_line = self.input_queue.get()
+                input_line = self._input_queue.get()
 
                 if input_line is None:
                     break
 
                 input_lines.append(input_line)
 
-            asyncio.run(
-                process_input_lines(input_lines, self.client, self.output_queue)
-            )
+            asyncio.run(self._process_input_lines(input_lines, self._output_queue))
 
         except Exception as e:
             logger.exception(f'Error processing lines in asyncio loop: {e}')
 
         finally:
-            self.output_queue.put(None)
+            self._output_queue.put(None)
             logger.info(f'{self.__class__.__name__} exited')
+
+    async def _process_input_lines(
+        self,
+        input_lines: list[str],
+    ):
+        semaphore = asyncio.Semaphore(MAX_CONCURRENT_REQUESTS)
+
+        try:
+            async with asyncio.TaskGroup() as task_group:
+                for input_line in input_lines:
+                    task_group.create_task(
+                        self._process_input_line(semaphore, input_line)
+                    )
+
+        except Exception as e:
+            logger.exception(f'Error in TaskGroup: {e}')
+
+    async def _process_input_line(
+        self,
+        semaphore: asyncio.Semaphore,
+        input_line: str,
+    ):
+        async with semaphore:
+            request = json.loads(input_line)
+
+            try:
+                response = await safe_chat_completion(self._client, request)
+
+            except Exception as e:
+                logger.error(
+                    f'Failed processing line after {MAX_RETRIES} retries: '
+                    f'{input_line} - Error: {e}'
+                )
+                response = {
+                    'request_id': request['request_id'],
+                    'response': None,
+                    'error': e,
+                }
+
+            finally:
+                output_line = json.dumps(response)
+
+            while True:
+                try:
+                    self._output_queue.put_nowait(output_line)
+                    break
+
+                except Full:
+                    await asyncio.sleep(0.1)
 
 
 class WriterThread(Thread):
     def __init__(self, output_file_path: Path, output_queue: Queue[str | None]):
         super().__init__(name=self.__class__.__name__)
 
-        self.output_file_path = output_file_path
-        self.output_queue = output_queue
+        self._output_file_path = output_file_path
+        self._output_queue = output_queue
 
     def run(self):
         logger.info(f'{self.__class__.__name__} started')
 
         try:
-            with open(self.output_file_path, 'w') as output_file:
+            with open(self._output_file_path, 'w') as output_file:
                 while True:
-                    line = self.output_queue.get()
+                    line = self._output_queue.get()
 
                     if line is None:
                         break
