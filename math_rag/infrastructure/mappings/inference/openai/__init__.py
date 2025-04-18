@@ -1,3 +1,6 @@
+from .em_params_mapping import EMParamsMapping
+from .em_request_mapping import EMRequestMapping
+from .em_response_list_mapping import EMResponseListMapping
 from .llm_conversation_mapping import LLMConversationMapping
 from .llm_error_mapping import LLMErrorMapping
 from .llm_message_mapping import LLMMessageMapping
@@ -7,6 +10,9 @@ from .llm_response_mapping import LLMResponseMapping
 
 
 __all__ = [
+    'EMParamsMapping',
+    'EMRequestMapping',
+    'EMResponseListMapping',
     'LLMConversationMapping',
     'LLMErrorMapping',
     'LLMMessageMapping',

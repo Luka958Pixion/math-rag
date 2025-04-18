@@ -36,6 +36,7 @@ pre-commit = "^4.1.0"
 pytest = "^8.3.4"
 jupyter = "^1.1.1"
 ipykernel = "^6.29.5"
+pytest-asyncio = "^0.26.0"
 
 
 [tool.poetry.group."dev.tgi".dependencies]

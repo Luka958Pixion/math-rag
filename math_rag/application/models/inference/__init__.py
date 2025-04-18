@@ -3,8 +3,11 @@ from .em_batch_result import EMBatchResult
 from .em_concurrent_request import EMConcurrentRequest
 from .em_concurrent_result import EMConcurrentResult
 from .em_error import EMError
+from .em_failed_request import EMFailedRequest
 from .em_params import EMParams
 from .em_request import EMRequest
+from .em_response import EMResponse
+from .em_response_list import EMResponseList
 from .em_result import EMResult
 from .llm_batch_request import LLMBatchRequest
 from .llm_batch_result import LLMBatchResult
@@ -31,8 +34,11 @@ __all__ = [
     'EMConcurrentRequest',
     'EMConcurrentResult',
     'EMError',
+    'EMFailedRequest',
     'EMParams',
     'EMRequest',
+    'EMResponse',
+    'EMResponseList',
     'EMResult',
     'LLMConversation',
     'LLMError',

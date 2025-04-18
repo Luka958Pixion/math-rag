@@ -32,9 +32,6 @@ class OpenAILLM(BaseLLM):
         max_time: float,
         max_num_retries: int,
     ) -> LLMResult[LLMResponseType]:
-        response_list = []
-        failed_request = None
-
         @on_exception(
             wait_gen=expo,
             exception=OPENAI_ERRORS_TO_RETRY,
@@ -61,6 +58,7 @@ class OpenAILLM(BaseLLM):
 
         try:
             response_list = await _generate(request)
+            failed_request = None
 
         except OPENAI_ERRORS_TO_RETRY as e:
             response_list = LLMResponseList[LLMResponseType](responses=[])
