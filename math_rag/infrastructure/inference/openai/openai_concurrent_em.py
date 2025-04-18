@@ -200,7 +200,8 @@ class OpenAIConcurrentEM(BaseConcurrentEM):
 
         if status_tracker.num_tasks_failed > 0:
             logger.warning(
-                f'{status_tracker.num_tasks_failed} / {status_tracker.num_tasks_started} requests failed'
+                f'{status_tracker.num_tasks_failed} / '
+                f'{status_tracker.num_tasks_started} requests failed'
             )
 
         if status_tracker.num_rate_limit_errors > 0:
