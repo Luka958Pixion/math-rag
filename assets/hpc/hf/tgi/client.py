@@ -8,10 +8,12 @@ from threading import Thread
 from uuid import UUID
 
 from backoff import expo, full_jitter, on_exception
-from decouple import config
+from decouple import Config, RepositoryEnv
 from huggingface_hub import AsyncInferenceClient
 from huggingface_hub.errors import TextGenerationError
 
+
+config = Config(repository=RepositoryEnv('.env.hpc.hf.tgi'))
 
 # NOTE: running locally requires TGI_BASE_URL
 # NOTE: running remotely requires TGI_API_KEY and MODEL_HUB_ID
@@ -111,7 +113,7 @@ class ProcessorThread(Thread):
 
                 input_lines.append(input_line)
 
-            asyncio.run(self._process_input_lines(input_lines, self._output_queue))
+            asyncio.run(self._process_input_lines(input_lines))
 
         except Exception as e:
             logger.exception(f'Error processing lines in asyncio loop: {e}')
@@ -120,10 +122,7 @@ class ProcessorThread(Thread):
             self._output_queue.put(None)
             logger.info(f'{self.__class__.__name__} exited')
 
-    async def _process_input_lines(
-        self,
-        input_lines: list[str],
-    ):
+    async def _process_input_lines(self, input_lines: list[str]):
         semaphore = asyncio.Semaphore(MAX_CONCURRENT_REQUESTS)
 
         try:

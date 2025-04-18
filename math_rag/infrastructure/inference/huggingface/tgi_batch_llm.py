@@ -249,7 +249,6 @@ class TGIBatchLLM(PartialBatchLLM):
         response_type: type[LLMResponseType],
     ) -> LLMBatchResult[LLMResponseType] | None:
         job = await self.pbs_pro_client.queue_status(batch_id)
-
         logger.info(f'Batch {batch_id} state {job.state}')
 
         match job.state:
@@ -279,10 +278,10 @@ class TGIBatchLLM(PartialBatchLLM):
         )
         status_tracker = BatchJobStatusTracker.model_validate_json(status_tracker_json)
 
-        if batch_id not in status_tracker.id_to_status:
+        if batch_request_id not in status_tracker.id_to_status:
             return None
 
-        status = status_tracker.id_to_status[batch_id]
+        status = status_tracker.id_to_status[batch_request_id]
 
         match status:
             case BatchJobStatus.WAITING | BatchJobStatus.RUNNING:
@@ -291,8 +290,8 @@ class TGIBatchLLM(PartialBatchLLM):
             case BatchJobStatus.FINISHED | BatchJobStatus.UNFINISHED:
                 pass
 
-        input_local_path = self.local / '.tmp' / f'input_{batch_id}.jsonl'
-        output_local_path = self.local / '.tmp' / f'output_{batch_id}.jsonl'
+        input_local_path = self.local / '.tmp' / f'input_{batch_request_id}.jsonl'
+        output_local_path = self.local / '.tmp' / f'output_{batch_request_id}.jsonl'
         input_remote_path = self.remote / input_local_path.name
         output_remote_path = self.remote / output_local_path.name
 

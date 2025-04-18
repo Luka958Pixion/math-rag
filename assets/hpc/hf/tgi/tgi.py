@@ -192,7 +192,7 @@ class HuggingFaceCLI:
             f'--env MODEL_HUB_ID={model_hub_id} '
             f'--env http_proxy={HTTP_PROXY} '
             f'--env https_proxy={HTTPS_PROXY} '
-            f'{CLIENT_SIF_PATH}'
+            f'{CLI_SIF_PATH}'
         )
         process = Popen(cmd, shell=True)
         cli_state.wait_process(process)
