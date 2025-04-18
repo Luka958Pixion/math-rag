@@ -147,6 +147,8 @@ class BatchJobStatusTracker:
             self._atomic_write()
 
     def _atomic_write(self):
+        # locks prevent server-side (HPC) race conditions
+        # atomic writing prevents client-side (math_rag app) race conditions
         with STATUS_TRACKER_TMP_PATH.open('w') as file:
             json_str = self.to_json()
             file.write(json_str)
