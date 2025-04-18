@@ -1,6 +1,8 @@
+from typing import overload
+
 from tiktoken import get_encoding
 
-from math_rag.application.models.inference import LLMRequest
+from math_rag.application.models.inference import EMRequest, LLMRequest
 from math_rag.application.types.inference import LLMResponseType
 from math_rag.infrastructure.constants.inference.openai import (
     ENCODING_NAME,
@@ -9,10 +11,28 @@ from math_rag.infrastructure.constants.inference.openai import (
 
 
 class TokenCounterUtil:
+    @overload
     @staticmethod
-    def count(request: LLMRequest[LLMResponseType], encoding_name: str | None = None):
+    def count(request: EMRequest, encoding_name: str | None = None) -> int:
+        pass
+
+    @overload
+    @staticmethod
+    def count(
+        request: LLMRequest[LLMResponseType], encoding_name: str | None = None
+    ) -> int:
+        pass
+
+    @staticmethod
+    def count(
+        request: EMRequest | LLMRequest[LLMResponseType],
+        encoding_name: str | None = None,
+    ) -> int:
         encoding_name = encoding_name or ENCODING_NAME
         encoding = get_encoding(encoding_name)
+
+        if isinstance(request, EMRequest):
+            return len(encoding.encode(request.text))
 
         prompt_tokens = sum(
             len(encoding.encode(message.content))

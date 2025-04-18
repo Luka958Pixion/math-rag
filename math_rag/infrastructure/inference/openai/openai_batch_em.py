@@ -4,7 +4,7 @@ from logging import getLogger
 from uuid import UUID
 
 from openai import AsyncOpenAI
-from openai.types.chat import ChatCompletion
+from openai.types.create_embedding_response import CreateEmbeddingResponse
 
 from math_rag.application.models.inference import (
     EMBatchRequest,
@@ -32,7 +32,7 @@ class OpenAIBatchEM(PartialBatchEM):
         self,
         batch_request: EMBatchRequest,
     ) -> str:
-        url = '/v1/chat/completions'
+        url = '/v1/embeddings'
         request_dicts = [
             {
                 'custom_id': str(request.id),
@@ -127,9 +127,9 @@ class OpenAIBatchEM(PartialBatchEM):
                 failed_requests.append(failed_request)
 
             else:
-                completion = ChatCompletion(**response['body'])
+                create_embedding_response = CreateEmbeddingResponse(**response['body'])
                 response_list = EMResponseListMapping.to_source(
-                    completion,
+                    create_embedding_response,
                     request_id=request_id,
                 )
                 response_lists.append(response_list)
