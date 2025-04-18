@@ -180,3 +180,4 @@ jupyter_sessions/
 .tmp/*
 !.tmp/.gitkeep
 .env.hpc.hf.tgi
+.env.hpc.hf.tei
