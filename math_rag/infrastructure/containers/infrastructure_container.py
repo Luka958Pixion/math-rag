@@ -28,6 +28,7 @@ from math_rag.infrastructure.clients import (
     SFTPClient,
     SSHClient,
 )
+from math_rag.infrastructure.inference.huggingface import TGIBatchLLM
 from math_rag.infrastructure.inference.openai import OpenAIUnifiedLLM
 from math_rag.infrastructure.repositories.documents import (
     LLMFailedRequestRepository,
@@ -170,11 +171,21 @@ class InfrastructureContainer(DeclarativeContainer):
 
     # Apptainer
     config.apptainer.port.from_env('APPTAINER_PORT')
+
     apptainer_client = Factory(
         ApptainerClient,
         base_url=Callable(
             lambda port: f'http://host.docker.internal:{port}', config.apptainer.port
         ),
+    )
+
+    # TGI
+    tgi_batch_llm = Factory(
+        TGIBatchLLM,
+        file_system_client=file_system_client,
+        pbs_pro_client=pbs_pro_client,
+        sftp_client=sftp_client,
+        apptainer_client=apptainer_client,
     )
 
     # -----------

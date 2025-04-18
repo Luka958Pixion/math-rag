@@ -44,6 +44,8 @@ from math_rag.shared.utils import DataclassUtil
 
 
 PBS_JOB_NAME = 'tgi'
+LOCAL_ROOT_PATH = Path(__file__).parents[4]
+REMOTE_ROOT_PATH = Path('tgi_default_root')
 
 # must be greater than WALLTIME_THRESHOLD in tgi.py
 WALLTIME_THRESHOLD = timedelta(minutes=10)
@@ -54,24 +56,19 @@ logger = getLogger(__name__)
 class TGIBatchLLM(PartialBatchLLM):
     def __init__(
         self,
-        remote: Path,
         file_system_client: FileSystemClient,
         pbs_pro_client: PBSProClient,
         sftp_client: SFTPClient,
         apptainer_client: ApptainerClient,
     ):
-        # local and remote project roots
-        self.local = Path(__file__).parents[4]
-        self.remote = remote
-
         self.file_system_client = file_system_client
         self.pbs_pro_client = pbs_pro_client
         self.sftp_client = sftp_client
         self.apptainer_client = apptainer_client
 
     async def init_resources(self):
-        tmp_path = self.local / '.tmp'
-        hf_path = self.local / 'assets/hpc/hf'
+        tmp_path = LOCAL_ROOT_PATH / '.tmp'
+        hf_path = LOCAL_ROOT_PATH / 'assets/hpc/hf'
         tgi_path = hf_path / 'tgi'
 
         # NOTE: order matters, e.g. client.def requires requirements.txt to build client.sif
@@ -83,16 +80,16 @@ class TGIBatchLLM(PartialBatchLLM):
             tgi_path / 'client.py',
             tgi_path / 'tgi.py',
             tgi_path / 'tgi.sh',
-            self.local / '.env.hpc.hf.tgi',
+            LOCAL_ROOT_PATH / '.env.hpc.hf.tgi',
         ]
 
         for local_path in local_paths:
             assert local_path.exists()
 
-        await self.file_system_client.make_directory(self.remote)
+        await self.file_system_client.make_directory(REMOTE_ROOT_PATH)
 
         for local_path in local_paths:
-            remote_path = self.remote / local_path.name
+            remote_path = REMOTE_ROOT_PATH / local_path.name
 
             if await self.file_system_client.test(remote_path):
                 local_hash = FileHasherUtil.hash(local_path, 'sha256')
@@ -120,7 +117,7 @@ class TGIBatchLLM(PartialBatchLLM):
                 sif_local_path = tmp_path / f'{local_path.stem}.sif'
                 await FileStreamWriterUtil.write(sif_stream, sif_local_path)
 
-                sif_remote_path = self.remote / sif_local_path.name
+                sif_remote_path = REMOTE_ROOT_PATH / sif_local_path.name
 
                 if await self.file_system_client.test(sif_remote_path):
                     await self.file_system_client.remove(sif_remote_path)
@@ -151,11 +148,11 @@ class TGIBatchLLM(PartialBatchLLM):
         input_jsonl_bytes = input_jsonl_str.encode('utf-8')
 
         # write input file
-        input_local_path = self.local / '.tmp' / f'input_{batch_request.id}.jsonl'
+        input_local_path = LOCAL_ROOT_PATH / '.tmp' / f'input_{batch_request.id}.jsonl'
         await FileWriterUtil.write(input_jsonl_bytes, input_local_path)
 
         # upload input file and avoid race-conditions
-        input_remote_path = self.remote / input_local_path.name
+        input_remote_path = REMOTE_ROOT_PATH / input_local_path.name
         input_remote_part_path = input_remote_path.with_name(
             input_remote_path.name + '.part'
         )
@@ -187,7 +184,7 @@ class TGIBatchLLM(PartialBatchLLM):
 
             if not walltime_left or walltime_left < WALLTIME_THRESHOLD:
                 job_id = await self.pbs_pro_client.queue_submit(
-                    self.remote,
+                    REMOTE_ROOT_PATH,
                     PBS_JOB_NAME,
                     num_chunks=DEFAULT_TGI_SETTINGS.num_chunks,
                     num_cpus=DEFAULT_TGI_SETTINGS.num_cpus,
@@ -199,7 +196,7 @@ class TGIBatchLLM(PartialBatchLLM):
 
         else:
             job_id = await self.pbs_pro_client.queue_submit(
-                self.remote,
+                REMOTE_ROOT_PATH,
                 PBS_JOB_NAME,
                 num_chunks=DEFAULT_TGI_SETTINGS.num_chunks,
                 num_cpus=DEFAULT_TGI_SETTINGS.num_cpus,
@@ -226,12 +223,12 @@ class TGIBatchLLM(PartialBatchLLM):
 
         # write batch job file
         batch_job_local_path = (
-            self.local / '.tmp' / f'batch_job_{job_id}_{batch_request.id}.json'
+            LOCAL_ROOT_PATH / '.tmp' / f'batch_job_{job_id}_{batch_request.id}.json'
         )
         await FileWriterUtil.write(batch_job_json_bytes, batch_job_local_path)
 
         # upload batch job file and avoid race-conditions
-        batch_job_remote_path = self.remote / batch_job_local_path.name
+        batch_job_remote_path = REMOTE_ROOT_PATH / batch_job_local_path.name
         batch_job_remote_part_path = batch_job_remote_path.with_name(
             batch_job_remote_path.name + '.part'
         )
@@ -272,7 +269,9 @@ class TGIBatchLLM(PartialBatchLLM):
             ):
                 pass
 
-        status_tracker_remote_path = self.remote / f'status_tracker_{batch_id}.json'
+        status_tracker_remote_path = (
+            REMOTE_ROOT_PATH / f'status_tracker_{batch_id}.json'
+        )
         status_tracker_json = await self.file_system_client.concatenate(
             status_tracker_remote_path
         )
@@ -290,10 +289,12 @@ class TGIBatchLLM(PartialBatchLLM):
             case BatchJobStatus.FINISHED | BatchJobStatus.UNFINISHED:
                 pass
 
-        input_local_path = self.local / '.tmp' / f'input_{batch_request_id}.jsonl'
-        output_local_path = self.local / '.tmp' / f'output_{batch_request_id}.jsonl'
-        input_remote_path = self.remote / input_local_path.name
-        output_remote_path = self.remote / output_local_path.name
+        input_local_path = LOCAL_ROOT_PATH / '.tmp' / f'input_{batch_request_id}.jsonl'
+        output_local_path = (
+            LOCAL_ROOT_PATH / '.tmp' / f'output_{batch_request_id}.jsonl'
+        )
+        input_remote_path = REMOTE_ROOT_PATH / input_local_path.name
+        output_remote_path = REMOTE_ROOT_PATH / output_local_path.name
 
         await self.sftp_client.download(output_remote_path, output_local_path)
 
