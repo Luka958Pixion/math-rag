@@ -36,7 +36,7 @@ class OpenAIEM(BaseEM):
             max_time=max_time,
             max_tries=max_num_retries,
         )
-        async def _generate(
+        async def _embed(
             request: EMRequest,
         ) -> EMResponseList:
             request_dict = EMRequestMapping.to_target(request)
@@ -51,7 +51,7 @@ class OpenAIEM(BaseEM):
             return response_list
 
         try:
-            response_list = await _generate(request)
+            response_list = await _embed(request)
             failed_request = None
 
         except OPENAI_ERRORS_TO_RETRY as e:
