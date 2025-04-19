@@ -9,7 +9,7 @@ from math_rag.application.models.inference import (
 
 class BaseBatchEM(ABC):
     @abstractmethod
-    async def batch_generate(
+    async def batch_embed(
         self,
         batch_request: EMBatchRequest,
         *,
@@ -19,14 +19,14 @@ class BaseBatchEM(ABC):
         pass
 
     @abstractmethod
-    async def batch_generate_init(
+    async def batch_embed_init(
         self,
         batch_request: EMBatchRequest,
     ) -> str:
         pass
 
     @abstractmethod
-    async def batch_generate_result(
+    async def batch_embed_result(
         self,
         batch_id: str,
         batch_request_id: UUID,

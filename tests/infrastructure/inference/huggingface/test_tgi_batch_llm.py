@@ -20,7 +20,7 @@ class TestOutput(BaseAssistantOutput):
 
 
 @pytest.mark.asyncio
-async def test_batch_generate_returns_response():
+async def test_batch_generate():
     # arrange
     container = InfrastructureContainer()
     container.init_resources()

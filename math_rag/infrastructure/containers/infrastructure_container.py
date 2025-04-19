@@ -29,7 +29,7 @@ from math_rag.infrastructure.clients import (
     SSHClient,
 )
 from math_rag.infrastructure.inference.huggingface import TGIBatchLLM
-from math_rag.infrastructure.inference.openai import OpenAIUnifiedLLM
+from math_rag.infrastructure.inference.openai import OpenAIUnifiedEM, OpenAIUnifiedLLM
 from math_rag.infrastructure.repositories.documents import (
     LLMFailedRequestRepository,
     MathExpressionClassificationRepository,
@@ -126,6 +126,7 @@ class InfrastructureContainer(DeclarativeContainer):
         api_key=config.openai.api_key,
     )
 
+    openai_unified_em = Factory(OpenAIUnifiedEM, client=async_openai_client)
     openai_unified_llm = Factory(OpenAIUnifiedLLM, client=async_openai_client)
 
     # arXiv

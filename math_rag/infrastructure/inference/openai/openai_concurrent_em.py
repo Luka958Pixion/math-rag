@@ -36,7 +36,7 @@ class OpenAIConcurrentEM(BaseConcurrentEM):
     def __init__(self, client: AsyncOpenAI):
         self.client = client
 
-    async def _generate(
+    async def _embed(
         self,
         request_tracker: EMRequestTracker,
         retry_queue: Queue[EMRequestTracker],
@@ -97,7 +97,7 @@ class OpenAIConcurrentEM(BaseConcurrentEM):
             status_tracker.num_tasks_in_progress -= 1
             status_tracker.num_tasks_succeeded += 1
 
-    async def concurrent_generate(
+    async def concurrent_embed(
         self,
         concurrent_request: EMConcurrentRequest,
         *,
@@ -166,7 +166,7 @@ class OpenAIConcurrentEM(BaseConcurrentEM):
                     next_request.retries_left -= 1
 
                     create_task(
-                        self._generate(
+                        self._embed(
                             request_tracker=next_request,
                             retry_queue=retry_queue,
                             status_tracker=status_tracker,

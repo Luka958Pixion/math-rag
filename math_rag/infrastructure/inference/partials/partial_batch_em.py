@@ -13,22 +13,22 @@ logger = getLogger(__name__)
 
 
 class PartialBatchEM(BaseBatchEM):
-    async def _batch_generate(
+    async def _batch_embed(
         self,
         batch_request: EMBatchRequest,
         poll_interval: float,
     ) -> EMBatchResult:
-        batch_id = await self.batch_generate_init(batch_request)
+        batch_id = await self.batch_embed_init(batch_request)
 
         while True:
-            batch_result = await self.batch_generate_result(batch_id, batch_request.id)
+            batch_result = await self.batch_embed_result(batch_id, batch_request.id)
 
             if batch_result is not None:
                 return batch_result
 
             await sleep(poll_interval)
 
-    async def _batch_generate_retry(
+    async def _batch_embed_retry(
         self,
         batch_request: EMBatchRequest,
         *,
@@ -42,7 +42,7 @@ class PartialBatchEM(BaseBatchEM):
         response_lists: list[EMResponseList] = []
 
         for _ in range(max_num_retries + 1):
-            batch_result = await self._batch_generate(batch_request, poll_interval)
+            batch_result = await self._batch_embed(batch_request, poll_interval)
             response_lists.extend(batch_result.response_lists)
 
             if not batch_result.failed_requests:
@@ -64,7 +64,7 @@ class PartialBatchEM(BaseBatchEM):
 
         return batch_result
 
-    async def batch_generate(
+    async def batch_embed(
         self,
         batch_request: EMBatchRequest,
         *,
@@ -72,12 +72,12 @@ class PartialBatchEM(BaseBatchEM):
         max_num_retries: int,
     ) -> EMBatchResult:
         if max_num_retries:
-            batch_result = await self._batch_generate_retry(
+            batch_result = await self._batch_embed_retry(
                 batch_request,
                 poll_interval=poll_interval,
                 max_num_retries=max_num_retries,
             )
 
-        batch_result = await self._batch_generate(batch_request, poll_interval)
+        batch_result = await self._batch_embed(batch_request, poll_interval)
 
         return batch_result
