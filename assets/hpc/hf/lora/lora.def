@@ -1,0 +1,34 @@
+Bootstrap: docker
+From: python:3.12
+
+%files
+    requirements.txt /requirements.txt
+
+%environment
+    export PYTHONUNBUFFERED=1
+
+%post
+    pip install --upgrade pip
+    pip install -r requirements.txt
+    # install bitsandbytes and triton separately (not available on MacOS)
+    pip install bitsandbytes==0.45.5 triton==3.3.0
+
+%runscript
+    python lora.py
+
+%labels
+    Author luka.panic@pixion.co
+    Version v0.0.1
+
+%help
+    Description:
+        A script for LoRA from Hugging Face.
+
+    Build:
+        apptainer build lora.sif lora.def
+
+    Environment:
+        - .env.hpc.hf.lora
+
+    Usage:
+        apptainer run --env-file .env.hpc.hf.lora lora.sif

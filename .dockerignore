@@ -181,3 +181,4 @@ jupyter_sessions/
 !.tmp/.gitkeep
 .env.hpc.hf.tgi
 .env.hpc.hf.tei
+.env.hpc.hf.lora

@@ -8,8 +8,3 @@
 
 ## Environment
 Create `.env` file with the keys defined in `.env.example`.
-
-## Requirements
-`requirements.txt` for `tgi.py` is exported using:
-
-`poetry export --only dev.tgi --without-hashes --format requirements.txt --output ./assets/hpc/hf/tgi/requirements.txt`
