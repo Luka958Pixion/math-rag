@@ -53,6 +53,7 @@ transformers = {extras = ["torch"], version = "^4.51.3"}
 trl = "0.16.1"
 sentencepiece = "0.2.0"
 datasets = "3.5.0"
+wandb = "^0.19.9"
 
 [tool.pytest.ini_options]
 log_cli = true

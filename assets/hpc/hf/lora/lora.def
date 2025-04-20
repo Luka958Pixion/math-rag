@@ -10,8 +10,6 @@ From: python:3.12
 %post
     pip install --upgrade pip
     pip install -r requirements.txt
-    # install bitsandbytes and triton separately (not available on MacOS)
-    pip install bitsandbytes==0.45.5 triton==3.3.0
 
 %runscript
     python lora.py
