@@ -48,10 +48,10 @@ async def test_batch_generate():
 
     # act
     batch_result = await tgi_batch_llm.batch_generate(
-        batch_request=batch_request,
+        batch_request,
         response_type=TestOutput,
-        poll_interval=2 * 60,
-        max_num_retries=0,
+        poll_interval=...,
+        max_num_retries=...,
     )
     response = batch_result.response_lists[0].responses[0]
 
