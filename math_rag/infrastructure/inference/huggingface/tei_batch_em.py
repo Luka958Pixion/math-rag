@@ -5,8 +5,6 @@ from logging import getLogger
 from pathlib import Path
 from uuid import UUID
 
-from huggingface_hub.inference._generated.types import ChatCompletionOutput
-
 from math_rag.application.models.inference import (
     EMBatchRequest,
     EMBatchResult,
@@ -14,7 +12,6 @@ from math_rag.application.models.inference import (
     EMRequest,
     EMResponseList,
 )
-from math_rag.application.types.inference import LLMResponseType
 from math_rag.infrastructure.clients import (
     ApptainerClient,
     FileSystemClient,
@@ -42,7 +39,6 @@ from math_rag.infrastructure.utils import (
     FileStreamWriterUtil,
     FileWriterUtil,
 )
-from math_rag.shared.utils import DataclassUtil
 
 
 PBS_JOB_NAME = 'tei'
@@ -313,8 +309,8 @@ class TGIBatchEM(PartialBatchEM):
 
             requests_dict[request_id] = request
 
-        failed_requests: list[EMFailedRequest[LLMResponseType]] = []
-        response_lists: list[EMResponseList[LLMResponseType]] = []
+        failed_requests: list[EMFailedRequest] = []
+        response_lists: list[EMResponseList] = []
 
         async for data in output_stream:
             request_id = UUID(data['request_id'])
@@ -330,10 +326,8 @@ class TGIBatchEM(PartialBatchEM):
                 failed_requests.append(failed_request)
 
             else:
-                response.pop('object')
-                completion = DataclassUtil.from_dict(ChatCompletionOutput, response)
-                response_list = EMResponseListMapping[LLMResponseType].to_source(
-                    completion,
+                response_list = EMResponseListMapping.to_source(
+                    response,
                     request_id=request_id,
                 )
                 response_lists.append(response_list)
