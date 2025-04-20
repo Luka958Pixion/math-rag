@@ -51,10 +51,21 @@ def on_backoff_handler(details: dict):
     jitter=full_jitter,
     on_backoff=on_backoff_handler,
 )
-async def safe_chat_completion(client: AsyncInferenceClient, request: dict) -> dict:
-    # TODO
-    output = await client.feature_extraction(**request['request'])
-    response = {'request_id': request['request_id'], 'response': output, 'error': None}
+async def safe_feature_extraction(client: AsyncInferenceClient, request: dict) -> dict:
+    ndarray_output = await client.feature_extraction(**request['request'])
+    if ndarray_output.ndim > 1:
+        logger.warning(
+            f'Embedding model {MODEL_HUB_ID} with output dimensionality '
+            f'{ndarray_output.ndim} may behave unexpectedly'
+        )
+        ndarray_output = ndarray_output.flatten()
+
+    float_output = list(map(float, ndarray_output.tolist()))
+    response = {
+        'request_id': request['request_id'],
+        'response': float_output,
+        'error': None,
+    }
 
     return response
 
@@ -145,7 +156,7 @@ class ProcessorThread(Thread):
             request = json.loads(input_line)
 
             try:
-                response = await safe_chat_completion(self._client, request)
+                response = await safe_feature_extraction(self._client, request)
 
             except Exception as e:
                 logger.error(
