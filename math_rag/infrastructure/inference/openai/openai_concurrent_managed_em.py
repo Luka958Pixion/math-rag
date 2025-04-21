@@ -22,7 +22,7 @@ class OpenAIConcurrentManagedEM(BaseConcurrentManagedEM):
         self, concurrent_request: EMConcurrentRequest
     ) -> EMConcurrentResult:
         concurrent_settings = self._em_settings_loader_service.load_concurrent_settings(
-            'openai', concurrent_settings.requests[0].params.model
+            'openai', concurrent_request.requests[0].params.model
         )
 
         return await self._em.concurrent_embed(
