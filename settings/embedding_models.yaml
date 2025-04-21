@@ -6,18 +6,18 @@ default:
 
     batch:
       poll_interval: 300.0
-      max_tokens_per_day: -1
+      max_tokens_per_day: null
       max_num_retries: 0
 
     concurrent:
-      max_requests_per_minute: -1
-      max_tokens_per_minute: -1
+      max_requests_per_minute: null
+      max_tokens_per_minute: null
       max_num_retries: 3
 
 huggingface:
   text-embeddings-inference:
     batch:
-      max_tokens_per_day: -1
+      max_tokens_per_day: null
 
 openai:
   text-embedding-3-large:
