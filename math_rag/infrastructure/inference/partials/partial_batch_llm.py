@@ -18,9 +18,13 @@ class PartialBatchLLM(BaseBatchLLM):
         self,
         batch_request: LLMBatchRequest[LLMResponseType],
         response_type: type[LLMResponseType],
+        *,
         poll_interval: float,
+        max_tokens_per_day: float,
     ) -> LLMBatchResult[LLMResponseType]:
-        batch_id = await self.batch_generate_init(batch_request)
+        batch_id = await self.batch_generate_init(
+            batch_request, max_tokens_per_day=max_tokens_per_day
+        )
 
         while True:
             batch_result = await self.batch_generate_result(
@@ -38,6 +42,7 @@ class PartialBatchLLM(BaseBatchLLM):
         response_type: type[LLMResponseType],
         *,
         poll_interval: float,
+        max_tokens_per_day: float,
         max_num_retries: int,
     ) -> LLMBatchResult[LLMResponseType]:
         if max_num_retries < 0:
@@ -48,7 +53,10 @@ class PartialBatchLLM(BaseBatchLLM):
 
         for _ in range(max_num_retries + 1):
             batch_result = await self._batch_generate(
-                batch_request, response_type, poll_interval
+                batch_request,
+                response_type,
+                poll_interval=poll_interval,
+                max_tokens_per_day=max_tokens_per_day,
             )
             response_lists.extend(batch_result.response_lists)
 
@@ -77,6 +85,7 @@ class PartialBatchLLM(BaseBatchLLM):
         response_type: type[LLMResponseType],
         *,
         poll_interval: float,
+        max_tokens_per_day: float,
         max_num_retries: int,
     ) -> LLMBatchResult[LLMResponseType]:
         if max_num_retries:
@@ -84,11 +93,15 @@ class PartialBatchLLM(BaseBatchLLM):
                 batch_request,
                 response_type,
                 poll_interval=poll_interval,
+                max_tokens_per_day=max_tokens_per_day,
                 max_num_retries=max_num_retries,
             )
 
         batch_result = await self._batch_generate(
-            batch_request, response_type, poll_interval
+            batch_request,
+            response_type,
+            poll_interval=poll_interval,
+            max_tokens_per_day=max_tokens_per_day,
         )
 
         return batch_result

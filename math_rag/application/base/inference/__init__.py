@@ -12,8 +12,6 @@ from .base_managed_em import BaseManagedEM
 from .base_managed_llm import BaseManagedLLM
 from .base_unified_em import BaseUnifiedEM
 from .base_unified_llm import BaseUnifiedLLM
-from .base_unified_managed_em import BaseUnifiedManagedEM
-from .base_unified_managed_llm import BaseUnifiedManagedLLM
 
 
 __all__ = [
@@ -31,6 +29,4 @@ __all__ = [
     'BaseBatchManagedLLM',
     'BaseConcurrentManagedEM',
     'BaseConcurrentManagedLLM',
-    'BaseUnifiedManagedEM',
-    'BaseUnifiedManagedLLM',
 ]

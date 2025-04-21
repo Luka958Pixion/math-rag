@@ -16,6 +16,7 @@ class BaseBatchLLM(ABC):
         response_type: type[LLMResponseType],
         *,
         poll_interval: float,
+        max_tokens_per_day: float,
         max_num_retries: int,
     ) -> LLMBatchResult[LLMResponseType]:
         pass
@@ -24,6 +25,8 @@ class BaseBatchLLM(ABC):
     async def batch_generate_init(
         self,
         batch_request: LLMBatchRequest[LLMResponseType],
+        *,
+        max_tokens_per_day: float,
     ) -> str:
         pass
 

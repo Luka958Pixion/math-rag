@@ -14,6 +14,7 @@ class BaseBatchEM(ABC):
         batch_request: EMBatchRequest,
         *,
         poll_interval: float,
+        max_tokens_per_day: float,
         max_num_retries: int,
     ) -> EMBatchResult:
         pass
@@ -22,6 +23,8 @@ class BaseBatchEM(ABC):
     async def batch_embed_init(
         self,
         batch_request: EMBatchRequest,
+        *,
+        max_tokens_per_day: float,
     ) -> str:
         pass
 

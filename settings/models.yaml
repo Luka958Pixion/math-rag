@@ -1,0 +1,20 @@
+llms:
+  default:
+    basic:
+      max_time: TODO
+      max_num_retries: TODO
+
+    batch:
+      poll_interval: TODO
+      max_num_retries: TODO
+
+    concurrent:
+      max_num_retries: TODO
+
+  gpt-4o-mini:
+    batch:
+      max_tokens_per_day: TODO
+
+    concurrent:
+      max_requests_per_minute: TODO
+      max_tokens_per_minute: TODO

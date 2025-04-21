@@ -8,7 +8,7 @@ from math_rag.application.base.inference import BaseBatchLLM
 from math_rag.application.base.repositories.documents import (
     BaseLLMFailedRequestRepository,
 )
-from math_rag.application.base.services import BaseSettingsLoaderService
+from math_rag.application.base.services import BaseLLMSettingsLoaderService
 from math_rag.application.models.inference import LLMBatchRequest
 from math_rag.application.types.assistants import (
     AssistantInputType,
@@ -24,7 +24,7 @@ class PartialBatchAssistant(
     def __init__(
         self,
         llm: BaseBatchLLM,
-        settings_loader_service: BaseSettingsLoaderService,
+        settings_loader_service: BaseLLMSettingsLoaderService,
         failed_request_repository: BaseLLMFailedRequestRepository,
     ):
         self.llm = llm
@@ -46,6 +46,7 @@ class PartialBatchAssistant(
             batch_request,
             response_type,
             poll_interval=settings.poll_interval,
+            max_tokens_per_day=...,
             max_num_retries=settings.max_num_retries,
         )
 
