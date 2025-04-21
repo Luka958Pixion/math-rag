@@ -2,6 +2,9 @@ from math_rag.application.base.inference import (
     BaseConcurrentLLM,
     BaseConcurrentManagedLLM,
 )
+from math_rag.application.base.repositories.documents import (
+    BaseLLMFailedRequestRepository,
+)
 from math_rag.application.base.services import BaseLLMSettingsLoaderService
 from math_rag.application.models.inference import (
     LLMConcurrentRequest,
@@ -15,9 +18,11 @@ class OpenAIConcurrentManagedLLM(BaseConcurrentManagedLLM):
         self,
         llm: BaseConcurrentLLM,
         llm_settings_loader_service: BaseLLMSettingsLoaderService,
+        llm_failed_request_repository: BaseLLMFailedRequestRepository,
     ):
         self._llm = llm
         self._llm_settings_loader_service = llm_settings_loader_service
+        self._llm_failed_request_repository = llm_failed_request_repository
 
     async def concurrent_generate(
         self, concurrent_request: LLMConcurrentRequest[LLMResponseType]
@@ -37,9 +42,16 @@ class OpenAIConcurrentManagedLLM(BaseConcurrentManagedLLM):
         elif concurrent_settings.max_num_retries is None:
             raise ValueError('max_num_retries can not be None')
 
-        return await self._llm.concurrent_generate(
+        concurrent_result = await self._llm.concurrent_generate(
             concurrent_request,
             max_requests_per_minute=concurrent_settings.max_requests_per_minute,
             max_tokens_per_minute=concurrent_settings.max_tokens_per_minute,
             max_num_retries=concurrent_settings.max_num_retries,
         )
+
+        if concurrent_result.failed_requests:
+            await self._llm_failed_request_repository.insert_many(
+                concurrent_result.failed_requests
+            )
+
+        return concurrent_result

@@ -1,4 +1,5 @@
 from abc import abstractmethod
+from uuid import UUID
 
 from math_rag.application.types.assistants import (
     AssistantInputType,
@@ -11,11 +12,7 @@ from .base_assistant import BaseAssistant
 class BaseBatchAssistant(BaseAssistant[AssistantInputType, AssistantOutputType]):
     @abstractmethod
     async def batch_assist(
-        self,
-        inputs: list[AssistantInputType],
-        response_type: type[AssistantOutputType],
-        poll_interval: float,
-        num_retries: int,
+        self, inputs: list[AssistantInputType], response_type: type[AssistantOutputType]
     ) -> tuple[list[AssistantInputType], list[AssistantOutputType]]:
         pass
 
@@ -27,6 +24,7 @@ class BaseBatchAssistant(BaseAssistant[AssistantInputType, AssistantOutputType])
     async def batch_assist_result(
         self,
         batch_id: str,
+        batch_request_id: UUID,
         response_type: type[AssistantOutputType],
     ) -> list[AssistantOutputType] | None:
         pass
