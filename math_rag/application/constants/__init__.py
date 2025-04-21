@@ -1,0 +1,4 @@
+from .settings import DEFAULT_MODEL, DEFAULT_PROVIDER
+
+
+__all__ = ['DEFAULT_MODEL', 'DEFAULT_PROVIDER']
