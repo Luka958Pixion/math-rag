@@ -40,7 +40,7 @@ from math_rag.infrastructure.utils import (
     FileStreamWriterUtil,
     FileWriterUtil,
 )
-from math_rag.shared.utils import DataclassUtil
+from math_rag.shared.utils import DataclassMapperUtil
 
 
 PBS_JOB_NAME = 'tgi'
@@ -129,7 +129,15 @@ class TGIBatchLLM(PartialBatchLLM):
     async def batch_generate_init(
         self,
         batch_request: LLMBatchRequest[LLMResponseType],
+        *,
+        max_tokens_per_day: float | None,
     ) -> str:
+        # validate
+        if max_tokens_per_day is not None:
+            raise ValueError(
+                f'{self.__class__.__name__} does not support max_tokens_per_day'
+            )
+
         # map requests
         request_dicts = [
             {
@@ -331,7 +339,9 @@ class TGIBatchLLM(PartialBatchLLM):
 
             else:
                 response.pop('object')
-                completion = DataclassUtil.from_dict(ChatCompletionOutput, response)
+                completion = DataclassMapperUtil.from_dict(
+                    ChatCompletionOutput, response
+                )
                 response_list = LLMResponseListMapping[LLMResponseType].to_source(
                     completion,
                     request_id=request_id,

@@ -32,6 +32,8 @@ class OpenAIBatchLLM(PartialBatchLLM):
     async def batch_generate_init(
         self,
         batch_request: LLMBatchRequest[LLMResponseType],
+        *,
+        max_tokens_per_day: float | None,
     ) -> str:
         url = '/v1/chat/completions'
         request_dicts = [

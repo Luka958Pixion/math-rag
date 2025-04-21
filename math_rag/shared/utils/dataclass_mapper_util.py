@@ -5,7 +5,7 @@ from typing import TypeVar, get_type_hints
 T = TypeVar('T')
 
 
-class DataclassUtil:
+class DataclassMapperUtil:
     @staticmethod
     def from_dict(cls: type[T], data: dict[str, object]) -> T:
         if not is_dataclass(cls):
@@ -21,7 +21,7 @@ class DataclassUtil:
                 kwargs[field] = value
 
             elif isinstance(value, dict) and is_dataclass(field_type):
-                kwargs[field] = DataclassUtil.from_dict(field_type, value)
+                kwargs[field] = DataclassMapperUtil.from_dict(field_type, value)
 
             elif (
                 isinstance(value, list)
@@ -30,7 +30,7 @@ class DataclassUtil:
             ):
                 inner_type = field_type.__args__[0]
                 kwargs[field] = [
-                    DataclassUtil.from_dict(inner_type, item)
+                    DataclassMapperUtil.from_dict(inner_type, item)
                     if isinstance(item, dict) and is_dataclass(inner_type)
                     else item
                     for item in value
