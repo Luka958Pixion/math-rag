@@ -128,7 +128,7 @@ class TGIBatchEM(PartialBatchEM):
         self, batch_request: EMBatchRequest, *, max_tokens_per_day: float
     ) -> str:
         # validate
-        if max_tokens_per_day is not None:
+        if max_tokens_per_day != -1:
             raise ValueError(
                 f'{self.__class__.__name__} does not support max_tokens_per_day'
             )

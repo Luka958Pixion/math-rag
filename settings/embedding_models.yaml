@@ -1,19 +1,23 @@
 default:
-  basic:
-    max_time: 60.0
-    max_num_retries: 6
+  default:
+    basic:
+      max_time: 60.0
+      max_num_retries: 6
 
-  batch:
-    poll_interval: 300.0
-    max_num_retries: 0
+    batch:
+      poll_interval: 300.0
+      max_tokens_per_day: -1
+      max_num_retries: 0
 
-  concurrent:
-    max_num_retries: 3
+    concurrent:
+      max_requests_per_minute: -1
+      max_tokens_per_minute: -1
+      max_num_retries: 3
 
 huggingface:
   text-embeddings-inference:
     batch:
-      max_tokens_per_day: null
+      max_tokens_per_day: -1
 
 openai:
   text-embedding-3-large:
