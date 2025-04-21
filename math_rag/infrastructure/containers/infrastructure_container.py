@@ -36,6 +36,7 @@ from math_rag.infrastructure.inference.openai import (
     OpenAIManagedLLM,
 )
 from math_rag.infrastructure.repositories.documents import (
+    EMFailedRequestRepository,
     LLMFailedRequestRepository,
     MathExpressionClassificationRepository,
     MathExpressionRepository,
@@ -43,6 +44,7 @@ from math_rag.infrastructure.repositories.documents import (
 from math_rag.infrastructure.repositories.files import GoogleFileRepository
 from math_rag.infrastructure.repositories.objects import MathArticleRepository
 from math_rag.infrastructure.seeders.documents import (
+    EMFailedRequestSeeder,
     LLMFailedRequestSeeder,
     MathExpressionClassificationSeeder,
     MathExpressionSeeder,
@@ -98,6 +100,7 @@ class InfrastructureContainer(DeclarativeContainer):
 
     math_expression_seeder = Factory(MathExpressionSeeder, **mongo_kwargs)
     math_expression_repository = Factory(MathExpressionRepository, **mongo_kwargs)
+    em_failed_request_repository = Factory(EMFailedRequestRepository, **mongo_kwargs)
     llm_failed_request_repository = Factory(LLMFailedRequestRepository, **mongo_kwargs)
 
     math_expression_classification_seeder = Factory(
@@ -106,6 +109,7 @@ class InfrastructureContainer(DeclarativeContainer):
     math_expression_classification_repository = Factory(
         MathExpressionClassificationRepository, **mongo_kwargs
     )
+    em_failed_request_seeder = Factory(EMFailedRequestSeeder, **mongo_kwargs)
     llm_failed_request_seeder = Factory(LLMFailedRequestSeeder, **mongo_kwargs)
 
     # Neo4j
@@ -131,12 +135,21 @@ class InfrastructureContainer(DeclarativeContainer):
         api_key=config.openai.api_key,
     )
 
-    # TODO
     openai_em = Factory(OpenAIEM, client=async_openai_client)
     openai_llm = Factory(OpenAILLM, client=async_openai_client)
 
-    openai_managed_em = Factory(OpenAIManagedEM, em, em_settings_loader_service)
-    openai_managed_llm = Factory(OpenAIManagedLLM, client=async_openai_client)
+    openai_managed_em = Factory(
+        OpenAIManagedEM,
+        em=openai_em,
+        em_settings_loader_service=application_container.em_settings_loader_service,
+        em_failed_request_repository=em_failed_request_repository,
+    )
+    openai_managed_llm = Factory(
+        OpenAIManagedLLM,
+        llm=openai_llm,
+        llm_settings_loader_service=application_container.llm_settings_loader_service,
+        llm_failed_request_repository=llm_failed_request_repository,
+    )
 
     # arXiv
     _arxiv_client = Singleton(Client)
