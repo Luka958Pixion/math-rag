@@ -18,9 +18,6 @@ from math_rag.infrastructure.clients import (
     PBSProClient,
     SFTPClient,
 )
-from math_rag.infrastructure.constants.inference.huggingface import (
-    DEFAULT_TGI_SETTINGS,  # TODO
-)
 from math_rag.infrastructure.enums.hpc.pbs import PBSProJobState
 from math_rag.infrastructure.enums.inference.huggingface import BatchJobStatus
 from math_rag.infrastructure.inference.partials import PartialBatchEM
@@ -33,6 +30,7 @@ from math_rag.infrastructure.models.inference.huggingface import (
     BatchJob,
     BatchJobStatusTracker,
 )
+from math_rag.infrastructure.services import TEISettingsLoaderService
 from math_rag.infrastructure.utils import (
     FileHasherUtil,
     FileReaderUtil,
@@ -58,11 +56,13 @@ class TEIBatchEM(PartialBatchEM):
         pbs_pro_client: PBSProClient,
         sftp_client: SFTPClient,
         apptainer_client: ApptainerClient,
+        tei_settings_loader_service: TEISettingsLoaderService,
     ):
         self.file_system_client = file_system_client
         self.pbs_pro_client = pbs_pro_client
         self.sftp_client = sftp_client
         self.apptainer_client = apptainer_client
+        self.tei_settings_loader_service = tei_settings_loader_service
 
     async def init_resources(self):
         tmp_path = LOCAL_ROOT_PATH / '.tmp'
@@ -133,6 +133,9 @@ class TEIBatchEM(PartialBatchEM):
                 f'{self.__class__.__name__} does not support max_tokens_per_day'
             )
 
+        # extract model
+        model = batch_request.requests[0].params.model
+
         # map requests
         request_dicts = [
             {
@@ -186,26 +189,28 @@ class TEIBatchEM(PartialBatchEM):
                 walltime_left = None
 
             if not walltime_left or walltime_left < WALLTIME_THRESHOLD:
+                tei_settings = self.tei_settings_loader_service.load(model)
                 job_id = await self.pbs_pro_client.queue_submit(
                     REMOTE_ROOT_PATH,
                     PBS_JOB_NAME,
-                    num_chunks=DEFAULT_TGI_SETTINGS.num_chunks,
-                    num_cpus=DEFAULT_TGI_SETTINGS.num_cpus,
-                    num_gpus=DEFAULT_TGI_SETTINGS.num_gpus,
-                    mem=DEFAULT_TGI_SETTINGS.mem,
-                    walltime=DEFAULT_TGI_SETTINGS.walltime,
+                    num_chunks=tei_settings.num_chunks,
+                    num_cpus=tei_settings.num_cpus,
+                    num_gpus=tei_settings.num_gpus,
+                    mem=tei_settings.mem,
+                    walltime=tei_settings.walltime,
                     depend_job_id=job_id,
                 )
 
         else:
+            tei_settings = self.tei_settings_loader_service.load(model)
             job_id = await self.pbs_pro_client.queue_submit(
                 REMOTE_ROOT_PATH,
                 PBS_JOB_NAME,
-                num_chunks=DEFAULT_TGI_SETTINGS.num_chunks,
-                num_cpus=DEFAULT_TGI_SETTINGS.num_cpus,
-                num_gpus=DEFAULT_TGI_SETTINGS.num_gpus,
-                mem=DEFAULT_TGI_SETTINGS.mem,
-                walltime=DEFAULT_TGI_SETTINGS.walltime,
+                num_chunks=tei_settings.num_chunks,
+                num_cpus=tei_settings.num_cpus,
+                num_gpus=tei_settings.num_gpus,
+                mem=tei_settings.mem,
+                walltime=tei_settings.walltime,
             )
 
         job = await self.pbs_pro_client.queue_status(job_id)
@@ -218,7 +223,7 @@ class TEIBatchEM(PartialBatchEM):
         # create in-memory batch job file
         batch_job = BatchJob(
             batch_request_id=batch_request.id,
-            model_hub_id=batch_request.requests[0].params.model,
+            model_hub_id=model,
             timestamp=int(datetime.now().timestamp()),
         )
         batch_job_json_str = batch_job.model_dump_json()

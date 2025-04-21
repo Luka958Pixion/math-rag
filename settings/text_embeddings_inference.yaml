@@ -1,0 +1,6 @@
+default:
+  num_chunks: 1
+  num_cpus: 4
+  num_gpus: 1
+  mem: 34359738368  # 32 * 1024**3
+  walltime: 7200    # 120 * 60
