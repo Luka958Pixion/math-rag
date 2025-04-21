@@ -23,29 +23,29 @@ class LLMSettingsLoaderService(BaseLLMSettingsLoaderService):
 
     def load_basic_settings(self, provider: str, model: str) -> BasicLLMSettings:
         if provider == DEFAULT:
-            return self._default_settings.basic_settings
+            return self._default_settings.basic
 
         return PydanticOverriderUtil.override(
-            self._default_settings.basic_settings,
-            self._provider_settings[provider][model].basic_settings,
+            self._default_settings.basic,
+            self._provider_settings[provider][model].basic,
         )
 
     def load_batch_settings(self, provider: str, model: str) -> BatchLLMSettings:
         if provider == DEFAULT:
-            return self._default_settings.batch_settings
+            return self._default_settings.batch
 
         return PydanticOverriderUtil.override(
-            self._default_settings.batch_settings,
-            self._provider_settings[provider][model].batch_settings,
+            self._default_settings.batch,
+            self._provider_settings[provider][model].batch,
         )
 
     def load_concurrent_settings(
         self, provider: str, model: str
     ) -> ConcurrentLLMSettings:
         if provider == DEFAULT:
-            return self._default_settings.concurrent_settings
+            return self._default_settings.concurrent
 
         return PydanticOverriderUtil.override(
-            self._default_settings.concurrent_settings,
-            self._provider_settings[provider][model].concurrent_settings,
+            self._default_settings.concurrent,
+            self._provider_settings[provider][model].concurrent,
         )

@@ -6,6 +6,6 @@ from .concurrent_llm_settings import ConcurrentLLMSettings
 
 
 class LLMSettings(BaseModel):
-    basic_settings: BasicLLMSettings
-    batch_settings: BatchLLMSettings
-    concurrent_settings: ConcurrentLLMSettings
+    basic: BasicLLMSettings | None = None
+    batch: BatchLLMSettings | None = None
+    concurrent: ConcurrentLLMSettings | None = None

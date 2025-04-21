@@ -25,7 +25,7 @@ def test_load_batch_settings(application_container: ApplicationContainer):
     )
 
     # assert
-    assert batch_settings.poll_interval == 60.0
+    assert batch_settings.poll_interval == 300.0
     assert batch_settings.max_tokens_per_day is None
     assert batch_settings.max_num_retries == 0
 
