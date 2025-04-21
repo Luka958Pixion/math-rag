@@ -39,8 +39,4 @@ class MECAssistant(PartialBatchAssistant[MECAssistantInput, MECAssistantOutput])
     def decode_from_response_list(
         self, response_list: LLMResponseList[MECAssistantOutput]
     ) -> MECAssistantOutput:
-        content = response_list.responses[0].content
-        content_dict = content.model_dump(exclude_unset=True)
-        output = MECAssistantOutput(**content_dict)
-
-        return output
+        return response_list.responses[0].content

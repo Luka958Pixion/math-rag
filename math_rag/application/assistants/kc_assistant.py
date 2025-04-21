@@ -41,8 +41,4 @@ class KCAssistant(PartialUnifiedAssistant[KCAssistantInput, KCAssistantOutput]):
     def decode_from_response_list(
         self, response_list: LLMResponseList[KCAssistantOutput]
     ) -> KCAssistantOutput:
-        content = response_list.responses[0].content
-        content_dict = content.model_dump(exclude_unset=True)
-        output = KCAssistantOutput(**content_dict)  # TODO move to partial
-
-        return output
+        return response_list.responses[0].content

@@ -22,7 +22,7 @@ class PartialBatchAssistant(
         self._llm = llm
 
         args = TypeUtil.get_type_args(self.__class__)
-        self.response_type = cast(type[AssistantOutputType], args[0][1])
+        self._response_type = cast(type[AssistantOutputType], args[0][1])
 
     async def batch_assist(
         self,
@@ -32,6 +32,13 @@ class PartialBatchAssistant(
         requests = [self.encode_to_request(input) for input in inputs]
         batch_request = LLMBatchRequest(requests=requests)
         batch_result = await self._llm.batch_generate(batch_request, response_type)
+
+        # map BoundAssistantOutput to AssistantOutput
+        for response_list in batch_result.response_lists:
+            for response in response_list.responses:
+                content_dict = response.content.model_dump(exclude_unset=True)
+                response.content = self._response_type(**content_dict)
+
         outputs = [
             self.decode_from_response_list(response_list)
             for response_list in batch_result.response_lists
@@ -52,7 +59,7 @@ class PartialBatchAssistant(
         batch_result = await self._llm.batch_generate_result(
             batch_id,
             batch_request_id,
-            self.response_type,
+            self._response_type,
         )
 
         if batch_result is None:
