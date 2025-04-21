@@ -6,7 +6,7 @@ from math_rag.application.models.inference import (
 )
 
 
-class BaseEM(ABC):
+class BaseBasicEM(ABC):
     @abstractmethod
     async def embed(
         self,

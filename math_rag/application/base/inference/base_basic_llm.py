@@ -7,9 +7,13 @@ from math_rag.application.models.inference import (
 from math_rag.application.types.inference import LLMResponseType
 
 
-class BaseManagedLLM(ABC):
+class BaseBasicLLM(ABC):
     @abstractmethod
     async def generate(
-        self, request: LLMRequest[LLMResponseType]
+        self,
+        request: LLMRequest[LLMResponseType],
+        *,
+        max_time: float,
+        max_num_retries: int,
     ) -> LLMResult[LLMResponseType]:
         pass

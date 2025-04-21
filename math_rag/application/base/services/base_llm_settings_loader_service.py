@@ -1,21 +1,23 @@
 from abc import ABC, abstractmethod
 
-from math_rag.application.models import (
+from math_rag.application.models.settings import (
+    BasicLLMSettings,
     BatchLLMSettings,
     ConcurrentLLMSettings,
-    LLMSettings,
 )
 
 
 class BaseLLMSettingsLoaderService(ABC):
     @abstractmethod
-    def load_settings(self) -> LLMSettings:
+    def load_basic_settings(self, provider: str, model: str) -> BasicLLMSettings:
         pass
 
     @abstractmethod
-    def load_batch_settings(self) -> BatchLLMSettings:
+    def load_batch_settings(self, provider: str, model: str) -> BatchLLMSettings:
         pass
 
     @abstractmethod
-    def load_concurrent_settings(self) -> ConcurrentLLMSettings:
+    def load_concurrent_settings(
+        self, provider: str, model: str
+    ) -> ConcurrentLLMSettings:
         pass

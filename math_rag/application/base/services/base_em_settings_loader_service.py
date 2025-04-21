@@ -1,15 +1,15 @@
 from abc import ABC, abstractmethod
 
-from math_rag.application.models import (
+from math_rag.infrastructure.models.settings import (
+    BasicEMSettings,
     BatchEMSettings,
     ConcurrentEMSettings,
-    EMSettings,
 )
 
 
 class BaseEMSettingsLoaderService(ABC):
     @abstractmethod
-    def load_settings(self) -> EMSettings:
+    def load_basic_settings(self) -> BasicEMSettings:
         pass
 
     @abstractmethod

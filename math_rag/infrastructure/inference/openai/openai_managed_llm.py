@@ -1,20 +1,14 @@
-from math_rag.application.base.inference import BaseLLM, BaseManagedLLM
-from math_rag.application.models.inference import (
-    LLMRequest,
-    LLMResult,
-)
-from math_rag.application.types.inference import LLMResponseType
+from openai import AsyncOpenAI
+
+from .openai_basic_managed_llm import OpenAIBasicManagedLLM
+from .openai_batch_managed_llm import OpenAIBatchManagedLLM
+from .openai_concurrent_managed_llm import OpenAIConcurrentManagedLLM
 
 
-class OpenAIManagedLLM(BaseManagedLLM):
-    def __init__(self, llm: BaseLLM):
-        self.llm = llm
-
-    async def generate(
-        self, request: LLMRequest[LLMResponseType]
-    ) -> LLMResult[LLMResponseType]:
-        return await self.llm.generate(
-            request,
-            max_time=...,
-            max_num_retries=...,  # TODO
-        )
+class OpenAIManagedLLM(
+    OpenAIBasicManagedLLM, OpenAIBatchManagedLLM, OpenAIConcurrentManagedLLM
+):
+    def __init__(self, client: AsyncOpenAI):
+        OpenAIBasicManagedLLM.__init__(self, client)
+        OpenAIBatchManagedLLM.__init__(self, client)
+        OpenAIConcurrentManagedLLM.__init__(self, client)

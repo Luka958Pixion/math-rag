@@ -18,7 +18,7 @@ class PartialBatchEM(BaseBatchEM):
         batch_request: EMBatchRequest,
         *,
         poll_interval: float,
-        max_tokens_per_day: float | None,
+        max_tokens_per_day: float,
     ) -> EMBatchResult:
         batch_id = await self.batch_embed_init(
             batch_request, max_tokens_per_day=max_tokens_per_day
@@ -37,7 +37,7 @@ class PartialBatchEM(BaseBatchEM):
         batch_request: EMBatchRequest,
         *,
         poll_interval: float,
-        max_tokens_per_day: float | None,
+        max_tokens_per_day: float,
         max_num_retries: int,
     ) -> EMBatchResult:
         if max_num_retries < 0:
@@ -78,7 +78,7 @@ class PartialBatchEM(BaseBatchEM):
         batch_request: EMBatchRequest,
         *,
         poll_interval: float,
-        max_tokens_per_day: float | None,
+        max_tokens_per_day: float,
         max_num_retries: int,
     ) -> EMBatchResult:
         if max_num_retries:

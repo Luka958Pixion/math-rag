@@ -1,5 +1,5 @@
 from math_rag.application.base.assistants import BaseAssistant, BaseAssistantProtocol
-from math_rag.application.base.inference import BaseLLM
+from math_rag.application.base.inference import BaseBasicLLM
 from math_rag.application.base.repositories.documents import (
     BaseLLMFailedRequestRepository,
 )
@@ -16,7 +16,7 @@ class PartialAssistant(
 ):
     def __init__(
         self,
-        llm: BaseLLM,
+        llm: BaseBasicLLM,
         settings_loader_service: BaseLLMSettingsLoaderService,
         failed_request_repository: BaseLLMFailedRequestRepository,
     ):

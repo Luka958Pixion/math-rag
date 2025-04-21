@@ -1,17 +1,14 @@
-from math_rag.application.base.inference import BaseEM, BaseManagedEM
-from math_rag.application.models.inference import (
-    EMRequest,
-    EMResult,
-)
+from openai import AsyncOpenAI
+
+from .openai_basic_managed_em import OpenAIBasicManagedEM
+from .openai_batch_managed_em import OpenAIBatchManagedEM
+from .openai_concurrent_managed_em import OpenAIConcurrentManagedEM
 
 
-class OpenAIManagedEM(BaseManagedEM):
-    def __init__(self, em: BaseEM):
-        self.em = em
-
-    async def embed(self, request: EMRequest) -> EMResult:
-        return await self.em.embed(
-            request,
-            max_time=...,
-            max_num_retries=...,  # TODO
-        )
+class OpenAIManagedEM(
+    OpenAIBasicManagedEM, OpenAIBatchManagedEM, OpenAIConcurrentManagedEM
+):
+    def __init__(self, client: AsyncOpenAI):
+        OpenAIBasicManagedEM.__init__(self, client)
+        OpenAIBatchManagedEM.__init__(self, client)
+        OpenAIConcurrentManagedEM.__init__(self, client)
