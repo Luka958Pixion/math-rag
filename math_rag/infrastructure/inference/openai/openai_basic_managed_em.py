@@ -18,6 +18,12 @@ class OpenAIBasicManagedEM(BaseBasicManagedEM):
             'openai', request.params.model
         )
 
+        if basic_settings.max_time is None:
+            raise ValueError('max_time can not be None')
+
+        elif basic_settings.max_num_retries is None:
+            raise ValueError('max_num_retries can not be None')
+
         return await self._em.embed(
             request,
             max_time=basic_settings.max_time,

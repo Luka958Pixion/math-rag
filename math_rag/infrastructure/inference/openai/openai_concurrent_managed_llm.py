@@ -28,6 +28,15 @@ class OpenAIConcurrentManagedLLM(BaseConcurrentManagedLLM):
             )
         )
 
+        if concurrent_settings.max_requests_per_minute is None:
+            raise ValueError('max_requests_per_minute can not be None')
+
+        elif concurrent_settings.max_tokens_per_minute is None:
+            raise ValueError('max_tokens_per_minute can not be None')
+
+        elif concurrent_settings.max_num_retries is None:
+            raise ValueError('max_num_retries can not be None')
+
         return await self._llm.concurrent_generate(
             concurrent_request,
             max_requests_per_minute=concurrent_settings.max_requests_per_minute,

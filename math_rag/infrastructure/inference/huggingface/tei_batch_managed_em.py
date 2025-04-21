@@ -5,7 +5,7 @@ from math_rag.application.base.services import BaseEMSettingsLoaderService
 from math_rag.application.models.inference import EMBatchRequest, EMBatchResult
 
 
-class OpenAIBatchManagedEM(BaseBatchManagedEM):
+class TEIBatchManagedEM(BaseBatchManagedEM):
     def __init__(
         self, em: BaseBatchEM, em_settings_loader_service: BaseEMSettingsLoaderService
     ):
@@ -14,14 +14,15 @@ class OpenAIBatchManagedEM(BaseBatchManagedEM):
 
     async def batch_embed(self, batch_request: EMBatchRequest) -> EMBatchResult:
         batch_settings = self._em_settings_loader_service.load_batch_settings(
-            'openai', batch_request.requests[0].params.model
+            'text-embeddings-inference', batch_request.requests[0].params.model
         )
 
         if batch_settings.poll_interval is None:
             raise ValueError('poll_interval can not be None')
 
-        elif batch_settings.max_tokens_per_day is None:
-            raise ValueError('max_num_retries can not be None')
+        elif batch_settings.max_tokens_per_day is not None:
+            # NOTE: differs from openai
+            raise ValueError('max_num_retries must be None')
 
         elif batch_settings.max_num_retries is None:
             raise ValueError('max_num_retries can not be None')

@@ -51,7 +51,7 @@ WALLTIME_THRESHOLD = timedelta(minutes=10)
 logger = getLogger(__name__)
 
 
-class TGIBatchEM(PartialBatchEM):
+class TEIBatchEM(PartialBatchEM):
     def __init__(
         self,
         file_system_client: FileSystemClient,
