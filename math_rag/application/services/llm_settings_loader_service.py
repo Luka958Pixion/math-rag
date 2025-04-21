@@ -25,7 +25,7 @@ class LLMSettingsLoaderService(BaseLLMSettingsLoaderService):
         if provider == DEFAULT:
             return self._default_settings.basic_settings
 
-        return PydanticOverriderUtil.override_non_none_fields(
+        return PydanticOverriderUtil.override(
             self._default_settings.basic_settings,
             self._provider_settings[provider][model].basic_settings,
         )
@@ -34,7 +34,7 @@ class LLMSettingsLoaderService(BaseLLMSettingsLoaderService):
         if provider == DEFAULT:
             return self._default_settings.batch_settings
 
-        return PydanticOverriderUtil.override_non_none_fields(
+        return PydanticOverriderUtil.override(
             self._default_settings.batch_settings,
             self._provider_settings[provider][model].batch_settings,
         )
@@ -45,7 +45,7 @@ class LLMSettingsLoaderService(BaseLLMSettingsLoaderService):
         if provider == DEFAULT:
             return self._default_settings.concurrent_settings
 
-        return PydanticOverriderUtil.override_non_none_fields(
+        return PydanticOverriderUtil.override(
             self._default_settings.concurrent_settings,
             self._provider_settings[provider][model].concurrent_settings,
         )

@@ -33,8 +33,9 @@ class OpenAIBatchLLM(PartialBatchLLM):
         self,
         batch_request: LLMBatchRequest[LLMResponseType],
         *,
-        max_tokens_per_day: float,
+        max_tokens_per_day: float | None,
     ) -> str:
+        # TODO use max_tokens_per_day
         url = '/v1/chat/completions'
         request_dicts = [
             {

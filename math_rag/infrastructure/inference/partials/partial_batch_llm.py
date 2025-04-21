@@ -20,7 +20,7 @@ class PartialBatchLLM(BaseBatchLLM):
         response_type: type[LLMResponseType],
         *,
         poll_interval: float,
-        max_tokens_per_day: float,
+        max_tokens_per_day: float | None,
     ) -> LLMBatchResult[LLMResponseType]:
         batch_id = await self.batch_generate_init(
             batch_request, max_tokens_per_day=max_tokens_per_day
@@ -42,7 +42,7 @@ class PartialBatchLLM(BaseBatchLLM):
         response_type: type[LLMResponseType],
         *,
         poll_interval: float,
-        max_tokens_per_day: float,
+        max_tokens_per_day: float | None,
         max_num_retries: int,
     ) -> LLMBatchResult[LLMResponseType]:
         if max_num_retries < 0:
@@ -85,7 +85,7 @@ class PartialBatchLLM(BaseBatchLLM):
         response_type: type[LLMResponseType],
         *,
         poll_interval: float,
-        max_tokens_per_day: float,
+        max_tokens_per_day: float | None,
         max_num_retries: int,
     ) -> LLMBatchResult[LLMResponseType]:
         if max_num_retries:

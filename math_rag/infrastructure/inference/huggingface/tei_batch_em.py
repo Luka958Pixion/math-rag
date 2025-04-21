@@ -125,10 +125,10 @@ class TGIBatchEM(PartialBatchEM):
             await self.sftp_client.upload(local_path, remote_path)
 
     async def batch_embed_init(
-        self, batch_request: EMBatchRequest, *, max_tokens_per_day: float
+        self, batch_request: EMBatchRequest, *, max_tokens_per_day: float | None
     ) -> str:
         # validate
-        if max_tokens_per_day != -1:
+        if max_tokens_per_day is not None:
             raise ValueError(
                 f'{self.__class__.__name__} does not support max_tokens_per_day'
             )

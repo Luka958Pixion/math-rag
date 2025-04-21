@@ -29,8 +29,9 @@ class OpenAIBatchEM(PartialBatchEM):
         self.client = client
 
     async def batch_embed_init(
-        self, batch_request: EMBatchRequest, *, max_tokens_per_day: float
+        self, batch_request: EMBatchRequest, *, max_tokens_per_day: float | None
     ) -> str:
+        # TODO use max_tokens_per_day
         url = '/v1/embeddings'
         request_dicts = [
             {

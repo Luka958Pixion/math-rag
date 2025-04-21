@@ -8,12 +8,16 @@ T = TypeVar('T', bound=BaseModel)
 
 class PydanticOverriderUtil:
     @staticmethod
-    def override_non_none_fields(original: T, override: T) -> T:
+    def override(original: T, override: T) -> T:
+        # overrides properties that are explicilty set in the override variable
         original_dict = original.model_dump()
         override_dict = override.model_dump()
+
         result = {
-            k: override_dict[k] if override_dict[k] is not None else original_dict[k]
-            for k in original_dict
+            key: override_dict[key]
+            if key in override.model_fields_set
+            else original_dict[key]
+            for key in original_dict
         }
 
         return original.__class__(**result)
