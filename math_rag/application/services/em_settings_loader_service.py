@@ -22,30 +22,50 @@ class EMSettingsLoaderService(BaseEMSettingsLoaderService):
         self._default_settings = self._provider_settings[DEFAULT][DEFAULT]
 
     def load_basic_settings(self, provider: str, model: str) -> BasicEMSettings:
-        if provider == DEFAULT:
-            return self._default_settings.basic_settings
+        default_basic_settings = self._default_settings.basic
+        override_basic_settings = self._provider_settings[provider][model].basic
+
+        if default_basic_settings is None:
+            raise ValueError('Default basic settings must not be None')
+
+        if provider == DEFAULT or override_basic_settings is None:
+            return default_basic_settings
 
         return PydanticOverriderUtil.override(
-            self._default_settings.basic_settings,
-            self._provider_settings[provider][model].basic_settings,
+            default_basic_settings,
+            override_basic_settings,
         )
 
     def load_batch_settings(self, provider: str, model: str) -> BatchEMSettings:
-        if provider == DEFAULT:
-            return self._default_settings.batch_settings
+        default_batch_settings = self._default_settings.batch
+        override_batch_settings = self._provider_settings[provider][model].batch
+
+        if default_batch_settings is None:
+            raise ValueError('Default batch settings must not be None')
+
+        if provider == DEFAULT or override_batch_settings is None:
+            return default_batch_settings
 
         return PydanticOverriderUtil.override(
-            self._default_settings.batch_settings,
-            self._provider_settings[provider][model].batch_settings,
+            default_batch_settings,
+            override_batch_settings,
         )
 
     def load_concurrent_settings(
         self, provider: str, model: str
     ) -> ConcurrentEMSettings:
-        if provider == DEFAULT:
-            return self._default_settings.concurrent_settings
+        default_concurrent_settings = self._default_settings.concurrent
+        override_concurrent_settings = self._provider_settings[provider][
+            model
+        ].concurrent
+
+        if default_concurrent_settings is None:
+            raise ValueError('Default concurrent settings must not be None')
+
+        if provider == DEFAULT or override_concurrent_settings is None:
+            return default_concurrent_settings
 
         return PydanticOverriderUtil.override(
-            self._default_settings.concurrent_settings,
-            self._provider_settings[provider][model].concurrent_settings,
+            default_concurrent_settings,
+            override_concurrent_settings,
         )
