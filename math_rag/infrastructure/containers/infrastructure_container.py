@@ -29,7 +29,12 @@ from math_rag.infrastructure.clients import (
     SSHClient,
 )
 from math_rag.infrastructure.inference.huggingface import TGIBatchLLM
-from math_rag.infrastructure.inference.openai import OpenAIManagedEM, OpenAIManagedLLM
+from math_rag.infrastructure.inference.openai import (
+    OpenAIEM,
+    OpenAILLM,
+    OpenAIManagedEM,
+    OpenAIManagedLLM,
+)
 from math_rag.infrastructure.repositories.documents import (
     LLMFailedRequestRepository,
     MathExpressionClassificationRepository,
@@ -126,7 +131,11 @@ class InfrastructureContainer(DeclarativeContainer):
         api_key=config.openai.api_key,
     )
 
-    openai_managed_em = Factory(OpenAIManagedEM, client=async_openai_client)
+    # TODO
+    openai_em = Factory(OpenAIEM, client=async_openai_client)
+    openai_llm = Factory(OpenAILLM, client=async_openai_client)
+
+    openai_managed_em = Factory(OpenAIManagedEM, em, em_settings_loader_service)
     openai_managed_llm = Factory(OpenAIManagedLLM, client=async_openai_client)
 
     # arXiv
@@ -194,15 +203,7 @@ class InfrastructureContainer(DeclarativeContainer):
     # -----------
 
     # KaTeX
-    kc_assistant = Factory(
-        KCAssistant,
-        llm=openai_managed_llm,
-        settings_loader_service=application_container.llm_settings_loader_service,
-        failed_request_repository=llm_failed_request_repository,
-    )
+    kc_assistant = Factory(KCAssistant, llm=openai_managed_llm)
     math_expression_classification_assistant = Factory(
-        MECAssistant,
-        llm=openai_managed_llm,
-        settings_loader_service=application_container.llm_settings_loader_service,
-        failed_request_repository=llm_failed_request_repository,
+        MECAssistant, llm=openai_managed_llm
     )

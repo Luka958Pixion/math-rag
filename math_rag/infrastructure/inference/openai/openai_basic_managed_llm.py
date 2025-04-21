@@ -1,4 +1,4 @@
-from math_rag.application.base.inference import BaseBasicLLM, BaseBasicManagedLLM
+from math_rag.application.base.inference import BaseBasicManagedLLM
 from math_rag.application.base.repositories.documents import (
     BaseLLMFailedRequestRepository,
 )
@@ -9,11 +9,13 @@ from math_rag.application.models.inference import (
 )
 from math_rag.application.types.inference import LLMResponseType
 
+from .openai_basic_llm import OpenAIBasicLLM
+
 
 class OpenAIBasicManagedLLM(BaseBasicManagedLLM):
     def __init__(
         self,
-        llm: BaseBasicLLM,
+        llm: OpenAIBasicLLM,
         llm_settings_loader_service: BaseLLMSettingsLoaderService,
         llm_failed_request_repository: BaseLLMFailedRequestRepository,
     ):

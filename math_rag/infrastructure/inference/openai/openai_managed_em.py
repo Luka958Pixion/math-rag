@@ -1,14 +1,17 @@
-from openai import AsyncOpenAI
+from math_rag.application.base.services import BaseEMSettingsLoaderService
 
 from .openai_basic_managed_em import OpenAIBasicManagedEM
 from .openai_batch_managed_em import OpenAIBatchManagedEM
 from .openai_concurrent_managed_em import OpenAIConcurrentManagedEM
+from .openai_em import OpenAIEM
 
 
 class OpenAIManagedEM(
     OpenAIBasicManagedEM, OpenAIBatchManagedEM, OpenAIConcurrentManagedEM
 ):
-    def __init__(self, client: AsyncOpenAI):
-        OpenAIBasicManagedEM.__init__(self, client)
-        OpenAIBatchManagedEM.__init__(self, client)
-        OpenAIConcurrentManagedEM.__init__(self, client)
+    def __init__(
+        self, em: OpenAIEM, em_settings_loader_service: BaseEMSettingsLoaderService
+    ):
+        OpenAIBasicManagedEM.__init__(self, em, em_settings_loader_service)
+        OpenAIBatchManagedEM.__init__(self, em, em_settings_loader_service)
+        OpenAIConcurrentManagedEM.__init__(self, em, em_settings_loader_service)

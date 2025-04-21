@@ -1,3 +1,7 @@
+from .em_error_mapping import EMErrorMapping
+from .em_failed_request_mapping import EMFailedRequestMapping
+from .em_params_mapping import EMParamsMapping
+from .em_request_mapping import EMRequestMapping
 from .kc_assistant_input_mapping import KCAssistantInputMapping
 from .kc_assistant_output_mapping import KCAssistantOutputMapping
 from .llm_conversation_mapping import LLMConversationMapping
@@ -11,6 +15,10 @@ from .math_expression_mapping import MathExpressionMapping
 
 
 __all__ = [
+    'EMErrorMapping',
+    'EMFailedRequestMapping',
+    'EMParamsMapping',
+    'EMRequestMapping',
     'KCAssistantInputMapping',
     'KCAssistantOutputMapping',
     'LLMConversationMapping',

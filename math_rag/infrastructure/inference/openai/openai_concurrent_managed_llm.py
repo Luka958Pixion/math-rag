@@ -1,7 +1,4 @@
-from math_rag.application.base.inference import (
-    BaseConcurrentLLM,
-    BaseConcurrentManagedLLM,
-)
+from math_rag.application.base.inference import BaseConcurrentManagedLLM
 from math_rag.application.base.repositories.documents import (
     BaseLLMFailedRequestRepository,
 )
@@ -12,11 +9,13 @@ from math_rag.application.models.inference import (
 )
 from math_rag.application.types.inference import LLMResponseType
 
+from .openai_concurrent_llm import OpenAIConcurrentLLM
+
 
 class OpenAIConcurrentManagedLLM(BaseConcurrentManagedLLM):
     def __init__(
         self,
-        llm: BaseConcurrentLLM,
+        llm: OpenAIConcurrentLLM,
         llm_settings_loader_service: BaseLLMSettingsLoaderService,
         llm_failed_request_repository: BaseLLMFailedRequestRepository,
     ):

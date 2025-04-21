@@ -1,8 +1,4 @@
-from math_rag.application.base.inference import BaseLLM
-from math_rag.application.base.repositories.documents import (
-    BaseLLMFailedRequestRepository,
-)
-from math_rag.application.base.services import BaseLLMSettingsLoaderService
+from math_rag.application.base.inference import BaseManagedLLM
 from math_rag.application.models.assistants import (
     MECAssistantInput,
     MECAssistantOutput,
@@ -20,13 +16,8 @@ from .prompts import MATH_EXPRESSION_CLASSIFICATION_PROMPT
 
 
 class MECAssistant(PartialBatchAssistant[MECAssistantInput, MECAssistantOutput]):
-    def __init__(
-        self,
-        llm: BaseLLM,
-        settings_loader_service: BaseLLMSettingsLoaderService,
-        failed_request_repository: BaseLLMFailedRequestRepository,
-    ):
-        super().__init__(llm, settings_loader_service, failed_request_repository)
+    def __init__(self, llm: BaseManagedLLM):
+        super().__init__(llm)
 
     def encode_to_request(
         self, input: MECAssistantInput

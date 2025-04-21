@@ -1,16 +1,25 @@
 from uuid import UUID
 
-from math_rag.application.base.inference import BaseBatchEM, BaseBatchManagedEM
+from math_rag.application.base.inference import BaseBatchManagedEM
+from math_rag.application.base.repositories.documents import (
+    BaseEMFailedRequestRepository,
+)
 from math_rag.application.base.services import BaseEMSettingsLoaderService
 from math_rag.application.models.inference import EMBatchRequest, EMBatchResult
+
+from .openai_batch_em import OpenAIBatchEM
 
 
 class OpenAIBatchManagedEM(BaseBatchManagedEM):
     def __init__(
-        self, em: BaseBatchEM, em_settings_loader_service: BaseEMSettingsLoaderService
+        self,
+        em: OpenAIBatchEM,
+        em_settings_loader_service: BaseEMSettingsLoaderService,
+        em_failed_request_repository: BaseEMFailedRequestRepository,
     ):
         self._em = em
         self._em_settings_loader_service = em_settings_loader_service
+        self._em_failed_request_repository = em_failed_request_repository
 
     async def batch_embed(self, batch_request: EMBatchRequest) -> EMBatchResult:
         batch_settings = self._em_settings_loader_service.load_batch_settings(
@@ -26,12 +35,19 @@ class OpenAIBatchManagedEM(BaseBatchManagedEM):
         elif batch_settings.max_num_retries is None:
             raise ValueError('max_num_retries can not be None')
 
-        return await self._em.batch_embed(
+        batch_result = await self._em.batch_embed(
             batch_request,
             poll_interval=batch_settings.poll_interval,
             max_tokens_per_day=batch_settings.max_tokens_per_day,
             max_num_retries=batch_settings.max_num_retries,
         )
+
+        if batch_result.failed_requests:
+            await self._em_failed_request_repository.insert_many(
+                batch_result.failed_requests
+            )
+
+        return batch_result
 
     async def batch_embed_init(self, batch_request: EMBatchRequest) -> str:
         return await self._em.batch_embed_init(batch_request)

@@ -1,6 +1,6 @@
 from uuid import UUID
 
-from math_rag.application.base.inference import BaseBatchLLM, BaseBatchManagedLLM
+from math_rag.application.base.inference import BaseBatchManagedLLM
 from math_rag.application.base.repositories.documents import (
     BaseLLMFailedRequestRepository,
 )
@@ -11,11 +11,13 @@ from math_rag.application.models.inference import (
 )
 from math_rag.application.types.inference import LLMResponseType
 
+from .openai_batch_llm import OpenAIBatchLLM
+
 
 class OpenAIBatchManagedLLM(BaseBatchManagedLLM):
     def __init__(
         self,
-        llm: BaseBatchLLM,
+        llm: OpenAIBatchLLM,
         llm_settings_loader_service: BaseLLMSettingsLoaderService,
         llm_failed_request_repository: BaseLLMFailedRequestRepository,
     ):

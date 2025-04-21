@@ -1,3 +1,7 @@
+from .em_error_document import EMErrorDocument
+from .em_failed_request_document import EMFailedRequestDocument
+from .em_params_document import EMParamsDocument
+from .em_request_document import EMRequestDocument
 from .kc_assistant_input_document import KCAssistantInputDocument
 from .kc_assistant_output_document import KCAssistantOutputDocument
 from .llm_conversation_document import LLMConversationDocument
@@ -13,6 +17,10 @@ from .math_expression_document import MathExpressionDocument
 
 
 __all__ = [
+    'EMErrorDocument',
+    'EMFailedRequestDocument',
+    'EMParamsDocument',
+    'EMRequestDocument',
     'KCAssistantInputDocument',
     'KCAssistantOutputDocument',
     'LLMConversationDocument',
