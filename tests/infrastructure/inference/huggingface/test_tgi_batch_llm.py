@@ -20,12 +20,9 @@ class TestOutput(BaseAssistantOutput):
 
 
 @pytest.mark.asyncio
-async def test_batch_generate():
+async def test_batch_generate(infrastructure_container: InfrastructureContainer):
     # arrange
-    container = InfrastructureContainer()
-    container.init_resources()
-    tgi_batch_llm = container.tgi_batch_llm()
-
+    tgi_batch_llm = infrastructure_container.tgi_batch_llm()
     await tgi_batch_llm.init_resources()
 
     test_input = TestInput()

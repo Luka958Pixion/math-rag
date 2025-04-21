@@ -197,12 +197,12 @@ class InfrastructureContainer(DeclarativeContainer):
     kc_assistant = Factory(
         KCAssistant,
         llm=openai_unified_llm,
-        settings_loader_service=application_container.settings_loader_service,
+        settings_loader_service=application_container.llm_settings_loader_service,
         failed_request_repository=llm_failed_request_repository,
     )
     math_expression_classification_assistant = Factory(
         MECAssistant,
         llm=openai_unified_llm,
-        settings_loader_service=application_container.settings_loader_service,
+        settings_loader_service=application_container.llm_settings_loader_service,
         failed_request_repository=llm_failed_request_repository,
     )

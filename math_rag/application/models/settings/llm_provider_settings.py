@@ -1,19 +1,17 @@
-from pydantic import BaseModel
+from pydantic import RootModel
 
 from .llm_model_settings import LLMModelSettings
 
 
-class LLMProviderSettings(BaseModel):
-    __root__: dict[str, LLMModelSettings]
-
+class LLMProviderSettings(RootModel[dict[str, LLMModelSettings]]):
     def __getitem__(self, key: str) -> LLMModelSettings:
-        return self.__root__[key]
+        return self.root[key]
 
     def keys(self):
-        return self.__root__.keys()
+        return self.root.keys()
 
     def values(self):
-        return self.__root__.values()
+        return self.root.values()
 
     def items(self):
-        return self.__root__.items()
+        return self.root.items()

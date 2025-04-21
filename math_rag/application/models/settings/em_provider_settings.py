@@ -1,19 +1,17 @@
-from pydantic import BaseModel
+from pydantic import RootModel
 
 from .em_model_settings import EMModelSettings
 
 
-class EMProviderSettings(BaseModel):
-    __root__: dict[str, EMModelSettings]
-
+class EMProviderSettings(RootModel[dict[str, EMModelSettings]]):
     def __getitem__(self, key: str) -> EMModelSettings:
-        return self.__root__[key]
+        return self.root[key]
 
     def keys(self):
-        return self.__root__.keys()
+        return self.root.keys()
 
     def values(self):
-        return self.__root__.values()
+        return self.root.values()
 
     def items(self):
-        return self.__root__.items()
+        return self.root.items()
