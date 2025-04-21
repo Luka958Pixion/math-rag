@@ -1,15 +1,19 @@
 from pathlib import Path
 
-from math_rag.infrastructure.models.settings import TGISettings
-from math_rag.shared.utils import YamlLoaderUtil
+from math_rag.infrastructure.models.settings import TGIModelSettings, TGISettings
+from math_rag.shared.utils import PydanticOverriderUtil, YamlLoaderUtil
 
 
 YAML_PATH = Path(__file__).parents[3] / 'settings' / 'text_generation_inference.yaml'
 DEFAULT = 'default'
 
 
-# TODO by model
 class TGISettingsLoaderService:
+    def __init__(self):
+        self._model_settings = YamlLoaderUtil.load(YAML_PATH, model=TGIModelSettings)
+
     def load(self, model: str) -> TGISettings:
-        # TODO map / and other special character from hf names
-        return YamlLoaderUtil.load(YAML_PATH, model=TGISettings)
+        default_settings = self._model_settings[DEFAULT]
+        override_settings = self._model_settings[model]
+
+        return PydanticOverriderUtil.override(default_settings, override_settings)
