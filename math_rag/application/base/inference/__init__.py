@@ -10,8 +10,10 @@ from .base_concurrent_em import BaseConcurrentEM
 from .base_concurrent_llm import BaseConcurrentLLM
 from .base_concurrent_managed_em import BaseConcurrentManagedEM
 from .base_concurrent_managed_llm import BaseConcurrentManagedLLM
-from .base_unified_em import BaseUnifiedEM
-from .base_unified_llm import BaseUnifiedLLM
+from .base_em import BaseEM
+from .base_llm import BaseLLM
+from .base_managed_em import BaseManagedEM
+from .base_managed_llm import BaseManagedLLM
 
 
 __all__ = [
@@ -19,14 +21,16 @@ __all__ = [
     'BaseConcurrentLLM',
     'BaseBasicEM',
     'BaseBasicLLM',
-    'BaseUnifiedLLM',
+    'BaseLLM',
     'BaseBatchEM',
     'BaseConcurrentEM',
-    'BaseUnifiedEM',
+    'BaseEM',
     'BaseBasicManagedEM',
     'BaseBasicManagedLLM',
     'BaseBatchManagedEM',
     'BaseBatchManagedLLM',
     'BaseConcurrentManagedEM',
     'BaseConcurrentManagedLLM',
+    'BaseManagedEM',
+    'BaseManagedLLM',
 ]

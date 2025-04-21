@@ -23,7 +23,7 @@ class TestOutput(BaseAssistantOutput):
 @pytest.mark.asyncio
 async def test_generate(infrastructure_container: InfrastructureContainer):
     # arrange
-    openai_unified_llm = infrastructure_container.openai_unified_llm()
+    openai_unified_llm = infrastructure_container.openai_managed_llm()
 
     test_input = TestInput()
     request = LLMRequest(
@@ -57,7 +57,7 @@ async def test_generate(infrastructure_container: InfrastructureContainer):
 @pytest.mark.asyncio
 async def test_concurrent_generate(infrastructure_container: InfrastructureContainer):
     # arrange
-    openai_unified_llm = infrastructure_container.openai_unified_llm()
+    openai_unified_llm = infrastructure_container.openai_managed_llm()
 
     test_input = TestInput()
     request = LLMRequest(
@@ -93,7 +93,7 @@ async def test_concurrent_generate(infrastructure_container: InfrastructureConta
 @pytest.mark.asyncio
 async def test_batch_generate(infrastructure_container: InfrastructureContainer):
     # arrange
-    openai_unified_llm = infrastructure_container.openai_unified_llm()
+    openai_unified_llm = infrastructure_container.openai_managed_llm()
 
     test_input = TestInput()
     request = LLMRequest(

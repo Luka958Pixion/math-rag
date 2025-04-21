@@ -12,7 +12,7 @@ from math_rag.infrastructure.containers import InfrastructureContainer
 @pytest.mark.asyncio
 async def test_embed(infrastructure_container: InfrastructureContainer):
     # arrange
-    openai_unified_em = infrastructure_container.openai_unified_em()
+    openai_unified_em = infrastructure_container.openai_managed_em()
     request = EMRequest(text='test', params=EMParams(model='text-embedding-3-large'))
 
     # act
@@ -30,7 +30,7 @@ async def test_embed(infrastructure_container: InfrastructureContainer):
 @pytest.mark.asyncio
 async def test_concurrent_embed(infrastructure_container: InfrastructureContainer):
     # arrange
-    openai_unified_em = infrastructure_container.openai_unified_em()
+    openai_unified_em = infrastructure_container.openai_managed_em()
     concurrent_request = EMConcurrentRequest(
         requests=[
             EMRequest(text='test', params=EMParams(model='text-embedding-3-large'))
@@ -53,7 +53,7 @@ async def test_concurrent_embed(infrastructure_container: InfrastructureContaine
 @pytest.mark.asyncio
 async def test_batch_embed(infrastructure_container: InfrastructureContainer):
     # arrange
-    openai_unified_em = infrastructure_container.openai_unified_em()
+    openai_unified_em = infrastructure_container.openai_managed_em()
     batch_request = EMBatchRequest(
         requests=[
             EMRequest(text='test', params=EMParams(model='text-embedding-3-large'))

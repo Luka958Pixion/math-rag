@@ -1,4 +1,4 @@
-from math_rag.application.base.inference import BaseUnifiedLLM
+from math_rag.application.base.inference import BaseLLM
 from math_rag.application.base.repositories.documents import (
     BaseLLMFailedRequestRepository,
 )
@@ -24,7 +24,7 @@ class KCRetryAssistant(
 ):
     def __init__(
         self,
-        llm: BaseUnifiedLLM,
+        llm: BaseLLM,
         settings_loader_service: BaseLLMSettingsLoaderService,
         failed_request_repository: BaseLLMFailedRequestRepository,
     ):

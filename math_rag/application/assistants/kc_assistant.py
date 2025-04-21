@@ -1,8 +1,4 @@
-from math_rag.application.base.inference import BaseUnifiedLLM
-from math_rag.application.base.repositories.documents import (
-    BaseLLMFailedRequestRepository,
-)
-from math_rag.application.base.services import BaseLLMSettingsLoaderService
+from math_rag.application.base.inference import BaseManagedLLM
 from math_rag.application.models.assistants import (
     KCAssistantInput,
     KCAssistantOutput,
@@ -20,13 +16,8 @@ from .prompts import KATEX_CORRECTION_PROMPT
 
 
 class KCAssistant(PartialUnifiedAssistant[KCAssistantInput, KCAssistantOutput]):
-    def __init__(
-        self,
-        llm: BaseUnifiedLLM,
-        settings_loader_service: BaseLLMSettingsLoaderService,
-        failed_request_repository: BaseLLMFailedRequestRepository,
-    ):
-        super().__init__(llm, settings_loader_service, failed_request_repository)
+    def __init__(self, llm: BaseManagedLLM):
+        super().__init__(llm)
 
     def encode_to_request(
         self, input: KCAssistantInput
@@ -52,6 +43,6 @@ class KCAssistant(PartialUnifiedAssistant[KCAssistantInput, KCAssistantOutput]):
     ) -> KCAssistantOutput:
         content = response_list.responses[0].content
         content_dict = content.model_dump(exclude_unset=True)
-        output = KCAssistantOutput(**content_dict)
+        output = KCAssistantOutput(**content_dict)  # TODO move to partial
 
         return output

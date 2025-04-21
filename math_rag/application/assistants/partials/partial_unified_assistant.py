@@ -1,8 +1,4 @@
-from math_rag.application.base.inference import BaseUnifiedLLM
-from math_rag.application.base.repositories.documents import (
-    BaseLLMFailedRequestRepository,
-)
-from math_rag.application.base.services import BaseLLMSettingsLoaderService
+from math_rag.application.base.inference import BaseLLM
 from math_rag.application.types.assistants import (
     AssistantInputType,
     AssistantOutputType,
@@ -18,18 +14,7 @@ class PartialUnifiedAssistant(
     PartialBatchAssistant[AssistantInputType, AssistantOutputType],
     PartialConcurrentAssistant[AssistantInputType, AssistantOutputType],
 ):
-    def __init__(
-        self,
-        llm: BaseUnifiedLLM,
-        settings_loader_service: BaseLLMSettingsLoaderService,
-        failed_request_repository: BaseLLMFailedRequestRepository,
-    ):
-        PartialAssistant.__init__(
-            self, llm, settings_loader_service, failed_request_repository
-        )
-        PartialBatchAssistant.__init__(
-            self, llm, settings_loader_service, failed_request_repository
-        )
-        PartialConcurrentAssistant.__init__(
-            self, llm, settings_loader_service, failed_request_repository
-        )
+    def __init__(self, llm: BaseLLM):
+        PartialAssistant.__init__(self, llm)
+        PartialBatchAssistant.__init__(self, llm)
+        PartialConcurrentAssistant.__init__(self, llm)
