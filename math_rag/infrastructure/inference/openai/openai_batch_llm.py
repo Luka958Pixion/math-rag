@@ -4,6 +4,7 @@ from logging import getLogger
 from uuid import UUID
 
 from openai import AsyncOpenAI
+from openai.types import Batch
 from openai.types.chat import ChatCompletion
 
 from math_rag.application.models.inference import (
@@ -29,13 +30,62 @@ class OpenAIBatchLLM(PartialBatchLLM):
     def __init__(self, client: AsyncOpenAI):
         self.client = client
 
+    def _is_token_limit_exceeded(self, batch: Batch) -> bool:
+        for batch_error in batch.errors.data:
+            if batch_error.code == 'token_limit_exceeded':
+                return True
+
+            elif batch_error.code == 'invalid_json_line':
+                raise ValueError(
+                    f'Batch error - code: {batch_error.code}, '
+                    f'line: {batch_error.line}, '
+                    f'message: {batch_error.message}, '
+                    f'param: {batch_error.param}'
+                )
+
+        return False
+
     async def batch_generate_init(
         self,
         batch_request: LLMBatchRequest[LLMResponseType],
         *,
         max_tokens_per_day: float | None,
     ) -> str:
-        # TODO use max_tokens_per_day
+        # validate
+        if max_tokens_per_day is None:
+            raise ValueError(f'{self.__class__.__name__} requires max_tokens_per_day')
+
+        total_tokens_approximation = sum(
+            len(message.role) + len(message.content)
+            for request in batch_request.requests
+            for message in request.conversation.messages
+        )
+
+        if total_tokens_approximation > max_tokens_per_day:
+            raise ValueError(
+                f'Batch request {batch_request.id} exceeds token limit '
+                f'{total_tokens_approximation}/{max_tokens_per_day}'
+            )
+
+        # check retries
+        async for batch in self.client.batches.list():
+            if batch.metadata['batch_request_id'] == str(batch_request.id):
+                break
+
+            if self._is_token_limit_exceeded(batch):
+                return await self.batch_generate_init(
+                    batch_request, max_tokens_per_day=max_tokens_per_day
+                )
+
+            logger.info(
+                f'Batch {batch.id} created for '
+                f'batch request {batch.metadata['batch_request_id']} '
+                f'with status {batch.status}'
+            )
+
+            return batch.id
+
+        # map requests
         url = '/v1/chat/completions'
         request_dicts = [
             {
@@ -49,6 +99,7 @@ class OpenAIBatchLLM(PartialBatchLLM):
             for request in batch_request.requests
         ]
 
+        # create in-memory input file
         lines = [
             json.dumps(request_dict, separators=(',', ':'))
             for request_dict in request_dicts
@@ -56,13 +107,21 @@ class OpenAIBatchLLM(PartialBatchLLM):
         jsonl_str = '\n'.join(lines)
         jsonl_bytes = jsonl_str.encode('utf-8')
 
+        # write input file
         input_file = await self.client.files.create(file=jsonl_bytes, purpose='batch')
         batch = await self.client.batches.create(
             input_file_id=input_file.id,
             endpoint=url,
             completion_window='24h',
-            metadata=None,
+            metadata={'batch_request_id': str(batch_request.id)},
         )
+
+        # check errors
+        if self._is_token_limit_exceeded(batch):
+            return await self.batch_generate_init(
+                batch_request, max_tokens_per_day=max_tokens_per_day
+            )
+
         logger.info(
             f'Batch {batch.id} created for '
             f'batch request {batch_request.id} '
