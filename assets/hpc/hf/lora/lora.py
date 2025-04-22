@@ -9,6 +9,7 @@ from time import sleep
 
 from datasets import load_dataset
 from decouple import config
+from huggingface_hub import login
 from peft import LoraConfig, get_peft_model, prepare_model_for_kbit_training
 from transformers import (
     AutoModelForCausalLM,
@@ -30,12 +31,19 @@ PBS_JOB_ID = os.environ['PBS_JOBID']
 HTTP_PROXY = 'http://10.150.1.1:3128'
 HTTPS_PROXY = 'http://10.150.1.1:3128'
 
+# huggingface
+HF_TOKEN = config('HF_TOKEN', default=None)
+
 # weights and biases
 WANDB_PROJECT = config('WANDB_PROJECT', default=None)
 WANDB_API_KEY = config('WANDB_API_KEY', default=None)
 
+# models
+MODEL_HUB_ID = config('MODEL_HUB_ID', default=None)
+
 # paths
 ENV_PATH = Path('.env.hpc.hf.lora')
+CACHE_DIR_PATH = Path('data')
 
 # thresholds
 WALLTIME_THRESHOLD = timedelta(minutes=30)
@@ -77,7 +85,9 @@ class FineTuningProcessorThread(Thread):
         logger.info(f'{self.__class__.__name__} started')
 
         tokenizer_name = 'TinyLlama/TinyLlama-1.1B-Chat-v1.0'
-        tokenizer: LlamaTokenizerFast = AutoTokenizer.from_pretrained(tokenizer_name)
+        tokenizer: LlamaTokenizerFast = AutoTokenizer.from_pretrained(
+            tokenizer_name, cache_dir=CACHE_DIR_PATH
+        )
         logger.info(f'tokenizer: {type(tokenizer)}')
 
         def format_prompt(example):
@@ -107,12 +117,15 @@ class FineTuningProcessorThread(Thread):
             model_name,
             device_map='auto',
             quantization_config=bnb_config,
+            cache_dir=CACHE_DIR_PATH,
         )
         model.config.use_cache = False
         model.config.pretraining_tp = 1
         logger.info(f'model: {type(tokenizer)}')
 
-        tokenizer = AutoTokenizer.from_pretrained(model_name, trust_remote_code=False)
+        tokenizer = AutoTokenizer.from_pretrained(
+            model_name, trust_remote_code=False, cache_dir=CACHE_DIR_PATH
+        )
         tokenizer.pad_token = '<PAD>'
         tokenizer.padding_side = 'left'
         logger.info(f'tokenizer2: {type(tokenizer)}')
@@ -219,6 +232,8 @@ class WalltimeTrackerThread(Thread):
 
 def main():
     # initialization
+    login(token=HF_TOKEN)
+
     training_stop_event = Event()
     training_done_event = Event()
 
