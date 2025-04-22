@@ -17,6 +17,7 @@ from math_rag.infrastructure.mappings.inference.openai import (
     EMRequestMapping,
     EMResponseListMapping,
 )
+from math_rag.infrastructure.validators.inference.openai import OpenAIValidator
 
 
 class OpenAIBasicEM(BaseBasicEM):
@@ -30,6 +31,8 @@ class OpenAIBasicEM(BaseBasicEM):
         max_time: float,
         max_num_retries: int,
     ) -> EMResult:
+        OpenAIValidator.validate_model_name(request.params.model)
+
         @on_exception(
             wait_gen=expo,
             exception=OPENAI_ERRORS_TO_RETRY,

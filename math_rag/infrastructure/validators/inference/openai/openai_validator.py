@@ -1,9 +1,9 @@
 from openai import models
 
 
-class OpenAIModelNameValidator:
+class OpenAIValidator:
     @staticmethod
-    def validate(model_name: str):
+    def validate_model_name(model_name: str):
         for model in models.list():
             if model.id == model_name:
                 return

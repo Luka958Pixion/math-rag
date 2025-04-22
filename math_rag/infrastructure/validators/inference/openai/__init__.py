@@ -1,1 +1,4 @@
-from .openai_model_name_validator import OpenAIModelNameValidator
+from .openai_validator import OpenAIValidator
+
+
+__all__ = ['OpenAIValidator']

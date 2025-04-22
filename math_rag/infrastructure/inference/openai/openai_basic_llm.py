@@ -19,6 +19,7 @@ from math_rag.infrastructure.mappings.inference.openai import (
     LLMRequestMapping,
     LLMResponseListMapping,
 )
+from math_rag.infrastructure.validators.inference.openai import OpenAIValidator
 
 
 class OpenAIBasicLLM(BaseBasicLLM):
@@ -32,6 +33,8 @@ class OpenAIBasicLLM(BaseBasicLLM):
         max_time: float,
         max_num_retries: int,
     ) -> LLMResult[LLMResponseType]:
+        OpenAIValidator.validate_model_name(request.params.model)
+
         @on_exception(
             wait_gen=expo,
             exception=OPENAI_ERRORS_TO_RETRY,

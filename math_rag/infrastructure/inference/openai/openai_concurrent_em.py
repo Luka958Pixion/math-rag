@@ -27,6 +27,7 @@ from math_rag.infrastructure.mappings.inference.openai import (
     EMResponseListMapping,
 )
 from math_rag.infrastructure.utils import TokenCounterUtil
+from math_rag.infrastructure.validators.inference.openai import OpenAIValidator
 
 
 logger = getLogger(__name__)
@@ -105,8 +106,8 @@ class OpenAIConcurrentEM(BaseConcurrentEM):
         max_tokens_per_minute: float,
         max_num_retries: int,
     ) -> EMConcurrentResult:
-        # extract model
         model = concurrent_request.requests[0].params.model
+        OpenAIValidator.validate_model_name(model)
 
         retry_queue: Queue[EMRequestTracker] = Queue()
         status_tracker = EMStatusTracker()

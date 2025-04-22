@@ -26,6 +26,7 @@ from math_rag.infrastructure.mappings.inference.openai import (
     LLMResponseListMapping,
 )
 from math_rag.infrastructure.utils import TokenCounterUtil
+from math_rag.infrastructure.validators.inference.openai import OpenAIValidator
 
 
 logger = getLogger(__name__)
@@ -46,8 +47,8 @@ class OpenAIBatchLLM(PartialBatchLLM):
         if max_tokens_per_day is None:
             raise ValueError(f'{self.__class__.__name__} requires max_tokens_per_day')
 
-        # extract model
         model = batch_request.requests[0].params.model
+        OpenAIValidator.validate_model_name(model)
 
         # check token limit
         total_tokens = sum(

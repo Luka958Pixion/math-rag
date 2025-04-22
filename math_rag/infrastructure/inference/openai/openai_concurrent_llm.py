@@ -29,6 +29,7 @@ from math_rag.infrastructure.mappings.inference.openai import (
     LLMResponseListMapping,
 )
 from math_rag.infrastructure.utils import TokenCounterUtil
+from math_rag.infrastructure.validators.inference.openai import OpenAIValidator
 
 
 logger = getLogger(__name__)
@@ -111,8 +112,8 @@ class OpenAIConcurrentLLM(BaseConcurrentLLM):
         max_tokens_per_minute: float,
         max_num_retries: int,
     ) -> LLMConcurrentResult[LLMResponseType]:
-        # extract model
         model = concurrent_request.requests[0].params.model
+        OpenAIValidator.validate_model_name(model)
 
         retry_queue: Queue[LLMRequestTracker] = Queue()
         status_tracker = LLMStatusTracker()
