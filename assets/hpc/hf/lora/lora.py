@@ -32,8 +32,7 @@ HTTPS_PROXY = 'http://10.150.1.1:3128'
 
 # weights and biases
 WANDB_PROJECT = config('WANDB_PROJECT', default=None)
-WANDB_ENTITY = config('WANDB_ENTITY', default=None)
-WANDB_NAME = config('WANDB_NAME', default=None)
+WANDB_API_KEY = config('WANDB_API_KEY', default=None)
 
 # paths
 ENV_PATH = Path('.env.hpc.hf.lora')
