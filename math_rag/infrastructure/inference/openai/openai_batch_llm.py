@@ -16,7 +16,7 @@ from math_rag.application.models.inference import (
 )
 from math_rag.application.types.inference import LLMResponseType
 from math_rag.infrastructure.constants.inference.openai import (
-    BATCH_WAIT_AFTER_RATE_LIMIT_ERROR_SECONDS,
+    BATCH_WAIT_AFTER_RATE_LIMIT_ERROR,
 )
 from math_rag.infrastructure.enums.inference.openai import BatchErrorCode
 from math_rag.infrastructure.inference.partials import PartialBatchLLM
@@ -46,6 +46,7 @@ class OpenAIBatchLLM(PartialBatchLLM):
         if max_tokens_per_day is None:
             raise ValueError(f'{self.__class__.__name__} requires max_tokens_per_day')
 
+        # check token limit
         total_tokens = sum(
             TokenCounterUtil.count(request) for request in batch_request.requests
         )
@@ -66,31 +67,34 @@ class OpenAIBatchLLM(PartialBatchLLM):
                     input_file = file
                     break
 
-        # map requests
-        url = '/v1/chat/completions'
-        request_dicts = [
-            {
-                'custom_id': str(request.id),
-                'method': 'POST',
-                'url': url,
-                'body': LLMRequestMapping[LLMResponseType].to_target(
-                    request, use_parsed=True
-                ),
-            }
-            for request in batch_request.requests
-        ]
+        if not input_file:
+            # map requests
+            url = '/v1/chat/completions'
+            request_dicts = [
+                {
+                    'custom_id': str(request.id),
+                    'method': 'POST',
+                    'url': url,
+                    'body': LLMRequestMapping[LLMResponseType].to_target(
+                        request, use_parsed=True
+                    ),
+                }
+                for request in batch_request.requests
+            ]
 
-        # create in-memory input file
-        lines = [
-            json.dumps(request_dict, separators=(',', ':'))
-            for request_dict in request_dicts
-        ]
-        jsonl_str = '\n'.join(lines)
-        jsonl_bytes = jsonl_str.encode('utf-8')
+            # create in-memory input file
+            lines = [
+                json.dumps(request_dict, separators=(',', ':'))
+                for request_dict in request_dicts
+            ]
+            jsonl_str = '\n'.join(lines)
+            jsonl_bytes = jsonl_str.encode('utf-8')
 
-        # create openai input file
-        input_file = await self.client.files.create(file=jsonl_bytes, purpose='batch')
-        self.batch_request_id_to_input_file_id[batch_request.id] = input_file.id
+            # create openai input file
+            input_file = await self.client.files.create(
+                file=jsonl_bytes, purpose='batch'
+            )
+            self.batch_request_id_to_input_file_id[batch_request.id] = input_file.id
 
         try:
             batch = await self.client.batches.create(
@@ -102,11 +106,13 @@ class OpenAIBatchLLM(PartialBatchLLM):
 
         except BadRequestError as e:
             if 'token_limit_exceeded' in str(e):
-                sleep(BATCH_WAIT_AFTER_RATE_LIMIT_ERROR_SECONDS)
+                sleep(BATCH_WAIT_AFTER_RATE_LIMIT_ERROR)
 
                 return await self.batch_generate_init(
                     batch_request, max_tokens_per_day=max_tokens_per_day
                 )
+
+            raise
 
         # check errors
         batch_error_codes = [code for code in BatchErrorCode]
@@ -141,6 +147,7 @@ class OpenAIBatchLLM(PartialBatchLLM):
             f'with status {batch.status}'
         )
 
+        # cleanup
         self.batch_request_id_to_input_file_id.pop(batch_request.id)
 
         return batch.id

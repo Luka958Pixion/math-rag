@@ -17,8 +17,8 @@ from math_rag.application.models.inference import (
     EMStatusTracker,
 )
 from math_rag.infrastructure.constants.inference.openai import (
-    CONCURRENT_WAIT_AFTER_RATE_LIMIT_ERROR_SECONDS,
-    CONCURRENT_WAIT_IDLE_SECONDS,
+    CONCURRENT_WAIT_AFTER_RATE_LIMIT_ERROR,
+    CONCURRENT_WAIT_IDLE,
     OPENAI_ERRORS_TO_RAISE,
     OPENAI_ERRORS_TO_RETRY_NO_RATE_LIMIT,
 )
@@ -179,25 +179,22 @@ class OpenAIConcurrentEM(BaseConcurrentEM):
             if status_tracker.num_tasks_in_progress == 0:
                 break
 
-            await sleep(CONCURRENT_WAIT_IDLE_SECONDS)
+            await sleep(CONCURRENT_WAIT_IDLE)
 
             seconds_since_rate_limit_error = (
                 perf_counter() - status_tracker.time_of_last_rate_limit_error
             )
 
-            if (
-                seconds_since_rate_limit_error
-                < CONCURRENT_WAIT_AFTER_RATE_LIMIT_ERROR_SECONDS
-            ):
+            if seconds_since_rate_limit_error < CONCURRENT_WAIT_AFTER_RATE_LIMIT_ERROR:
                 remaining_seconds_to_pause = (
-                    CONCURRENT_WAIT_AFTER_RATE_LIMIT_ERROR_SECONDS
+                    CONCURRENT_WAIT_AFTER_RATE_LIMIT_ERROR
                     - seconds_since_rate_limit_error
                 )
                 await sleep(remaining_seconds_to_pause)
 
                 wait_until = ctime(
                     status_tracker.time_of_last_rate_limit_error
-                    + CONCURRENT_WAIT_AFTER_RATE_LIMIT_ERROR_SECONDS
+                    + CONCURRENT_WAIT_AFTER_RATE_LIMIT_ERROR
                 )
                 logger.warning(f'Pausing to cool down until {wait_until}')
 
