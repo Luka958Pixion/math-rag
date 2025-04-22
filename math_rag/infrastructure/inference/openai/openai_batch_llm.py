@@ -4,7 +4,7 @@ from asyncio import sleep
 from logging import getLogger
 from uuid import UUID
 
-from openai import AsyncOpenAI
+from openai import AsyncOpenAI, BadRequestError
 from openai.types.chat import ChatCompletion
 
 from math_rag.application.models.inference import (
@@ -34,6 +34,7 @@ logger = getLogger(__name__)
 class OpenAIBatchLLM(PartialBatchLLM):
     def __init__(self, client: AsyncOpenAI):
         self.client = client
+        self.batch_request_id_to_input_file_id: dict[UUID, str] = {}
 
     async def batch_generate_init(
         self,
@@ -45,45 +46,25 @@ class OpenAIBatchLLM(PartialBatchLLM):
         if max_tokens_per_day is None:
             raise ValueError(f'{self.__class__.__name__} requires max_tokens_per_day')
 
-        total_tokens_approximation = sum(
+        total_tokens = sum(
             TokenCounterUtil.count(request) for request in batch_request.requests
         )
 
-        if total_tokens_approximation > max_tokens_per_day:
+        if total_tokens > max_tokens_per_day:
             raise ValueError(
                 f'Batch request {batch_request.id} exceeds token limit '
-                f'{total_tokens_approximation}/{max_tokens_per_day}'
+                f'{total_tokens}/{max_tokens_per_day}'
             )
 
-        # check retries
-        async for batch in self.client.batches.list():
-            if batch.metadata['batch_request_id'] != str(batch_request.id):
-                continue
+        # check if the file already exists
+        input_file = None
+        input_file_ids = self.batch_request_id_to_input_file_id.values()
 
-            # TODO shouldnt call batch_generate_init!
-            for batch_error in batch.errors.data:
-                if batch_error.code == BatchErrorCode.TOKEN_LIMIT_EXCEEDED:
-                    sleep(BATCH_WAIT_AFTER_RATE_LIMIT_ERROR_SECONDS)
-
-                    return await self.batch_generate_init(
-                        batch_request, max_tokens_per_day=max_tokens_per_day
-                    )
-
-                elif batch_error.code == BatchErrorCode.INVALID_JSON_LINE:
-                    raise ValueError(
-                        f'Batch error - code: {batch_error.code}, '
-                        f'line: {batch_error.line}, '
-                        f'message: {batch_error.message}, '
-                        f'param: {batch_error.param}'
-                    )
-
-            logger.info(
-                f'Batch {batch.id} created for '
-                f'batch request {batch.metadata['batch_request_id']} '
-                f'with status {batch.status}'
-            )
-
-            return batch.id
+        if input_file_ids:
+            async for file in self.client.files.list():
+                if file.id in input_file_ids:
+                    input_file = file
+                    break
 
         # map requests
         url = '/v1/chat/completions'
@@ -107,30 +88,51 @@ class OpenAIBatchLLM(PartialBatchLLM):
         jsonl_str = '\n'.join(lines)
         jsonl_bytes = jsonl_str.encode('utf-8')
 
-        # write input file
+        # create openai input file
         input_file = await self.client.files.create(file=jsonl_bytes, purpose='batch')
-        batch = await self.client.batches.create(
-            input_file_id=input_file.id,
-            endpoint=url,
-            completion_window='24h',
-            metadata={'batch_request_id': str(batch_request.id)},
-        )
+        self.batch_request_id_to_input_file_id[batch_request.id] = input_file.id
 
-        # check errors
-        for batch_error in batch.errors.data:
-            if batch_error.code == BatchErrorCode.TOKEN_LIMIT_EXCEEDED:
+        try:
+            batch = await self.client.batches.create(
+                input_file_id=input_file.id,
+                endpoint=url,
+                completion_window='24h',
+                metadata=None,
+            )
+
+        except BadRequestError as e:
+            if 'token_limit_exceeded' in str(e):
                 sleep(BATCH_WAIT_AFTER_RATE_LIMIT_ERROR_SECONDS)
 
                 return await self.batch_generate_init(
                     batch_request, max_tokens_per_day=max_tokens_per_day
                 )
 
-            elif batch_error.code == BatchErrorCode.INVALID_JSON_LINE:
+        # check errors
+        batch_error_codes = [code for code in BatchErrorCode]
+
+        if batch.errors:
+            logger.warning(f'Cancelling batch {batch.id} due to an error')
+            await self.client.batches.cancel(batch.id)
+
+            if batch.errors.data:
+                for batch_error in batch.errors.data:
+                    batch_error_code_label = (
+                        'Unknown'
+                        if batch_error.code not in batch_error_codes
+                        else 'Known'
+                    )
+
+                    logger.error(
+                        f'{batch_error_code_label} batch error - '
+                        f'code: {batch_error.code}, '
+                        f'line: {batch_error.line}, '
+                        f'message: {batch_error.message}, '
+                        f'param: {batch_error.param}'
+                    )
+
                 raise ValueError(
-                    f'Batch error - code: {batch_error.code}, '
-                    f'line: {batch_error.line}, '
-                    f'message: {batch_error.message}, '
-                    f'param: {batch_error.param}'
+                    f'Batch {batch.id} has {len(batch.errors.data)} error(s)'
                 )
 
         logger.info(
@@ -138,6 +140,8 @@ class OpenAIBatchLLM(PartialBatchLLM):
             f'batch request {batch_request.id} '
             f'with status {batch.status}'
         )
+
+        self.batch_request_id_to_input_file_id.pop(batch_request.id)
 
         return batch.id
 
