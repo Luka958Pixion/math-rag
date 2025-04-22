@@ -79,6 +79,7 @@ class FineTuningProcessorThread(Thread):
 
         tokenizer_name = 'TinyLlama/TinyLlama-1.1B-Chat-v1.0'
         tokenizer: LlamaTokenizerFast = AutoTokenizer.from_pretrained(tokenizer_name)
+        logger.info(f'tokenizer: {type(tokenizer)}')
 
         def format_prompt(example):
             chat = example['messages']
@@ -110,10 +111,12 @@ class FineTuningProcessorThread(Thread):
         )
         model.config.use_cache = False
         model.config.pretraining_tp = 1
+        logger.info(f'model: {type(tokenizer)}')
 
         tokenizer = AutoTokenizer.from_pretrained(model_name, trust_remote_code=False)
         tokenizer.pad_token = '<PAD>'
         tokenizer.padding_side = 'left'
+        logger.info(f'tokenizer2: {type(tokenizer)}')
 
         peft_config = LoraConfig(
             lora_alpha=32,
