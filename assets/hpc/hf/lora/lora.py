@@ -1,6 +1,11 @@
+import os
+import subprocess
+
+from datetime import timedelta
 from logging import INFO, basicConfig, getLogger
 from pathlib import Path
-from threading import Thread
+from threading import Event, Thread
+from time import sleep
 
 from datasets import load_dataset
 from decouple import config
@@ -18,12 +23,23 @@ from transformers.models.llama.tokenization_llama_fast import LlamaTokenizerFast
 from trl import SFTConfig, SFTTrainer
 
 
+# current job
+PBS_JOB_ID = os.environ['PBS_JOBID']
+
+# squid proxy
+HTTP_PROXY = 'http://10.150.1.1:3128'
+HTTPS_PROXY = 'http://10.150.1.1:3128'
+
+# weights and biases
 WANDB_PROJECT = config('WANDB_PROJECT', default=None)
 WANDB_ENTITY = config('WANDB_ENTITY', default=None)
 WANDB_NAME = config('WANDB_NAME', default=None)
 
-CLIENT_SIF_PATH = Path('client.sif')
+# paths
 ENV_PATH = Path('.env.hpc.hf.lora')
+
+# thresholds
+WALLTIME_THRESHOLD = timedelta(minutes=30)
 
 
 basicConfig(
@@ -33,6 +49,9 @@ logger = getLogger(__name__)
 
 
 class GracefulStopCallback(TrainerCallback):
+    def __init__(self, training_stop_event: Event):
+        self._training_stop_event = training_stop_event
+
     def on_step_end(
         self,
         args: TrainingArguments,
@@ -40,18 +59,24 @@ class GracefulStopCallback(TrainerCallback):
         control: TrainerControl,
         **kwargs,
     ):
-        # TODO use something instead of env var
-        # if os.path.exists("STOP_TRAINING"):
-        #    control.should_training_stop = True
+        # triggered at the end of every training step
+        if self._training_stop_event.is_set():
+            logger.warning('Graceful stop event detected, stopping training...')
+            control.should_training_stop = True
 
         return control
 
 
 class FineTuningProcessorThread(Thread):
-    def __init__(self):
+    def __init__(self, training_stop_event: Event, training_done_event: Event):
         super().__init__(name=self.__class__.__name__)
 
+        self._training_stop_event = training_stop_event
+        self._training_done_event = training_done_event
+
     def run(self):
+        logger.info(f'{self.__class__.__name__} started')
+
         tokenizer_name = 'TinyLlama/TinyLlama-1.1B-Chat-v1.0'
         tokenizer: LlamaTokenizerFast = AutoTokenizer.from_pretrained(tokenizer_name)
 
@@ -138,18 +163,70 @@ class FineTuningProcessorThread(Thread):
         trainer.train(resume_from_checkpoint=True)
         trainer.model.save_pretrained('TinyLlama-1.1B-qlora')
 
+        self._training_done_event.set()
+        logger.info(f'{self.__class__.__name__} exited')
+
 
 class WalltimeTrackerThread(Thread):
-    def __init__(self):
+    def __init__(self, training_stop_event: Event, training_done_event: Event):
         super().__init__(name=self.__class__.__name__)
 
+        self._training_stop_event = training_stop_event
+        self._training_done_event = training_done_event
+
     def run(self):
-        pass
+        logger.info(f'{self.__class__.__name__} started')
+
+        DELAY = 3 * 60
+        cmd = (
+            f'qstat -f {PBS_JOB_ID} | '
+            "awk -F'= ' "
+            "'/Resource_List.walltime/ { walltime = $2 } "
+            '/resources_used.walltime/ { used = $2 } '
+            'END { print walltime "\\n" used }\''
+        )
+
+        while True:
+            if self._training_done_event.is_set():
+                break
+
+            # read walltime
+            result = subprocess.run(
+                cmd, check=True, capture_output=True, text=True, shell=True
+            )
+            walltimes = result.stdout.strip().splitlines()
+
+            if len(walltimes) == 1:
+                sleep(DELAY)
+                continue
+
+            hours, minutes, seconds = map(int, walltimes[0].split(':'))
+            walltime = timedelta(hours=hours, minutes=minutes, seconds=seconds)
+            hours, minutes, seconds = map(int, walltimes[1].split(':'))
+            walltime_used = timedelta(hours=hours, minutes=minutes, seconds=seconds)
+            walltime_left = walltime - walltime_used
+
+            if walltime_left < WALLTIME_THRESHOLD:
+                self._training_stop_event.set()
+                break
+
+            sleep(DELAY)
+
+        logger.info(f'{self.__class__.__name__} exited')
 
 
 def main():
-    fine_tuning_processor_thread = FineTuningProcessorThread()
-    walltime_tracker_thread = WalltimeTrackerThread()
+    # initialization
+    training_stop_event = Event()
+    training_done_event = Event()
+
+    # threads
+    fine_tuning_processor_thread = FineTuningProcessorThread(
+        training_stop_event, training_done_event
+    )
+    walltime_tracker_thread = WalltimeTrackerThread(
+        training_stop_event, training_done_event
+    )
 
     fine_tuning_processor_thread.start()
     walltime_tracker_thread.start()
