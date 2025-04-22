@@ -42,9 +42,13 @@ class OpenAIBatchEM(PartialBatchEM):
         if max_tokens_per_day is None:
             raise ValueError(f'{self.__class__.__name__} requires max_tokens_per_day')
 
+        # extract model
+        model = batch_request.requests[0].params.model
+
         # check token limit
         total_tokens = sum(
-            TokenCounterUtil.count(request) for request in batch_request.requests
+            TokenCounterUtil.count(request, model_name=model)
+            for request in batch_request.requests
         )
 
         if total_tokens > max_tokens_per_day:

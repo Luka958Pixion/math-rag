@@ -111,6 +111,9 @@ class OpenAIConcurrentLLM(BaseConcurrentLLM):
         max_tokens_per_minute: float,
         max_num_retries: int,
     ) -> LLMConcurrentResult[LLMResponseType]:
+        # extract model
+        model = concurrent_request.requests[0].params.model
+
         retry_queue: Queue[LLMRequestTracker] = Queue()
         status_tracker = LLMStatusTracker()
         next_request: LLMRequestTracker | None = None
@@ -136,7 +139,9 @@ class OpenAIConcurrentLLM(BaseConcurrentLLM):
                 elif requests_not_empty:
                     if requests:
                         request = requests.popleft()
-                        token_consumption = TokenCounterUtil.count(request)
+                        token_consumption = TokenCounterUtil.count(
+                            request, model_name=model
+                        )
                         next_request = LLMRequestTracker(
                             request=request,
                             token_consumption=token_consumption,

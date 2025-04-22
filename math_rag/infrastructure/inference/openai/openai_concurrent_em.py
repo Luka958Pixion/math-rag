@@ -105,6 +105,9 @@ class OpenAIConcurrentEM(BaseConcurrentEM):
         max_tokens_per_minute: float,
         max_num_retries: int,
     ) -> EMConcurrentResult:
+        # extract model
+        model = concurrent_request.requests[0].params.model
+
         retry_queue: Queue[EMRequestTracker] = Queue()
         status_tracker = EMStatusTracker()
         next_request: EMRequestTracker | None = None
@@ -128,7 +131,9 @@ class OpenAIConcurrentEM(BaseConcurrentEM):
                 elif requests_not_empty:
                     if requests:
                         request = requests.popleft()
-                        token_consumption = TokenCounterUtil.count(request)
+                        token_consumption = TokenCounterUtil.count(
+                            request, model_name=model
+                        )
                         next_request = EMRequestTracker(
                             request=request,
                             token_consumption=token_consumption,
