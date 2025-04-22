@@ -10,6 +10,7 @@ from math_rag.application.models.inference import (
     LLMBatchResult,
 )
 from math_rag.application.types.inference import LLMResponseType
+from math_rag.infrastructure.validators.inference.openai import OpenAIValidator
 
 from .openai_batch_llm import OpenAIBatchLLM
 
@@ -30,8 +31,11 @@ class OpenAIBatchManagedLLM(BaseBatchManagedLLM):
         batch_request: LLMBatchRequest[LLMResponseType],
         response_type: type[LLMResponseType],
     ) -> LLMBatchResult[LLMResponseType]:
+        model = batch_request.requests[0].params.model
+        OpenAIValidator.validate_model_name(model)
+
         batch_settings = self._llm_settings_loader_service.load_batch_settings(
-            'openai', batch_request.requests[0].params.model
+            'openai', model
         )
 
         if batch_settings.poll_interval is None:

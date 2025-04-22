@@ -3,6 +3,9 @@ from uuid import UUID
 from math_rag.application.base.inference import BaseBatchEM, BaseBatchManagedEM
 from math_rag.application.base.services import BaseEMSettingsLoaderService
 from math_rag.application.models.inference import EMBatchRequest, EMBatchResult
+from math_rag.infrastructure.validators.inference.huggingface import (
+    HuggingFaceValidator,
+)
 
 
 class TEIBatchManagedEM(BaseBatchManagedEM):
@@ -13,8 +16,11 @@ class TEIBatchManagedEM(BaseBatchManagedEM):
         self._em_settings_loader_service = em_settings_loader_service
 
     async def batch_embed(self, batch_request: EMBatchRequest) -> EMBatchResult:
+        model = batch_request.requests[0].params.model
+        HuggingFaceValidator.validate_model_name(model)
+
         batch_settings = self._em_settings_loader_service.load_batch_settings(
-            'text-embeddings-inference', batch_request.requests[0].params.model
+            'text-embeddings-inference', model
         )
 
         if batch_settings.poll_interval is None:

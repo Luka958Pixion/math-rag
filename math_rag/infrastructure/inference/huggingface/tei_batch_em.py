@@ -37,6 +37,9 @@ from math_rag.infrastructure.utils import (
     FileStreamWriterUtil,
     FileWriterUtil,
 )
+from math_rag.infrastructure.validators.inference.huggingface import (
+    HuggingFaceValidator,
+)
 
 
 PBS_JOB_NAME = 'tei'
@@ -133,8 +136,8 @@ class TEIBatchEM(PartialBatchEM):
                 f'{self.__class__.__name__} does not support max_tokens_per_day'
             )
 
-        # extract model
         model = batch_request.requests[0].params.model
+        HuggingFaceValidator.validate_model_name(model)
 
         # map requests
         request_dicts = [

@@ -8,6 +8,7 @@ from math_rag.application.models.inference import (
     LLMConcurrentResult,
 )
 from math_rag.application.types.inference import LLMResponseType
+from math_rag.infrastructure.validators.inference.openai import OpenAIValidator
 
 from .openai_concurrent_llm import OpenAIConcurrentLLM
 
@@ -26,10 +27,11 @@ class OpenAIConcurrentManagedLLM(BaseConcurrentManagedLLM):
     async def concurrent_generate(
         self, concurrent_request: LLMConcurrentRequest[LLMResponseType]
     ) -> LLMConcurrentResult[LLMResponseType]:
+        model = concurrent_request.requests[0].params.model
+        OpenAIValidator.validate_model_name(model)
+
         concurrent_settings = (
-            self._llm_settings_loader_service.load_concurrent_settings(
-                'openai', concurrent_request.requests[0].params.model
-            )
+            self._llm_settings_loader_service.load_concurrent_settings('openai', model)
         )
 
         if concurrent_settings.max_requests_per_minute is None:

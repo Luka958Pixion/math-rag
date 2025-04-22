@@ -6,6 +6,7 @@ from math_rag.application.base.repositories.documents import (
 )
 from math_rag.application.base.services import BaseEMSettingsLoaderService
 from math_rag.application.models.inference import EMBatchRequest, EMBatchResult
+from math_rag.infrastructure.validators.inference.openai import OpenAIValidator
 
 from .openai_batch_em import OpenAIBatchEM
 
@@ -22,8 +23,11 @@ class OpenAIBatchManagedEM(BaseBatchManagedEM):
         self._em_failed_request_repository = em_failed_request_repository
 
     async def batch_embed(self, batch_request: EMBatchRequest) -> EMBatchResult:
+        model = batch_request.requests[0].params.model
+        OpenAIValidator.validate_model_name(model)
+
         batch_settings = self._em_settings_loader_service.load_batch_settings(
-            'openai', batch_request.requests[0].params.model
+            'openai', model
         )
 
         if batch_settings.poll_interval is None:

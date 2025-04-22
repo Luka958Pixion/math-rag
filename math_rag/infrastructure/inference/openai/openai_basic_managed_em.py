@@ -7,6 +7,7 @@ from math_rag.application.models.inference import (
     EMRequest,
     EMResult,
 )
+from math_rag.infrastructure.validators.inference.openai import OpenAIValidator
 
 from .openai_basic_em import OpenAIBasicEM
 
@@ -23,6 +24,8 @@ class OpenAIBasicManagedEM(BaseBasicManagedEM):
         self._em_failed_request_repository = em_failed_request_repository
 
     async def embed(self, request: EMRequest) -> EMResult:
+        OpenAIValidator.validate_model_name(request.params.model)
+
         basic_settings = self._em_settings_loader_service.load_basic_settings(
             'openai', request.params.model
         )

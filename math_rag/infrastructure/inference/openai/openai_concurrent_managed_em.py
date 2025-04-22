@@ -7,6 +7,7 @@ from math_rag.application.models.inference import (
     EMConcurrentRequest,
     EMConcurrentResult,
 )
+from math_rag.infrastructure.validators.inference.openai import OpenAIValidator
 
 from .openai_concurrent_em import OpenAIConcurrentEM
 
@@ -25,8 +26,11 @@ class OpenAIConcurrentManagedEM(BaseConcurrentManagedEM):
     async def concurrent_embed(
         self, concurrent_request: EMConcurrentRequest
     ) -> EMConcurrentResult:
+        model = concurrent_request.requests[0].params.model
+        OpenAIValidator.validate_model_name(model)
+
         concurrent_settings = self._em_settings_loader_service.load_concurrent_settings(
-            'openai', concurrent_request.requests[0].params.model
+            'openai', model
         )
 
         if concurrent_settings.max_requests_per_minute is None:

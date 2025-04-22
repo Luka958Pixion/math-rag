@@ -7,6 +7,9 @@ from math_rag.application.models.inference import (
     LLMBatchResult,
 )
 from math_rag.application.types.inference import LLMResponseType
+from math_rag.infrastructure.validators.inference.huggingface import (
+    HuggingFaceValidator,
+)
 
 
 class TGIBatchManagedLLM(BaseBatchManagedLLM):
@@ -23,8 +26,11 @@ class TGIBatchManagedLLM(BaseBatchManagedLLM):
         batch_request: LLMBatchRequest[LLMResponseType],
         response_type: type[LLMResponseType],
     ) -> LLMBatchResult[LLMResponseType]:
+        model = batch_request.requests[0].params.model
+        HuggingFaceValidator.validate_model_name(model)
+
         batch_settings = self._llm_settings_loader_service.load_batch_settings(
-            'text-generation-inference', batch_request.requests[0].params.model
+            'text-generation-inference', model
         )
 
         if batch_settings.poll_interval is None:
