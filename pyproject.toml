@@ -55,6 +55,7 @@ sentencepiece = "0.2.0"
 datasets = "3.5.0"
 wandb = "^0.19.9"
 huggingface-hub = "^0.30.2"
+python-decouple = "^3.8"
 
 [tool.pytest.ini_options]
 log_cli = true

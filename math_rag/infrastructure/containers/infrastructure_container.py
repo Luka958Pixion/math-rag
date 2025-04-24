@@ -28,7 +28,7 @@ from math_rag.infrastructure.clients import (
     SFTPClient,
     SSHClient,
 )
-from math_rag.infrastructure.inference.huggingface import TGIBatchLLM
+from math_rag.infrastructure.inference.huggingface import TEIBatchEM, TGIBatchLLM
 from math_rag.infrastructure.inference.openai import (
     OpenAIEM,
     OpenAILLM,
@@ -53,6 +53,8 @@ from math_rag.infrastructure.seeders.objects import MathArticleSeeder
 from math_rag.infrastructure.services import (
     LatexParserService,
     LatexVisitorService,
+    TEISettingsLoaderService,
+    TGISettingsLoaderService,
 )
 
 
@@ -202,13 +204,28 @@ class InfrastructureContainer(DeclarativeContainer):
         ),
     )
 
+    # TEI
+    tei_settings_loader_service = Factory(TEISettingsLoaderService)
+
+    tei_batch_em = Factory(
+        TEIBatchEM,
+        file_system_client=file_system_client,
+        pbs_pro_client=pbs_pro_client,
+        sftp_client=sftp_client,
+        apptainer_client=apptainer_client,
+        tgi_settings_loader_service=tei_settings_loader_service,
+    )
+
     # TGI
+    tgi_settings_loader_service = Factory(TGISettingsLoaderService)
+
     tgi_batch_llm = Factory(
         TGIBatchLLM,
         file_system_client=file_system_client,
         pbs_pro_client=pbs_pro_client,
         sftp_client=sftp_client,
         apptainer_client=apptainer_client,
+        tgi_settings_loader_service=tgi_settings_loader_service,
     )
 
     # -----------

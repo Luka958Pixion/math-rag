@@ -2,8 +2,6 @@ from .openai_batch import BATCH_WAIT_AFTER_RATE_LIMIT_ERROR
 from .openai_concurrent import (
     CONCURRENT_WAIT_AFTER_RATE_LIMIT_ERROR,
     CONCURRENT_WAIT_IDLE,
-    ENCODING_NAME,
-    MAX_COMPLETION_TOKENS,
 )
 from .openai_errors import (
     OPENAI_ERRORS_TO_RAISE,
@@ -14,8 +12,6 @@ from .openai_errors import (
 
 __all__ = [
     'BATCH_WAIT_AFTER_RATE_LIMIT_ERROR',
-    'ENCODING_NAME',
-    'MAX_COMPLETION_TOKENS',
     'CONCURRENT_WAIT_AFTER_RATE_LIMIT_ERROR',
     'CONCURRENT_WAIT_IDLE',
     'OPENAI_ERRORS_TO_RAISE',

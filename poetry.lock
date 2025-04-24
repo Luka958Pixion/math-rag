@@ -4154,7 +4154,7 @@ version = "3.8"
 description = "Strict separation of settings from code."
 optional = false
 python-versions = "*"
-groups = ["main", "dev.tgi"]
+groups = ["main", "dev.lora", "dev.tgi"]
 files = [
     {file = "python-decouple-3.8.tar.gz", hash = "sha256:ba6e2657d4f376ecc46f77a3a615e058d93ba5e465c01bbe57289bfb7cce680f"},
     {file = "python_decouple-3.8-py3-none-any.whl", hash = "sha256:d0d45340815b25f4de59c974b855bb38d03151d81b037d9e3f463b0c9f8cbd66"},
@@ -6073,4 +6073,4 @@ propcache = ">=0.2.0"
 [metadata]
 lock-version = "2.1"
 python-versions = ">=3.12,<4.0"
-content-hash = "a76f096c0eff09d44893ca1bc53a27f501413c31654f1e7254e9fe32c4a49e20"
+content-hash = "2eff8fba0e01dee9d0a1d0d42106ac25e99302be6ae9683b995151ea38d0ce21"
