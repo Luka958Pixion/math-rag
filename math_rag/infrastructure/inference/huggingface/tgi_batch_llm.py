@@ -21,6 +21,7 @@ from math_rag.infrastructure.clients import (
     PBSProClient,
     SFTPClient,
 )
+from math_rag.infrastructure.enums.hpc import HPCQueue
 from math_rag.infrastructure.enums.hpc.pbs import PBSProJobState
 from math_rag.infrastructure.enums.inference.huggingface import BatchJobStatus
 from math_rag.infrastructure.inference.partials import PartialBatchLLM
@@ -50,8 +51,8 @@ PBS_JOB_NAME = 'tgi'
 LOCAL_ROOT_PATH = Path(__file__).parents[4]
 REMOTE_ROOT_PATH = Path('tgi_default_root')
 
-# must be greater than WALLTIME_THRESHOLD in tgi.py
-WALLTIME_THRESHOLD = timedelta(minutes=10)
+# must be greater than WALL_TIME_THRESHOLD in tgi.py
+WALL_TIME_THRESHOLD = timedelta(minutes=10)
 
 logger = getLogger(__name__)
 
@@ -75,6 +76,8 @@ class TGIBatchLLM(PartialBatchLLM):
         tmp_path = LOCAL_ROOT_PATH / '.tmp'
         hf_path = LOCAL_ROOT_PATH / 'assets/hpc/hf'
         tgi_path = hf_path / 'tgi'
+        prometheus_path = LOCAL_ROOT_PATH / 'assets/hpc/prometheus'
+        ngrok_path = LOCAL_ROOT_PATH / 'assets/hpc/ngrok'
 
         # NOTE: order matters, e.g. client.def requires requirements.txt to build client.sif
         local_paths = [
@@ -85,7 +88,12 @@ class TGIBatchLLM(PartialBatchLLM):
             tgi_path / 'client.py',
             tgi_path / 'tgi.py',
             tgi_path / 'tgi.sh',
+            prometheus_path / 'prometheus.yml',
+            prometheus_path / 'prometheus.def',
+            ngrok_path / 'ngrok.yml',
+            ngrok_path / 'ngrok.def',
             LOCAL_ROOT_PATH / '.env.hpc.hf.tgi',
+            LOCAL_ROOT_PATH / '.env.hpc.ngrok',
         ]
 
         for local_path in local_paths:
@@ -112,11 +120,21 @@ class TGIBatchLLM(PartialBatchLLM):
                     continue
 
             if local_path.suffix == '.def':
+                match local_path.name:
+                    case 'client.def':
+                        additional_path = tgi_path / 'requirements.txt'
+
+                    case 'prometheus.def':
+                        additional_path = prometheus_path / 'prometheus.yml'
+
+                    case 'ngrok.def':
+                        additional_path = ngrok_path / 'ngrok.yml'
+
+                    case _:
+                        additional_path = None
+
                 sif_stream = await self.apptainer_client.build(
-                    local_path,
-                    tgi_path / 'requirements.txt'
-                    if local_path.name == 'client.def'
-                    else None,
+                    local_path, additional_path
                 )
 
                 sif_local_path = tmp_path / f'{local_path.stem}.sif'
@@ -181,24 +199,24 @@ class TGIBatchLLM(PartialBatchLLM):
         if job_id:
             try:
                 (
-                    walltime,
-                    walltime_used,
-                ) = await self.pbs_pro_client.queue_status_walltimes(job_id)
+                    wall_time,
+                    wall_time_used,
+                ) = await self.pbs_pro_client.queue_status_wall_times(job_id)
 
-                if walltime_used is None:
+                if wall_time_used is None:
                     raise ValueError(
-                        'Walltime used can not be None because job is running'
+                        'Wall time used can not be None because job is running'
                     )
 
-                walltime_left = walltime - walltime_used
+                wall_time_left = wall_time - wall_time_used
 
             except Exception as e:
                 logger.error(
-                    f'Failed to get walltime because job {job_id} terminated: {e}'
+                    f'Failed to get wall time because job {job_id} terminated: {e}'
                 )
-                walltime_left = None
+                wall_time_left = None
 
-            if not walltime_left or walltime_left < WALLTIME_THRESHOLD:
+            if not wall_time_left or wall_time_left < WALL_TIME_THRESHOLD:
                 tgi_settings = self.tgi_settings_loader_service.load(model)
                 job_id = await self.pbs_pro_client.queue_submit(
                     REMOTE_ROOT_PATH,
@@ -207,8 +225,9 @@ class TGIBatchLLM(PartialBatchLLM):
                     num_cpus=tgi_settings.num_cpus,
                     num_gpus=tgi_settings.num_gpus,
                     mem=tgi_settings.mem,
-                    walltime=tgi_settings.walltime,
+                    wall_time=tgi_settings.wall_time,
                     depend_job_id=job_id,
+                    queue=HPCQueue.GPU_TEST,  # TODO remove
                 )
 
         else:
@@ -220,7 +239,8 @@ class TGIBatchLLM(PartialBatchLLM):
                 num_cpus=tgi_settings.num_cpus,
                 num_gpus=tgi_settings.num_gpus,
                 mem=tgi_settings.mem,
-                walltime=tgi_settings.walltime,
+                wall_time=tgi_settings.wall_time,
+                queue=HPCQueue.GPU_TEST,  # TODO remove
             )
 
         job = await self.pbs_pro_client.queue_status(job_id)

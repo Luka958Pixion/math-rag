@@ -9,6 +9,6 @@ class HPCJobStatisticsEntry(BaseModel):
     used_percent: float
     mem: int
     used_mem: int
-    walltime: timedelta
-    used_walltime: timedelta
+    wall_time: timedelta
+    used_wall_time: timedelta
     exit_code: str

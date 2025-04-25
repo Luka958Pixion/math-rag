@@ -1,0 +1,27 @@
+Bootstrap: docker
+From: ngrok/ngrok:latest
+
+%files
+    ngrok.yml /ngrok.yml
+
+%startscript
+    ngrok config add-authtoken "$NGROK_AUTHTOKEN"
+    ngrok start --all --config /ngrok.yml
+
+%labels
+    Author luka.panic@pixion.co
+    Version v0.0.1
+
+%help
+    Description:
+        ngrok API gateway.
+
+    Build:
+        apptainer build ngrok.sif ngrok.def
+
+    Usage:
+        apptainer instance start \
+            --writable-tmpfs
+            --env-file .env.hpc.ngrok
+            ngrok.sif \
+            ngrok_instance

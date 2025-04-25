@@ -1,6 +1,7 @@
 from datetime import timedelta
 from pathlib import Path
 
+from math_rag.infrastructure.enums.hpc import HPCQueue
 from math_rag.infrastructure.mappings.hpc.pbs import (
     PBSProJobAlternateMapping,
     PBSProJobFullMapping,
@@ -30,8 +31,9 @@ class PBSProClient:
         num_cpus: int,
         num_gpus: int,
         mem: int,
-        walltime: timedelta,
+        wall_time: timedelta,
         depend_job_id: str | None = None,
+        queue: HPCQueue = HPCQueue.GPU,
     ) -> str:
         cmd = f'cd {project_root_path} && qsub '
 
@@ -43,9 +45,9 @@ class PBSProClient:
             cmd += f'-W depend=afterok:{depend_job_id} '
 
         cmd += (
-            f'-l '
-            f'select={num_chunks}:ncpus={num_cpus}:mem={mem}B:ngpus={num_gpus},'
-            f'walltime={walltime} '
+            f'-q {queue.value} '
+            f'-l select={num_chunks}:ncpus={num_cpus}:mem={mem}B:ngpus={num_gpus},'
+            f'walltime={wall_time} '
             f'-N {job_name} '
             f'{job_name}.sh'
         )
@@ -85,24 +87,24 @@ class PBSProClient:
 
         return PBSProJobFullMapping.to_source(stdout)
 
-    async def queue_status_walltimes(
+    async def queue_status_wall_times(
         self, job_id: str
     ) -> tuple[timedelta, timedelta | None]:
-        awk_cmd = AwkCmdBuilderUtil.build_walltimes()
+        awk_cmd = AwkCmdBuilderUtil.build_wall_times()
         stdout = await self.ssh_client.run(f'qstat -f {job_id} | {awk_cmd}')
-        walltimes = stdout.strip().splitlines()
+        wall_times = stdout.strip().splitlines()
 
-        hours, minutes, seconds = map(int, walltimes[0].split(':'))
-        walltime = timedelta(hours=hours, minutes=minutes, seconds=seconds)
+        hours, minutes, seconds = map(int, wall_times[0].split(':'))
+        wall_time = timedelta(hours=hours, minutes=minutes, seconds=seconds)
 
-        if len(walltimes) == 2:
-            hours, minutes, seconds = map(int, walltimes[1].split(':'))
-            walltime_used = timedelta(hours=hours, minutes=minutes, seconds=seconds)
+        if len(wall_times) == 2:
+            hours, minutes, seconds = map(int, wall_times[1].split(':'))
+            wall_time_used = timedelta(hours=hours, minutes=minutes, seconds=seconds)
 
         else:
-            walltime_used = None
+            wall_time_used = None
 
-        return walltime, walltime_used
+        return wall_time, wall_time_used
 
     async def queue_delete(self, job_id: str, *, force: bool):
         await self.ssh_client.run(

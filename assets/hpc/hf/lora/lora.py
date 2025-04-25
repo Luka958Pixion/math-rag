@@ -7,22 +7,6 @@ from pathlib import Path
 from threading import Event, Thread
 from time import sleep
 
-from datasets import load_dataset
-from decouple import config
-from huggingface_hub import login
-from peft import LoraConfig, get_peft_model, prepare_model_for_kbit_training
-from transformers import (
-    AutoModelForCausalLM,
-    AutoTokenizer,
-    BitsAndBytesConfig,
-    TrainerCallback,
-    TrainerControl,
-    TrainerState,
-    TrainingArguments,
-)
-from transformers.models.llama.tokenization_llama_fast import LlamaTokenizerFast
-from trl import SFTConfig, SFTTrainer
-
 
 # current job
 PBS_JOB_ID = os.environ['PBS_JOBID']
@@ -31,47 +15,17 @@ PBS_JOB_ID = os.environ['PBS_JOBID']
 HTTP_PROXY = 'http://10.150.1.1:3128'
 HTTPS_PROXY = 'http://10.150.1.1:3128'
 
-# huggingface
-HF_TOKEN = config('HF_TOKEN', default=None)
-
-# weights and biases
-WANDB_PROJECT = config('WANDB_PROJECT', default=None)
-WANDB_API_KEY = config('WANDB_API_KEY', default=None)
-
-# models
-MODEL_HUB_ID = config('MODEL_HUB_ID', default=None)
+# thresholds
+WALL_TIME_THRESHOLD = timedelta(minutes=30)
 
 # paths
-ENV_PATH = Path('.env.hpc.hf.lora')
-CACHE_DIR_PATH = Path('data')
-
-# thresholds
-WALLTIME_THRESHOLD = timedelta(minutes=30)
+ENV_PATH = Path('.env.hpc.hf.tgi')
 
 
 basicConfig(
     level=INFO, format='%(asctime)s [%(threadName)s] %(levelname)s: %(message)s'
 )
 logger = getLogger(__name__)
-
-
-class GracefulStopCallback(TrainerCallback):
-    def __init__(self, training_stop_event: Event):
-        self._training_stop_event = training_stop_event
-
-    def on_step_end(
-        self,
-        args: TrainingArguments,
-        state: TrainerState,
-        control: TrainerControl,
-        **kwargs,
-    ):
-        # triggered at the end of every training step
-        if self._training_stop_event.is_set():
-            logger.warning('Graceful stop event detected, stopping training...')
-            control.should_training_stop = True
-
-        return control
 
 
 class FineTuningProcessorThread(Thread):
@@ -84,105 +38,28 @@ class FineTuningProcessorThread(Thread):
     def run(self):
         logger.info(f'{self.__class__.__name__} started')
 
-        tokenizer_name = 'TinyLlama/TinyLlama-1.1B-Chat-v1.0'
-        tokenizer: LlamaTokenizerFast = AutoTokenizer.from_pretrained(
-            tokenizer_name, cache_dir=CACHE_DIR_PATH
+        # TODO - switch logic for different providers and models for each of them
+        MODEL_NAME = ...
+        TOKENIZER_NAME = ...
+        PROVIDER_SIF_PATH = ...
+        cmd = (
+            'apptainer run '
+            '--nv '
+            f'--env-file {ENV_PATH} '
+            f'--env MODEL_NAME={MODEL_NAME} '
+            f'--env TOKENIZER_NAME={TOKENIZER_NAME} '
+            f'--env http_proxy={HTTP_PROXY} '
+            f'--env https_proxy={HTTPS_PROXY} '
+            f'{PROVIDER_SIF_PATH}'
         )
-        logger.info(f'tokenizer: {type(tokenizer)}')
-
-        def format_prompt(example):
-            chat = example['messages']
-            prompt = tokenizer.apply_chat_template(chat, tokenize=False)
-
-            return {'text': prompt}
-
-        dataset_path = 'HuggingFaceH4/ultrachat_200k'
-        dataset = (
-            load_dataset(dataset_path, split='test_sft')
-            .shuffle(seed=42)
-            .select(range(3000))
-        )
-        dataset = dataset.map(format_prompt)
-
-        model_name = 'TinyLlama/TinyLlama-1.1B-intermediate-step-1431k-3T'
-
-        bnb_config = BitsAndBytesConfig(
-            load_in_4bit=True,
-            bnb_4bit_quant_type='nf4',
-            bnb_4bit_compute_dtype='float16',
-            bnb_4bit_use_double_quant=True,
-        )
-
-        model = AutoModelForCausalLM.from_pretrained(
-            model_name,
-            device_map='auto',
-            quantization_config=bnb_config,
-            cache_dir=CACHE_DIR_PATH,
-        )
-        model.config.use_cache = False
-        model.config.pretraining_tp = 1
-        logger.info(f'model: {type(tokenizer)}')
-
-        tokenizer = AutoTokenizer.from_pretrained(
-            model_name, trust_remote_code=False, cache_dir=CACHE_DIR_PATH
-        )
-        tokenizer.pad_token = '<PAD>'
-        tokenizer.padding_side = 'left'
-        logger.info(f'tokenizer2: {type(tokenizer)}')
-
-        peft_config = LoraConfig(
-            lora_alpha=32,
-            lora_dropout=0.1,
-            r=64,
-            bias='none',
-            task_type='CAUSAL_LM',
-            target_modules=[
-                'k_proj',
-                'gate_proj',
-                'v_proj',
-                'up_proj',
-                'q_proj',
-                'o_proj',
-                'down_proj',
-            ],
-        )
-
-        model = prepare_model_for_kbit_training(model)
-        model = get_peft_model(model, peft_config)
-
-        sft_config = SFTConfig(
-            output_dir='TinyLlama-1.1B-qlora',
-            dataset_text_field='text',
-            max_seq_length=512,
-            per_device_train_batch_size=2,
-            gradient_accumulation_steps=4,
-            optim='paged_adamw_32bit',
-            learning_rate=2e-4,
-            lr_scheduler_type='cosine',
-            num_train_epochs=1,
-            fp16=True,
-            gradient_checkpointing=True,
-            report_to='wandb',
-            logging_dir='./logs',
-            logging_steps=10,
-        )
-        trainer = SFTTrainer(
-            model=model,
-            train_dataset=dataset,
-            tokenizer=tokenizer,
-            args=sft_config,
-            peft_config=peft_config,
-        )
-
-        trainer.add_callback(GracefulStopCallback())
-        trainer.train(resume_from_checkpoint=True)
-        trainer.model.save_pretrained('TinyLlama-1.1B-qlora')
+        # process = Popen(cmd, shell=True)
+        # exit_status = cli_state.wait(process)
 
         self._training_done_event.set()
         logger.info(f'{self.__class__.__name__} exited')
 
 
-class WalltimeTrackerThread(Thread):
+class WallTimeTrackerThread(Thread):
     def __init__(self, training_stop_event: Event, training_done_event: Event):
         super().__init__(name=self.__class__.__name__)
 
@@ -205,23 +82,23 @@ class WalltimeTrackerThread(Thread):
             if self._training_done_event.is_set():
                 break
 
-            # read walltime
+            # read wall time
             result = subprocess.run(
                 cmd, check=True, capture_output=True, text=True, shell=True
             )
-            walltimes = result.stdout.strip().splitlines()
+            wall_times = result.stdout.strip().splitlines()
 
-            if len(walltimes) == 1:
+            if len(wall_times) == 1:
                 sleep(DELAY)
                 continue
 
-            hours, minutes, seconds = map(int, walltimes[0].split(':'))
-            walltime = timedelta(hours=hours, minutes=minutes, seconds=seconds)
-            hours, minutes, seconds = map(int, walltimes[1].split(':'))
-            walltime_used = timedelta(hours=hours, minutes=minutes, seconds=seconds)
-            walltime_left = walltime - walltime_used
+            hours, minutes, seconds = map(int, wall_times[0].split(':'))
+            wall_time = timedelta(hours=hours, minutes=minutes, seconds=seconds)
+            hours, minutes, seconds = map(int, wall_times[1].split(':'))
+            wall_time_used = timedelta(hours=hours, minutes=minutes, seconds=seconds)
+            wall_time_left = wall_time - wall_time_used
 
-            if walltime_left < WALLTIME_THRESHOLD:
+            if wall_time_left < WALL_TIME_THRESHOLD:
                 self._training_stop_event.set()
                 break
 
@@ -232,8 +109,6 @@ class WalltimeTrackerThread(Thread):
 
 def main():
     # initialization
-    login(token=HF_TOKEN)
-
     training_stop_event = Event()
     training_done_event = Event()
 
@@ -241,15 +116,15 @@ def main():
     fine_tuning_processor_thread = FineTuningProcessorThread(
         training_stop_event, training_done_event
     )
-    walltime_tracker_thread = WalltimeTrackerThread(
+    wall_time_tracker_thread = WallTimeTrackerThread(
         training_stop_event, training_done_event
     )
 
     fine_tuning_processor_thread.start()
-    walltime_tracker_thread.start()
+    wall_time_tracker_thread.start()
 
     fine_tuning_processor_thread.join()
-    walltime_tracker_thread.join()
+    wall_time_tracker_thread.join()
 
 
 if __name__ == '__main__':

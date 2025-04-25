@@ -12,7 +12,7 @@ class PBSProResourcesUsedMapping(BaseMapping[PBSProResourcesUsed, str]):
             num_cpus=target['resources_used.ncpus'],
             mem=FormatParserUtil.parse_memory(target['resources_used.mem']),
             vmem=FormatParserUtil.parse_memory(target['resources_used.vmem']),
-            walltime=FormatParserUtil.parse_timedelta(
+            wall_time=FormatParserUtil.parse_timedelta(
                 target['resources_used.walltime']
             ),
         )

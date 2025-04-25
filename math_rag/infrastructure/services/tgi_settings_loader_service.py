@@ -14,6 +14,9 @@ class TGISettingsLoaderService:
 
     def load(self, model: str) -> TGISettings:
         default_settings = self._model_settings[DEFAULT]
-        override_settings = self._model_settings[model]
+        override_settings = self._model_settings.get(model, None)
+
+        if not override_settings:
+            return default_settings
 
         return PydanticOverriderUtil.override(default_settings, override_settings)

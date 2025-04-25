@@ -9,4 +9,4 @@ class PBSProResourcesUsed(BaseModel):
     num_cpus: int
     mem: int
     vmem: int
-    walltime: timedelta
+    wall_time: timedelta

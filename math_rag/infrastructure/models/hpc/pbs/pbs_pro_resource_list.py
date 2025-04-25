@@ -10,4 +10,4 @@ class PBSProResourceList(BaseModel):
     num_nodes: int
     place: str
     select: str
-    walltime: timedelta
+    wall_time: timedelta

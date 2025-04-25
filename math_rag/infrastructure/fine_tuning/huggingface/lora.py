@@ -30,8 +30,8 @@ PBS_JOB_NAME = 'lora'
 LOCAL_ROOT_PATH = Path(__file__).parents[4]
 REMOTE_ROOT_PATH = Path('lora_default_root')
 
-# must be greater than WALLTIME_THRESHOLD in lora.py
-WALLTIME_THRESHOLD = timedelta(minutes=35)
+# must be greater than WALL_TIME_THRESHOLD in lora.py
+WALL_TIME_THRESHOLD = timedelta(minutes=35)
 
 logger = getLogger(__name__)
 

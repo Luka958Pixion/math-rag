@@ -16,7 +16,7 @@ class ApptainerClient(BaseApptainerClient):
     def __init__(self, base_url: str):
         self.base_url = base_url
 
-    async def build_init(self, def_path: Path, requirements_path: Path | None) -> UUID:
+    async def build_init(self, def_path: Path, additional_path: Path | None) -> UUID:
         url = self.base_url + '/apptainer/build/init'
 
         async with AsyncClient() as client:
@@ -25,10 +25,10 @@ class ApptainerClient(BaseApptainerClient):
                     'def_file': (def_path.name, def_file, 'application/octet-stream')
                 }
 
-                if requirements_path:
-                    with requirements_path.open('rb') as req_file:
-                        files['requirements_file'] = (
-                            requirements_path.name,
+                if additional_path:
+                    with additional_path.open('rb') as req_file:
+                        files['additional_file'] = (
+                            additional_path.name,
                             req_file,
                             'application/octet-stream',
                         )
@@ -65,12 +65,12 @@ class ApptainerClient(BaseApptainerClient):
     async def build(
         self,
         def_path: Path,
-        requirements_path: Path | None = None,
+        additional_path: Path | None = None,
         *,
         max_retries: int = 3,
         poll_interval: float = 5,
     ) -> AsyncGenerator[bytes, None]:
-        task_id = await self.build_init(def_path, requirements_path)
+        task_id = await self.build_init(def_path, additional_path)
         retries = 0
 
         while True:
@@ -85,7 +85,7 @@ class ApptainerClient(BaseApptainerClient):
 
                 case ApptainerBuildStatus.FAILED:
                     if retries < max_retries:
-                        task_id = await self.build_init(def_path, requirements_path)
+                        task_id = await self.build_init(def_path, additional_path)
                         retries += 1
 
                     else:

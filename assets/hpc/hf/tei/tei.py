@@ -42,7 +42,7 @@ BATCH_JOB_PATH_PATTERN = f'batch_job_{PBS_JOB_ID}_*.json'
 
 # thresholds
 INACTIVE_THRESHOLD = timedelta(minutes=15)
-WALLTIME_THRESHOLD = timedelta(minutes=5)
+WALL_TIME_THRESHOLD = timedelta(minutes=5)
 
 basicConfig(
     level=INFO, format='%(asctime)s [%(threadName)s] %(levelname)s: %(message)s'
@@ -278,7 +278,7 @@ class BatchJobReaderThread(Thread):
         status_tracker: BatchJobStatusTracker,
         status_tracker_resource: BatchJobStatusTrackerResource,
         inactive_stop_event: Event,
-        walltime_stop_event: Event,
+        wall_time_stop_event: Event,
         reader_thread_finished_event: Event,
     ):
         super().__init__(name=self.__class__.__name__)
@@ -287,7 +287,7 @@ class BatchJobReaderThread(Thread):
         self._status_tracker = status_tracker
         self._status_tracker_resource = status_tracker_resource
         self._inactive_stop_event = inactive_stop_event
-        self._walltime_stop_event = walltime_stop_event
+        self._wall_time_stop_event = wall_time_stop_event
         self._reader_thread_finished_event = reader_thread_finished_event
 
     def run(self):
@@ -296,7 +296,10 @@ class BatchJobReaderThread(Thread):
         DELAY = 60
 
         while True:
-            if self._inactive_stop_event.is_set() or self._walltime_stop_event.is_set():
+            if (
+                self._inactive_stop_event.is_set()
+                or self._wall_time_stop_event.is_set()
+            ):
                 break
 
             # read batch job files
@@ -333,7 +336,7 @@ class BatchJobProcessorThread(Thread):
         status_tracker: BatchJobStatusTracker,
         status_tracker_resource: BatchJobStatusTrackerResource,
         inactive_stop_event: Event,
-        walltime_stop_event: Event,
+        wall_time_stop_event: Event,
         processor_thread_finished_event: Event,
         cli_state: ProcessState,
         client_state: ProcessState,
@@ -346,7 +349,7 @@ class BatchJobProcessorThread(Thread):
         self._status_tracker = status_tracker
         self._status_tracker_resource = status_tracker_resource
         self._inactive_stop_event = inactive_stop_event
-        self._walltime_stop_event = walltime_stop_event
+        self._wall_time_stop_event = wall_time_stop_event
         self._processor_thread_finished_event = processor_thread_finished_event
         self._cli_state = cli_state
         self._client_state = client_state
@@ -360,7 +363,7 @@ class BatchJobProcessorThread(Thread):
         is_server_instance_running = False
 
         while True:
-            if self._walltime_stop_event.is_set():
+            if self._wall_time_stop_event.is_set():
                 break
 
             if time_inactive >= INACTIVE_THRESHOLD:
@@ -424,13 +427,13 @@ class BatchJobProcessorThread(Thread):
         logger.info(f'{self.__class__.__name__} exited')
 
 
-class WalltimeTrackerThread(Thread):
+class WallTimeTrackerThread(Thread):
     def __init__(
         self,
         status_tracker: BatchJobStatusTracker,
         status_tracker_resource: BatchJobStatusTrackerResource,
         inactive_stop_event: Event,
-        walltime_stop_event: Event,
+        wall_time_stop_event: Event,
         reader_thread_finished_event: Event,
         processor_thread_finished_event: Event,
         cli_state: ProcessState,
@@ -442,7 +445,7 @@ class WalltimeTrackerThread(Thread):
         self._status_tracker = status_tracker
         self._status_tracker_resource = status_tracker_resource
         self._inactive_stop_event = inactive_stop_event
-        self._walltime_stop_event = walltime_stop_event
+        self._wall_time_stop_event = wall_time_stop_event
         self._reader_thread_finished_event = reader_thread_finished_event
         self._processor_thread_finished_event = processor_thread_finished_event
         self._cli_state = cli_state
@@ -465,24 +468,24 @@ class WalltimeTrackerThread(Thread):
             if self._inactive_stop_event.is_set():
                 break
 
-            # read walltime
+            # read wall time
             result = subprocess.run(
                 cmd, check=True, capture_output=True, text=True, shell=True
             )
-            walltimes = result.stdout.strip().splitlines()
+            wall_times = result.stdout.strip().splitlines()
 
-            if len(walltimes) == 1:
+            if len(wall_times) == 1:
                 sleep(DELAY)
                 continue
 
-            hours, minutes, seconds = map(int, walltimes[0].split(':'))
-            walltime = timedelta(hours=hours, minutes=minutes, seconds=seconds)
-            hours, minutes, seconds = map(int, walltimes[1].split(':'))
-            walltime_used = timedelta(hours=hours, minutes=minutes, seconds=seconds)
-            walltime_left = walltime - walltime_used
+            hours, minutes, seconds = map(int, wall_times[0].split(':'))
+            wall_time = timedelta(hours=hours, minutes=minutes, seconds=seconds)
+            hours, minutes, seconds = map(int, wall_times[1].split(':'))
+            wall_time_used = timedelta(hours=hours, minutes=minutes, seconds=seconds)
+            wall_time_left = wall_time - wall_time_used
 
-            if walltime_left < WALLTIME_THRESHOLD:
-                self._walltime_stop_event.set()
+            if wall_time_left < WALL_TIME_THRESHOLD:
+                self._wall_time_stop_event.set()
 
                 # stop long running processes
                 for state in (self._cli_state, self._client_state, self._server_state):
@@ -515,7 +518,7 @@ def main():
     status_tracker = BatchJobStatusTracker()
     status_tracker_resource = BatchJobStatusTrackerResource()
     inactive_stop_event = Event()
-    walltime_stop_event = Event()
+    wall_time_stop_event = Event()
     reader_thread_finished_event = Event()
     processor_thread_finished_event = Event()
     cli_state = ProcessState()
@@ -534,7 +537,7 @@ def main():
         status_tracker,
         status_tracker_resource,
         inactive_stop_event,
-        walltime_stop_event,
+        wall_time_stop_event,
         reader_thread_finished_event,
     )
     batch_job_processor_thread = BatchJobProcessorThread(
@@ -543,17 +546,17 @@ def main():
         status_tracker,
         status_tracker_resource,
         inactive_stop_event,
-        walltime_stop_event,
+        wall_time_stop_event,
         processor_thread_finished_event,
         cli_state,
         client_state,
         server_state,
     )
-    walltime_tracker_thread = WalltimeTrackerThread(
+    wall_time_tracker_thread = WallTimeTrackerThread(
         status_tracker,
         status_tracker_resource,
         inactive_stop_event,
-        walltime_stop_event,
+        wall_time_stop_event,
         reader_thread_finished_event,
         processor_thread_finished_event,
         cli_state,
@@ -563,11 +566,11 @@ def main():
 
     batch_job_reader_thread.start()
     batch_job_processor_thread.start()
-    walltime_tracker_thread.start()
+    wall_time_tracker_thread.start()
 
     batch_job_reader_thread.join()
     batch_job_processor_thread.join()
-    walltime_tracker_thread.join()
+    wall_time_tracker_thread.join()
 
     logger.info('All threads have exited')
 

@@ -28,12 +28,22 @@ HTTPS_PROXY = 'http://10.150.1.1:3128'
 TGI_BASE_URL = 'http://0.0.0.0:8000'
 TGI_SERVER_INSTANCE_NAME = 'tgi_server_instance'
 
+# prometheus
+PROMETHEUS_BASE_URL = 'http://0.0.0.0:9090'
+PROMETHEUS_INSTANCE_NAME = 'prometheus_instance'
+
+# ngrok
+NGROK_BASE_URL = 'http://0.0.0.0:4040'
+NGROK_INSTANCE_NAME = 'ngrok_instance'
+
 # paths
 WORKDIR = Path('.')
 ENV_PATH = Path('.env.hpc.hf.tgi')
 CLI_SIF_PATH = Path('cli.sif')
 CLIENT_SIF_PATH = Path('client.sif')
 SERVER_SIF_PATH = Path('server.sif')
+PROMETHEUS_SIF_PATH = Path('prometheus.sif')
+NGROK_SIF_PATH = Path('ngrok.sif')
 STATUS_TRACKER_PATH = Path(f'status_tracker_{PBS_JOB_ID}.json')
 STATUS_TRACKER_TMP_PATH = STATUS_TRACKER_PATH.with_suffix('.tmp')
 
@@ -42,7 +52,7 @@ BATCH_JOB_PATH_PATTERN = f'batch_job_{PBS_JOB_ID}_*.json'
 
 # thresholds
 INACTIVE_THRESHOLD = timedelta(minutes=15)
-WALLTIME_THRESHOLD = timedelta(minutes=5)
+WALL_TIME_THRESHOLD = timedelta(minutes=5)
 
 basicConfig(
     level=INFO, format='%(asctime)s [%(threadName)s] %(levelname)s: %(message)s'
@@ -240,6 +250,8 @@ class ServerInstance:
         logger.info(f'Waiting for {TGI_SERVER_INSTANCE_NAME} to become healthy...')
 
         while True:
+            connection = None
+
             try:
                 connection = HTTPConnection(parsed_url.hostname, parsed_url.port)
                 connection.request('GET', '/health')
@@ -260,6 +272,10 @@ class ServerInstance:
                     f'Health check failed: {e}, retrying in {POLL_INTERVAL}s...'
                 )
 
+            finally:
+                if connection:
+                    connection.close()
+
             sleep(POLL_INTERVAL)
 
         return exit_status
@@ -267,6 +283,124 @@ class ServerInstance:
     @staticmethod
     def stop():
         cmd = f'apptainer instance stop {TGI_SERVER_INSTANCE_NAME}'
+        subprocess.run(cmd, check=True, capture_output=False, shell=True)
+
+
+class PrometheusInstance:
+    @staticmethod
+    def start(prometheus_state: ProcessHandler) -> ProcessExitStatus:
+        logger.info(f'Starting {PROMETHEUS_INSTANCE_NAME}...')
+
+        cmd = (
+            'apptainer instance start '
+            '--writable-tmpfs '
+            f'{PROMETHEUS_SIF_PATH} '
+            f'{PROMETHEUS_INSTANCE_NAME}'
+        )
+        process = Popen(cmd, shell=True)
+        exit_status = prometheus_state.wait(process)
+
+        POLL_INTERVAL = 5
+        parsed_url = urlparse(PROMETHEUS_BASE_URL)
+
+        if not parsed_url.port:
+            raise ValueError('PROMETHEUS_BASE_URL does not include a port')
+
+        logger.info(f'Waiting for {PROMETHEUS_INSTANCE_NAME} to become healthy...')
+
+        while True:
+            connection = None
+
+            try:
+                connection = HTTPConnection(parsed_url.hostname, parsed_url.port)
+                connection.request('GET', '/-/ready')
+                response = connection.getresponse()
+
+                if response.status == 200:
+                    logger.info(f'{PROMETHEUS_INSTANCE_NAME} is healthy')
+                    break
+
+                else:
+                    logger.info(
+                        f'Health check returned status {response.status}, '
+                        f'retrying in {POLL_INTERVAL}s...'
+                    )
+
+            except Exception as e:
+                logger.info(
+                    f'Health check failed: {e}, retrying in {POLL_INTERVAL}s...'
+                )
+
+            finally:
+                if connection:
+                    connection.close()
+
+            sleep(POLL_INTERVAL)
+
+        return exit_status
+
+    @staticmethod
+    def stop():
+        cmd = f'apptainer instance stop {PROMETHEUS_INSTANCE_NAME}'
+        subprocess.run(cmd, check=True, capture_output=False, shell=True)
+
+
+class NgrokInstance:
+    @staticmethod
+    def start(ngrok_state: ProcessHandler) -> ProcessExitStatus:
+        logger.info(f'Starting {NGROK_INSTANCE_NAME}...')
+
+        cmd = (
+            'apptainer instance start '
+            '--writable-tmpfs '
+            f'{NGROK_SIF_PATH} '
+            f'{NGROK_INSTANCE_NAME}'
+        )
+        process = Popen(cmd, shell=True)
+        exit_status = ngrok_state.wait(process)
+
+        POLL_INTERVAL = 5
+        parsed_url = urlparse(NGROK_BASE_URL)
+
+        if not parsed_url.port:
+            raise ValueError('NGROK_BASE_URL does not include a port')
+
+        logger.info(f'Waiting for {NGROK_INSTANCE_NAME} to become healthy...')
+
+        while True:
+            connection = None
+
+            try:
+                connection = HTTPConnection(parsed_url.hostname, parsed_url.port)
+                connection.request('GET', '/api/tunnels')
+                response = connection.getresponse()
+
+                if response.status == 200:
+                    logger.info(f'{NGROK_INSTANCE_NAME} is healthy')
+                    break
+
+                else:
+                    logger.info(
+                        f'Health check returned status {response.status}, '
+                        f'retrying in {POLL_INTERVAL}s...'
+                    )
+
+            except Exception as e:
+                logger.info(
+                    f'Health check failed: {e}, retrying in {POLL_INTERVAL}s...'
+                )
+
+            finally:
+                if connection:
+                    connection.close()
+
+            sleep(POLL_INTERVAL)
+
+        return exit_status
+
+    @staticmethod
+    def stop():
+        cmd = f'apptainer instance stop {NGROK_INSTANCE_NAME}'
         subprocess.run(cmd, check=True, capture_output=False, shell=True)
 
 
@@ -297,7 +431,7 @@ class BatchJobReaderThread(Thread):
         status_tracker: BatchJobStatusTracker,
         status_tracker_resource: BatchJobStatusTrackerResource,
         inactive_stop_event: Event,
-        walltime_stop_event: Event,
+        wall_time_stop_event: Event,
         reader_thread_finished_event: Event,
     ):
         super().__init__(name=self.__class__.__name__)
@@ -306,7 +440,7 @@ class BatchJobReaderThread(Thread):
         self._status_tracker = status_tracker
         self._status_tracker_resource = status_tracker_resource
         self._inactive_stop_event = inactive_stop_event
-        self._walltime_stop_event = walltime_stop_event
+        self._wall_time_stop_event = wall_time_stop_event
         self._reader_thread_finished_event = reader_thread_finished_event
 
     def run(self):
@@ -315,7 +449,10 @@ class BatchJobReaderThread(Thread):
         DELAY = 60
 
         while True:
-            if self._inactive_stop_event.is_set() or self._walltime_stop_event.is_set():
+            if (
+                self._inactive_stop_event.is_set()
+                or self._wall_time_stop_event.is_set()
+            ):
                 break
 
             # read batch job files
@@ -351,7 +488,7 @@ class BatchJobProcessorThread(Thread):
         status_tracker: BatchJobStatusTracker,
         status_tracker_resource: BatchJobStatusTrackerResource,
         inactive_stop_event: Event,
-        walltime_stop_event: Event,
+        wall_time_stop_event: Event,
         processor_thread_finished_event: Event,
     ):
         super().__init__(name=self.__class__.__name__)
@@ -360,13 +497,15 @@ class BatchJobProcessorThread(Thread):
         self._status_tracker = status_tracker
         self._status_tracker_resource = status_tracker_resource
         self._inactive_stop_event = inactive_stop_event
-        self._walltime_stop_event = walltime_stop_event
+        self._wall_time_stop_event = wall_time_stop_event
         self._processor_thread_finished_event = processor_thread_finished_event
 
         self._previous_batch_job: BatchJob | None = None
-        self._cli_handler = ProcessHandler(walltime_stop_event)
-        self._client_handler = ProcessHandler(walltime_stop_event)
-        self._server_handler = ProcessHandler(walltime_stop_event)
+        self._cli_handler = ProcessHandler(wall_time_stop_event)
+        self._client_handler = ProcessHandler(wall_time_stop_event)
+        self._server_handler = ProcessHandler(wall_time_stop_event)
+        self._prometheus_handler = ProcessHandler(wall_time_stop_event)
+        self._ngrok_handler = ProcessHandler(wall_time_stop_event)
 
     def run(self):
         logger.info(f'{self.__class__.__name__} started')
@@ -374,9 +513,11 @@ class BatchJobProcessorThread(Thread):
         DELAY = 30
         time_inactive = timedelta()
         is_server_instance_running = False
+        is_prometheus_instance_running = False
+        is_ngrok_instance_running = False
 
         while True:
-            if self._walltime_stop_event.is_set():
+            if self._wall_time_stop_event.is_set():
                 break
 
             if time_inactive >= INACTIVE_THRESHOLD:
@@ -411,11 +552,11 @@ class BatchJobProcessorThread(Thread):
                 mount_path.mkdir(parents=True)
                 HuggingFaceCLI.download_model(self._cli_handler, batch_job.model_hub_id)
 
-                if self._walltime_stop_event.is_set():
+                if self._wall_time_stop_event.is_set():
                     break
 
-            # start server instance
             if not self._previous_batch_job:
+                # start server instance
                 server_instance_exit_status = ServerInstance.start(
                     self._server_handler, mount_path
                 )
@@ -423,26 +564,51 @@ class BatchJobProcessorThread(Thread):
                 if server_instance_exit_status == ProcessExitStatus.COMPLETED:
                     is_server_instance_running = True
 
-                if self._walltime_stop_event.is_set():
+                # start prometheus instance
+                prometheus_instance_exit_status = PrometheusInstance.start(
+                    self._prometheus_handler
+                )
+
+                if prometheus_instance_exit_status == ProcessExitStatus.COMPLETED:
+                    is_prometheus_instance_running = True
+
+                # start ngrok instance
+                ngrok_instance_exit_status = NgrokInstance.start(self._ngrok_handler)
+
+                if ngrok_instance_exit_status == ProcessExitStatus.COMPLETED:
+                    is_ngrok_instance_running = True
+
+                if self._wall_time_stop_event.is_set():
                     break
 
-            # restart server instance with another model
+            # restart instances with another model
             elif self._previous_batch_job.model_hub_id != batch_job.model_hub_id:
+                NgrokInstance.stop()
+                PrometheusInstance.stop()
                 ServerInstance.stop()
                 server_instance_exit_status = ServerInstance.start(mount_path)
-                is_server_instance_running = True
 
                 if server_instance_exit_status == ProcessExitStatus.COMPLETED:
                     is_server_instance_running = True
 
-                if self._walltime_stop_event.is_set():
+                prometheus_instance_exit_status = PrometheusInstance.start(mount_path)
+
+                if prometheus_instance_exit_status == ProcessExitStatus.COMPLETED:
+                    is_prometheus_instance_running = True
+
+                ngrok_instance_exit_status = NgrokInstance.start(mount_path)
+
+                if ngrok_instance_exit_status == ProcessExitStatus.COMPLETED:
+                    is_ngrok_instance_running = True
+
+                if self._wall_time_stop_event.is_set():
                     break
 
             # run client
             Client.run(self._client_handler, batch_job.batch_request_id)
             self._previous_batch_job = batch_job
 
-            if self._walltime_stop_event.is_set():
+            if self._wall_time_stop_event.is_set():
                 break
 
             # critical section
@@ -452,6 +618,12 @@ class BatchJobProcessorThread(Thread):
             )
             self._status_tracker_resource.release()
 
+        if is_ngrok_instance_running:
+            NgrokInstance.stop()
+
+        if is_prometheus_instance_running:
+            PrometheusInstance.stop()
+
         if is_server_instance_running:
             ServerInstance.stop()
 
@@ -459,13 +631,13 @@ class BatchJobProcessorThread(Thread):
         logger.info(f'{self.__class__.__name__} exited')
 
 
-class WalltimeTrackerThread(Thread):
+class WallTimeTrackerThread(Thread):
     def __init__(
         self,
         status_tracker: BatchJobStatusTracker,
         status_tracker_resource: BatchJobStatusTrackerResource,
         inactive_stop_event: Event,
-        walltime_stop_event: Event,
+        wall_time_stop_event: Event,
         reader_thread_finished_event: Event,
         processor_thread_finished_event: Event,
     ):
@@ -474,7 +646,7 @@ class WalltimeTrackerThread(Thread):
         self._status_tracker = status_tracker
         self._status_tracker_resource = status_tracker_resource
         self._inactive_stop_event = inactive_stop_event
-        self._walltime_stop_event = walltime_stop_event
+        self._wall_time_stop_event = wall_time_stop_event
         self._reader_thread_finished_event = reader_thread_finished_event
         self._processor_thread_finished_event = processor_thread_finished_event
 
@@ -494,24 +666,24 @@ class WalltimeTrackerThread(Thread):
             if self._inactive_stop_event.is_set():
                 break
 
-            # read walltime
+            # read wall time
             result = subprocess.run(
                 cmd, check=True, capture_output=True, text=True, shell=True
             )
-            walltimes = result.stdout.strip().splitlines()
+            wall_times = result.stdout.strip().splitlines()
 
-            if len(walltimes) == 1:
+            if len(wall_times) == 1:
                 sleep(DELAY)
                 continue
 
-            hours, minutes, seconds = map(int, walltimes[0].split(':'))
-            walltime = timedelta(hours=hours, minutes=minutes, seconds=seconds)
-            hours, minutes, seconds = map(int, walltimes[1].split(':'))
-            walltime_used = timedelta(hours=hours, minutes=minutes, seconds=seconds)
-            walltime_left = walltime - walltime_used
+            hours, minutes, seconds = map(int, wall_times[0].split(':'))
+            wall_time = timedelta(hours=hours, minutes=minutes, seconds=seconds)
+            hours, minutes, seconds = map(int, wall_times[1].split(':'))
+            wall_time_used = timedelta(hours=hours, minutes=minutes, seconds=seconds)
+            wall_time_left = wall_time - wall_time_used
 
-            if walltime_left < WALLTIME_THRESHOLD:
-                self._walltime_stop_event.set()
+            if wall_time_left < WALL_TIME_THRESHOLD:
+                self._wall_time_stop_event.set()
 
                 # wait for other threads to stop
                 self._reader_thread_finished_event.wait()
@@ -539,7 +711,7 @@ def main():
     status_tracker = BatchJobStatusTracker()
     status_tracker_resource = BatchJobStatusTrackerResource()
     inactive_stop_event = Event()
-    walltime_stop_event = Event()
+    wall_time_stop_event = Event()
     reader_thread_finished_event = Event()
     processor_thread_finished_event = Event()
 
@@ -555,7 +727,7 @@ def main():
         status_tracker,
         status_tracker_resource,
         inactive_stop_event,
-        walltime_stop_event,
+        wall_time_stop_event,
         reader_thread_finished_event,
     )
     batch_job_processor_thread = BatchJobProcessorThread(
@@ -563,25 +735,25 @@ def main():
         status_tracker,
         status_tracker_resource,
         inactive_stop_event,
-        walltime_stop_event,
+        wall_time_stop_event,
         processor_thread_finished_event,
     )
-    walltime_tracker_thread = WalltimeTrackerThread(
+    wall_time_tracker_thread = WallTimeTrackerThread(
         status_tracker,
         status_tracker_resource,
         inactive_stop_event,
-        walltime_stop_event,
+        wall_time_stop_event,
         reader_thread_finished_event,
         processor_thread_finished_event,
     )
 
     batch_job_reader_thread.start()
     batch_job_processor_thread.start()
-    walltime_tracker_thread.start()
+    wall_time_tracker_thread.start()
 
     batch_job_reader_thread.join()
     batch_job_processor_thread.join()
-    walltime_tracker_thread.join()
+    wall_time_tracker_thread.join()
 
     logger.info('All threads have exited')
 

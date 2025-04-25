@@ -1,0 +1,25 @@
+Bootstrap: docker
+From: prom/prometheus:latest
+
+%files
+    prometheus.yml /prometheus.yml
+
+%startscript
+    /bin/prometheus --config.file=/prometheus.yml --web.listen-address="0.0.0.0:9090"
+
+%labels
+    Author luka.panic@pixion.co
+    Version v0.0.1
+
+%help
+    Description:
+        Prometheus monitoring system and time series database.
+
+    Build:
+        apptainer build prometheus.sif prometheus.def
+
+    Usage:
+        apptainer instance start \
+            --writable-tmpfs
+            prometheus.sif \
+            prometheus_instance

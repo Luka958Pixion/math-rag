@@ -56,6 +56,7 @@ datasets = "3.5.0"
 wandb = "^0.19.9"
 huggingface-hub = "^0.30.2"
 python-decouple = "^3.8"
+optuna = "^4.3.0"
 
 [tool.pytest.ini_options]
 log_cli = true

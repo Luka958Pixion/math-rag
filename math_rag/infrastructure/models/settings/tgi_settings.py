@@ -8,4 +8,4 @@ class TGISettings(BaseModel):
     num_cpus: int
     num_gpus: int
     mem: int
-    walltime: timedelta
+    wall_time: timedelta

@@ -1,0 +1,4 @@
+tunnels:
+  prometheus:
+    addr: 0.0.0.0:9090
+    proto: http

@@ -22,7 +22,7 @@ class AwkCmdBuilderUtil:
         return f"awk 'NR{operator}{row_number} {{print {print_args}}}'"
 
     @staticmethod
-    def build_walltimes() -> str:
+    def build_wall_times() -> str:
         return (
             "awk -F'= ' "
             "'/Resource_List.walltime/ { walltime = $2 } "

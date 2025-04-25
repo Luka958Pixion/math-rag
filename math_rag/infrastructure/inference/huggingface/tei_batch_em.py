@@ -46,8 +46,8 @@ PBS_JOB_NAME = 'tei'
 LOCAL_ROOT_PATH = Path(__file__).parents[4]
 REMOTE_ROOT_PATH = Path('tei_default_root')
 
-# must be greater than WALLTIME_THRESHOLD in tei.py
-WALLTIME_THRESHOLD = timedelta(minutes=10)
+# must be greater than WALL_TIME_THRESHOLD in tei.py
+WALL_TIME_THRESHOLD = timedelta(minutes=10)
 
 logger = getLogger(__name__)
 
@@ -174,24 +174,24 @@ class TEIBatchEM(PartialBatchEM):
         if job_id:
             try:
                 (
-                    walltime,
-                    walltime_used,
-                ) = await self.pbs_pro_client.queue_status_walltimes(job_id)
+                    wall_time,
+                    wall_time_used,
+                ) = await self.pbs_pro_client.queue_status_wall_times(job_id)
 
-                if walltime_used is None:
+                if wall_time_used is None:
                     raise ValueError(
-                        'Walltime used can not be None because job is running'
+                        'Wall time used can not be None because job is running'
                     )
 
-                walltime_left = walltime - walltime_used
+                wall_time_left = wall_time - wall_time_used
 
             except Exception as e:
                 logger.error(
-                    f'Failed to get walltime because job {job_id} terminated: {e}'
+                    f'Failed to get wall time because job {job_id} terminated: {e}'
                 )
-                walltime_left = None
+                wall_time_left = None
 
-            if not walltime_left or walltime_left < WALLTIME_THRESHOLD:
+            if not wall_time_left or wall_time_left < WALL_TIME_THRESHOLD:
                 tei_settings = self.tei_settings_loader_service.load(model)
                 job_id = await self.pbs_pro_client.queue_submit(
                     REMOTE_ROOT_PATH,
@@ -200,7 +200,7 @@ class TEIBatchEM(PartialBatchEM):
                     num_cpus=tei_settings.num_cpus,
                     num_gpus=tei_settings.num_gpus,
                     mem=tei_settings.mem,
-                    walltime=tei_settings.walltime,
+                    wall_time=tei_settings.wall_time,
                     depend_job_id=job_id,
                 )
 
@@ -213,7 +213,7 @@ class TEIBatchEM(PartialBatchEM):
                 num_cpus=tei_settings.num_cpus,
                 num_gpus=tei_settings.num_gpus,
                 mem=tei_settings.mem,
-                walltime=tei_settings.walltime,
+                wall_time=tei_settings.wall_time,
             )
 
         job = await self.pbs_pro_client.queue_status(job_id)
