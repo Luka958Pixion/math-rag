@@ -353,6 +353,7 @@ class NgrokInstance:
         cmd = (
             'apptainer instance start '
             '--writable-tmpfs '
+            f'--env-file {ENV_PATH} '
             f'{NGROK_SIF_PATH} '
             f'{NGROK_INSTANCE_NAME}'
         )

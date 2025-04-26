@@ -5,7 +5,6 @@ From: ngrok/ngrok:latest
     ngrok.yml /ngrok.yml
 
 %startscript
-    ngrok config add-authtoken "$NGROK_AUTHTOKEN"
     ngrok start --all --config /ngrok.yml
 
 %labels
@@ -14,7 +13,7 @@ From: ngrok/ngrok:latest
 
 %help
     Description:
-        ngrok API gateway.
+        ngrok API gateway exposes application to the Internet.
 
     Build:
         apptainer build ngrok.sif ngrok.def

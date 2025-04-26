@@ -1,5 +1,6 @@
 import json
 
+from asyncio import sleep
 from datetime import datetime, timedelta
 from logging import getLogger
 from pathlib import Path
@@ -53,6 +54,7 @@ REMOTE_ROOT_PATH = Path('tgi_default_root')
 
 # must be greater than WALL_TIME_THRESHOLD in tgi.py
 WALL_TIME_THRESHOLD = timedelta(minutes=10)
+STATUS_TRACKER_DELAY = 3
 
 logger = getLogger(__name__)
 
@@ -81,6 +83,8 @@ class TGIBatchLLM(PartialBatchLLM):
 
         # NOTE: order matters, e.g. client.def requires requirements.txt to build client.sif
         local_paths = [
+            LOCAL_ROOT_PATH / '.env.hpc.hf.tgi',
+            LOCAL_ROOT_PATH / '.env.hpc.ngrok',
             hf_path / 'cli.def',
             tgi_path / 'requirements.txt',
             tgi_path / 'server.def',
@@ -92,8 +96,6 @@ class TGIBatchLLM(PartialBatchLLM):
             prometheus_path / 'prometheus.def',
             ngrok_path / 'ngrok.yml',
             ngrok_path / 'ngrok.def',
-            LOCAL_ROOT_PATH / '.env.hpc.hf.tgi',
-            LOCAL_ROOT_PATH / '.env.hpc.ngrok',
         ]
 
         for local_path in local_paths:
@@ -120,6 +122,7 @@ class TGIBatchLLM(PartialBatchLLM):
                     continue
 
             if local_path.suffix == '.def':
+                # TODO you must rebuild image if this file was changed!
                 match local_path.name:
                     case 'client.def':
                         additional_path = tgi_path / 'requirements.txt'
@@ -310,6 +313,17 @@ class TGIBatchLLM(PartialBatchLLM):
         status_tracker_remote_path = (
             REMOTE_ROOT_PATH / f'status_tracker_{batch_id}.json'
         )
+        status_tracker_exists = await self.file_system_client.test(
+            status_tracker_remote_path
+        )
+
+        if not status_tracker_exists:
+            logger.warning(
+                f'Status tracker {status_tracker_remote_path} is not created yet, '
+                f'waiting for {STATUS_TRACKER_DELAY}s'
+            )
+            await sleep(STATUS_TRACKER_DELAY)
+
         status_tracker_json = await self.file_system_client.concatenate(
             status_tracker_remote_path
         )

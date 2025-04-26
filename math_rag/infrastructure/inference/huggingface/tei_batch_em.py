@@ -1,5 +1,6 @@
 import json
 
+from asyncio import sleep
 from datetime import datetime, timedelta
 from logging import getLogger
 from pathlib import Path
@@ -48,6 +49,7 @@ REMOTE_ROOT_PATH = Path('tei_default_root')
 
 # must be greater than WALL_TIME_THRESHOLD in tei.py
 WALL_TIME_THRESHOLD = timedelta(minutes=10)
+STATUS_TRACKER_DELAY = 3
 
 logger = getLogger(__name__)
 
@@ -282,6 +284,17 @@ class TEIBatchEM(PartialBatchEM):
         status_tracker_remote_path = (
             REMOTE_ROOT_PATH / f'status_tracker_{batch_id}.json'
         )
+        status_tracker_exists = await self.file_system_client.test(
+            status_tracker_remote_path
+        )
+
+        if not status_tracker_exists:
+            logger.warning(
+                f'Status tracker {status_tracker_remote_path} is not created yet, '
+                f'waiting for {STATUS_TRACKER_DELAY}s'
+            )
+            await sleep(STATUS_TRACKER_DELAY)
+
         status_tracker_json = await self.file_system_client.concatenate(
             status_tracker_remote_path
         )
