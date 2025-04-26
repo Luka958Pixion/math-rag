@@ -54,7 +54,7 @@ REMOTE_ROOT_PATH = Path('tgi_default_root')
 
 # must be greater than WALL_TIME_THRESHOLD in tgi.py
 WALL_TIME_THRESHOLD = timedelta(minutes=10)
-STATUS_TRACKER_DELAY = 3
+STATUS_TRACKER_DELAY = 30
 
 logger = getLogger(__name__)
 
@@ -79,12 +79,10 @@ class TGIBatchLLM(PartialBatchLLM):
         hf_path = LOCAL_ROOT_PATH / 'assets/hpc/hf'
         tgi_path = hf_path / 'tgi'
         prometheus_path = LOCAL_ROOT_PATH / 'assets/hpc/prometheus'
-        ngrok_path = LOCAL_ROOT_PATH / 'assets/hpc/ngrok'
 
         # NOTE: order matters, e.g. client.def requires requirements.txt to build client.sif
         local_paths = [
             LOCAL_ROOT_PATH / '.env.hpc.hf.tgi',
-            LOCAL_ROOT_PATH / '.env.hpc.ngrok',
             hf_path / 'cli.def',
             tgi_path / 'requirements.txt',
             tgi_path / 'server.def',
@@ -94,8 +92,6 @@ class TGIBatchLLM(PartialBatchLLM):
             tgi_path / 'tgi.sh',
             prometheus_path / 'prometheus.yml',
             prometheus_path / 'prometheus.def',
-            ngrok_path / 'ngrok.yml',
-            ngrok_path / 'ngrok.def',
         ]
 
         for local_path in local_paths:
@@ -129,9 +125,6 @@ class TGIBatchLLM(PartialBatchLLM):
 
                     case 'prometheus.def':
                         additional_path = prometheus_path / 'prometheus.yml'
-
-                    case 'ngrok.def':
-                        additional_path = ngrok_path / 'ngrok.yml'
 
                     case _:
                         additional_path = None

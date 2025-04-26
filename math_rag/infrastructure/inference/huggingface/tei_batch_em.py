@@ -49,7 +49,7 @@ REMOTE_ROOT_PATH = Path('tei_default_root')
 
 # must be greater than WALL_TIME_THRESHOLD in tei.py
 WALL_TIME_THRESHOLD = timedelta(minutes=10)
-STATUS_TRACKER_DELAY = 3
+STATUS_TRACKER_DELAY = 30
 
 logger = getLogger(__name__)
 

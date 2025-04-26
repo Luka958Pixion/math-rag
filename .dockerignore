@@ -182,4 +182,3 @@ jupyter_sessions/
 .env.hpc.hf.tgi
 .env.hpc.hf.tei
 .env.hpc.hf.lora
-.env.hpc.ngrok
