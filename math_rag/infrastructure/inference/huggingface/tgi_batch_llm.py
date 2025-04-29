@@ -78,20 +78,18 @@ class TGIBatchLLM(PartialBatchLLM):
         tmp_path = LOCAL_ROOT_PATH / '.tmp'
         hf_path = LOCAL_ROOT_PATH / 'assets/hpc/hf'
         tgi_path = hf_path / 'tgi'
-        prometheus_path = LOCAL_ROOT_PATH / 'assets/hpc/prometheus'
 
         # NOTE: order matters, e.g. client.def requires requirements.txt to build client.sif
         local_paths = [
             LOCAL_ROOT_PATH / '.env.hpc.hf.tgi',
             hf_path / 'cli.def',
+            # tgi_path / 'prometheus.yml',
             tgi_path / 'requirements.txt',
             tgi_path / 'server.def',
             tgi_path / 'client.def',
             tgi_path / 'client.py',
             tgi_path / 'tgi.py',
             tgi_path / 'tgi.sh',
-            prometheus_path / 'prometheus.yml',
-            prometheus_path / 'prometheus.def',
         ]
 
         for local_path in local_paths:
@@ -122,9 +120,6 @@ class TGIBatchLLM(PartialBatchLLM):
                 match local_path.name:
                     case 'client.def':
                         additional_path = tgi_path / 'requirements.txt'
-
-                    case 'prometheus.def':
-                        additional_path = prometheus_path / 'prometheus.yml'
 
                     case _:
                         additional_path = None
@@ -223,7 +218,7 @@ class TGIBatchLLM(PartialBatchLLM):
                     mem=tgi_settings.mem,
                     wall_time=tgi_settings.wall_time,
                     depend_job_id=job_id,
-                    queue=HPCQueue.GPU_TEST,  # TODO remove
+                    queue=HPCQueue.GPU,  # TODO remove
                 )
 
         else:
@@ -236,7 +231,7 @@ class TGIBatchLLM(PartialBatchLLM):
                 num_gpus=tgi_settings.num_gpus,
                 mem=tgi_settings.mem,
                 wall_time=tgi_settings.wall_time,
-                queue=HPCQueue.GPU_TEST,  # TODO remove
+                queue=HPCQueue.GPU,  # TODO remove
             )
 
         job = await self.pbs_pro_client.queue_status(job_id)

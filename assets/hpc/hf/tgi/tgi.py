@@ -30,7 +30,6 @@ TGI_SERVER_INSTANCE_NAME = 'tgi_server_instance'
 
 # prometheus
 PROMETHEUS_BASE_URL = 'http://0.0.0.0:9090'
-PROMETHEUS_INSTANCE_NAME = 'prometheus_instance'
 
 # paths
 WORKDIR = Path('.')
@@ -38,7 +37,6 @@ ENV_PATH = Path('.env.hpc.hf.tgi')
 CLI_SIF_PATH = Path('cli.sif')
 CLIENT_SIF_PATH = Path('client.sif')
 SERVER_SIF_PATH = Path('server.sif')
-PROMETHEUS_SIF_PATH = Path('prometheus.sif')
 STATUS_TRACKER_PATH = Path(f'status_tracker_{PBS_JOB_ID}.json')
 STATUS_TRACKER_TMP_PATH = STATUS_TRACKER_PATH.with_suffix('.tmp')
 
@@ -229,8 +227,6 @@ class ServerInstance:
         cmd = (
             'apptainer instance start '
             '--nv '
-            '--net '  # TODO new
-            '--network-args "portmap=8000:8000/tcp,portmap=9000:9000/tcp" '  # TODO new
             f'--bind {bind} '
             f'{SERVER_SIF_PATH} '
             f'{TGI_SERVER_INSTANCE_NAME}'
@@ -244,7 +240,9 @@ class ServerInstance:
         if not parsed_url.port:
             raise ValueError('TGI_BASE_URL does not include a port')
 
-        logger.info(f'Waiting for {TGI_SERVER_INSTANCE_NAME} to become healthy...')
+        logger.info(
+            f'Waiting for {TGI_SERVER_INSTANCE_NAME} (TGI) to become healthy...'
+        )
 
         while True:
             connection = None
@@ -275,38 +273,14 @@ class ServerInstance:
 
             sleep(POLL_INTERVAL)
 
-        return exit_status
-
-    @staticmethod
-    def stop():
-        cmd = f'apptainer instance stop {TGI_SERVER_INSTANCE_NAME}'
-        subprocess.run(cmd, check=True, capture_output=False, shell=True)
-
-        logger.info(f'{TGI_SERVER_INSTANCE_NAME} stopped')
-
-
-class PrometheusInstance:
-    @staticmethod
-    def start(prometheus_state: ProcessHandler) -> ProcessExitStatus:
-        logger.info(f'Starting {PROMETHEUS_INSTANCE_NAME}...')
-
-        cmd = (
-            'apptainer instance start '
-            '--net '  # TODO new
-            '--writable-tmpfs '
-            f'{PROMETHEUS_SIF_PATH} '
-            f'{PROMETHEUS_INSTANCE_NAME}'
-        )
-        process = Popen(cmd, shell=True)
-        exit_status = prometheus_state.wait(process)
-
-        POLL_INTERVAL = 5
         parsed_url = urlparse(PROMETHEUS_BASE_URL)
 
         if not parsed_url.port:
             raise ValueError('PROMETHEUS_BASE_URL does not include a port')
 
-        logger.info(f'Waiting for {PROMETHEUS_INSTANCE_NAME} to become healthy...')
+        logger.info(
+            f'Waiting for {TGI_SERVER_INSTANCE_NAME} (Prometheus) to become healthy...'
+        )
 
         while True:
             connection = None
@@ -317,7 +291,7 @@ class PrometheusInstance:
                 response = connection.getresponse()
 
                 if response.status == 200:
-                    logger.info(f'{PROMETHEUS_INSTANCE_NAME} is healthy')
+                    logger.info(f'{TGI_SERVER_INSTANCE_NAME} (Prometheus) is healthy')
                     break
 
                 else:
@@ -371,10 +345,10 @@ class PrometheusInstance:
             if connection:
                 connection.close()
 
-        cmd = f'apptainer instance stop {PROMETHEUS_INSTANCE_NAME}'
+        cmd = f'apptainer instance stop {TGI_SERVER_INSTANCE_NAME}'
         subprocess.run(cmd, check=True, capture_output=False, shell=True)
 
-        logger.info(f'{PROMETHEUS_INSTANCE_NAME} stopped')
+        logger.info(f'{TGI_SERVER_INSTANCE_NAME} stopped')
 
 
 class Client:
@@ -477,7 +451,6 @@ class BatchJobProcessorThread(Thread):
         self._cli_handler = ProcessHandler(wall_time_stop_event)
         self._client_handler = ProcessHandler(wall_time_stop_event)
         self._server_handler = ProcessHandler(wall_time_stop_event)
-        self._prometheus_handler = ProcessHandler(wall_time_stop_event)
 
     def run(self):
         logger.info(f'{self.__class__.__name__} started')
@@ -485,7 +458,6 @@ class BatchJobProcessorThread(Thread):
         DELAY = 30
         time_inactive = timedelta()
         is_server_instance_running = False
-        is_prometheus_instance_running = False
 
         while True:
             if self._wall_time_stop_event.is_set():
@@ -535,30 +507,16 @@ class BatchJobProcessorThread(Thread):
                 if server_instance_exit_status == ProcessExitStatus.COMPLETED:
                     is_server_instance_running = True
 
-                # start prometheus instance
-                prometheus_instance_exit_status = PrometheusInstance.start(
-                    self._prometheus_handler
-                )
-
-                if prometheus_instance_exit_status == ProcessExitStatus.COMPLETED:
-                    is_prometheus_instance_running = True
-
                 if self._wall_time_stop_event.is_set():
                     break
 
             # restart instances with another model
             elif self._previous_batch_job.model_hub_id != batch_job.model_hub_id:
-                PrometheusInstance.stop()
                 ServerInstance.stop()
                 server_instance_exit_status = ServerInstance.start(mount_path)
 
                 if server_instance_exit_status == ProcessExitStatus.COMPLETED:
                     is_server_instance_running = True
-
-                prometheus_instance_exit_status = PrometheusInstance.start(mount_path)
-
-                if prometheus_instance_exit_status == ProcessExitStatus.COMPLETED:
-                    is_prometheus_instance_running = True
 
                 if self._wall_time_stop_event.is_set():
                     break
@@ -576,9 +534,6 @@ class BatchJobProcessorThread(Thread):
                 batch_job.batch_request_id, BatchJobStatus.FINISHED
             )
             self._status_tracker_resource.release()
-
-        if is_prometheus_instance_running:
-            PrometheusInstance.stop()
 
         if is_server_instance_running:
             ServerInstance.stop()

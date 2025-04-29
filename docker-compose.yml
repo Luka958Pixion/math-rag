@@ -78,7 +78,7 @@ services:
       - '--storage.tsdb.path=/prometheus'
     volumes:
       - ./prometheus.yml:/etc/prometheus/prometheus.yml
-      - prometheus_data:/prometheus
+      - ./.tmp/prometheus/data:/prometheus
     ports:
       - 9090:9090
 

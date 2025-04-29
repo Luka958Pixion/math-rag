@@ -1,11 +1,49 @@
 Bootstrap: docker
 From: ghcr.io/huggingface/text-generation-inference:latest
 
-%environment
-    export PYTHONUNBUFFERED=1
+%post
+    set -e
+    PROMETHEUS_VERSION=3.3.0
+    curl -sL https://github.com/prometheus/prometheus/releases/download/v${PROMETHEUS_VERSION}/prometheus-${PROMETHEUS_VERSION}.linux-amd64.tar.gz -o /tmp/prom.tar.gz
+    mkdir -p /opt
+    tar --no-same-owner -xzf /tmp/prom.tar.gz -C /opt
+    mv /opt/prometheus-${PROMETHEUS_VERSION}.linux-amd64 /opt/prometheus
+    rm /tmp/prom.tar.gz
+    mkdir -p /tmp/prometheus_data
 
 %startscript
-    text-generation-launcher --model-id /model --port 8000 --hostname 0.0.0.0
+    set -e
+    cat > /tmp/prometheus.yml <<'EOF'
+global:
+  scrape_interval: 15s
+
+scrape_configs:
+  - job_name: 'tgi'
+    static_configs:
+      - targets: ['localhost:9000']
+EOF
+
+    text-generation-launcher \
+        --model-id /model \
+        --port 8000 \
+        --hostname 0.0.0.0 \
+        --prometheus-port 9000 \
+        > /tmp/tgi_output.log \
+        2> /tmp/tgi_error.log &
+
+    TGI_PID=$!
+
+    /opt/prometheus/prometheus \
+        --config.file=/tmp/prometheus.yml \
+        --storage.tsdb.path=/tmp/prometheus_data \
+        --web.listen-address=0.0.0.0:9090 \
+        --web.enable-admin-api \
+        > /tmp/prometheus_output.log \
+        2> /tmp/prometheus_error.log &
+
+    PROMETHEUS_PID=$!
+
+    wait $TGI_PID $PROMETHEUS_PID
 
 %labels
     Author luka.panic@pixion.co
