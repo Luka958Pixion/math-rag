@@ -9,7 +9,6 @@ From: ghcr.io/huggingface/text-generation-inference:latest
     tar --no-same-owner -xzf /tmp/prom.tar.gz -C /opt
     mv /opt/prometheus-${PROMETHEUS_VERSION}.linux-amd64 /opt/prometheus
     rm /tmp/prom.tar.gz
-    mkdir -p /tmp/prometheus_data
 
 %startscript
     set -e
@@ -35,7 +34,7 @@ EOF
 
     /opt/prometheus/prometheus \
         --config.file=/tmp/prometheus.yml \
-        --storage.tsdb.path=/tmp/prometheus_data \
+        --storage.tsdb.path=/data \
         --web.listen-address=0.0.0.0:9090 \
         --web.enable-admin-api \
         --log.level=debug \
@@ -63,6 +62,6 @@ EOF
     Usage:
         apptainer instance start \
             --nv \
-            --bind "$PWD/mount/$MODEL_HUB_ID:/model" \
+            --bind "$PWD/mount/$MODEL_HUB_ID:/model,$PWD/data:/data" \
             server.sif \
             tgi_server_instance

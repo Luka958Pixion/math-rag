@@ -220,10 +220,16 @@ class HuggingFaceCLI:
 
 class ServerInstance:
     @staticmethod
-    def start(server_state: ProcessHandler, mount_path: Path) -> ProcessExitStatus:
+    def start(
+        server_state: ProcessHandler, mount_path: Path, data_path: Path
+    ) -> ProcessExitStatus:
         logger.info(f'Starting {TGI_SERVER_INSTANCE_NAME}...')
 
-        bind = f'{mount_path}:/model'
+        bindings = [
+            f'{mount_path}:/model',
+            f'{data_path}:/data',
+        ]
+        bind = ','.join(bindings)
         cmd = (
             'apptainer instance start '
             '--nv '
@@ -341,7 +347,7 @@ class ServerInstance:
                     conn1.request('GET', '/metrics')
                     response1 = conn1.getresponse()
                     logger.info(f'/metrics returned status {response1.status}')
-                    # logger.warning(response1.read().decode())
+                    logger.info(f'/metrics returned {response1.read().decode()}')
                     conn1.close()
 
                 except Exception as e:
@@ -351,8 +357,8 @@ class ServerInstance:
                     conn3 = HTTPConnection(parsed_url.hostname, parsed_url.port)
                     conn3.request('GET', '/api/v1/targets')
                     response3 = conn3.getresponse()
-                    logger.info(f'/metrics returned status {response1.status}')
-                    # logger.warning(response3.read().decode())
+                    logger.info(f'/api/v1/targets returned status {response1.status}')
+                    logger.info(f'/api/v1/targets returned {response3.read().decode()}')
                     conn3.close()
                 except Exception as e:
                     logger.error(f'/api/v1/targets failed: {e}')
@@ -360,6 +366,7 @@ class ServerInstance:
                 # -----
             else:
                 logger.warning(f'Snapshot returned status {response.status}')
+                logger.warning(f'Snapshot returned status {response.read().decode()}')
 
         except Exception as e:
             logger.error(f'Snapshot failed: {e}')
@@ -513,6 +520,7 @@ class BatchJobProcessorThread(Thread):
 
             # download model if it's not downloaded already
             mount_path = WORKDIR / 'mount' / batch_job.model_hub_id
+            data_path = WORKDIR / 'data'
 
             if not mount_path.exists():
                 mount_path.mkdir(parents=True)
@@ -524,7 +532,7 @@ class BatchJobProcessorThread(Thread):
             if not self._previous_batch_job:
                 # start server instance
                 server_instance_exit_status = ServerInstance.start(
-                    self._server_handler, mount_path
+                    self._server_handler, mount_path, data_path
                 )
 
                 if server_instance_exit_status == ProcessExitStatus.COMPLETED:
@@ -536,7 +544,9 @@ class BatchJobProcessorThread(Thread):
             # restart instances with another model
             elif self._previous_batch_job.model_hub_id != batch_job.model_hub_id:
                 ServerInstance.stop()
-                server_instance_exit_status = ServerInstance.start(mount_path)
+                server_instance_exit_status = ServerInstance.start(
+                    self._server_handler, mount_path, data_path
+                )
 
                 if server_instance_exit_status == ProcessExitStatus.COMPLETED:
                     is_server_instance_running = True

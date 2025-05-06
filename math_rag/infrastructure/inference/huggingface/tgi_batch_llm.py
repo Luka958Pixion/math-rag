@@ -75,17 +75,66 @@ class TGIBatchLLM(PartialBatchLLM):
         self.tgi_settings_loader_service = tgi_settings_loader_service
 
     async def _has_file_changed(self, local_path: Path, remote_path: Path) -> bool:
-        remote_path_exists = await self.file_system_client.test(remote_path)
+        """
+        Determines whether a local file differs from its remote counterpart based on SHA-256 hash comparison.
 
-        if remote_path_exists:
-            local_hash = FileHasherUtil.hash(local_path, 'sha256')
-            remote_hash = await self.file_system_client.hash(remote_path, 'sha256sum')
+        Computes the SHA-256 hash of both the local and remote files and compares them.
 
-            return local_hash != remote_hash
+        Args:
+            local_path (Path): Path to the local file.
+            remote_path (Path): Path to the remote file.
 
-        return False
+        Returns:
+            bool: True if the local and remote file hashes differ, False otherwise.
+        """
+
+        local_hash = FileHasherUtil.hash(local_path, 'sha256')
+        remote_hash = await self.file_system_client.hash(remote_path, 'sha256sum')
+
+        return local_hash != remote_hash
+
+    async def _upload_file(
+        self, local_path: Path, remote_path: Path, force: bool = False
+    ) -> bool:
+        """
+        Uploads a file to the remote path if it is missing or has changed.
+
+        If the remote file exists:
+            - Reuploads the file if `force` is True or the local file content differs.
+            - Skips upload if the file is unchanged and `force` is False.
+
+        If the remote file does not exist, uploads it directly.
+
+        Args:
+            local_path (Path): Path to the local file to upload.
+            remote_path (Path): Destination path on the remote system.
+            force (bool, optional): If True, reupload the file regardless of changes. Defaults to False.
+
+        Returns:
+            bool: True if the file was uploaded or reuploaded, False if upload was skipped.
+        """
+
+        if await self.file_system_client.test(remote_path):
+            if force or await self._has_file_changed(local_path, remote_path):
+                await self.file_system_client.remove(remote_path)
+                await self.sftp_client.upload(local_path, remote_path)
+                logger.info(f'Reupload completed: {remote_path}')
+
+                return True
+
+            else:
+                logger.info(f'Upload skipped: {local_path} unchanged')
+
+                return False
+
+        else:
+            await self.sftp_client.upload(local_path, remote_path)
+            logger.info(f'Upload completed: {remote_path}')
+
+            return True
 
     async def init_resources(self):
+        # common directory paths
         tmp_path = LOCAL_ROOT_PATH / '.tmp'
         hf_path = LOCAL_ROOT_PATH / 'assets/hpc/hf'
         tgi_path = hf_path / 'tgi'
@@ -123,34 +172,21 @@ class TGIBatchLLM(PartialBatchLLM):
         # create remote root directory
         await self.file_system_client.make_directory(REMOTE_ROOT_PATH)
 
-        # upload build paths
         for def_local_path, additional_local_path in build_local_paths_dict.items():
             is_build_required = False
 
-            # check whether the def file has changed
-            def_remote_path = REMOTE_ROOT_PATH / def_local_path.name
-
-            if await self._has_file_changed(def_local_path, def_remote_path):
-                await self.file_system_client.remove(def_remote_path)
-                is_build_required = True
-
-            else:
-                logger.info(f'Upload skipped: {def_remote_path} unchanged')
-
-            # check whether the additional file has changed
+            # upload additional file
             if additional_local_path:
                 additional_remote_path = REMOTE_ROOT_PATH / additional_local_path.name
-
-                if await self._has_file_changed(
+                is_build_required = await self._upload_file(
                     additional_local_path, additional_remote_path
-                ):
-                    await self.file_system_client.remove(additional_remote_path)
-                    is_build_required = True
+                )
 
-                else:
-                    logger.info(f'Upload skipped: {def_remote_path} unchanged')
+            # upload definition file
+            def_remote_path = REMOTE_ROOT_PATH / def_local_path.name
+            is_build_required = await self._upload_file(def_local_path, def_remote_path)
 
-            # (re)build and (re)upload
+            # (re)build and (re)upload singularity image file
             if not is_build_required:
                 continue
 
@@ -161,29 +197,14 @@ class TGIBatchLLM(PartialBatchLLM):
             sif_local_path = tmp_path / f'{def_local_path.stem}.sif'
             await FileStreamWriterUtil.write(sif_stream, sif_local_path)
 
+            # force upload to skip hashing for large images (hash always differs here)
             sif_remote_path = REMOTE_ROOT_PATH / sif_local_path.name
-
-            if await self.file_system_client.test(sif_remote_path):
-                await self.file_system_client.remove(sif_remote_path)
-
-            await self.sftp_client.upload(sif_local_path, sif_remote_path)
-            logger.info(f'Upload completed: {sif_remote_path}')
-            await self.sftp_client.upload(local_path, remote_path)
-            logger.info(f'Upload completed: {sif_remote_path}')
+            await self._upload_file(sif_local_path, sif_remote_path, force=True)
 
         # upload runtime paths
         for local_path in runtime_local_paths:
             remote_path = REMOTE_ROOT_PATH / local_path.name
-
-            if await self._has_file_changed(local_path, remote_path):
-                await self.file_system_client.remove(remote_path)
-
-            else:
-                logger.info(f'Upload skipped: {local_path} unchanged')
-                continue
-
-            await self.sftp_client.upload(local_path, remote_path)
-            logger.info(f'Upload completed: {local_path}')
+            await self._upload_file(local_path, remote_path)
 
     async def batch_generate_init(
         self,
