@@ -44,7 +44,7 @@ STATUS_TRACKER_TMP_PATH = STATUS_TRACKER_PATH.with_suffix('.tmp')
 BATCH_JOB_PATH_PATTERN = f'batch_job_{PBS_JOB_ID}_*.json'
 
 # thresholds
-INACTIVE_THRESHOLD = timedelta(minutes=15)
+INACTIVE_THRESHOLD = timedelta(minutes=2)  # TODO was 15
 WALL_TIME_THRESHOLD = timedelta(minutes=5)
 
 basicConfig(
@@ -335,6 +335,29 @@ class ServerInstance:
                 with open('snapshot.json', 'w') as file:
                     json.dump(snapshot, file)
 
+                # TODO new ----
+                try:
+                    conn1 = HTTPConnection('127.0.0.1', 8000)
+                    conn1.request('GET', '/metrics')
+                    response1 = conn1.getresponse()
+                    logger.info(f'/metrics returned status {response1.status}')
+                    # logger.warning(response1.read().decode())
+                    conn1.close()
+
+                except Exception as e:
+                    logger.error(f'/metrics failed: {e}')
+
+                try:
+                    conn3 = HTTPConnection(parsed_url.hostname, parsed_url.port)
+                    conn3.request('GET', '/api/v1/targets')
+                    response3 = conn3.getresponse()
+                    logger.info(f'/metrics returned status {response1.status}')
+                    # logger.warning(response3.read().decode())
+                    conn3.close()
+                except Exception as e:
+                    logger.error(f'/api/v1/targets failed: {e}')
+
+                # -----
             else:
                 logger.warning(f'Snapshot returned status {response.status}')
 

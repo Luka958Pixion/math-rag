@@ -74,71 +74,116 @@ class TGIBatchLLM(PartialBatchLLM):
         self.apptainer_client = apptainer_client
         self.tgi_settings_loader_service = tgi_settings_loader_service
 
+    async def _has_file_changed(self, local_path: Path, remote_path: Path) -> bool:
+        remote_path_exists = await self.file_system_client.test(remote_path)
+
+        if remote_path_exists:
+            local_hash = FileHasherUtil.hash(local_path, 'sha256')
+            remote_hash = await self.file_system_client.hash(remote_path, 'sha256sum')
+
+            return local_hash != remote_hash
+
+        return False
+
     async def init_resources(self):
         tmp_path = LOCAL_ROOT_PATH / '.tmp'
         hf_path = LOCAL_ROOT_PATH / 'assets/hpc/hf'
         tgi_path = hf_path / 'tgi'
 
-        # NOTE: order matters, e.g. client.def requires requirements.txt to build client.sif
-        local_paths = [
-            LOCAL_ROOT_PATH / '.env.hpc.hf.tgi',
-            hf_path / 'cli.def',
-            # tgi_path / 'prometheus.yml',
-            tgi_path / 'requirements.txt',
-            tgi_path / 'server.def',
-            tgi_path / 'client.def',
-            tgi_path / 'client.py',
-            tgi_path / 'tgi.py',
-            tgi_path / 'tgi.sh',
-        ]
+        # build paths
+        cli_def_path = hf_path / 'cli.def'
+        requirements_txt_path = tgi_path / 'requirements.txt'
+        server_def_path = tgi_path / 'server.def'
+        client_def_path = tgi_path / 'client.def'
+
+        build_local_paths_dict: dict[Path, Path | None] = {
+            cli_def_path: None,
+            client_def_path: None,
+            server_def_path: requirements_txt_path,
+        }
+
+        # runtime paths
+        env_path = LOCAL_ROOT_PATH / '.env.hpc.hf.tgi'
+        client_py_path = tgi_path / 'client.py'
+        tgi_py_path = tgi_path / 'tgi.py'
+        tgi_sh_path = tgi_path / 'tgi.sh'
+
+        runtime_local_paths = [env_path, client_py_path, tgi_py_path, tgi_sh_path]
+
+        # verify local paths
+        local_paths = (
+            runtime_local_paths
+            + [key for key in build_local_paths_dict.keys()]
+            + [value for value in build_local_paths_dict.values() if value is not None]
+        )
 
         for local_path in local_paths:
             assert local_path.exists()
 
+        # create remote root directory
         await self.file_system_client.make_directory(REMOTE_ROOT_PATH)
 
-        for local_path in local_paths:
-            remote_path = REMOTE_ROOT_PATH / local_path.name
+        # upload build paths
+        for def_local_path, additional_local_path in build_local_paths_dict.items():
+            is_build_required = False
 
-            if await self.file_system_client.test(remote_path):
-                local_hash = FileHasherUtil.hash(local_path, 'sha256')
-                remote_hash = await self.file_system_client.hash(
-                    remote_path, 'sha256sum'
-                )
+            # check whether the def file has changed
+            def_remote_path = REMOTE_ROOT_PATH / def_local_path.name
 
-                if local_hash != remote_hash:
-                    await self.file_system_client.remove(remote_path)
+            if await self._has_file_changed(def_local_path, def_remote_path):
+                await self.file_system_client.remove(def_remote_path)
+                is_build_required = True
 
-                    logger.info(f'Upload started: {local_path}')
+            else:
+                logger.info(f'Upload skipped: {def_remote_path} unchanged')
+
+            # check whether the additional file has changed
+            if additional_local_path:
+                additional_remote_path = REMOTE_ROOT_PATH / additional_local_path.name
+
+                if await self._has_file_changed(
+                    additional_local_path, additional_remote_path
+                ):
+                    await self.file_system_client.remove(additional_remote_path)
+                    is_build_required = True
 
                 else:
-                    logger.info(f'Upload skipped: {local_path} unchanged')
-                    continue
+                    logger.info(f'Upload skipped: {def_remote_path} unchanged')
 
-            if local_path.suffix == '.def':
-                # TODO you must rebuild image if this file was changed!
-                match local_path.name:
-                    case 'client.def':
-                        additional_path = tgi_path / 'requirements.txt'
+            # (re)build and (re)upload
+            if not is_build_required:
+                continue
 
-                    case _:
-                        additional_path = None
+            sif_stream = await self.apptainer_client.build(
+                def_local_path, additional_local_path
+            )
 
-                sif_stream = await self.apptainer_client.build(
-                    local_path, additional_path
-                )
+            sif_local_path = tmp_path / f'{def_local_path.stem}.sif'
+            await FileStreamWriterUtil.write(sif_stream, sif_local_path)
 
-                sif_local_path = tmp_path / f'{local_path.stem}.sif'
-                await FileStreamWriterUtil.write(sif_stream, sif_local_path)
+            sif_remote_path = REMOTE_ROOT_PATH / sif_local_path.name
 
-                sif_remote_path = REMOTE_ROOT_PATH / sif_local_path.name
+            if await self.file_system_client.test(sif_remote_path):
+                await self.file_system_client.remove(sif_remote_path)
 
-                if await self.file_system_client.test(sif_remote_path):
-                    await self.file_system_client.remove(sif_remote_path)
+            await self.sftp_client.upload(sif_local_path, sif_remote_path)
+            logger.info(f'Upload completed: {sif_remote_path}')
+            await self.sftp_client.upload(local_path, remote_path)
+            logger.info(f'Upload completed: {sif_remote_path}')
 
-                await self.sftp_client.upload(sif_local_path, sif_remote_path)
+        # upload runtime paths
+        for local_path in runtime_local_paths:
+            remote_path = REMOTE_ROOT_PATH / local_path.name
+
+            if await self._has_file_changed(local_path, remote_path):
+                await self.file_system_client.remove(remote_path)
+
+            else:
+                logger.info(f'Upload skipped: {local_path} unchanged')
+                continue
 
             await self.sftp_client.upload(local_path, remote_path)
+            logger.info(f'Upload completed: {local_path}')
 
     async def batch_generate_init(
         self,
@@ -218,7 +263,7 @@ class TGIBatchLLM(PartialBatchLLM):
                     mem=tgi_settings.mem,
                     wall_time=tgi_settings.wall_time,
                     depend_job_id=job_id,
-                    queue=HPCQueue.GPU,  # TODO remove
+                    queue=HPCQueue.GPU,
                 )
 
         else:
@@ -231,7 +276,7 @@ class TGIBatchLLM(PartialBatchLLM):
                 num_gpus=tgi_settings.num_gpus,
                 mem=tgi_settings.mem,
                 wall_time=tgi_settings.wall_time,
-                queue=HPCQueue.GPU,  # TODO remove
+                queue=HPCQueue.GPU,
             )
 
         job = await self.pbs_pro_client.queue_status(job_id)
