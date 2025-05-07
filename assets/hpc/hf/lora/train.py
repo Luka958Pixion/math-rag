@@ -12,7 +12,6 @@ from transformers import (
     AutoModelForCausalLM,
     AutoTokenizer,
     BitsAndBytesConfig,
-    PretrainedConfig,
     PreTrainedModel,
     PreTrainedTokenizerBase,
     TrainerCallback,
@@ -20,9 +19,9 @@ from transformers import (
     TrainerState,
     TrainingArguments,
 )
-from transformers.models.llama.configuration_llama import LlamaConfig
-from transformers.models.llama.modeling_llama import LlamaForCausalLM
 from trl import SFTConfig, SFTTrainer
+
+from .llama import init_llama_language_model, init_llama_tokenizer
 
 
 # huggingface
@@ -101,6 +100,7 @@ def run():
         trust_remote_code=...,
     )
     tokenizer = cast(PreTrainedTokenizerBase, tokenizer)
+    init_llama_tokenizer(tokenizer)
 
     # TODO hardcode everything except name/path
     # https://huggingface.co/docs/datasets/v3.5.1/en/package_reference/loading_methods#datasets.load_dataset
@@ -160,16 +160,7 @@ def run():
         code_revision=...,
     )
     model = cast(PreTrainedModel, model)
-    model.config = cast(PretrainedConfig, model.config)
-
-    model.config.use_cache = (
-        False  # TODO check if use_cache exists -> llama config does!
-    )
-    model.config.pretraining_tp = 1  # TODO check if use_cache exists
-
-    tokenizer.pad_token = '<PAD>'
-    tokenizer.padding_side = 'left'
-    tokenizer.chat_template = "{% for message in messages %}{{ message['role'] }}: {{ message['content'] }}\n{% endfor %}"
+    init_llama_language_model(model)
 
     peft_config = LoraConfig(
         # https://huggingface.co/docs/peft/v0.15.0/en/package_reference/config#peft.config.PeftConfigMixin
@@ -238,7 +229,6 @@ def run():
         eval_accumulation_steps=...,
         eval_delay=...,
         torch_empty_cache_steps=...,
-        # learning_rate=..., # NOTE duplicate
         weight_decay=...,
         adam_beta1=...,
         adam_beta2=...,
@@ -355,7 +345,6 @@ def run():
         learning_rate=...,
     )
     trainer = SFTTrainer(
-        # TODO new SFTTrainer
         model=...,
         args=...,
         data_collator=...,
