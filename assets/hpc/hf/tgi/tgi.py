@@ -321,6 +321,7 @@ class ServerInstance:
 
     @staticmethod
     def stop():
+        # take a snapshot
         parsed_url = urlparse(PROMETHEUS_BASE_URL)
 
         if not parsed_url.port:
@@ -338,38 +339,64 @@ class ServerInstance:
                 snapshot = json.loads(body)
                 logger.info(f'Prometheus snapshot: {snapshot}')
 
-                with open('snapshot.json', 'w') as file:
+                with open(f'snapshot_{PBS_JOB_ID}.json', 'w') as file:
                     json.dump(snapshot, file)
 
-                # TODO new ----
-                try:
-                    conn1 = HTTPConnection('127.0.0.1', 8000)
-                    conn1.request('GET', '/metrics')
-                    response1 = conn1.getresponse()
-                    logger.info(f'/metrics returned status {response1.status}')
-                    logger.info(f'/metrics returned {response1.read().decode()}')
-                    conn1.close()
-
-                except Exception as e:
-                    logger.error(f'/metrics failed: {e}')
-
-                try:
-                    conn3 = HTTPConnection(parsed_url.hostname, parsed_url.port)
-                    conn3.request('GET', '/api/v1/targets')
-                    response3 = conn3.getresponse()
-                    logger.info(f'/api/v1/targets returned status {response1.status}')
-                    logger.info(f'/api/v1/targets returned {response3.read().decode()}')
-                    conn3.close()
-                except Exception as e:
-                    logger.error(f'/api/v1/targets failed: {e}')
-
-                # -----
             else:
                 logger.warning(f'Snapshot returned status {response.status}')
-                logger.warning(f'Snapshot returned status {response.read().decode()}')
+                logger.warning(f'Snapshot returned: {response.read().decode()}')
 
         except Exception as e:
             logger.error(f'Snapshot failed: {e}')
+
+        finally:
+            if connection:
+                connection.close()
+
+        # check targets endpoint
+        connection = None
+
+        try:
+            connection = HTTPConnection(parsed_url.hostname, parsed_url.port)
+            connection.request('GET', '/api/v1/targets')
+            response = connection.getresponse()
+
+            if response.status == 200:
+                logger.info(f'Targets returned status {response.status}')
+
+            else:
+                logger.warning(f'Targets returned status {response.status}')
+                logger.warning(f'Targets returned: {response.read().decode()}')
+
+        except Exception as e:
+            logger.error(f'Targets failed: {e}')
+
+        finally:
+            if connection:
+                connection.close()
+
+        # check metrics endpoint
+        parsed_url = urlparse(TGI_BASE_URL)
+
+        if not parsed_url.port:
+            raise ValueError('TGI_BASE_URL does not include a port')
+
+        connection = None
+
+        try:
+            connection = HTTPConnection(parsed_url.hostname, parsed_url.port)
+            connection.request('GET', '/metrics')
+            response = connection.getresponse()
+
+            if response.status == 200:
+                logger.info(f'Metrics returned status {response.status}')
+
+            else:
+                logger.warning(f'Metrics returned status {response.status}')
+                logger.warning(f'Metrics returned: {response.read().decode()}')
+
+        except Exception as e:
+            logger.error(f'Metrics failed: {e}')
 
         finally:
             if connection:

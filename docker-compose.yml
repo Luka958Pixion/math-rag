@@ -11,6 +11,7 @@ services:
       - /var/run/docker.sock:/var/run/docker.sock
       - ./.env:/workspaces/.env
       - ./.ssh/id_ed25519:/.ssh/id_ed25519
+      - /var/run/docker.sock:/var/run/docker.sock
     ports:
       - ${PORT}:${PORT}
     command: sleep infinity

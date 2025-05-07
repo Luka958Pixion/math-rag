@@ -172,6 +172,9 @@ class TGIBatchLLM(PartialBatchLLM):
         # create remote root directory
         await self.file_system_client.make_directory(REMOTE_ROOT_PATH)
 
+        # create remote data directory for prometheus
+        await self.file_system_client.make_directory(REMOTE_ROOT_PATH / 'data')
+
         for def_local_path, additional_local_path in build_local_paths_dict.items():
             is_build_required = False
 

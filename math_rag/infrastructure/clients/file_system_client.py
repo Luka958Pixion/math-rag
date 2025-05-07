@@ -60,3 +60,6 @@ class FileSystemClient:
         return await self.ssh_client.run(
             f"{hash_function_name} {file_path} | awk '{{print $1}}'"
         )
+
+    async def archive(self, source: Path, target: Path):
+        await self.ssh_client.run(f'tar -cvf {source} {target}')

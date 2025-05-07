@@ -19,6 +19,9 @@
   },
   "postCreateCommand": "sh ./.devcontainer/post-create.sh",
   "remoteUser": "root",
-  "forwardPorts": ["${localEnv:PORT}"]
+  "forwardPorts": ["${localEnv:PORT}"],
+  "mounts": [
+    "source=/var/run/docker.sock,target=/var/run/docker.sock,type=bind"
+  ]
 }
     

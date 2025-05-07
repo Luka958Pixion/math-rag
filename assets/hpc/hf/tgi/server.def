@@ -19,7 +19,7 @@ global:
 scrape_configs:
   - job_name: 'tgi'
     static_configs:
-      - targets: ['127.0.0.1:8000']
+      - targets: ['0.0.0.0:8000']
 EOF
 
     text-generation-launcher \
