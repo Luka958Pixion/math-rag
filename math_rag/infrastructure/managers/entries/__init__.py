@@ -1,4 +1,4 @@
-from .pbs_pro_job_listener_entry import PBSProJobListenerEntry
+from .pbs_pro_job_dispatcher_entry import PBSProJobDispatcherEntry
 
 
-__all__ = ['PBSProJobListenerEntry']
+__all__ = ['PBSProJobDispatcherEntry']

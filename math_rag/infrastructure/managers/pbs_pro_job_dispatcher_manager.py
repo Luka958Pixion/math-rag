@@ -1,20 +1,20 @@
 from threading import Lock
 from uuid import UUID
 
-from .entries import PBSProJobListenerEntry
+from .entries import PBSProJobDispatcherEntry
 
 
-class PBSProJobListenerManager:
+class PBSProJobDispatcherManager:
     def __init__(self):
         self._lock = Lock()
-        self._job_id_to_entry: dict[UUID, PBSProJobListenerEntry] = {}
+        self._job_id_to_entry: dict[UUID, PBSProJobDispatcherEntry] = {}
 
     def add_job_id(self, job_id: UUID, listener_classes: set[str]):
         with self._lock:
             entry = self._job_id_to_entry.get(job_id)
 
             if not entry:
-                entry = PBSProJobListenerEntry(
+                entry = PBSProJobDispatcherEntry(
                     job_id=job_id, listener_classes=listener_classes
                 )
                 self._job_id_to_entry[job_id] = entry
