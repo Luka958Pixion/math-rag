@@ -45,18 +45,16 @@ class PrometheusSnapshotLoaderService:
         if job.state not in (PBSProJobState.FINISHED, PBSProJobState.EXITED):
             return
 
-        snapshot_json_name = f'snapshot_{job_id}.json'
-        snapshot_json_local_path = LOCAL_ROOT_PATH / '.tmp' / snapshot_json_name
-        snapshot_json_remote_path = REMOTE_ROOT_PATH / snapshot_json_name
+        json_name = f'snapshot_{job_id}.json'
+        json_local_path = LOCAL_ROOT_PATH / '.tmp' / json_name
+        json_remote_path = REMOTE_ROOT_PATH / json_name
 
-        if not await self.file_system_client.test(snapshot_json_remote_path):
+        if not await self.file_system_client.test(json_remote_path):
             return
 
-        await self.sftp_client.download(
-            snapshot_json_remote_path, snapshot_json_local_path
-        )
+        await self.sftp_client.download(json_remote_path, json_local_path)
 
-        snapshot_json = await FileReaderUtil.read_json(snapshot_json_local_path)
+        snapshot_json = await FileReaderUtil.read_json(json_local_path)
         snapshot_response = PrometheusSnapshotResponse.model_validate(snapshot_json)
 
         if snapshot_response.status == PrometheusSnapshotStatus.ERROR:
@@ -70,27 +68,23 @@ class PrometheusSnapshotLoaderService:
 
         snapshot_name = snapshot_response.data.name
 
-        snapshot_remote_path = (
-            REMOTE_ROOT_PATH / 'data' / 'snapshots' / snapshot_name
-        )  # TODO
-        snapshot_local_path = (
-            LOCAL_ROOT_PATH / '.tmp' / 'prometheus' / 'snapshots' / snapshot_name
-        )  # TODO
+        remote_path = REMOTE_ROOT_PATH / 'data' / 'snapshots' / snapshot_name
+        local_path = LOCAL_ROOT_PATH / '.tmp' / 'prometheus' / 'snapshots'
 
-        snapshot_archive_remote_path = REMOTE_ROOT_PATH / f'snapshot_{0}.tar.gz'  # TODO
-        snapshot_archive_local_path = (
-            LOCAL_ROOT_PATH / '.tmp' / 'prometheus' / 'snapshots' / snapshot_name
-        )  # TODO
+        archive_remote_path = REMOTE_ROOT_PATH / f'snapshot_{snapshot_name}.tar.gz'
+        archive_local_path = (
+            LOCAL_ROOT_PATH
+            / '.tmp'
+            / 'prometheus'
+            / 'snapshots'
+            / archive_remote_path.name
+        )
 
         await self.file_system_client.archive(
-            snapshot_remote_path, snapshot_archive_remote_path
+            remote_path, archive_remote_path, include_root=False
         )
-        await self.sftp_client.download(
-            snapshot_archive_remote_path, snapshot_archive_local_path
-        )
-        TarFileExtractorUtil.extract_tar_gz_to_path(snapshot_local_path)
-
-        snapshot_id = ...
+        await self.sftp_client.download(archive_remote_path, archive_local_path)
+        TarFileExtractorUtil.extract_tar_gz_to_path(archive_local_path, local_path)
 
         client = docker.from_env()
         container = client.containers.get(PROMETHEUS_CONTAINER_NAME)
