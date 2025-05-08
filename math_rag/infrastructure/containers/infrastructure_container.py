@@ -53,6 +53,7 @@ from math_rag.infrastructure.seeders.objects import MathArticleSeeder
 from math_rag.infrastructure.services import (
     LatexParserService,
     LatexVisitorService,
+    PrometheusSnapshotLoaderService,
     TEISettingsLoaderService,
     TGISettingsLoaderService,
 )
@@ -226,6 +227,14 @@ class InfrastructureContainer(DeclarativeContainer):
         sftp_client=sftp_client,
         apptainer_client=apptainer_client,
         tgi_settings_loader_service=tgi_settings_loader_service,
+    )
+
+    # Prometheus
+    prometheus_snapshot_loader_service = Factory(
+        PrometheusSnapshotLoaderService,
+        file_system_client=file_system_client,
+        pbs_pro_client=pbs_pro_client,
+        sftp_client=sftp_client,
     )
 
     # -----------

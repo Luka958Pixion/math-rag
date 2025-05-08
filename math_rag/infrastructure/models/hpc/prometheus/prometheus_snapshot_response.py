@@ -1,5 +1,3 @@
-from typing import Literal
-
 from pydantic import BaseModel, Field
 
 from math_rag.infrastructure.enums.hpc.prometheus import PrometheusSnapshotStatus

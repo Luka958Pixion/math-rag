@@ -8,7 +8,6 @@ from math_rag.infrastructure.clients import (
     PBSProClient,
     SFTPClient,
 )
-from math_rag.infrastructure.enums.hpc.pbs import PBSProJobState
 from math_rag.infrastructure.enums.hpc.prometheus import PrometheusSnapshotStatus
 from math_rag.infrastructure.models.hpc.prometheus import PrometheusSnapshotResponse
 from math_rag.infrastructure.utils import FileReaderUtil, TarFileExtractorUtil
@@ -35,19 +34,14 @@ class PrometheusSnapshotLoaderService:
         self.sftp_client = sftp_client
 
     async def load(self):
-        job_id = await self.pbs_pro_client.queue_select(PBS_JOB_NAME)
+        # try to get a snapshot json file
+        json_remote_path_pattern = REMOTE_ROOT_PATH / 'snapshot_*.json'
+        json_remote_path = await self.file_system_client.find(json_remote_path_pattern)
 
-        if not job_id:
+        if not json_remote_path:
             return
 
-        job = await self.pbs_pro_client.queue_status(job_id)
-
-        if job.state not in (PBSProJobState.FINISHED, PBSProJobState.EXITED):
-            return
-
-        json_name = f'snapshot_{job_id}.json'
-        json_local_path = LOCAL_ROOT_PATH / '.tmp' / json_name
-        json_remote_path = REMOTE_ROOT_PATH / json_name
+        json_local_path = LOCAL_ROOT_PATH / '.tmp' / json_remote_path.name
 
         if not await self.file_system_client.test(json_remote_path):
             return
@@ -66,12 +60,12 @@ class PrometheusSnapshotLoaderService:
 
             return
 
+        # get an actual snapshot
         snapshot_name = snapshot_response.data.name
 
         remote_path = REMOTE_ROOT_PATH / 'data' / 'snapshots' / snapshot_name
         local_path = LOCAL_ROOT_PATH / '.tmp' / 'prometheus' / 'snapshots'
-
-        archive_remote_path = REMOTE_ROOT_PATH / f'snapshot_{snapshot_name}.tar.gz'
+        archive_remote_path = REMOTE_ROOT_PATH / f'snapshot_{snapshot_name}.tar'
         archive_local_path = (
             LOCAL_ROOT_PATH
             / '.tmp'
@@ -86,6 +80,12 @@ class PrometheusSnapshotLoaderService:
         await self.sftp_client.download(archive_remote_path, archive_local_path)
         TarFileExtractorUtil.extract_tar_gz_to_path(archive_local_path, local_path)
 
+        # cleanup
+        json_local_path.unlink()
+        archive_local_path.unlink()
+        await self.file_system_client.remove([json_remote_path, archive_remote_path])
+
+        # restart prometheus
         client = docker.from_env()
         container = client.containers.get(PROMETHEUS_CONTAINER_NAME)
         container.restart()

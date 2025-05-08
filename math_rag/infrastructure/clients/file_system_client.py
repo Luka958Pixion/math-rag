@@ -17,6 +17,17 @@ class FileSystemClient:
 
         return stdout == 'true'
 
+    async def find(self, file_path: Path) -> Path | None:
+        stdout = await self.ssh_client.run(
+            f'find {file_path.parent} '
+            f'-name "{file_path.name}" '
+            '-maxdepth 1 '
+            '-print '
+            '-quit'
+        )
+
+        return Path(stdout) if stdout else None
+
     @overload
     async def remove(self, file_path: Path):
         pass
@@ -63,7 +74,7 @@ class FileSystemClient:
 
     async def archive(self, source: Path, target: Path, *, include_root: bool):
         await self.ssh_client.run(
-            f'tar -cvf {source} {target}'
+            f'tar -cvf {target} {source}'
             if include_root
-            else f'tar -cvf {source} -C {target} .'
+            else f'tar -cvf {target} -C {source} .'
         )
