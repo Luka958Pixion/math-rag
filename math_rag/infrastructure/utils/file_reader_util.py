@@ -22,6 +22,13 @@ class FileReaderUtil:
                 continue
 
     @staticmethod
+    async def read_json(source: Path) -> dict[str, Any] | list[Any]:
+        async with aiofiles.open(source, mode='r', encoding='utf-8') as source_file:
+            content = await source_file.read()
+
+            return json.loads(content)
+
+    @staticmethod
     async def read_jsonl(source: Path) -> AsyncGenerator[dict[str, Any], None]:
         async with aiofiles.open(source, mode='r', encoding='utf-8') as source_file:
             async for line in source_file:
