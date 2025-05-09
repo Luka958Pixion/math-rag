@@ -13,7 +13,9 @@ from math_rag.infrastructure.containers import InfrastructureContainer
 async def test_embed(infrastructure_container: InfrastructureContainer):
     # arrange
     openai_unified_em = infrastructure_container.openai_managed_em()
-    request = EMRequest(text='test', params=EMParams(model='text-embedding-3-large'))
+    request = EMRequest(
+        text='test', params=EMParams(model='text-embedding-3-large', dimensions=3072)
+    )
 
     # act
     result = await openai_unified_em.embed(
@@ -33,7 +35,10 @@ async def test_concurrent_embed(infrastructure_container: InfrastructureContaine
     openai_unified_em = infrastructure_container.openai_managed_em()
     concurrent_request = EMConcurrentRequest(
         requests=[
-            EMRequest(text='test', params=EMParams(model='text-embedding-3-large'))
+            EMRequest(
+                text='test',
+                params=EMParams(model='text-embedding-3-large', dimensions=3072),
+            )
         ]
     )
 
@@ -56,7 +61,10 @@ async def test_batch_embed(infrastructure_container: InfrastructureContainer):
     openai_unified_em = infrastructure_container.openai_managed_em()
     batch_request = EMBatchRequest(
         requests=[
-            EMRequest(text='test', params=EMParams(model='text-embedding-3-large'))
+            EMRequest(
+                text='test',
+                params=EMParams(model='text-embedding-3-large', dimensions=3072),
+            )
         ]
     )
 

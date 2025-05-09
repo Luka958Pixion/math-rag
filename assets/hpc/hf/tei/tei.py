@@ -28,6 +28,9 @@ HTTPS_PROXY = 'http://10.150.1.1:3128'
 TEI_BASE_URL = 'http://0.0.0.0:8000'
 TEI_SERVER_INSTANCE_NAME = 'tei_server_instance'
 
+# prometheus
+PROMETHEUS_BASE_URL = 'http://0.0.0.0:9090'
+
 # paths
 WORKDIR = Path('.')
 ENV_PATH = Path('.env.hpc.hf.tei')
@@ -41,7 +44,7 @@ STATUS_TRACKER_TMP_PATH = STATUS_TRACKER_PATH.with_suffix('.tmp')
 BATCH_JOB_PATH_PATTERN = f'batch_job_{PBS_JOB_ID}_*.json'
 
 # thresholds
-INACTIVE_THRESHOLD = timedelta(minutes=15)
+INACTIVE_THRESHOLD = timedelta(minutes=2)  # TODO was 15
 WALL_TIME_THRESHOLD = timedelta(minutes=5)
 
 basicConfig(
@@ -50,32 +53,41 @@ basicConfig(
 logger = getLogger(__name__)
 
 
-class ProcessState:
-    def __init__(self):
-        self._lock: Lock = Lock()
+class ProcessExitStatus(str, Enum):
+    COMPLETED = 'completed'
+    INTERRUPTED = 'interrupted'
+
+
+class ProcessHandler:
+    def __init__(self, *stop_events: Event):
+        self._stop_events = stop_events
         self._process: Popen | None = None
 
-    def wait_process(self, process: Popen):
-        with self._lock:
-            self._process = process
+    def wait(self, process: Popen) -> ProcessExitStatus:
+        self._process = process
+        DELAY = 15
 
-        return_code = self._process.wait()
+        while self._process.poll() is None:
+            if any(event.is_set() for event in self._stop_events):
+                self._process.terminate()
+
+                try:
+                    self._process.wait(timeout=5)
+
+                except TimeoutExpired:
+                    self._process.kill()
+                    self._process.wait()
+
+                return ProcessExitStatus.INTERRUPTED
+
+            sleep(DELAY)
+
+        return_code = self._process.returncode
 
         if return_code != 0:
             raise CalledProcessError(return_code, self._process.args)
 
-    def stop_process(self):
-        with self._lock:
-            process = self._process
-
-        if process and process.poll() is None:
-            process.terminate()
-
-            try:
-                process.wait(timeout=5)
-
-            except TimeoutExpired:
-                process.kill()
+        return ProcessExitStatus.COMPLETED
 
 
 @dataclass
@@ -182,7 +194,9 @@ class BatchJobStatusTracker:
 
 class HuggingFaceCLI:
     @staticmethod
-    def download_model(cli_state: ProcessState, model_hub_id: str):
+    def download_model(
+        cli_state: ProcessHandler, model_hub_id: str
+    ) -> ProcessExitStatus:
         logger.info(f'Starting {model_hub_id} download...')
 
         bind = f'{WORKDIR}/mount:/mount'
@@ -197,17 +211,25 @@ class HuggingFaceCLI:
             f'{CLI_SIF_PATH}'
         )
         process = Popen(cmd, shell=True)
-        cli_state.wait_process(process)
+        exit_status = cli_state.wait(process)
 
         logger.info(f'Downloaded {model_hub_id}')
+
+        return exit_status
 
 
 class ServerInstance:
     @staticmethod
-    def start(server_state: ProcessState, mount_path: Path):
+    def start(
+        server_state: ProcessHandler, mount_path: Path, data_path: Path
+    ) -> ProcessExitStatus:
         logger.info(f'Starting {TEI_SERVER_INSTANCE_NAME}...')
 
-        bind = f'{mount_path}:/model'
+        bindings = [
+            f'{mount_path}:/model',
+            f'{data_path}:/data',
+        ]
+        bind = ','.join(bindings)
         cmd = (
             'apptainer instance start '
             '--nv '
@@ -216,7 +238,7 @@ class ServerInstance:
             f'{TEI_SERVER_INSTANCE_NAME}'
         )
         process = Popen(cmd, shell=True)
-        server_state.wait_process(process)
+        exit_status = server_state.wait(process)
 
         POLL_INTERVAL = 5
         parsed_url = urlparse(TEI_BASE_URL)
@@ -224,9 +246,13 @@ class ServerInstance:
         if not parsed_url.port:
             raise ValueError('TEI_BASE_URL does not include a port')
 
-        logger.info(f'Waiting for {TEI_SERVER_INSTANCE_NAME} to become healthy...')
+        logger.info(
+            f'Waiting for {TEI_SERVER_INSTANCE_NAME} (TEI) to become healthy...'
+        )
 
         while True:
+            connection = None
+
             try:
                 connection = HTTPConnection(parsed_url.hostname, parsed_url.port)
                 connection.request('GET', '/health')
@@ -247,17 +273,144 @@ class ServerInstance:
                     f'Health check failed: {e}, retrying in {POLL_INTERVAL}s...'
                 )
 
+            finally:
+                if connection:
+                    connection.close()
+
             sleep(POLL_INTERVAL)
+
+        parsed_url = urlparse(PROMETHEUS_BASE_URL)
+
+        if not parsed_url.port:
+            raise ValueError('PROMETHEUS_BASE_URL does not include a port')
+
+        logger.info(
+            f'Waiting for {TEI_SERVER_INSTANCE_NAME} (Prometheus) to become healthy...'
+        )
+
+        while True:
+            connection = None
+
+            try:
+                connection = HTTPConnection(parsed_url.hostname, parsed_url.port)
+                connection.request('GET', '/-/ready')
+                response = connection.getresponse()
+
+                if response.status == 200:
+                    logger.info(f'{TEI_SERVER_INSTANCE_NAME} (Prometheus) is healthy')
+                    break
+
+                else:
+                    logger.info(
+                        f'Health check returned status {response.status}, '
+                        f'retrying in {POLL_INTERVAL}s...'
+                    )
+
+            except Exception as e:
+                logger.info(
+                    f'Health check failed: {e}, retrying in {POLL_INTERVAL}s...'
+                )
+
+            finally:
+                if connection:
+                    connection.close()
+
+            sleep(POLL_INTERVAL)
+
+        return exit_status
 
     @staticmethod
     def stop():
+        # take a snapshot
+        parsed_url = urlparse(PROMETHEUS_BASE_URL)
+
+        if not parsed_url.port:
+            raise ValueError('PROMETHEUS_BASE_URL does not include a port')
+
+        connection = None
+
+        try:
+            connection = HTTPConnection(parsed_url.hostname, parsed_url.port)
+            connection.request('POST', '/api/v1/admin/tsdb/snapshot')
+            response = connection.getresponse()
+
+            if response.status == 200:
+                body = response.read()
+                snapshot = json.loads(body)
+                logger.info(f'Prometheus snapshot: {snapshot}')
+
+                with open(f'snapshot_{PBS_JOB_ID}.json', 'w') as file:
+                    json.dump(snapshot, file)
+
+            else:
+                logger.warning(f'Snapshot returned status {response.status}')
+                logger.warning(f'Snapshot returned: {response.read().decode()}')
+
+        except Exception as e:
+            logger.error(f'Snapshot failed: {e}')
+
+        finally:
+            if connection:
+                connection.close()
+
+        # check targets endpoint
+        connection = None
+
+        try:
+            connection = HTTPConnection(parsed_url.hostname, parsed_url.port)
+            connection.request('GET', '/api/v1/targets')
+            response = connection.getresponse()
+
+            if response.status == 200:
+                logger.info(f'Targets returned status {response.status}')
+
+            else:
+                logger.warning(f'Targets returned status {response.status}')
+                logger.warning(f'Targets returned: {response.read().decode()}')
+
+        except Exception as e:
+            logger.error(f'Targets failed: {e}')
+
+        finally:
+            if connection:
+                connection.close()
+
+        # check metrics endpoint
+        parsed_url = urlparse(TEI_BASE_URL)
+
+        if not parsed_url.port:
+            raise ValueError('TEI_BASE_URL does not include a port')
+
+        connection = None
+
+        try:
+            connection = HTTPConnection(parsed_url.hostname, parsed_url.port)
+            connection.request('GET', '/metrics')
+            response = connection.getresponse()
+
+            if response.status == 200:
+                logger.info(f'Metrics returned status {response.status}')
+
+            else:
+                logger.warning(f'Metrics returned status {response.status}')
+                logger.warning(f'Metrics returned: {response.read().decode()}')
+
+        except Exception as e:
+            logger.error(f'Metrics failed: {e}')
+
+        finally:
+            if connection:
+                connection.close()
+
         cmd = f'apptainer instance stop {TEI_SERVER_INSTANCE_NAME}'
         subprocess.run(cmd, check=True, capture_output=False, shell=True)
+
+        logger.info(f'{TEI_SERVER_INSTANCE_NAME} stopped')
 
 
 class Client:
     @staticmethod
-    def run(client_state: ProcessState, batch_request_id: UUID):
+    def run(client_state: ProcessHandler, batch_request_id: UUID) -> ProcessExitStatus:
         logger.info('Starting client...')
 
         cmd = (
@@ -268,7 +421,11 @@ class Client:
             f'{CLIENT_SIF_PATH}'
         )
         process = Popen(cmd, shell=True)
-        client_state.wait_process(process)
+        exit_status = client_state.wait(process)
+
+        logger.info('Client finished')
+
+        return exit_status
 
 
 class BatchJobReaderThread(Thread):
@@ -332,28 +489,25 @@ class BatchJobProcessorThread(Thread):
     def __init__(
         self,
         batch_job_queue: PriorityQueue[tuple[int, BatchJob]],
-        previous_batch_job: BatchJob | None,
         status_tracker: BatchJobStatusTracker,
         status_tracker_resource: BatchJobStatusTrackerResource,
         inactive_stop_event: Event,
         wall_time_stop_event: Event,
         processor_thread_finished_event: Event,
-        cli_state: ProcessState,
-        client_state: ProcessState,
-        server_state: ProcessState,
     ):
         super().__init__(name=self.__class__.__name__)
 
         self._batch_job_queue = batch_job_queue
-        self._previous_batch_job = previous_batch_job
         self._status_tracker = status_tracker
         self._status_tracker_resource = status_tracker_resource
         self._inactive_stop_event = inactive_stop_event
         self._wall_time_stop_event = wall_time_stop_event
         self._processor_thread_finished_event = processor_thread_finished_event
-        self._cli_state = cli_state
-        self._client_state = client_state
-        self._server_state = server_state
+
+        self._previous_batch_job: BatchJob | None = None
+        self._cli_handler = ProcessHandler(wall_time_stop_event)
+        self._client_handler = ProcessHandler(wall_time_stop_event)
+        self._server_handler = ProcessHandler(wall_time_stop_event)
 
     def run(self):
         logger.info(f'{self.__class__.__name__} started')
@@ -393,25 +547,46 @@ class BatchJobProcessorThread(Thread):
 
             # download model if it's not downloaded already
             mount_path = WORKDIR / 'mount' / batch_job.model_hub_id
+            data_path = WORKDIR / 'data'
 
             if not mount_path.exists():
                 mount_path.mkdir(parents=True)
-                HuggingFaceCLI.download_model(self._cli_state, batch_job.model_hub_id)
+                HuggingFaceCLI.download_model(self._cli_handler, batch_job.model_hub_id)
 
-            # start server instance
+                if self._wall_time_stop_event.is_set():
+                    break
+
             if not self._previous_batch_job:
-                ServerInstance.start(self._server_state, mount_path)
-                is_server_instance_running = True
+                # start server instance
+                server_instance_exit_status = ServerInstance.start(
+                    self._server_handler, mount_path, data_path
+                )
 
-            # restart server instance with another model
+                if server_instance_exit_status == ProcessExitStatus.COMPLETED:
+                    is_server_instance_running = True
+
+                if self._wall_time_stop_event.is_set():
+                    break
+
+            # restart instances with another model
             elif self._previous_batch_job.model_hub_id != batch_job.model_hub_id:
                 ServerInstance.stop()
-                ServerInstance.start(mount_path)
-                is_server_instance_running = True
+                server_instance_exit_status = ServerInstance.start(
+                    self._server_handler, mount_path, data_path
+                )
+
+                if server_instance_exit_status == ProcessExitStatus.COMPLETED:
+                    is_server_instance_running = True
+
+                if self._wall_time_stop_event.is_set():
+                    break
 
             # run client
-            Client.run(self._client_state, batch_job.batch_request_id)
+            Client.run(self._client_handler, batch_job.batch_request_id)
             self._previous_batch_job = batch_job
+
+            if self._wall_time_stop_event.is_set():
+                break
 
             # critical section
             self._status_tracker_resource.acquire()
@@ -436,9 +611,6 @@ class WallTimeTrackerThread(Thread):
         wall_time_stop_event: Event,
         reader_thread_finished_event: Event,
         processor_thread_finished_event: Event,
-        cli_state: ProcessState,
-        client_state: ProcessState,
-        server_state: ProcessState,
     ):
         super().__init__(name=self.__class__.__name__)
 
@@ -448,9 +620,6 @@ class WallTimeTrackerThread(Thread):
         self._wall_time_stop_event = wall_time_stop_event
         self._reader_thread_finished_event = reader_thread_finished_event
         self._processor_thread_finished_event = processor_thread_finished_event
-        self._cli_state = cli_state
-        self._client_state = client_state
-        self._server_state = server_state
 
     def run(self):
         logger.info(f'{self.__class__.__name__} started')
@@ -487,10 +656,6 @@ class WallTimeTrackerThread(Thread):
             if wall_time_left < WALL_TIME_THRESHOLD:
                 self._wall_time_stop_event.set()
 
-                # stop long running processes
-                for state in (self._cli_state, self._client_state, self._server_state):
-                    state.stop_process()
-
                 # wait for other threads to stop
                 self._reader_thread_finished_event.wait()
                 self._processor_thread_finished_event.wait()
@@ -512,18 +677,14 @@ class WallTimeTrackerThread(Thread):
 
 
 def main():
-    # initialization
+    # multi-threaded variables
     batch_job_queue: Queue[BatchJob] = Queue()
-    previous_batch_job: BatchJob | None = None
     status_tracker = BatchJobStatusTracker()
     status_tracker_resource = BatchJobStatusTrackerResource()
     inactive_stop_event = Event()
     wall_time_stop_event = Event()
     reader_thread_finished_event = Event()
     processor_thread_finished_event = Event()
-    cli_state = ProcessState()
-    client_state = ProcessState()
-    server_state = ProcessState()
 
     # create status file
     with STATUS_TRACKER_PATH.open('w') as file:
@@ -542,15 +703,11 @@ def main():
     )
     batch_job_processor_thread = BatchJobProcessorThread(
         batch_job_queue,
-        previous_batch_job,
         status_tracker,
         status_tracker_resource,
         inactive_stop_event,
         wall_time_stop_event,
         processor_thread_finished_event,
-        cli_state,
-        client_state,
-        server_state,
     )
     wall_time_tracker_thread = WallTimeTrackerThread(
         status_tracker,
@@ -559,9 +716,6 @@ def main():
         wall_time_stop_event,
         reader_thread_finished_event,
         processor_thread_finished_event,
-        cli_state,
-        client_state,
-        server_state,
     )
 
     batch_job_reader_thread.start()

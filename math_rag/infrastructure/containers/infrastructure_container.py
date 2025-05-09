@@ -214,7 +214,7 @@ class InfrastructureContainer(DeclarativeContainer):
         pbs_pro_client=pbs_pro_client,
         sftp_client=sftp_client,
         apptainer_client=apptainer_client,
-        tgi_settings_loader_service=tei_settings_loader_service,
+        tei_settings_loader_service=tei_settings_loader_service,
     )
 
     # TGI

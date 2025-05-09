@@ -12,5 +12,5 @@ class PrometheusSnapshotResponse(BaseModel):
     error: str | None = None
 
     class Config:
-        allow_population_by_field_name = True
+        validate_by_name = True
         populate_by_name = True

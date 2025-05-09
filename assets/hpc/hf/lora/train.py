@@ -6,6 +6,7 @@ import huggingface_hub
 import wandb
 
 from datasets import load_dataset
+from datasets.download import DownloadConfig
 from decouple import config
 from peft import LoraConfig, get_peft_model, prepare_model_for_kbit_training
 from transformers import (
@@ -19,6 +20,7 @@ from transformers import (
     TrainerState,
     TrainingArguments,
 )
+from transformers.configuration_utils import PretrainedConfig
 from trl import SFTConfig, SFTTrainer
 
 from .llama import init_llama_language_model, init_llama_tokenizer
@@ -84,6 +86,65 @@ def format_prompt(tokenizer: PreTrainedTokenizerBase, example: dict):
 
 
 def run():
+    pretrained_config = PretrainedConfig(
+        name_or_path=...,
+        output_hidden_states=...,
+        output_attentions=...,
+        return_dict=...,
+        is_encoder_decoder=...,
+        is_decoder=...,
+        cross_attention_hidden_size=...,
+        add_cross_attention=...,
+        tie_encoder_decoder=...,
+        prune_heads=...,
+        chunk_size_feed_forward=...,
+        # Parameters for sequence generation
+        max_length=...,
+        min_length=...,
+        do_sample=...,
+        early_stopping=...,
+        num_beams=...,
+        num_beam_groups=...,
+        diversity_penalty=...,
+        temperature=...,
+        top_k=...,
+        top_p=...,
+        typical_p=...,
+        repetition_penalty=...,
+        length_penalty=...,
+        no_repeat_ngram_size=...,
+        encoder_no_repeat_ngram_size=...,
+        bad_words_ids=...,
+        num_return_sequences=...,
+        output_scores=...,
+        return_dict_in_generate=...,
+        forced_bos_token_id=...,
+        forced_eos_token_id=...,
+        remove_invalid_values=...,
+        # Parameters for fine-tuning tasks
+        architectures=...,
+        finetuning_task=...,
+        id2label=...,
+        label2id=...,
+        num_labels=...,
+        task_specific_params=...,
+        problem_type=...,
+        # Parameters linked to the tokenizer
+        tokenizer_class=...,
+        prefix=...,
+        bos_token_id=...,
+        pad_token_id=...,
+        eos_token_id=...,
+        decoder_start_token_id=...,
+        sep_token_id=...,
+        # PyTorch specific parameters
+        torchscript=...,
+        tie_word_embeddings=...,
+        torch_dtype=...,
+        # TensorFlow specific parameters
+        use_bfloat16=...,
+        tf_legacy_loss=...,
+    )
     # https://huggingface.co/docs/transformers/en/model_doc/auto#transformers.AutoTokenizer
     tokenizer = AutoTokenizer.from_pretrained(
         pretrained_model_name_or_path=...,
@@ -101,6 +162,26 @@ def run():
     )
     tokenizer = cast(PreTrainedTokenizerBase, tokenizer)
     init_llama_tokenizer(tokenizer)
+
+    download_config = DownloadConfig(
+        cache_dir=...,
+        force_download=...,
+        resume_download=...,
+        local_files_only=...,
+        proxies=...,
+        user_agent=...,
+        extract_compressed_file=...,
+        force_extract=...,
+        delete_extracted=...,
+        extract_on_the_fly=...,
+        use_etag=...,
+        num_proc=...,
+        max_retries=...,
+        token=...,
+        storage_options=...,
+        download_desc=...,
+        disable_tqdm=...,
+    )
 
     # TODO hardcode everything except name/path
     # https://huggingface.co/docs/datasets/v3.5.1/en/package_reference/loading_methods#datasets.load_dataset
