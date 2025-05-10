@@ -27,7 +27,7 @@ services:
       MINIO_ROOT_PASSWORD: password
     volumes:
       - minio_data:/data  # causes deadlock errors when using put_object if mapped to local
-    command: server /data
+    command: ["server", "--console-address", ":9001", "/data"]
 
   mongo:
     image: mongo:latest
