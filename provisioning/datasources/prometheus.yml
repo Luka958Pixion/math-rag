@@ -5,10 +5,10 @@ datasources:
     type: prometheus
     access: proxy
     url: http://host.docker.internal:9090
-    isDefault: true
+    isDefault: false
 
   - name: Prometheus Text Generation Inference
     type: prometheus
     access: proxy
     url: http://host.docker.internal:9095
-    isDefault: true
+    isDefault: false

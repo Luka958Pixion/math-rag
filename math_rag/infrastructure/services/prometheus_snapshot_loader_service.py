@@ -65,9 +65,11 @@ class PrometheusSnapshotLoaderService:
 
         remote_path = remote_root_path / 'data' / 'snapshots' / snapshot_name
         local_path = (
-            LOCAL_ROOT_PATH / '.tmp' / 'prometheus' / 'snapshots' / 'tei'
-            if prometheus_container_name.endswith('tei')
-            else 'tgi'
+            LOCAL_ROOT_PATH
+            / '.tmp'
+            / 'prometheus'
+            / 'snapshots'
+            / ('tei' if prometheus_container_name.endswith('tei') else 'tgi')
         )
         archive_remote_path = remote_root_path / f'snapshot_{snapshot_name}.tar'
         archive_local_path = (
