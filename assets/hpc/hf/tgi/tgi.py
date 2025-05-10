@@ -44,7 +44,7 @@ STATUS_TRACKER_TMP_PATH = STATUS_TRACKER_PATH.with_suffix('.tmp')
 BATCH_JOB_PATH_PATTERN = f'batch_job_{PBS_JOB_ID}_*.json'
 
 # thresholds
-INACTIVE_THRESHOLD = timedelta(minutes=2)  # TODO was 15
+INACTIVE_THRESHOLD = timedelta(minutes=15)
 WALL_TIME_THRESHOLD = timedelta(minutes=5)
 
 basicConfig(

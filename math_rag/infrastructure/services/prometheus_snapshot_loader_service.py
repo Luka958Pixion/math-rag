@@ -15,8 +15,8 @@ from math_rag.infrastructure.utils import FileReaderUtil, TarFileExtractorUtil
 
 PBS_JOB_NAME = 'tgi'
 LOCAL_ROOT_PATH = Path(__file__).parents[3]
-REMOTE_ROOT_PATH = Path('tgi_default_root')
-PROMETHEUS_CONTAINER_NAME = 'prometheus'
+REMOTE_ROOT_PATHS = [Path('tei_default_root'), Path('tgi_default_root')]
+PROMETHEUS_CONTAINER_NAMES = ['prometheus-tei', 'prometheus-tgi']
 
 
 logger = getLogger(__name__)
@@ -33,9 +33,9 @@ class PrometheusSnapshotLoaderService:
         self.pbs_pro_client = pbs_pro_client
         self.sftp_client = sftp_client
 
-    async def load(self):
+    async def _load(self, remote_root_path: Path, prometheus_container_name: str):
         # try to get a snapshot json file
-        json_remote_path_pattern = REMOTE_ROOT_PATH / 'snapshot_*.json'
+        json_remote_path_pattern = remote_root_path / 'snapshot_*.json'
         json_remote_path = await self.file_system_client.find(json_remote_path_pattern)
 
         if not json_remote_path:
@@ -63,9 +63,13 @@ class PrometheusSnapshotLoaderService:
         # get an actual snapshot
         snapshot_name = snapshot_response.data.name
 
-        remote_path = REMOTE_ROOT_PATH / 'data' / 'snapshots' / snapshot_name
-        local_path = LOCAL_ROOT_PATH / '.tmp' / 'prometheus' / 'snapshots'
-        archive_remote_path = REMOTE_ROOT_PATH / f'snapshot_{snapshot_name}.tar'
+        remote_path = remote_root_path / 'data' / 'snapshots' / snapshot_name
+        local_path = (
+            LOCAL_ROOT_PATH / '.tmp' / 'prometheus' / 'snapshots' / 'tei'
+            if prometheus_container_name.endswith('tei')
+            else 'tgi'
+        )
+        archive_remote_path = remote_root_path / f'snapshot_{snapshot_name}.tar'
         archive_local_path = (
             LOCAL_ROOT_PATH
             / '.tmp'
@@ -87,5 +91,11 @@ class PrometheusSnapshotLoaderService:
 
         # restart prometheus
         client = docker.from_env()
-        container = client.containers.get(PROMETHEUS_CONTAINER_NAME)
+        container = client.containers.get(prometheus_container_name)
         container.restart()
+
+    async def load(self):
+        for remote_root_path, prometheus_container_name in zip(
+            REMOTE_ROOT_PATHS, PROMETHEUS_CONTAINER_NAMES
+        ):
+            await self._load(remote_root_path, prometheus_container_name)

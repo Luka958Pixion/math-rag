@@ -71,22 +71,33 @@ services:
     volumes:
       - qdrant_storage:/qdrant/storage
 
-  prometheus:
+  prometheus-tei:
     image: prom/prometheus:latest
-    container_name: prometheus
+    container_name: prometheus-tei
     command:
       - '--config.file=/dev/null'
       - '--storage.tsdb.path=/prometheus'
     volumes:
-      - ./.tmp/prometheus/snapshots:/prometheus
+      - ./.tmp/prometheus/snapshots/tei:/prometheus
     ports:
       - 9090:9090
+
+  prometheus-tgi:
+    image: prom/prometheus:latest
+    container_name: prometheus-tgi
+    command:
+      - '--config.file=/dev/null'
+      - '--storage.tsdb.path=/prometheus'
+    volumes:
+      - ./.tmp/prometheus/snapshots/tgi:/prometheus
+    ports:
+      - 9095:9090
 
   grafana:
     image: grafana/grafana:latest
     container_name: grafana
     ports:
-      - "3000:3000"
+      - 3000:3000
     volumes:
       - grafana-data:/var/lib/grafana
       - ./provisioning/datasources:/etc/grafana/provisioning/datasources

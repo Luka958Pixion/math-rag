@@ -52,10 +52,14 @@ def on_backoff_handler(details: dict):
     on_backoff=on_backoff_handler,
 )
 async def safe_feature_extraction(client: AsyncInferenceClient, request: dict) -> dict:
+    if TEI_BASE_URL:
+        model = request['request'].pop('model')
+
     ndarray_output = await client.feature_extraction(**request['request'])
+
     if ndarray_output.ndim > 1:
         logger.warning(
-            f'Embedding model {MODEL_HUB_ID} with output dimensionality '
+            f'Embedding model {model or MODEL_HUB_ID} with output dimensionality '
             f'{ndarray_output.ndim} may behave unexpectedly'
         )
         ndarray_output = ndarray_output.flatten()
@@ -218,7 +222,6 @@ def main():
         base_url=TEI_BASE_URL,
         api_key=TEI_API_KEY,
         model=MODEL_HUB_ID,
-        provider='hf-inference',
         timeout=None,
     )
 

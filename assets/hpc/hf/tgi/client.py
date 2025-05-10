@@ -52,6 +52,9 @@ def on_backoff_handler(details: dict):
     on_backoff=on_backoff_handler,
 )
 async def safe_chat_completion(client: AsyncInferenceClient, request: dict) -> dict:
+    if TGI_BASE_URL:
+        request['request'].pop('model')
+
     output = await client.chat_completion(**request['request'])
     response = {'request_id': request['request_id'], 'response': output, 'error': None}
 
@@ -206,7 +209,6 @@ def main():
         base_url=TGI_BASE_URL,
         api_key=TGI_API_KEY,
         model=MODEL_HUB_ID,
-        provider='hf-inference',
         timeout=None,
     )
 

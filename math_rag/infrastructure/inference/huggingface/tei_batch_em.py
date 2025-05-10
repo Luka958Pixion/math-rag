@@ -142,8 +142,8 @@ class TEIBatchEM(PartialBatchEM):  # TODO update
 
         build_local_paths_dict: dict[Path, Path | None] = {
             cli_def_path: None,
-            client_def_path: None,
-            server_def_path: requirements_txt_path,
+            client_def_path: requirements_txt_path,
+            server_def_path: None,
         }
 
         # runtime paths
@@ -172,11 +172,12 @@ class TEIBatchEM(PartialBatchEM):  # TODO update
 
         for def_local_path, additional_local_path in build_local_paths_dict.items():
             is_build_required = False
+            is_build_required_additional = False
 
             # upload additional file
             if additional_local_path:
                 additional_remote_path = REMOTE_ROOT_PATH / additional_local_path.name
-                is_build_required = await self._upload_file(
+                is_build_required_additional = await self._upload_file(
                     additional_local_path, additional_remote_path
                 )
 
@@ -185,7 +186,7 @@ class TEIBatchEM(PartialBatchEM):  # TODO update
             is_build_required = await self._upload_file(def_local_path, def_remote_path)
 
             # (re)build and (re)upload singularity image file
-            if not is_build_required:
+            if not is_build_required and not is_build_required_additional:
                 continue
 
             sif_stream = await self.apptainer_client.build(

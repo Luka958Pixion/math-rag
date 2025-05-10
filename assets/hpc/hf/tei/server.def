@@ -30,7 +30,7 @@ EOF
         > /tmp/tei_output.log \
         2> /tmp/tei_error.log &
 
-    TGI_PID=$!
+    TEI_PID=$!
 
     /opt/prometheus/prometheus \
         --config.file=/tmp/prometheus.yml \
@@ -43,7 +43,7 @@ EOF
 
     PROMETHEUS_PID=$!
 
-    wait $TGI_PID $PROMETHEUS_PID
+    wait $TEI_PID $PROMETHEUS_PID
 
 %labels
     Author luka.panic@pixion.co

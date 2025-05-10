@@ -1,8 +1,14 @@
 apiVersion: 1
 
 datasources:
-  - name: Prometheus
+  - name: Prometheus Text Embeddings Inference
     type: prometheus
     access: proxy
     url: http://host.docker.internal:9090
+    isDefault: true
+
+  - name: Prometheus Text Generation Inference
+    type: prometheus
+    access: proxy
+    url: http://host.docker.internal:9095
     isDefault: true
