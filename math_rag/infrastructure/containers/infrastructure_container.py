@@ -88,7 +88,7 @@ class InfrastructureContainer(DeclarativeContainer):
 
     # Mongo
     config.mongo.host.from_env('MONGO_HOST')
-    config.mongo.deployment.from_env('DEPLOYMENT')
+    config.mongo.deployment.from_env('MONGO_DEPLOYMENT')
 
     mongo_client = Singleton(
         AsyncMongoClient,

@@ -7,4 +7,33 @@
 - `ssh-keygen -t ed25519 -f .ssh/id_ed25519 -C "math-rag-key"`
 
 ## Environment
-Create `.env` file with the keys defined in `.env.example`.
+Create `.env` file with the following variables:
+- `PORT=7100`
+- `JUPYTER_PORT=7035`
+- `KATEX_PORT=7025`
+- `APPTAINER_PORT=7015`
+- `MINIO_ENDPOINT=localhost:9000`
+- `MINIO_ACCESS_KEY=admin`
+- `MINIO_SECRET_KEY=password`
+- `MONGO_HOST=mongodb://root:password@localhost:27017/`
+- `MONGO_DEPLOYMENT=develop`
+- `NEO4J_URI=neo4j://localhost:7687`
+- `NEO4J_USERNAME=neo4j`
+- `NEO4J_PASSWORD=password`
+- `QDRANT_URL=http://localhost:6333`
+- `HPC_USER`
+- `HPC_HOST`
+- `HPC_PASSPHRASE`
+- `OPENAI_BASE_URL=https://api.openai.com/v1`
+- `OPENAI_API_KEY`
+
+Create `.env.hpc.hf.lora` file with the following variables:
+- `HF_TOKEN`
+- `WANDB_API_KEY`
+- `WANDB_PROJECT=math-rag`
+
+Create `.env.hpc.hf.tei` file with the following variables:
+- `HF_TOKEN`
+
+Create `.env.hpc.hf.tgi` file with the following variables:
+- `HF_TOKEN`
