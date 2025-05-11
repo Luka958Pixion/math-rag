@@ -27,11 +27,14 @@ class MathExpressionLabelerAssistant(
     def encode_to_request(
         self, input: MathExpressionLabelerAssistantInput
     ) -> LLMRequest[MathExpressionLabelerAssistantOutput]:
-        classes = '\n'.join(
-            [f'{i + 1}. {name}' for i, name in enumerate(MathExpressionLabelEnum)]
+        class_names = '\n'.join(
+            [
+                f'{i + 1}. {class_name}'
+                for i, class_name in enumerate(MathExpressionLabelEnum)
+            ]
         )
         prompt = MATH_EXPRESSION_LABELER_PROMPT.format(
-            latex=input.latex, classes=classes
+            latex=input.latex, classes=class_names
         )
         request = LLMRequest(
             conversation=LLMConversation(
