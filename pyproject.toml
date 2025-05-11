@@ -29,6 +29,7 @@ aiofiles = "^24.1.0"
 types-aiofiles = "^24.1.0.20250326"
 python-decouple-typed = "^3.11.0"
 docker = "^7.1.0"
+datasets = "3.5.0"
 
 
 [tool.poetry.group.dev.dependencies]
