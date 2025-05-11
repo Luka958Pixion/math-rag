@@ -38,7 +38,7 @@ from math_rag.infrastructure.inference.openai import (
 from math_rag.infrastructure.repositories.documents import (
     EMFailedRequestRepository,
     LLMFailedRequestRepository,
-    MathExpressionClassificationRepository,
+    MathExpressionLabelRepository,
     MathExpressionRepository,
 )
 from math_rag.infrastructure.repositories.files import GoogleFileRepository
@@ -46,7 +46,7 @@ from math_rag.infrastructure.repositories.objects import MathArticleRepository
 from math_rag.infrastructure.seeders.documents import (
     EMFailedRequestSeeder,
     LLMFailedRequestSeeder,
-    MathExpressionClassificationSeeder,
+    MathExpressionLabelSeeder,
     MathExpressionSeeder,
 )
 from math_rag.infrastructure.seeders.objects import MathArticleSeeder
@@ -107,10 +107,10 @@ class InfrastructureContainer(DeclarativeContainer):
     llm_failed_request_repository = Factory(LLMFailedRequestRepository, **mongo_kwargs)
 
     math_expression_classification_seeder = Factory(
-        MathExpressionClassificationSeeder, **mongo_kwargs
+        MathExpressionLabelSeeder, **mongo_kwargs
     )
     math_expression_classification_repository = Factory(
-        MathExpressionClassificationRepository, **mongo_kwargs
+        MathExpressionLabelRepository, **mongo_kwargs
     )
     em_failed_request_seeder = Factory(EMFailedRequestSeeder, **mongo_kwargs)
     llm_failed_request_seeder = Factory(LLMFailedRequestSeeder, **mongo_kwargs)

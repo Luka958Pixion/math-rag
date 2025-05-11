@@ -1,25 +1,25 @@
 from pymongo import AsyncMongoClient
 
 from math_rag.application.base.repositories.documents import (
-    BaseMathExpressionClassificationRepository,
+    BaseMathExpressionLabelRepository,
 )
-from math_rag.core.models import MathExpressionClassification
+from math_rag.core.models import MathExpressionLabel
 from math_rag.infrastructure.mappings.documents import (
-    MathExpressionClassificationMapping,
+    MathExpressionLabelMapping,
 )
 from math_rag.infrastructure.models.documents import (
-    MathExpressionClassificationDocument,
+    MathExpressionLabelDocument,
 )
 
 from .document_repository import DocumentRepository
 
 
-class MathExpressionClassificationRepository(
-    BaseMathExpressionClassificationRepository,
+class MathExpressionLabelRepository(
+    BaseMathExpressionLabelRepository,
     DocumentRepository[
-        MathExpressionClassification,
-        MathExpressionClassificationDocument,
-        MathExpressionClassificationMapping,
+        MathExpressionLabel,
+        MathExpressionLabelDocument,
+        MathExpressionLabelMapping,
     ],
 ):
     def __init__(self, client: AsyncMongoClient, deployment: str):
