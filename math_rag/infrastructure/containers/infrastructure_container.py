@@ -261,5 +261,4 @@ class InfrastructureContainer(DeclarativeContainer):
         MathArticleParserService,
         latex_parser_service=latex_parser_service,
         latex_visitor_service=latex_visitor_service,
-        math_article_repository=math_article_repository,
     )
