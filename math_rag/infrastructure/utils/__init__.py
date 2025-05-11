@@ -7,7 +7,6 @@ from .file_stream_writer_util import FileStreamWriterUtil
 from .file_streamer_util import FileStreamerUtil
 from .file_writer_util import FileWriterUtil
 from .format_parser_util import FormatParserUtil
-from .gzip_extractor_util import GzipExtractorUtil
 from .tar_file_extractor_util import TarFileExtractorUtil
 from .token_counter_util import TokenCounterUtil
 from .uuid_encoder_util import UUIDEncoderUtil
@@ -19,7 +18,6 @@ __all__ = [
     'FileHasherUtil',
     'FileReaderUtil',
     'FileWriterUtil',
-    'GzipExtractorUtil',
     'TarFileExtractorUtil',
     'UUIDEncoderUtil',
     'TokenCounterUtil',

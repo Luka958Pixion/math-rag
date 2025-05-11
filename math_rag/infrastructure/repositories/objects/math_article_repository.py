@@ -2,13 +2,13 @@ from io import BytesIO
 
 from minio import Minio
 
-from math_rag.application.base.repositories.objects import BaseArticleRepository
+from math_rag.application.base.repositories.objects import BaseMathArticleRepository
 from math_rag.core.models import MathArticle
 from math_rag.infrastructure.mappings.objects import MathArticleMapping
 from math_rag.infrastructure.models.objects import MathArticleObject
 
 
-class MathArticleRepository(BaseArticleRepository):
+class MathArticleRepository(BaseMathArticleRepository):
     def __init__(self, client: Minio):
         self.client = client
         self.bucket_name = MathArticleObject.__name__.lower()

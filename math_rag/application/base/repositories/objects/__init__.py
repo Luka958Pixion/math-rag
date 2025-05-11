@@ -1,4 +1,4 @@
-from .base_article_repository import BaseArticleRepository
+from .base_math_article_repository import BaseMathArticleRepository
 
 
-__all__ = ['BaseArticleRepository']
+__all__ = ['BaseMathArticleRepository']
