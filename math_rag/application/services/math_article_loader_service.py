@@ -1,7 +1,7 @@
 from math_rag.application.base.clients import BaseArxivClient
 from math_rag.application.base.repositories.objects import BaseMathArticleRepository
 from math_rag.application.base.services import BaseMathArticleLoaderService
-from math_rag.application.enums.arxiv import MathCategory
+from math_rag.application.enums.arxiv import BaseArxivCategory
 from math_rag.core.models import MathArticle
 from math_rag.shared.utils import GzipExtractorUtil
 
@@ -15,11 +15,15 @@ class MathArticleLoaderService(BaseMathArticleLoaderService):
         self.arxiv_client = arxiv_client
         self.math_article_repository = math_article_repository
 
-    async def load(self):
+    async def load(self, category: BaseArxivCategory, limit: int):
+        if limit < len(BaseArxivCategory):
+            raise ValueError()
+
+        sublimit = int(limit / len(BaseArxivCategory))
         results = [
             result
-            for category in MathCategory
-            for result in self.arxiv_client.search(category, 4)
+            for subcategory in category
+            for result in self.arxiv_client.search(subcategory, sublimit)
         ]
         file_name_to_bytes: dict[str, bytes] = {}
 

@@ -18,6 +18,10 @@ from math_rag.application.assistants import (
     MathExpressionLabelerAssistant,
 )
 from math_rag.application.containers import ApplicationContainer
+from math_rag.application.services import (
+    MathArticleLoaderService,
+    MathArticleParserService,
+)
 from math_rag.infrastructure.clients import (
     ApptainerClient,
     ArxivClient,
@@ -241,8 +245,21 @@ class InfrastructureContainer(DeclarativeContainer):
     # Application
     # -----------
 
-    # KaTeX
+    # Assistants
     katex_corrector_assistant = Factory(KatexCorrectorAssistant, llm=openai_managed_llm)
     math_expression_labeler_assistant = Factory(
         MathExpressionLabelerAssistant, llm=openai_managed_llm
+    )
+
+    # Services
+    math_article_loader_service = Factory(
+        MathArticleLoaderService,
+        arxiv_client=arxiv_client,
+        math_article_repository=math_article_repository,
+    )
+    math_article_parser_service = Factory(
+        MathArticleParserService,
+        latex_parser_service=latex_parser_service,
+        latex_visitor_service=latex_visitor_service,
+        math_article_repository=math_article_repository,
     )
