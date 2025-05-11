@@ -1,1 +1,1 @@
-from .latex_math_node_rich import LatexMathNodeRich
+from .latex_math_rich_node import LatexMathRichNode
