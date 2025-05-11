@@ -1,10 +1,10 @@
-from .kc_prompt import KATEX_CORRECTION_PROMPT
-from .kc_retry_prompt import KATEX_CORRECTION_RETRY_PROMPT
-from .mec_prompt import MATH_EXPRESSION_CLASSIFICATION_PROMPT
+from .katex_corrector_prompt import KATEX_CORRECTOR_PROMPT
+from .katex_corrector_retry_prompt import KATEX_CORRECTOR_RETRY_PROMPT
+from .math_expression_labeler_prompt import MATH_EXPRESSION_LABELER_PROMPT
 
 
 __all__ = [
-    'KATEX_CORRECTION_PROMPT',
-    'KATEX_CORRECTION_RETRY_PROMPT',
-    'MATH_EXPRESSION_CLASSIFICATION_PROMPT',
+    'KATEX_CORRECTOR_PROMPT',
+    'KATEX_CORRECTOR_RETRY_PROMPT',
+    'MATH_EXPRESSION_LABELER_PROMPT',
 ]

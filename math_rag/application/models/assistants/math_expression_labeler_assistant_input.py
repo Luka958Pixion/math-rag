@@ -1,5 +1,5 @@
 from math_rag.application.base.assistants import BaseAssistantInput
 
 
-class MECAssistantInput(BaseAssistantInput):
+class MathExpressionLabelerAssistantInput(BaseAssistantInput):
     latex: str

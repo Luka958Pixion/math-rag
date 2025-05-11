@@ -1,4 +1,4 @@
-MATH_EXPRESSION_CLASSIFICATION_PROMPT = """
+MATH_EXPRESSION_LABELER_PROMPT = """
 You are an expert LaTeX expression classification assistant.
 Given a LaTeX expression, classify it into one of five classes:
 1. equality

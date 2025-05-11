@@ -1,16 +1,18 @@
-from .kc_assistant_input import KCAssistantInput
-from .kc_assistant_output import KCAssistantOutput
-from .kc_retry_assistant_input import KCRetryAssistantInput
-from .kc_retry_assistant_output import KCRetryAssistantOutput
-from .mec_assistant_input import MECAssistantInput
-from .mec_assistant_output import MECAssistantOutput
+from .katex_corrector_assistant_input import KatexCorrectorAssistantInput
+from .katex_corrector_assistant_output import KatexCorrectorAssistantOutput
+from .katex_corrector_retry_assistant_input import KatexCorrectorRetryAssistantInput
+from .katex_corrector_retry_assistant_output import KatexCorrectorRetryAssistantOutput
+from .math_expression_labeler_assistant_input import MathExpressionLabelerAssistantInput
+from .math_expression_labeler_assistant_output import (
+    MathExpressionLabelerAssistantOutput,
+)
 
 
 __all__ = [
-    'KCAssistantInput',
-    'KCAssistantOutput',
-    'KCRetryAssistantInput',
-    'KCRetryAssistantOutput',
-    'MECAssistantInput',
-    'MECAssistantOutput',
+    'KatexCorrectorAssistantInput',
+    'KatexCorrectorAssistantOutput',
+    'KatexCorrectorRetryAssistantInput',
+    'KatexCorrectorRetryAssistantOutput',
+    'MathExpressionLabelerAssistantInput',
+    'MathExpressionLabelerAssistantOutput',
 ]

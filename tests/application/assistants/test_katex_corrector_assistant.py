@@ -1,14 +1,17 @@
 import pytest
 
-from math_rag.application.models.assistants import KCAssistantInput, KCAssistantOutput
+from math_rag.application.models.assistants import (
+    KatexCorrectorAssistantInput,
+    KatexCorrectorAssistantOutput,
+)
 from math_rag.infrastructure.containers import InfrastructureContainer
 
 
 @pytest.mark.asyncio
 async def test_assist(infrastructure_container: InfrastructureContainer):
     # arrange
-    kc_assistant = infrastructure_container.kc_assistant()
-    input = KCAssistantInput(
+    katex_corrector_assistant = infrastructure_container.katex_corrector_assistant()
+    input = KatexCorrectorAssistantInput(
         katex=r'd\omega = \theta \w \omega',
         error=(
             r'KaTeX parse error: Undefined control sequence: '
@@ -17,7 +20,7 @@ async def test_assist(infrastructure_container: InfrastructureContainer):
     )
 
     # act
-    output = await kc_assistant.assist(input)
+    output = await katex_corrector_assistant.assist(input)
 
     # assert
-    type(output) == KCAssistantOutput
+    type(output) == KatexCorrectorAssistantOutput

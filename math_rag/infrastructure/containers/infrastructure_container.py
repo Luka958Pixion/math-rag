@@ -14,8 +14,8 @@ from openai import AsyncOpenAI
 from pymongo import AsyncMongoClient
 
 from math_rag.application.assistants import (
-    KCAssistant,
-    MECAssistant,
+    KatexCorrectorAssistant,
+    MathExpressionLabelerAssistant,
 )
 from math_rag.application.containers import ApplicationContainer
 from math_rag.infrastructure.clients import (
@@ -242,7 +242,7 @@ class InfrastructureContainer(DeclarativeContainer):
     # -----------
 
     # KaTeX
-    kc_assistant = Factory(KCAssistant, llm=openai_managed_llm)
-    math_expression_classification_assistant = Factory(
-        MECAssistant, llm=openai_managed_llm
+    katex_corrector_assistant = Factory(KatexCorrectorAssistant, llm=openai_managed_llm)
+    math_expression_label_assistant = Factory(
+        MathExpressionLabelerAssistant, llm=openai_managed_llm
     )

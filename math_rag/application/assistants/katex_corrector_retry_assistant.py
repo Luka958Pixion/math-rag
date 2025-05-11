@@ -1,7 +1,7 @@
 from math_rag.application.base.inference import BaseManagedLLM
 from math_rag.application.models.assistants import (
-    KCRetryAssistantInput,
-    KCRetryAssistantOutput,
+    KatexCorrectorRetryAssistantInput,
+    KatexCorrectorRetryAssistantOutput,
 )
 from math_rag.application.models.inference import (
     LLMConversation,
@@ -12,24 +12,26 @@ from math_rag.application.models.inference import (
 )
 
 from .partials import PartialBatchAssistant
-from .prompts import KATEX_CORRECTION_PROMPT, KATEX_CORRECTION_RETRY_PROMPT
+from .prompts import KATEX_CORRECTOR_PROMPT, KATEX_CORRECTOR_RETRY_PROMPT
 
 
-class KCRetryAssistant(
-    PartialBatchAssistant[KCRetryAssistantInput, KCRetryAssistantOutput]
+class KatexCorrectorRetryAssistant(
+    PartialBatchAssistant[
+        KatexCorrectorRetryAssistantInput, KatexCorrectorRetryAssistantOutput
+    ]
 ):
     def __init__(self, llm: BaseManagedLLM):
         super().__init__(llm)
 
     def encode_to_request(
-        self, input: KCRetryAssistantInput
-    ) -> LLMRequest[KCRetryAssistantOutput]:
+        self, input: KatexCorrectorRetryAssistantInput
+    ) -> LLMRequest[KatexCorrectorRetryAssistantOutput]:
         initial_input = input.pairs[0][0]
-        initial_prompt = KATEX_CORRECTION_PROMPT.format(
+        initial_prompt = KATEX_CORRECTOR_PROMPT.format(
             katex=initial_input.katex, error=initial_input.error
         )
         prompts = [
-            KATEX_CORRECTION_RETRY_PROMPT.format(katex=input.katex, error=input.error)
+            KATEX_CORRECTOR_RETRY_PROMPT.format(katex=input.katex, error=input.error)
             for input, _ in input.pairs[1:]
         ]
         prompts.insert(0, initial_prompt)
@@ -47,16 +49,16 @@ class KCRetryAssistant(
 
         request = LLMRequest(
             conversation=LLMConversation(messages=messages),
-            params=LLMParams[KCRetryAssistantOutput](
+            params=LLMParams[KatexCorrectorRetryAssistantOutput](
                 model='gpt-4o',
                 temperature=0.0,
-                response_type=KCRetryAssistantOutput.bind(input.id),
+                response_type=KatexCorrectorRetryAssistantOutput.bind(input.id),
             ),
         )
 
         return request
 
     def decode_from_response_list(
-        self, response_list: LLMResponseList[KCRetryAssistantOutput]
-    ) -> KCRetryAssistantOutput:
+        self, response_list: LLMResponseList[KatexCorrectorRetryAssistantOutput]
+    ) -> KatexCorrectorRetryAssistantOutput:
         return response_list.responses[0].content

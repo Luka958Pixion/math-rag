@@ -1,4 +1,4 @@
-KATEX_CORRECTION_PROMPT = """
+KATEX_CORRECTOR_PROMPT = """
 You are an expert KaTeX correction assistant.
 
 Your task is to correct the following KaTeX expression so that it is fully compatible with the KaTeX rendering engine, which has limitations compared to standard LaTeX.
