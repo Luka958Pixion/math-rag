@@ -1,12 +1,12 @@
 from .partial_assistant import PartialAssistant
+from .partial_basic_assistant import PartialBasicAssistant
 from .partial_batch_assistant import PartialBatchAssistant
 from .partial_concurrent_assistant import PartialConcurrentAssistant
-from .partial_unified_assistant import PartialUnifiedAssistant
 
 
 __all__ = [
-    'PartialAssistant',
+    'PartialBasicAssistant',
     'PartialBatchAssistant',
     'PartialConcurrentAssistant',
-    'PartialUnifiedAssistant',
+    'PartialAssistant',
 ]

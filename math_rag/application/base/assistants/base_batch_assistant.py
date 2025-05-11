@@ -6,10 +6,10 @@ from math_rag.application.types.assistants import (
     AssistantOutputType,
 )
 
-from .base_assistant import BaseAssistant
+from .base_basic_assistant import BaseBasicAssistant
 
 
-class BaseBatchAssistant(BaseAssistant[AssistantInputType, AssistantOutputType]):
+class BaseBatchAssistant(BaseBasicAssistant[AssistantInputType, AssistantOutputType]):
     @abstractmethod
     async def batch_assist(
         self, inputs: list[AssistantInputType], response_type: type[AssistantOutputType]

@@ -11,12 +11,12 @@ from math_rag.application.models.inference import (
     LLMResponseList,
 )
 
-from .partials import PartialBatchAssistant
+from .partials import PartialAssistant
 from .prompts import KATEX_CORRECTOR_PROMPT, KATEX_CORRECTOR_RETRY_PROMPT
 
 
 class KatexCorrectorRetryAssistant(
-    PartialBatchAssistant[
+    PartialAssistant[
         KatexCorrectorRetryAssistantInput, KatexCorrectorRetryAssistantOutput
     ]
 ):

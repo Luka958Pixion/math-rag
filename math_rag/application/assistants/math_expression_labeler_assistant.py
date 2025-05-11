@@ -11,12 +11,12 @@ from math_rag.application.models.inference import (
     LLMResponseList,
 )
 
-from .partials import PartialBatchAssistant
+from .partials import PartialAssistant
 from .prompts import MATH_EXPRESSION_LABELER_PROMPT
 
 
 class MathExpressionLabelerAssistant(
-    PartialBatchAssistant[
+    PartialAssistant[
         MathExpressionLabelerAssistantInput, MathExpressionLabelerAssistantOutput
     ]
 ):

@@ -243,6 +243,6 @@ class InfrastructureContainer(DeclarativeContainer):
 
     # KaTeX
     katex_corrector_assistant = Factory(KatexCorrectorAssistant, llm=openai_managed_llm)
-    math_expression_label_assistant = Factory(
+    math_expression_labeler_assistant = Factory(
         MathExpressionLabelerAssistant, llm=openai_managed_llm
     )
