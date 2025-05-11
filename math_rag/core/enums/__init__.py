@@ -1,4 +1,4 @@
-from .math_expression_category import MathExpressionCategory
+from .math_expression_label_enum import MathExpressionLabelEnum
 
 
-__all__ = ['MathExpressionCategory']
+__all__ = ['MathExpressionLabelEnum']

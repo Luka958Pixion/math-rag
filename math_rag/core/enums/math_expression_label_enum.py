@@ -1,7 +1,7 @@
 from enum import Enum
 
 
-class MathExpressionCategory(str, Enum):
+class MathExpressionLabelEnum(str, Enum):
     EQUALITY = 'equality'
     INEQUALITY = 'inequality'
     CONSTANT = 'constant'
