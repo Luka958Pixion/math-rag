@@ -1,5 +1,6 @@
 from importlib import import_module
-from typing import Generic, TypeVar, get_args
+from types import UnionType
+from typing import Annotated, Any, Generic, TypeVar, Union, get_args, get_origin
 
 
 T = TypeVar('T')
@@ -36,3 +37,19 @@ class TypeUtil(Generic[T]):
         type = getattr(module, class_name)
 
         return type
+
+    @staticmethod
+    def extract_optional_type(annotation: type[T] | None) -> type[T]:
+        """
+        If `annotation` is exactly `Type[T] | None`, return the `Type[T]` part,
+        otherwise return the `annotation`.
+        """
+        origin = get_origin(annotation)
+
+        if origin in (Union, UnionType):
+            args = get_args(annotation)
+
+            if len(args) == 2 and any(arg is type(None) for arg in args):
+                return args[0] if args[1] is type(None) else args[1]
+
+        return annotation

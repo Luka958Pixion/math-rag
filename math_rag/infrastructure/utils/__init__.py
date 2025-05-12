@@ -1,5 +1,6 @@
 from .awk_cmd_builder_util import AwkCmdBuilderUtil
 from .bytes_streamer_util import BytesStreamerUtil
+from .dataset_feature_extractor_util import DatasetFeatureExtractorUtil
 from .dataset_splitter_util import DatasetSplitterUtil
 from .file_hasher_util import FileHasherUtil
 from .file_reader_util import FileReaderUtil
@@ -16,6 +17,7 @@ from .uuid_encoder_util import UUIDEncoderUtil
 __all__ = [
     'AwkCmdBuilderUtil',
     'BytesStreamerUtil',
+    'DatasetFeatureExtractorUtil',
     'DatasetSplitterUtil',
     'FileHasherUtil',
     'FileReaderUtil',
