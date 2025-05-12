@@ -244,12 +244,12 @@ class InfrastructureContainer(DeclarativeContainer):
 
     # HuggingFace
     config.hugging_face.token.from_env('HF_TOKEN')
-    config.hugging_face.datasets_url.from_env('HF_DATASETS_URL')
+    config.hugging_face.datasets_base_url.from_env('HF_DATASETS_BASE_URL')
 
     dataset_publisher_service = Factory(
         DatasetPublisherService,
         hugging_face_token=config.hugging_face.token,
-        hugging_face_datasets_url=config.hugging_face.datasets_url,
+        hugging_face_datasets_base_url=config.hugging_face.datasets_base_url,
     )
 
     # -----------

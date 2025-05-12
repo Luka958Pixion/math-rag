@@ -17,10 +17,10 @@ class DatasetPublisherService:
     def __init__(
         self,
         hugging_face_token: str,
-        hugging_face_datasets_url: str,
+        hugging_face_datasets_base_url: str,
     ):
         self.hugging_face_token = hugging_face_token
-        self.hugging_face_datasets_url = hugging_face_datasets_url
+        self.hugging_face_datasets_base_url = hugging_face_datasets_base_url
         self.hugging_face_api = HfApi()
 
     def publish(
@@ -47,7 +47,7 @@ class DatasetPublisherService:
         author = 'Luka Panić'
         title = dataset.__class__.__name__
         year = datetime.now().year
-        url = self.hugging_face_datasets_url
+        url = f'{self.hugging_face_datasets_base_url}/{repo_id}'
 
         citation = '\n'.join(
             [
