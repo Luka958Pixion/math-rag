@@ -4,6 +4,7 @@ from datasets import Dataset, DatasetDict
 
 
 class DatasetSplitterUtil:
+    @staticmethod
     def split(
         dataset: Dataset,
         *,
