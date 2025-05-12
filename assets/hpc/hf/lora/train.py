@@ -62,7 +62,7 @@ class GracefulStopCallback(TrainerCallback):
         return control
 
 
-def format_prompt(tokenizer: PreTrainedTokenizerBase, example: dict):
+def format_prompt(tokenizer: PreTrainedTokenizerBase, example: dict[str, str]):
     # https://huggingface.co/docs/transformers/main/en/internal/tokenization_utils#transformers.PreTrainedTokenizerBase.apply_chat_template
     prompt = tokenizer.apply_chat_template(
         conversation=...,
