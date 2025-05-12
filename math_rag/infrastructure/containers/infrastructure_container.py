@@ -244,13 +244,11 @@ class InfrastructureContainer(DeclarativeContainer):
 
     # HuggingFace
     config.hugging_face.token.from_env('HF_TOKEN')
-    config.hugging_face.repository_id.from_env('HF_REPO_ID')
     config.hugging_face.datasets_url.from_env('HF_DATASETS_URL')
 
     dataset_publisher_service = Factory(
         DatasetPublisherService,
         hugging_face_token=config.hugging_face.token,
-        hugging_face_repository_id=config.hugging_face.repository_id,
         hugging_face_datasets_url=config.hugging_face.datasets_url,
     )
 

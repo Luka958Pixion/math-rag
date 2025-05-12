@@ -2,17 +2,18 @@ import numpy as np
 
 from datasets import Dataset, DatasetDict
 
+from math_rag.application.models.datasets import DatasetSplitSettings
+
 
 class DatasetSplitterUtil:
     @staticmethod
-    def split(
-        dataset: Dataset,
-        *,
-        train_ratio: float,
-        validation_ratio: float,
-        test_ratio: float,
-        seed: int,
-    ) -> DatasetDict:
+    def split(dataset: Dataset, settings: DatasetSplitSettings) -> DatasetDict:
+        train_ratio, validation_ratio, test_ratio, seed = (
+            settings.train_ratio,
+            settings.validation_ratio,
+            settings.test_ratio,
+            settings.seed,
+        )
         total = train_ratio + validation_ratio + test_ratio
 
         if not np.isclose(total, 1.0):
