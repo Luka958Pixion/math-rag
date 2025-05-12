@@ -1,10 +1,9 @@
-from uuid import UUID, uuid4
+from uuid import UUID
 
-from pydantic import BaseModel, Field
+from math_rag.application.base.datasets import BaseSample
 
 
-class MathExpressionSample(BaseModel):
-    id: UUID = Field(default_factory=uuid4)
+class MathExpressionSample(BaseSample):
     math_expression_id: UUID
     math_expression_label_id: UUID
     latex: str

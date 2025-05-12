@@ -11,7 +11,7 @@ class DatasetFeatureExtractorUtil:
     @staticmethod
     def extract(model: type[BaseModel]) -> Features:
         """
-        Convert a Pydantic BaseModel (only primitives + UUID, or Optional[...])
+        Convert a Pydantic BaseModel (only primitives and UUID, or their Optional[...])
         into a Hugging Face Datasets Features mapping.
         """
         TYPE_MAP: dict[type[Any], str] = {

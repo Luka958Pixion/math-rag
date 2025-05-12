@@ -40,10 +40,6 @@ class TypeUtil(Generic[T]):
 
     @staticmethod
     def extract_optional_type(annotation: type[T] | None) -> type[T]:
-        """
-        If `annotation` is exactly `Type[T] | None`, return the `Type[T]` part,
-        otherwise return the `annotation`.
-        """
         origin = get_origin(annotation)
 
         if origin in (Union, UnionType):

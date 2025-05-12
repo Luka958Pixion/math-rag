@@ -1,4 +1,4 @@
-from .math_expression_dataset_mapping import MathExpressionDatasetMapping
+from .dataset_mapping import DatasetMapping
 
 
-__all__ = ['MathExpressionDatasetMapping']
+__all__ = ['DatasetMapping']

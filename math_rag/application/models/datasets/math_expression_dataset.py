@@ -1,7 +1,7 @@
-from pydantic import RootModel
+from math_rag.application.base.datasets import BaseDataset
 
 from .math_expression_sample import MathExpressionSample
 
 
-class MathExpressionDataset(RootModel[list[MathExpressionSample]]):
+class MathExpressionDataset(BaseDataset[MathExpressionSample]):
     pass
