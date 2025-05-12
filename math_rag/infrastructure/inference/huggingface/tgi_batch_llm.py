@@ -152,7 +152,7 @@ class TGIBatchLLM(PartialBatchLLM):
         }
 
         # runtime paths
-        env_path = LOCAL_ROOT_PATH / '.env.hpc.hf.tgi'
+        env_path = LOCAL_ROOT_PATH / '.env.hpc'
         client_py_path = tgi_path / 'client.py'
         tgi_py_path = tgi_path / 'tgi.py'
         tgi_sh_path = tgi_path / 'tgi.sh'

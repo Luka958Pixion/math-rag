@@ -19,7 +19,7 @@ HTTPS_PROXY = 'http://10.150.1.1:3128'
 WALL_TIME_THRESHOLD = timedelta(minutes=30)
 
 # paths
-ENV_PATH = Path('.env.hpc.hf.tgi')
+ENV_PATH = Path('.env.hpc')
 
 
 basicConfig(

@@ -13,7 +13,7 @@ from huggingface_hub import AsyncInferenceClient
 from huggingface_hub.errors import TextGenerationError
 
 
-config = Config(repository=RepositoryEnv('.env.hpc.hf.tei'))
+config = Config(repository=RepositoryEnv('.env.hpc'))
 
 # NOTE: running locally requires TEI_BASE_URL
 # NOTE: running remotely requires TEI_API_KEY and MODEL_HUB_ID

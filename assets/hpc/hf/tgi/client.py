@@ -13,7 +13,7 @@ from huggingface_hub import AsyncInferenceClient
 from huggingface_hub.errors import TextGenerationError
 
 
-config = Config(repository=RepositoryEnv('.env.hpc.hf.tgi'))
+config = Config(repository=RepositoryEnv('.env.hpc'))
 
 # NOTE: running locally requires TGI_BASE_URL
 # NOTE: running remotely requires TGI_API_KEY and MODEL_HUB_ID

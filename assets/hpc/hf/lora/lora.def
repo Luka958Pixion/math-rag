@@ -28,7 +28,7 @@ From: python:3.12
         apptainer build lora.sif lora.def
 
     Environment:
-        - .env.hpc.hf.lora
+        - .env.hpc
 
     Usage:
-        apptainer run --env-file .env.hpc.hf.lora lora.sif
+        apptainer run --env-file .env.hpc lora.sif

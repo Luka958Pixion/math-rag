@@ -147,7 +147,7 @@ class TEIBatchEM(PartialBatchEM):  # TODO update
         }
 
         # runtime paths
-        env_path = LOCAL_ROOT_PATH / '.env.hpc.hf.tei'
+        env_path = LOCAL_ROOT_PATH / '.env.hpc'
         client_py_path = tei_path / 'client.py'
         tei_py_path = tei_path / 'tei.py'
         tei_sh_path = tei_path / 'tei.sh'

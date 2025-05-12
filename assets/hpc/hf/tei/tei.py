@@ -33,7 +33,7 @@ PROMETHEUS_BASE_URL = 'http://0.0.0.0:9090'
 
 # paths
 WORKDIR = Path('.')
-ENV_PATH = Path('.env.hpc.hf.tei')
+ENV_PATH = Path('.env.hpc')
 CLI_SIF_PATH = Path('cli.sif')
 CLIENT_SIF_PATH = Path('client.sif')
 SERVER_SIF_PATH = Path('server.sif')

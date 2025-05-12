@@ -27,13 +27,7 @@ Create `.env` file with the following variables:
 - `OPENAI_BASE_URL=https://api.openai.com/v1`
 - `OPENAI_API_KEY`
 
-Create `.env.hpc.hf.lora` file with the following variables:
+Create `.env.hpc` file with the following variables:
 - `HF_TOKEN`
 - `WANDB_API_KEY`
 - `WANDB_PROJECT=math-rag`
-
-Create `.env.hpc.hf.tei` file with the following variables:
-- `HF_TOKEN`
-
-Create `.env.hpc.hf.tgi` file with the following variables:
-- `HF_TOKEN`

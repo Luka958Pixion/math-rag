@@ -62,7 +62,7 @@ class LoRA:
             lora_path / 'lora.def',
             lora_path / 'lora.py',
             lora_path / 'lora.sh',
-            LOCAL_ROOT_PATH / '.env.hpc.hf.lora',
+            LOCAL_ROOT_PATH / '.env.hpc',
         ]
 
         for local_path in local_paths:

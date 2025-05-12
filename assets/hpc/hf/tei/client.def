@@ -26,7 +26,7 @@ From: python:3.12
         apptainer build client.sif client.def
 
     Environment:
-        - .env.hpc.hf.tei
+        - .env.hpc
 
     Usage:
-        apptainer run --env-file .env.hpc.hf.tei client.sif
+        apptainer run --env-file .env.hpc client.sif
