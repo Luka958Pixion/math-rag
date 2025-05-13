@@ -31,6 +31,7 @@ Create `.env` file with the following variables:
 - `HF_TOKEN`
 
 Create `.env.hpc` file with the following variables:
+- `HF_USERNAME`
 - `HF_TOKEN`
 - `WANDB_API_KEY`
 - `WANDB_PROJECT=math-rag`
