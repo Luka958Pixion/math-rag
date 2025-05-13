@@ -27,11 +27,12 @@ class PartialBatchAssistant(
     async def batch_assist(
         self,
         inputs: list[AssistantInputType],
-        response_type: type[AssistantOutputType],
     ) -> list[AssistantOutputType]:
         requests = [self.encode_to_request(input) for input in inputs]
         batch_request = LLMBatchRequest(requests=requests)
-        batch_result = await self._llm.batch_generate(batch_request, response_type)
+        batch_result = await self._llm.batch_generate(
+            batch_request, self._response_type
+        )
 
         # map BoundAssistantOutput to AssistantOutput
         for response_list in batch_result.response_lists:

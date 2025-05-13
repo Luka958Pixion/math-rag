@@ -12,7 +12,7 @@ from .base_basic_assistant import BaseBasicAssistant
 class BaseBatchAssistant(BaseBasicAssistant[AssistantInputType, AssistantOutputType]):
     @abstractmethod
     async def batch_assist(
-        self, inputs: list[AssistantInputType], response_type: type[AssistantOutputType]
+        self, inputs: list[AssistantInputType]
     ) -> tuple[list[AssistantInputType], list[AssistantOutputType]]:
         pass
 
@@ -25,6 +25,5 @@ class BaseBatchAssistant(BaseBasicAssistant[AssistantInputType, AssistantOutputT
         self,
         batch_id: str,
         batch_request_id: UUID,
-        response_type: type[AssistantOutputType],
     ) -> list[AssistantOutputType] | None:
         pass
