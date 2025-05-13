@@ -1,8 +1,8 @@
 from datetime import datetime
 
 from datasets import DatasetInfo
-from huggingface_hub import HfApi, create_repo
-from requests.exceptions import HTTPError
+from huggingface_hub import HfApi
+from huggingface_hub.errors import RepositoryNotFoundError
 
 from math_rag.application.base.datasets import BaseDataset, BaseSample
 from math_rag.application.models.datasets import DatasetSplitSettings
@@ -16,38 +16,44 @@ from math_rag.infrastructure.utils import (
 class DatasetPublisherService:
     def __init__(
         self,
+        hugging_face_base_url: str,
+        hugging_face_username: str,
         hugging_face_token: str,
-        hugging_face_datasets_base_url: str,
     ):
+        self.hugging_face_base_url = hugging_face_base_url
+        self.hugging_face_username = hugging_face_username
         self.hugging_face_token = hugging_face_token
-        self.hugging_face_datasets_base_url = hugging_face_datasets_base_url
         self.hugging_face_api = HfApi()
 
     def publish(
         self,
         dataset: BaseDataset,
         sample_type: type[BaseSample],
-        settings: DatasetSplitSettings,
+        split_settings: DatasetSplitSettings,
     ):
-        repo_id = dataset.__class__.__name__.lower()
+        repo_id = f'{self.hugging_face_username}/{dataset.__class__.__name__.lower()}'
 
         # create a repository if it doesn't exist
         try:
             self.hugging_face_api.dataset_info(repo_id, token=self.hugging_face_token)
 
-        except HTTPError as e:
-            if e.response and e.response.status_code == 404:
-                create_repo(repo_id, repo_type='dataset', token=self.hugging_face_token)
+        except RepositoryNotFoundError as e:
+            self.hugging_face_api.create_repo(
+                repo_id, repo_type='dataset', token=self.hugging_face_token
+            )
 
-            else:
-                raise
+        # map dataset to huggingface
+        hf_dataset = DatasetMapping.to_target(dataset).shuffle(seed=42)
+
+        # split
+        dataset_dict = DatasetSplitterUtil.split(hf_dataset, split_settings)
 
         # create dataset metadata
         citation_key = repo_id
-        author = 'Luka Panić'
+        author = self.hugging_face_username
         title = dataset.__class__.__name__
         year = datetime.now().year
-        url = f'{self.hugging_face_datasets_base_url}/{repo_id}'
+        url = f'{self.hugging_face_base_url}/datasets/{repo_id}'
 
         citation = '\n'.join(
             [
@@ -70,11 +76,9 @@ class DatasetPublisherService:
             license='mit',
             citation=citation,
         )
-
-        # map dataset to huggingface
-        hf_dataset = DatasetMapping.to_target(dataset).shuffle(seed=42)
-        dataset_dict = DatasetSplitterUtil.split(hf_dataset, settings)
         dataset_dict.info = info
+
+        # publish
         dataset_dict.push_to_hub(
             repo_id,
             private=True,

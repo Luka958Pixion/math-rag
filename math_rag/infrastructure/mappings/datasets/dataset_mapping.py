@@ -16,4 +16,6 @@ class DatasetMapping(BaseMapping[BaseDataset[T], Dataset]):
 
     @staticmethod
     def to_target(source: BaseDataset[T]) -> Dataset:
-        return Dataset.from_list([sample.model_dump() for sample in source.root])
+        return Dataset.from_list(
+            [sample.model_dump(mode='json') for sample in source.root]
+        )

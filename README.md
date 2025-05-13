@@ -26,8 +26,9 @@ Create `.env` file with the following variables:
 - `HPC_PASSPHRASE`
 - `OPENAI_BASE_URL=https://api.openai.com/v1`
 - `OPENAI_API_KEY`
+- `HF_BASE_URL=https://huggingface.co`
+- `HF_USERNAME`
 - `HF_TOKEN`
-- `HF_DATASETS_BASE_URL`
 
 Create `.env.hpc` file with the following variables:
 - `HF_TOKEN`
