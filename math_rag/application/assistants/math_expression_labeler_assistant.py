@@ -10,7 +10,6 @@ from math_rag.application.models.inference import (
     LLMRequest,
     LLMResponseList,
 )
-from math_rag.core.enums import MathExpressionLabelEnum
 
 from .partials import PartialAssistant
 from .prompts import MATH_EXPRESSION_LABELER_PROMPT
@@ -27,15 +26,7 @@ class MathExpressionLabelerAssistant(
     def encode_to_request(
         self, input: MathExpressionLabelerAssistantInput
     ) -> LLMRequest[MathExpressionLabelerAssistantOutput]:
-        class_names = '\n'.join(
-            [
-                f'{i + 1}. {class_name}'
-                for i, class_name in enumerate(MathExpressionLabelEnum)
-            ]
-        )
-        prompt = MATH_EXPRESSION_LABELER_PROMPT.format(
-            latex=input.latex, classes=class_names
-        )
+        prompt = MATH_EXPRESSION_LABELER_PROMPT.format(latex=input.latex)
         request = LLMRequest(
             conversation=LLMConversation(
                 messages=[LLMMessage(role='user', content=prompt)]

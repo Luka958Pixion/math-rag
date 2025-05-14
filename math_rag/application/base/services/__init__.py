@@ -1,3 +1,4 @@
+from .base_dataset_publisher_service import BaseDatasetPublisherService
 from .base_em_settings_loader_service import BaseEMSettingsLoaderService
 from .base_latex_parser_service import BaseLatexParserService
 from .base_latex_visitor_service import BaseLatexVisitorService
@@ -7,6 +8,7 @@ from .base_math_article_parser_service import BaseMathArticleParserService
 
 
 __all__ = [
+    'BaseDatasetPublisherService',
     'BaseEMSettingsLoaderService',
     'BaseLLMSettingsLoaderService',
     'BaseMathArticleLoaderService',

@@ -22,5 +22,5 @@ Your task is to correct the following KaTeX expression so that it is fully compa
 """
 
 KATEX_CORRECTOR_PROMPT = LLMPrompt(
-    template=KATEX_CORRECTOR_PROMPT_TEMPLATE, input_keys=['katex', 'error']
+    template=KATEX_CORRECTOR_PROMPT_TEMPLATE.strip(), input_keys=['katex', 'error']
 )

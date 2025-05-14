@@ -11,5 +11,5 @@ Your KaTeX is still not rendering properly, fix it.
 """
 
 KATEX_CORRECTOR_RETRY_PROMPT = LLMPrompt(
-    template=KATEX_CORRECTOR_RETRY_PROMPT_TEMPLATE, input_keys=['error']
+    template=KATEX_CORRECTOR_RETRY_PROMPT_TEMPLATE.strip(), input_keys=['error']
 )
