@@ -1,4 +1,5 @@
 from datetime import datetime
+from logging import getLogger
 
 from datasets import DatasetInfo
 from huggingface_hub import HfApi
@@ -11,6 +12,9 @@ from math_rag.infrastructure.utils import (
     DatasetFeatureExtractorUtil,
     DatasetSplitterUtil,
 )
+
+
+logger = getLogger(__name__)
 
 
 class DatasetPublisherService:
@@ -35,12 +39,16 @@ class DatasetPublisherService:
 
         # create a repository if it doesn't exist
         try:
-            self.hugging_face_api.dataset_info(repo_id, token=self.hugging_face_token)
+            dataset_info = self.hugging_face_api.dataset_info(
+                repo_id, token=self.hugging_face_token
+            )
+            logger.info(f'Dataset {repo_id} with id {dataset_info.id} already exists')
 
-        except RepositoryNotFoundError as e:
-            self.hugging_face_api.create_repo(
+        except RepositoryNotFoundError:
+            repo_url = self.hugging_face_api.create_repo(
                 repo_id, repo_type='dataset', token=self.hugging_face_token
             )
+            logger.info(f'Created dataset {repo_id}, view it at: {repo_url.url}')
 
         # map dataset to huggingface
         hf_dataset = DatasetMapping.to_target(dataset).shuffle(seed=42)
@@ -68,6 +76,7 @@ class DatasetPublisherService:
 
         sample_fields = list(BaseSample.model_fields.keys())
         sample_features = DatasetFeatureExtractorUtil.extract(sample_type)
+        dataset_dict = dataset_dict.cast(sample_features)
 
         info = DatasetInfo(
             description=f'A dataset with: {",".join(sample_fields)}',
