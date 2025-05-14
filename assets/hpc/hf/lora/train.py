@@ -119,9 +119,7 @@ def main(trial: Trial, resume: bool, dataset_name: str):
     prompt_json_bytes = Path(prompt_json_path).read_bytes()
     prompt = json.loads(prompt_json_bytes)
 
-    dataset_dict = dataset_dict.map(
-        lambda x: format_prompt(x, prompt), remove_columns=['id']
-    )
+    dataset_dict = dataset_dict.map(lambda x: format_prompt(x, prompt))
 
     train_dataset = dataset_dict['train']
     validate_dataset = dataset_dict['validate']
