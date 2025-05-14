@@ -75,9 +75,7 @@ def format_prompt(sample: dict[str, str], prompt: dict):
     input_keys: list[str] = prompt['input_keys']
 
     return {
-        'text': template.format(
-            **{input_key: sample[input_key] for input_key in input_keys}
-        ),
+        'text': template.format(**{key: sample[key] for key in input_keys}),
         'label': sample['label'],
     }
 
