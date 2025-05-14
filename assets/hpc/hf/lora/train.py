@@ -1,3 +1,5 @@
+import json
+
 from logging import INFO, basicConfig, getLogger
 from pathlib import Path
 from typing import cast
@@ -47,24 +49,13 @@ DATASET_PATH = config('DATASET_PATH', default=None)
 # paths
 CACHE_DIR_PATH = Path('data')
 
+# TODO set HF_HOME=... and bind it
+
 
 basicConfig(
     level=INFO, format='%(asctime)s [%(threadName)s] %(levelname)s: %(message)s'
 )
 logger = getLogger(__name__)
-
-MATH_EXPRESSION_LABELER_PROMPT = """
-You are an expert LaTeX expression classification assistant.
-Given a LaTeX expression, classify it into one of five classes:
-{class_names}
-
-Return the class number only (no symbols or extra text)!
-
-### LaTeX:
-{latex}
-
-### Class:
-"""
 
 
 class GracefulStopCallback(TrainerCallback):
@@ -79,43 +70,57 @@ class GracefulStopCallback(TrainerCallback):
         return control
 
 
-def format_prompt(sample: dict[str, str]):
-    # TODO pass class_names
-    prompt = (
-        MATH_EXPRESSION_LABELER_PROMPT.format(class_names=..., latex=sample['latex'])
-        + '\n'
-    )
+def format_prompt(sample: dict[str, str], prompt: dict):
+    template: str = prompt['template']
+    input_keys: list[str] = prompt['input_keys']
 
     return {
-        'text': prompt,
+        'text': template.format(
+            **{input_key: sample[input_key] for input_key in input_keys}
+        ),
         'label': sample['label'],
     }
 
 
-def run(trial: Trial, resume: bool):
+def main(trial: Trial, resume: bool, dataset_name: str):
+    # initialization
+    huggingface_hub.login(token=HF_TOKEN)
+    wandb.login(key=WANDB_API_KEY)
+    wandb.init(project=WANDB_PROJECT, name='TinyLlama-1.1B-qlora')
+
     tokenizer = AutoTokenizer.from_pretrained(
         pretrained_model_name_or_path=...,
-        cache_dir=...,  # TODO bind
         use_fast=True,
         trust_remote_code=True,
     )
     tokenizer = cast(PreTrainedTokenizerBase, tokenizer)
     init_llama_tokenizer(tokenizer)
 
+    repo_id = f'{HF_USERNAME}/{dataset_name}'
+
     download_config = DownloadConfig(
         max_retries=3,
         disable_tqdm=True,
     )
-
     dataset_dict: DatasetDict = load_dataset(
-        path=f'{HF_USERNAME}/mathexpressiondataset',
+        path=repo_id,
         split=None,
-        cache_dir=...,  # TODO: bind
         download_config=download_config,
         token=HF_TOKEN,
         trust_remote_code=True,
     )
-    dataset_dict = dataset_dict.map(format_prompt, remove_columns=['id'])
+    prompt_json_path = huggingface_hub.hf_hub_download(
+        repo_id=repo_id,
+        filename='prompt.json',
+        repo_type='dataset',
+        token=HF_TOKEN,
+    )
+    prompt_json_bytes = Path(prompt_json_path).read_bytes()
+    prompt = json.loads(prompt_json_bytes)
+
+    dataset_dict = dataset_dict.map(
+        lambda x: format_prompt(x, prompt), remove_columns=['id']
+    )
 
     train_dataset = dataset_dict['train']
     validate_dataset = dataset_dict['validate']
@@ -129,7 +134,6 @@ def run(trial: Trial, resume: bool):
 
     model = AutoModelForCausalLM.from_pretrained(
         pretrained_model_name_or_path=...,
-        cache_dir=...,  # TODO bind
         trust_remote_code=True,
         quantization_config=bits_and_bytes_config,
         device_map='auto',
@@ -219,18 +223,6 @@ def run(trial: Trial, resume: bool):
         token=None,
         save_peft_format=True,
     )
-
-
-def main(trial: Trial, resume: bool):
-    # TODO pass trial from optuna here
-    # TODO which models are passed from optuna?
-
-    # initialization
-    huggingface_hub.login(token=HF_TOKEN)
-    wandb.login(key=WANDB_API_KEY)
-    wandb.init(project=WANDB_PROJECT, name='TinyLlama-1.1B-qlora')
-
-    run(trial, resume)
 
 
 if __name__ == '__main__':
