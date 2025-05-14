@@ -84,10 +84,13 @@ def main(trial: Trial, resume: bool, dataset_name: str):
     # initialization
     huggingface_hub.login(token=HF_TOKEN)
     wandb.login(key=WANDB_API_KEY)
-    wandb.init(project=WANDB_PROJECT, name='TinyLlama-1.1B-qlora')
+    wandb.init(
+        project=WANDB_PROJECT,
+        name=f'{MODEL_NAME}_{trial.study._study_id}_{trial._trial_id}_qlora',
+    )
 
     tokenizer = AutoTokenizer.from_pretrained(
-        pretrained_model_name_or_path=...,
+        pretrained_model_name_or_path=MODEL_NAME,
         use_fast=True,
         trust_remote_code=True,
     )
@@ -131,7 +134,7 @@ def main(trial: Trial, resume: bool, dataset_name: str):
     )
 
     model = AutoModelForCausalLM.from_pretrained(
-        pretrained_model_name_or_path=...,
+        pretrained_model_name_or_path=TOKENIZER_NAME,
         trust_remote_code=True,
         quantization_config=bits_and_bytes_config,
         device_map='auto',
