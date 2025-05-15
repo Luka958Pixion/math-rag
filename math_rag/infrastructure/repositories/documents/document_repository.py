@@ -6,7 +6,11 @@ from bson.json_util import dumps, loads
 from pymongo import AsyncMongoClient, InsertOne
 
 from math_rag.application.base.repositories.documents import BaseDocumentRepository
-from math_rag.infrastructure.types import MappingType, SourceType, TargetType
+from math_rag.infrastructure.types.repositories.documents import (
+    MappingType,
+    SourceType,
+    TargetType,
+)
 from math_rag.shared.utils import TypeUtil
 
 
@@ -72,6 +76,9 @@ class DocumentRepository(
 
         return items
 
+    async def clear(self):
+        await self.collection.delete_many({})
+
     async def backup(self):
         cursor = self.collection.find().batch_size(100)
 
@@ -80,7 +87,7 @@ class DocumentRepository(
                 file.write(dumps(document) + '\n')
 
     async def restore(self):
-        await self.db.drop_collection(self.collection_name)
+        await self.clear()
 
         batch = []
 

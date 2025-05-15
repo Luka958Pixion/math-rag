@@ -1,3 +1,4 @@
+from io import BytesIO
 from uuid import UUID
 
 from math_rag.core.models import MathArticle
@@ -8,20 +9,25 @@ from math_rag.infrastructure.models.objects import MathArticleObject
 class MathArticleMapping(BaseMapping[MathArticle, MathArticleObject]):
     @staticmethod
     def to_source(target: MathArticleObject) -> MathArticle:
-        math_article = MathArticle(
-            id=UUID(target.id),
-            name=target.name,
-            bytes=target.bytes,
-        )
+        id = target.metadata.get('X-Amz-Meta-id')
 
-        return math_article
+        if id is None:
+            raise ValueError(f'Missing X-Amz-Meta-id in {target.object_name}')
+
+        return MathArticle(
+            id=UUID(id),
+            name=target.object_name,
+            bytes=target.data.read(),
+        )
 
     @staticmethod
-    def to_target(source: MathArticle) -> MathArticleObject:
-        math_article_object = MathArticleObject(
-            id=str(source.id),
-            name=source.name,
-            bytes=source.bytes,
-        )
+    def to_target(source: MathArticle, *, bucket_name: str) -> MathArticleObject:
+        data = BytesIO(source.bytes)
 
-        return math_article_object
+        return MathArticleObject(
+            bucket_name=bucket_name,
+            object_name=source.name,
+            data=data,
+            length=data.getbuffer().nbytes,
+            metadata={'X-Amz-Meta-id': str(source.id)},
+        )

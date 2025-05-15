@@ -2,7 +2,7 @@ from typing import Generic, cast
 
 from pymongo import AsyncMongoClient
 
-from math_rag.infrastructure.types import TargetType
+from math_rag.infrastructure.types.repositories.documents import TargetType
 from math_rag.shared.utils import TypeUtil
 
 

@@ -26,3 +26,15 @@ class BaseDocumentRepository(ABC, Generic[T]):
     @abstractmethod
     async def find_many(self) -> list[T]:
         pass
+
+    @abstractmethod
+    async def clear(self):
+        pass
+
+    @abstractmethod
+    async def backup(self):
+        pass
+
+    @abstractmethod
+    async def restore(self):
+        pass

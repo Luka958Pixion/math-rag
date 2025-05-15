@@ -1,7 +1,5 @@
-from pydantic import BaseModel
+from math_rag.infrastructure.base import BaseObject
 
 
-class MathArticleObject(BaseModel):
-    id: str
-    name: str
-    bytes: bytes
+class MathArticleObject(BaseObject):
+    pass

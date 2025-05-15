@@ -1,0 +1,86 @@
+from io import BytesIO
+from pathlib import Path
+from typing import Generic, cast
+
+from minio import Minio
+
+from math_rag.application.base.repositories.objects import BaseObjectRepository
+from math_rag.infrastructure.types.repositories.objects import (
+    MappingType,
+    SourceType,
+    TargetType,
+)
+from math_rag.shared.utils import TypeUtil
+
+
+BACKUP_PATH = Path('../../../../.tmp/backups/minio')
+
+
+class ObjectRepository(
+    BaseObjectRepository[SourceType], Generic[SourceType, TargetType, MappingType]
+):
+    def __init__(self, client: Minio):
+        args = TypeUtil.get_type_args(self.__class__)
+        self.source_cls = cast(type[SourceType], args[1][0])
+        self.target_cls = cast(type[TargetType], args[1][1])
+        self.mapping_cls = cast(type[MappingType], args[1][2])
+
+        self.client = client
+        self.bucket_name = self.target_cls.__name__.lower()
+        self.backup_dir_path = BACKUP_PATH / self.bucket_name
+
+    def insert_many(self, items: list[SourceType]):
+        objects = [self.mapping_cls.to_target(item) for item in items]
+
+        for object in objects:
+            self.client.put_object(**object)
+
+    def find_by_name(self, name: str) -> SourceType:
+        object_response = self.client.get_object(self.bucket_name, name)
+        object_bytes = BytesIO(object_response.read())
+        object_response.close()
+        object_response.release_conn()
+
+        stat_response = self.client.stat_object(self.bucket_name, name)
+        id = stat_response.metadata.get('X-Amz-Meta-id')
+
+        if id is None:
+            raise ValueError(f'Missing X-Amz-Meta-id in {name}')
+
+        object = self.target_cls(
+            bucket_name=self.bucket_name,
+            object_name=name,
+            data=object_bytes,
+            length=object_bytes.getbuffer().nbytes,
+            metadata={'X-Amz-Meta-id': id},
+        )
+        item = self.mapping_cls.to_source(object)
+
+        return item
+
+    def list_names(self) -> list[str | None]:
+        objects = self.client.list_objects(self.bucket_name, recursive=True)
+
+        return [object.object_name for object in objects]
+
+    def clear(self):
+        objects = self.client.list_objects(self.bucket_name, recursive=True)
+
+        for object in objects:
+            self.client.remove_object(self.bucket_name, object)
+
+    def backup(self):
+        self.backup_dir_path.mkdir(parents=True, exist_ok=True)
+
+        for object_name in self.list_names():
+            local_path = self.backup_dir_path / object_name
+            local_path.parent.mkdir(parents=True, exist_ok=True)
+            self.client.fget_object(self.bucket_name, object_name, str(local_path))
+
+    def restore(self):
+        self.clear()
+
+        for path in self.backup_dir_path.rglob('*'):
+            if path.is_file():
+                object_name = str(path.relative_to(self.backup_dir_path))
+                self.client.fput_object(self.bucket_name, object_name, str(path))

@@ -29,7 +29,7 @@ class MathExpressionLoaderService:  # TODO finish this + base class + DI
         file_names = [
             name
             for name in self.math_article_repository.list_names()
-            if name.endswith('.tex')
+            if name is not None and name.endswith('.tex')
         ]
 
         for name in file_names:
