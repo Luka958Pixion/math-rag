@@ -1,11 +1,16 @@
+from pathlib import Path
 from typing import Generic, cast
 from uuid import UUID
 
+from bson.json_util import dumps, loads
 from pymongo import AsyncMongoClient, InsertOne
 
 from math_rag.application.base.repositories.documents import BaseDocumentRepository
 from math_rag.infrastructure.types import MappingType, SourceType, TargetType
 from math_rag.shared.utils import TypeUtil
+
+
+BACKUP_PATH = Path('../../../../.tmp/backups/mongo')
 
 
 class DocumentRepository(
@@ -21,6 +26,7 @@ class DocumentRepository(
         self.db = self.client[deployment]
         self.collection_name = self.target_cls.__name__.lower()
         self.collection = self.db[self.collection_name]
+        self.backup_file_path = BACKUP_PATH / f'{self.collection}.ndjson'
 
     async def insert_one(self, item: SourceType):
         doc = self.mapping_cls.to_target(item)
@@ -65,3 +71,27 @@ class DocumentRepository(
         items = [self.mapping_cls.to_source(doc) for doc in docs]
 
         return items
+
+    async def backup(self):
+        cursor = self.collection.find().batch_size(100)
+
+        with open(self.backup_file_path, 'w', encoding='utf-8') as file:
+            async for document in cursor:
+                file.write(dumps(document) + '\n')
+
+    async def restore(self):
+        await self.db.drop_collection(self.collection_name)
+
+        batch = []
+
+        with open(self.backup_file_path, 'r', encoding='utf-8') as file:
+            for line in file:
+                document = loads(line)
+                batch.append(document)
+
+                if len(batch) >= 100:
+                    await self.collection.insert_many(batch)
+                    batch.clear()
+
+        if batch:
+            await self.collection.insert_many(batch)

@@ -16,6 +16,7 @@ class MathArticleRepository(BaseMathArticleRepository):
     def __init__(self, client: Minio):
         self.client = client
         self.bucket_name = MathArticleObject.__name__.lower()
+        self.backup_dir_path = BACKUP_PATH / self.bucket_name
 
     def insert_many(self, items: list[MathArticle]):
         objs = [MathArticleMapping.to_target(item) for item in items]
@@ -54,15 +55,15 @@ class MathArticleRepository(BaseMathArticleRepository):
         ]
 
     def backup(self):
-        BACKUP_PATH.mkdir(parents=True, exist_ok=True)
+        self.backup_dir_path.mkdir(parents=True, exist_ok=True)
 
         for object_name in self.list_names():
-            local_path = BACKUP_PATH / object_name
+            local_path = self.backup_dir_path / object_name
             local_path.parent.mkdir(parents=True, exist_ok=True)
             self.client.fget_object(self.bucket_name, object_name, str(local_path))
 
     def restore(self):
-        for path in BACKUP_PATH.rglob('*'):
+        for path in self.backup_dir_path.rglob('*'):
             if path.is_file():
-                object_name = str(path.relative_to(BACKUP_PATH))
+                object_name = str(path.relative_to(self.backup_dir_path))
                 self.client.fput_object(self.bucket_name, object_name, str(path))

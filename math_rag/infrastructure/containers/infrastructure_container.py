@@ -21,6 +21,7 @@ from math_rag.application.containers import ApplicationContainer
 from math_rag.application.services import (
     MathArticleLoaderService,
     MathArticleParserService,
+    MathExpressionLoaderService,
 )
 from math_rag.infrastructure.clients import (
     ApptainerClient,
@@ -274,4 +275,11 @@ class InfrastructureContainer(DeclarativeContainer):
         MathArticleParserService,
         latex_parser_service=latex_parser_service,
         latex_visitor_service=latex_visitor_service,
+    )
+    math_expression_loader_service = Factory(
+        MathExpressionLoaderService,
+        katex_client=katex_client,
+        math_article_parser_service=math_article_parser_service,
+        math_article_repository=math_article_repository,
+        math_expression_repository=math_expression_repository,
     )
