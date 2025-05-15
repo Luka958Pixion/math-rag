@@ -26,7 +26,7 @@ class MathArticleLoaderService(BaseMathArticleLoaderService):
         if limit < len(BaseArxivCategory):
             raise ValueError()
 
-        sublimit = int(limit / len(BaseArxivCategory))
+        sublimit = int(limit / len(category))
         category_list = list(category)
 
         for i in range(0, len(category_list), BATCH_SIZE):

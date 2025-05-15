@@ -15,3 +15,11 @@ class BaseMathArticleRepository(ABC):
     @abstractmethod
     def list_names(self) -> list[str]:
         pass
+
+    @abstractmethod
+    def backup(self):
+        pass
+
+    @abstractmethod
+    def restore(self):
+        pass

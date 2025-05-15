@@ -1,4 +1,5 @@
 from io import BytesIO
+from pathlib import Path
 
 from minio import Minio
 
@@ -6,6 +7,9 @@ from math_rag.application.base.repositories.objects import BaseMathArticleReposi
 from math_rag.core.models import MathArticle
 from math_rag.infrastructure.mappings.objects import MathArticleMapping
 from math_rag.infrastructure.models.objects import MathArticleObject
+
+
+BACKUP_PATH = Path('../../../../.tmp/backups/minio')
 
 
 class MathArticleRepository(BaseMathArticleRepository):
@@ -48,3 +52,17 @@ class MathArticleRepository(BaseMathArticleRepository):
         return [
             object.object_name for object in objects if object.object_name is not None
         ]
+
+    def backup(self):
+        BACKUP_PATH.mkdir(parents=True, exist_ok=True)
+
+        for object_name in self.list_names():
+            local_path = BACKUP_PATH / object_name
+            local_path.parent.mkdir(parents=True, exist_ok=True)
+            self.client.fget_object(self.bucket_name, object_name, str(local_path))
+
+    def restore(self):
+        for path in BACKUP_PATH.rglob('*'):
+            if path.is_file():
+                object_name = str(path.relative_to(BACKUP_PATH))
+                self.client.fput_object(self.bucket_name, object_name, str(path))
