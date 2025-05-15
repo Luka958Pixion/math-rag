@@ -4,5 +4,5 @@ from math_rag.application.base.seeders.embeddings import (
 
 
 class QdrantEmbeddingSeeder(BaseEmbeddingSeeder):
-    async def seed(self, name: str):
+    async def seed(self, reset: bool = False):
         pass

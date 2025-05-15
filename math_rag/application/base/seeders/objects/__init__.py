@@ -1,4 +1,4 @@
-from .base_article_seeder import BaseArticleSeeder
+from .base_object_seeder import BaseObjectSeeder
 
 
-__all__ = ['BaseArticleSeeder']
+__all__ = ['BaseObjectSeeder']

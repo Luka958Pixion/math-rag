@@ -2,11 +2,12 @@ from typing import Generic, cast
 
 from pymongo import AsyncMongoClient
 
+from math_rag.application.base.seeders.documents import BaseDocumentSeeder
 from math_rag.infrastructure.types.repositories.documents import TargetType
 from math_rag.shared.utils import TypeUtil
 
 
-class DocumentSeeder(Generic[TargetType]):
+class DocumentSeeder(BaseDocumentSeeder, Generic[TargetType]):
     def __init__(self, client: AsyncMongoClient, deployment: str):
         args = TypeUtil.get_type_args(self.__class__)
         self.target_cls = cast(type[TargetType], args[0])

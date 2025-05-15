@@ -1,7 +1,7 @@
 from abc import ABC, abstractmethod
 
 
-class BaseEmbeddingSeeder(ABC):
+class BaseObjectSeeder(ABC):
     @abstractmethod
     async def seed(self, reset: bool):
         pass
