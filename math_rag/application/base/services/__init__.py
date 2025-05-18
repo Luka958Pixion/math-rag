@@ -5,6 +5,7 @@ from .base_latex_visitor_service import BaseLatexVisitorService
 from .base_llm_settings_loader_service import BaseLLMSettingsLoaderService
 from .base_math_article_loader_service import BaseMathArticleLoaderService
 from .base_math_article_parser_service import BaseMathArticleParserService
+from .base_math_expression_loader_service import BaseMathExpressionLoaderService
 
 
 __all__ = [
@@ -15,4 +16,5 @@ __all__ = [
     'BaseMathArticleParserService',
     'BaseLatexParserService',
     'BaseLatexVisitorService',
+    'BaseMathExpressionLoaderService',
 ]

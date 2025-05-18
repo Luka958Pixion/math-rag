@@ -1,6 +1,6 @@
 from typing import TypeVar
 
-from pydantic import BaseModel
+from math_rag.application.base.assistants import BaseAssistantOutput
 
 
-AssistantOutputType = TypeVar('AssistantOutputType', bound=BaseModel)
+AssistantOutputType = TypeVar('AssistantOutputType', bound=BaseAssistantOutput)

@@ -279,6 +279,7 @@ class InfrastructureContainer(DeclarativeContainer):
     math_expression_loader_service = Factory(
         MathExpressionLoaderService,
         katex_client=katex_client,
+        katex_corrector_assistant=katex_corrector_assistant,
         math_article_parser_service=math_article_parser_service,
         math_article_repository=math_article_repository,
         math_expression_repository=math_expression_repository,

@@ -45,7 +45,10 @@ class PartialBatchAssistant(
             for response_list in batch_result.response_lists
         ]
 
-        return outputs
+        input_id_to_output = {output.input_id: output for output in outputs}
+        sorted_outputs = [input_id_to_output[input.id] for input in inputs]
+
+        return sorted_outputs
 
     async def batch_assist_init(self, inputs: list[AssistantInputType]) -> str:
         requests = [self.encode_to_request(input) for input in inputs]

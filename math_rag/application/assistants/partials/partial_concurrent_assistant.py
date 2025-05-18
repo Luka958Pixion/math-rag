@@ -43,4 +43,7 @@ class PartialConcurrentAssistant(
             for response_list in concurrent_result.response_lists
         ]
 
-        return outputs
+        input_id_to_output = {output.input_id: output for output in outputs}
+        sorted_outputs = [input_id_to_output[input.id] for input in inputs]
+
+        return sorted_outputs
