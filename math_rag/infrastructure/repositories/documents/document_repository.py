@@ -1,3 +1,4 @@
+from datetime import datetime
 from pathlib import Path
 from typing import Generic, cast
 from uuid import UUID
@@ -31,7 +32,6 @@ class DocumentRepository(
         self.db = self.client[deployment]
         self.collection_name = self.target_cls.__name__.lower()
         self.collection = self.db[self.collection_name]
-        self.backup_file_path = BACKUP_PATH / f'{self.collection_name}.ndjson'
         self.json_options = JSONOptions(uuid_representation=UuidRepresentation.STANDARD)
 
     async def insert_one(self, item: SourceType):
@@ -82,8 +82,13 @@ class DocumentRepository(
         await self.collection.delete_many({})
 
     async def backup(self):
-        cursor = self.collection.find().batch_size(100)
+        timestamp = datetime.now().strftime('%Y-%m-%d_%H-%M-%S')
+        self.backup_file_path = (
+            BACKUP_PATH / timestamp / f'{self.collection_name}.ndjson'
+        )
         self.backup_file_path.parent.mkdir(parents=True, exist_ok=True)
+
+        cursor = self.collection.find().batch_size(100)
 
         with open(self.backup_file_path, 'w') as file:
             async for document in cursor:

@@ -46,6 +46,8 @@ class MathArticleLoaderService(BaseMathArticleLoaderService):
             ]
             self.math_article_repository.insert_many(math_articles)
 
+        self.math_article_repository.backup()
+
     async def _process_result(self, result: Result) -> dict[str, bytes] | None:
         arxiv_id = result.entry_id.split('/')[-1]
         src = await self.arxiv_client.get_src(arxiv_id)

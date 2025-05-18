@@ -1,3 +1,4 @@
+from datetime import datetime
 from io import BytesIO
 from pathlib import Path
 from typing import Generic, cast
@@ -27,7 +28,6 @@ class ObjectRepository(
 
         self.client = client
         self.bucket_name = self.target_cls.__name__.lower()
-        self.backup_dir_path = BACKUP_PATH / self.bucket_name
 
     def insert_one(self, item: SourceType):
         object = self.mapping_cls.to_target(item)
@@ -103,6 +103,8 @@ class ObjectRepository(
             self.client.remove_object(self.bucket_name, object.object_name)
 
     def backup(self):
+        timestamp = datetime.now().strftime('%Y-%m-%d_%H-%M-%S')
+        self.backup_dir_path = BACKUP_PATH / timestamp / self.bucket_name
         self.backup_dir_path.mkdir(parents=True, exist_ok=True)
 
         for object_name in self.list_names():
