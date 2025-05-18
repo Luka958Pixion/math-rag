@@ -7,6 +7,10 @@ T = TypeVar('T')
 
 class BaseObjectRepository(ABC, Generic[T]):
     @abstractmethod
+    def insert_one(self, item: T):
+        pass
+
+    @abstractmethod
     def insert_many(self, items: list[T]):
         pass
 

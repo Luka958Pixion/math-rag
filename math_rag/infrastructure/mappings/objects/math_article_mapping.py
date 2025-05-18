@@ -21,11 +21,10 @@ class MathArticleMapping(BaseMapping[MathArticle, MathArticleObject]):
         )
 
     @staticmethod
-    def to_target(source: MathArticle, *, bucket_name: str) -> MathArticleObject:
+    def to_target(source: MathArticle) -> MathArticleObject:
         data = BytesIO(source.bytes)
 
         return MathArticleObject(
-            bucket_name=bucket_name,
             object_name=source.name,
             data=data,
             length=data.getbuffer().nbytes,

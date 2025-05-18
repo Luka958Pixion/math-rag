@@ -13,7 +13,7 @@ from math_rag.infrastructure.types.repositories.objects import (
 from math_rag.shared.utils import TypeUtil
 
 
-BACKUP_PATH = Path('../../../../.tmp/backups/minio')
+BACKUP_PATH = Path(__file__).parents[4] / '.tmp' / 'backups' / 'minio'
 
 
 class ObjectRepository(
@@ -29,11 +29,45 @@ class ObjectRepository(
         self.bucket_name = self.target_cls.__name__.lower()
         self.backup_dir_path = BACKUP_PATH / self.bucket_name
 
+    def insert_one(self, item: SourceType):
+        object = self.mapping_cls.to_target(item)
+        # NOTE: can't use unpacking because data is not serializable
+        self.client.put_object(
+            bucket_name=self.bucket_name,
+            object_name=object.object_name,
+            data=object.data,
+            length=object.length,
+            content_type=object.content_type,
+            metadata=object.metadata,
+            sse=object.sse,
+            progress=object.progress,
+            part_size=object.part_size,
+            num_parallel_uploads=object.num_parallel_uploads,
+            tags=object.tags,
+            retention=object.retention,
+            legal_hold=object.legal_hold,
+        )
+
     def insert_many(self, items: list[SourceType]):
         objects = [self.mapping_cls.to_target(item) for item in items]
 
         for object in objects:
-            self.client.put_object(**object)
+            # NOTE: can't use unpacking because data is not serializable
+            self.client.put_object(
+                bucket_name=self.bucket_name,
+                object_name=object.object_name,
+                data=object.data,
+                length=object.length,
+                content_type=object.content_type,
+                metadata=object.metadata,
+                sse=object.sse,
+                progress=object.progress,
+                part_size=object.part_size,
+                num_parallel_uploads=object.num_parallel_uploads,
+                tags=object.tags,
+                retention=object.retention,
+                legal_hold=object.legal_hold,
+            )
 
     def find_by_name(self, name: str) -> SourceType:
         object_response = self.client.get_object(self.bucket_name, name)
@@ -48,7 +82,6 @@ class ObjectRepository(
             raise ValueError(f'Missing X-Amz-Meta-id in {name}')
 
         object = self.target_cls(
-            bucket_name=self.bucket_name,
             object_name=name,
             data=object_bytes,
             length=object_bytes.getbuffer().nbytes,
@@ -67,7 +100,7 @@ class ObjectRepository(
         objects = self.client.list_objects(self.bucket_name, recursive=True)
 
         for object in objects:
-            self.client.remove_object(self.bucket_name, object)
+            self.client.remove_object(self.bucket_name, object.object_name)
 
     def backup(self):
         self.backup_dir_path.mkdir(parents=True, exist_ok=True)

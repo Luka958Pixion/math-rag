@@ -1,4 +1,5 @@
-from typing import BinaryIO
+from io import BytesIO
+from typing import Any
 
 from minio.commonconfig import Tags
 from minio.helpers import DictType, ProgressType
@@ -8,16 +9,18 @@ from pydantic import BaseModel
 
 
 class BaseObject(BaseModel):
-    bucket_name: str
     object_name: str
-    data: BinaryIO
+    data: BytesIO
     length: int
     content_type: str = 'application/octet-stream'
     metadata: DictType | None = None
     sse: Sse | None = None
-    progress: ProgressType | None = None
+    progress: Any | None = None  # ProgressType doesn't work with Pydantic
     part_size: int = 0
     num_parallel_uploads: int = 3
     tags: Tags | None = None
     retention: Retention | None = None
     legal_hold: bool = False
+
+    class Config:
+        arbitrary_types_allowed = True  # needed for BinaryIO

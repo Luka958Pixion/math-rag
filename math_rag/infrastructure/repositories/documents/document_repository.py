@@ -2,7 +2,8 @@ from pathlib import Path
 from typing import Generic, cast
 from uuid import UUID
 
-from bson.json_util import dumps, loads
+from bson.binary import UuidRepresentation
+from bson.json_util import JSONOptions, dumps, loads
 from pymongo import AsyncMongoClient, InsertOne
 
 from math_rag.application.base.repositories.documents import BaseDocumentRepository
@@ -14,7 +15,7 @@ from math_rag.infrastructure.types.repositories.documents import (
 from math_rag.shared.utils import TypeUtil
 
 
-BACKUP_PATH = Path('../../../../.tmp/backups/mongo')
+BACKUP_PATH = Path(__file__).parents[4] / '.tmp' / 'backups' / 'mongo'
 
 
 class DocumentRepository(
@@ -30,7 +31,8 @@ class DocumentRepository(
         self.db = self.client[deployment]
         self.collection_name = self.target_cls.__name__.lower()
         self.collection = self.db[self.collection_name]
-        self.backup_file_path = BACKUP_PATH / f'{self.collection}.ndjson'
+        self.backup_file_path = BACKUP_PATH / f'{self.collection_name}.ndjson'
+        self.json_options = JSONOptions(uuid_representation=UuidRepresentation.STANDARD)
 
     async def insert_one(self, item: SourceType):
         doc = self.mapping_cls.to_target(item)
@@ -81,19 +83,21 @@ class DocumentRepository(
 
     async def backup(self):
         cursor = self.collection.find().batch_size(100)
+        self.backup_file_path.parent.mkdir(parents=True, exist_ok=True)
 
-        with open(self.backup_file_path, 'w', encoding='utf-8') as file:
+        with open(self.backup_file_path, 'w') as file:
             async for document in cursor:
-                file.write(dumps(document) + '\n')
+                print(document)
+                file.write(dumps(document, json_options=self.json_options) + '\n')
 
     async def restore(self):
         await self.clear()
 
         batch = []
 
-        with open(self.backup_file_path, 'r', encoding='utf-8') as file:
+        with open(self.backup_file_path, 'r') as file:
             for line in file:
-                document = loads(line)
+                document = loads(line, json_options=self.json_options)
                 batch.append(document)
 
                 if len(batch) >= 100:
