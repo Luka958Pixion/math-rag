@@ -64,32 +64,35 @@ class MathExpressionLoaderService(BaseMathExpressionLoaderService):
 
         for name in file_names:
             # load and parse math articles
-            math_article = await self.math_article_repository.find_by_name(name)
+            math_article = self.math_article_repository.find_by_name(name)
             math_nodes = self.math_article_parser_service.parse(math_article)
 
-            # extract raw KaTeX strings
+            # extract and validate KaTeX
             katexes = [str(node.latex_verbatim()).strip('$') for node in math_nodes]
-
-            # validate KaTeX
             results = await self.katex_client.batch_validate_many(
                 katexes, batch_size=1000
             )
             valid, invalid = self._split_by_validity(math_nodes, results)
             logger.info(f'Validated KaTeX: {len(valid)}/{len(results)}')
 
-            # attempt correction if any failed
+            # try to correct invalid KaTeX
+            final_katexes: list[str | None] = [
+                katex if results[i].valid else None for i, katex in enumerate(katexes)
+            ]
+
             if invalid:
-                inputs = [
+                correction_inputs = [
                     KatexCorrectorAssistantInput(
                         katex=str(node.latex_verbatim()).strip('$'),
                         error=result.error,
                     )
                     for node, result in invalid
                 ]
-                outputs = await self.katex_corrector_assistant.batch_assist(inputs)
+                outputs = await self.katex_corrector_assistant.concurrent_assist(
+                    correction_inputs
+                )
                 corrected_katexes = [output.katex for output in outputs]
 
-                # re-validate corrected KaTeX
                 re_results = await self.katex_client.batch_validate_many(
                     corrected_katexes, batch_size=1000
                 )
@@ -98,27 +101,32 @@ class MathExpressionLoaderService(BaseMathExpressionLoaderService):
                     re_results,
                 )
 
-                # merge results
-                valid.extend(re_valid)
-                invalid = re_invalid
+                # merge corrected into final_katexes
+                for (node, _), corrected_katex, re_result in zip(
+                    invalid, corrected_katexes, re_results
+                ):
+                    if re_result.valid:
+                        index = math_nodes.index(node)
+                        final_katexes[index] = corrected_katex
 
                 logger.info(
-                    f'Re-validated KaTeX: recovered {len(re_valid)}, still failing {len(invalid)}'
+                    f'Re-validated KaTeX: recovered {len(re_valid)}, still failing {len(re_invalid)}'
                 )
 
             # create and insert math expressions
             math_expressions: list[MathExpression] = []
 
-            for math_node, result in valid + invalid:
-                latex = str(math_node.latex_verbatim())
-                katex = latex.strip('$') if result.valid else None
-                math_expression = MathExpression(
-                    latex=latex,
-                    katex=katex,
-                    position=math_node.pos,
-                    is_inline=math_node.displaytype == 'inline',
+            for node, katex in zip(math_nodes, final_katexes):
+                latex = str(node.latex_verbatim())
+                math_expressions.append(
+                    MathExpression(
+                        math_article_id=math_article.id,
+                        latex=latex,
+                        katex=katex,
+                        position=node.pos,
+                        is_inline=node.displaytype == 'inline',
+                    )
                 )
-                math_expressions.append(math_expression)
 
             await self.math_expression_repository.batch_insert_many(
                 math_expressions, batch_size=100

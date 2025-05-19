@@ -74,15 +74,15 @@ class OpenAIConcurrentLLM(BaseConcurrentLLM):
             status_tracker.num_api_errors += 1
 
         except (*OPENAI_ERRORS_TO_RAISE, Exception) as e:
-            logger.error(f'Uncaught exception {type(e).__class__}: {e}')
-
+            logger.error(f'Uncaught exception {type(e)}: {e}')
             raise
 
         if exception:
             error = LLMError(message=exception.message, body=exception.message)
             request_tracker.errors.append(error)
+            request_tracker.retries_left -= 1
 
-            if request_tracker.retries_left:
+            if request_tracker.retries_left > 0:
                 retry_queue.put_nowait(request_tracker)
 
             else:
@@ -90,17 +90,13 @@ class OpenAIConcurrentLLM(BaseConcurrentLLM):
                     request=request_tracker.request, errors=request_tracker.errors
                 )
                 failed_requests.append(failed_request)
-
                 status_tracker.num_tasks_in_progress -= 1
                 status_tracker.num_tasks_failed += 1
-
                 logger.error(
                     f'Request {request_tracker.request.id} failed after all retries'
                 )
-
         else:
             response_lists.append(response_list)
-
             status_tracker.num_tasks_in_progress -= 1
             status_tracker.num_tasks_succeeded += 1
 
@@ -143,6 +139,12 @@ class OpenAIConcurrentLLM(BaseConcurrentLLM):
                         token_consumption = TokenCounterUtil.count(
                             request, model_name=model
                         )
+
+                        if token_consumption > max_tokens_per_minute:
+                            raise ValueError(
+                                f'Request {request.id} needs {token_consumption} tokens, but max_tokens_per_minute is {max_tokens_per_minute}'
+                            )
+
                         next_request = LLMRequestTracker(
                             request=request,
                             token_consumption=token_consumption,
@@ -177,8 +179,6 @@ class OpenAIConcurrentLLM(BaseConcurrentLLM):
                 ):
                     available_request_capacity -= 1
                     available_token_capacity -= next_request_tokens
-                    next_request.retries_left -= 1
-
                     create_task(
                         self._generate(
                             request_tracker=next_request,
