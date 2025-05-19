@@ -10,6 +10,7 @@ from math_rag.application.models.inference import (
     EMResult,
 )
 from math_rag.infrastructure.constants.inference.openai import (
+    OPENAI_ERRORS_TO_NOT_RETRY,
     OPENAI_ERRORS_TO_RAISE,
     OPENAI_ERRORS_TO_RETRY,
 )
@@ -57,7 +58,7 @@ class OpenAIBasicEM(BaseBasicEM):
             response_list = await _embed(request)
             failed_request = None
 
-        except OPENAI_ERRORS_TO_RETRY as e:
+        except OPENAI_ERRORS_TO_RETRY + OPENAI_ERRORS_TO_NOT_RETRY as e:
             response_list = EMResponseList(responses=[])
             error = EMError(message=e.message, body=e.body)
             failed_request = EMFailedRequest(request=request, errors=[error])

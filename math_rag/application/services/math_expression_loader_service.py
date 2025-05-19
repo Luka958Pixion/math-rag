@@ -1,5 +1,6 @@
 from logging import getLogger
 from typing import TypeAlias
+from uuid import UUID
 
 from pylatexenc.latexwalker import LatexMathNode
 
@@ -14,7 +15,10 @@ from math_rag.application.base.services import (
     BaseMathExpressionLoaderService,
 )
 from math_rag.application.models import KatexValidationResult
-from math_rag.application.models.assistants import KatexCorrectorAssistantInput
+from math_rag.application.models.assistants import (
+    KatexCorrectorAssistantInput,
+    KatexCorrectorAssistantOutput,
+)
 from math_rag.core.models import MathExpression
 
 
@@ -75,53 +79,70 @@ class MathExpressionLoaderService(BaseMathExpressionLoaderService):
             valid, invalid = self._split_by_validity(math_nodes, results)
             logger.info(f'Validated KaTeX: {len(valid)}/{len(results)}')
 
-            # try to correct invalid KaTeX
+            # prepare final_katexes, preserving originals for valid ones
             final_katexes: list[str | None] = [
                 katex if results[i].valid else None for i, katex in enumerate(katexes)
             ]
 
             if invalid:
-                correction_inputs = [
-                    KatexCorrectorAssistantInput(
+                # create the inputs
+                inputs: list[KatexCorrectorAssistantInput] = []
+                invalid_input_id_to_node: dict[UUID, LatexMathNode] = {}
+
+                for node, result in invalid:
+                    input = KatexCorrectorAssistantInput(
                         katex=str(node.latex_verbatim()).strip('$'),
                         error=result.error,
                     )
-                    for node, result in invalid
-                ]
-                outputs = await self.katex_corrector_assistant.concurrent_assist(
-                    correction_inputs
-                )
-                corrected_katexes = [output.katex for output in outputs]
+                    inputs.append(input)
+                    invalid_input_id_to_node[input.id] = node
 
+                # call assistant (may return fewer outputs)
+                outputs = await self.katex_corrector_assistant.concurrent_assist(inputs)
+
+                # map returned outputs back to nodes
+                input_id_to_output: dict[UUID, KatexCorrectorAssistantOutput] = {
+                    output.input_id: output for output in outputs
+                }
+
+                # prepare lists for only those we actually got back
+                corrected_katexes: list[str] = []
+                corrected_nodes: list[LatexMathNode] = []
+
+                for input_id, node in invalid_input_id_to_node.items():
+                    if input_id in input_id_to_output:
+                        corrected_nodes.append(node)
+                        corrected_katexes.append(input_id_to_output[input_id].katex)
+
+                # re-validate only the ones we have corrections for
                 re_results = await self.katex_client.batch_validate_many(
                     corrected_katexes, batch_size=1000
                 )
-                re_valid, re_invalid = self._split_by_validity(
-                    [node for node, _ in invalid],
-                    re_results,
-                )
+                re_valid, _ = self._split_by_validity(corrected_nodes, re_results)
 
-                # merge corrected into final_katexes
-                for (node, _), corrected_katex, re_result in zip(
-                    invalid, corrected_katexes, re_results
+                # merge only the successfully re-validated corrections
+                for node, corrected_katex, re_result in zip(
+                    corrected_nodes, corrected_katexes, re_results
                 ):
                     if re_result.valid:
-                        index = math_nodes.index(node)
-                        final_katexes[index] = corrected_katex
+                        idx = math_nodes.index(node)
+                        final_katexes[idx] = corrected_katex
 
+                num_corrected = len(re_valid)
+                num_non_corrected = len(invalid) - num_corrected
                 logger.info(
-                    f'Re-validated KaTeX: recovered {len(re_valid)}, still failing {len(re_invalid)}'
+                    f'Re-validated KaTeX: corrected {num_corrected}, '
+                    f'still failing {num_non_corrected}'
                 )
 
             # create and insert math expressions
             math_expressions: list[MathExpression] = []
 
             for node, katex in zip(math_nodes, final_katexes):
-                latex = str(node.latex_verbatim())
                 math_expressions.append(
                     MathExpression(
                         math_article_id=math_article.id,
-                        latex=latex,
+                        latex=str(node.latex_verbatim()),
                         katex=katex,
                         position=node.pos,
                         is_inline=node.displaytype == 'inline',

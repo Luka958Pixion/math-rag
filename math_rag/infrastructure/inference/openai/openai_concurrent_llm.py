@@ -1,4 +1,4 @@
-from asyncio import Queue, create_task, sleep
+from asyncio import Queue, TaskGroup, sleep
 from collections import deque
 from logging import getLogger
 from time import ctime, perf_counter
@@ -21,6 +21,7 @@ from math_rag.application.types.inference import LLMResponseType
 from math_rag.infrastructure.constants.inference.openai import (
     CONCURRENT_WAIT_AFTER_RATE_LIMIT_ERROR,
     CONCURRENT_WAIT_IDLE,
+    OPENAI_ERRORS_TO_NOT_RETRY,
     OPENAI_ERRORS_TO_RAISE,
     OPENAI_ERRORS_TO_RETRY_NO_RATE_LIMIT,
 )
@@ -49,6 +50,7 @@ class OpenAIConcurrentLLM(BaseConcurrentLLM):
     ):
         request = request_tracker.request
         exception = None
+        no_retry_exception = None
 
         try:
             request_dict = LLMRequestMapping[LLMResponseType].to_target(request)
@@ -73,14 +75,27 @@ class OpenAIConcurrentLLM(BaseConcurrentLLM):
             exception = e
             status_tracker.num_api_errors += 1
 
+        except OPENAI_ERRORS_TO_NOT_RETRY as e:
+            exception = no_retry_exception = e
+            status_tracker.num_api_errors += 1
+
         except (*OPENAI_ERRORS_TO_RAISE, Exception) as e:
-            logger.error(f'Uncaught exception {type(e)}: {e}')
+            logger.error(
+                f'Uncaught exception {type(e)}: {e}, caused by request {request}'
+            )
             raise
 
         if exception:
-            error = LLMError(message=exception.message, body=exception.message)
+            error = LLMError(
+                message=exception.message
+                if hasattr(exception, 'message')
+                else str(exception),
+                body=exception.message if hasattr(exception, 'message') else None,
+            )
             request_tracker.errors.append(error)
-            request_tracker.retries_left -= 1
+            request_tracker.retries_left = (
+                0 if no_retry_exception else request_tracker.retries_left - 1
+            )
 
             if request_tracker.retries_left > 0:
                 retry_queue.put_nowait(request_tracker)
@@ -90,13 +105,16 @@ class OpenAIConcurrentLLM(BaseConcurrentLLM):
                     request=request_tracker.request, errors=request_tracker.errors
                 )
                 failed_requests.append(failed_request)
+
                 status_tracker.num_tasks_in_progress -= 1
                 status_tracker.num_tasks_failed += 1
+
                 logger.error(
                     f'Request {request_tracker.request.id} failed after all retries'
                 )
         else:
             response_lists.append(response_list)
+
             status_tracker.num_tasks_in_progress -= 1
             status_tracker.num_tasks_succeeded += 1
 
@@ -127,90 +145,95 @@ class OpenAIConcurrentLLM(BaseConcurrentLLM):
         response_lists: list[LLMResponseList[LLMResponseType]] = []
         failed_requests: list[LLMFailedRequest[LLMResponseType]] = []
 
-        while True:
-            if next_request is None:
-                if not retry_queue.empty():
-                    next_request = retry_queue.get_nowait()
-                    logger.debug(f'Retrying request {next_request.request.id}')
+        async with TaskGroup() as task_group:
+            while True:
+                if next_request is None:
+                    if not retry_queue.empty():
+                        next_request = retry_queue.get_nowait()
+                        logger.debug(f'Retrying request {next_request.request.id}')
 
-                elif requests_not_empty:
-                    if requests:
-                        request = requests.popleft()
-                        token_consumption = TokenCounterUtil.count(
-                            request, model_name=model
-                        )
-
-                        if token_consumption > max_tokens_per_minute:
-                            raise ValueError(
-                                f'Request {request.id} needs {token_consumption} tokens, but max_tokens_per_minute is {max_tokens_per_minute}'
+                    elif requests_not_empty:
+                        if requests:
+                            request = requests.popleft()
+                            token_consumption = TokenCounterUtil.count(
+                                request, model_name=model
                             )
 
-                        next_request = LLMRequestTracker(
-                            request=request,
-                            token_consumption=token_consumption,
-                            retries_left=max_num_retries,
+                            if token_consumption > max_tokens_per_minute:
+                                raise ValueError(
+                                    f'Request {request.id} needs {token_consumption} tokens, but max_tokens_per_minute is {max_tokens_per_minute}'
+                                )
+
+                            next_request = LLMRequestTracker(
+                                request=request,
+                                token_consumption=token_consumption,
+                                retries_left=max_num_retries,
+                            )
+                            status_tracker.num_tasks_started += 1
+                            status_tracker.num_tasks_in_progress += 1
+
+                        else:
+                            requests_not_empty = False
+
+                current_time = perf_counter()
+                seconds_since_update = current_time - last_update_time
+                available_request_capacity = min(
+                    available_request_capacity
+                    + max_requests_per_minute * seconds_since_update / 60.0,
+                    max_requests_per_minute,
+                )
+                available_token_capacity = min(
+                    available_token_capacity
+                    + max_tokens_per_minute * seconds_since_update / 60.0,
+                    max_tokens_per_minute,
+                )
+                last_update_time = current_time
+
+                if next_request:
+                    next_request_tokens = next_request.token_consumption
+
+                    if (
+                        available_request_capacity >= 1
+                        and available_token_capacity >= next_request_tokens
+                    ):
+                        available_request_capacity -= 1
+                        available_token_capacity -= next_request_tokens
+
+                        task_group.create_task(
+                            self._generate(
+                                request_tracker=next_request,
+                                retry_queue=retry_queue,
+                                status_tracker=status_tracker,
+                                response_lists=response_lists,
+                                failed_requests=failed_requests,
+                            )
                         )
-                        status_tracker.num_tasks_started += 1
-                        status_tracker.num_tasks_in_progress += 1
+                        next_request = None
 
-                    else:
-                        requests_not_empty = False
+                if status_tracker.num_tasks_in_progress == 0:
+                    break
 
-            current_time = perf_counter()
-            seconds_since_update = current_time - last_update_time
-            available_request_capacity = min(
-                available_request_capacity
-                + max_requests_per_minute * seconds_since_update / 60.0,
-                max_requests_per_minute,
-            )
-            available_token_capacity = min(
-                available_token_capacity
-                + max_tokens_per_minute * seconds_since_update / 60.0,
-                max_tokens_per_minute,
-            )
-            last_update_time = current_time
+                await sleep(CONCURRENT_WAIT_IDLE)
 
-            if next_request:
-                next_request_tokens = next_request.token_consumption
+                seconds_since_rate_limit_error = (
+                    perf_counter() - status_tracker.time_of_last_rate_limit_error
+                )
 
                 if (
-                    available_request_capacity >= 1
-                    and available_token_capacity >= next_request_tokens
+                    seconds_since_rate_limit_error
+                    < CONCURRENT_WAIT_AFTER_RATE_LIMIT_ERROR
                 ):
-                    available_request_capacity -= 1
-                    available_token_capacity -= next_request_tokens
-                    create_task(
-                        self._generate(
-                            request_tracker=next_request,
-                            retry_queue=retry_queue,
-                            status_tracker=status_tracker,
-                            response_lists=response_lists,
-                            failed_requests=failed_requests,
-                        )
+                    remaining_seconds_to_pause = (
+                        CONCURRENT_WAIT_AFTER_RATE_LIMIT_ERROR
+                        - seconds_since_rate_limit_error
                     )
-                    next_request = None
+                    await sleep(remaining_seconds_to_pause)
 
-            if status_tracker.num_tasks_in_progress == 0:
-                break
-
-            await sleep(CONCURRENT_WAIT_IDLE)
-
-            seconds_since_rate_limit_error = (
-                perf_counter() - status_tracker.time_of_last_rate_limit_error
-            )
-
-            if seconds_since_rate_limit_error < CONCURRENT_WAIT_AFTER_RATE_LIMIT_ERROR:
-                remaining_seconds_to_pause = (
-                    CONCURRENT_WAIT_AFTER_RATE_LIMIT_ERROR
-                    - seconds_since_rate_limit_error
-                )
-                await sleep(remaining_seconds_to_pause)
-
-                wait_until = ctime(
-                    status_tracker.time_of_last_rate_limit_error
-                    + CONCURRENT_WAIT_AFTER_RATE_LIMIT_ERROR
-                )
-                logger.warning(f'Pausing to cool down until {wait_until}')
+                    wait_until = ctime(
+                        status_tracker.time_of_last_rate_limit_error
+                        + CONCURRENT_WAIT_AFTER_RATE_LIMIT_ERROR
+                    )
+                    logger.warning(f'Pausing to cool down until {wait_until}')
 
         if status_tracker.num_tasks_failed > 0:
             logger.warning(

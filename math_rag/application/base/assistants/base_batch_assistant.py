@@ -13,7 +13,7 @@ class BaseBatchAssistant(BaseBasicAssistant[AssistantInputType, AssistantOutputT
     @abstractmethod
     async def batch_assist(
         self, inputs: list[AssistantInputType]
-    ) -> tuple[list[AssistantInputType], list[AssistantOutputType]]:
+    ) -> list[AssistantOutputType]:
         pass
 
     @abstractmethod

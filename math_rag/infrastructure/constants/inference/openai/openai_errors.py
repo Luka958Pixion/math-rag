@@ -4,7 +4,9 @@ from openai import (
     AuthenticationError,
     BadRequestError,
     ConflictError,
+    ContentFilterFinishReasonError,
     InternalServerError,
+    LengthFinishReasonError,
     NotFoundError,
     PermissionDeniedError,
     RateLimitError,
@@ -18,6 +20,7 @@ OPENAI_ERRORS_TO_RETRY = (
     RateLimitError,
     UnprocessableEntityError,
 )
+OPENAI_ERRORS_TO_NOT_RETRY = (LengthFinishReasonError, ContentFilterFinishReasonError)
 OPENAI_ERRORS_TO_RETRY_NO_RATE_LIMIT = (
     APITimeoutError,
     InternalServerError,

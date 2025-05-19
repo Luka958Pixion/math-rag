@@ -12,6 +12,7 @@ from math_rag.application.models.inference import (
 )
 from math_rag.application.types.inference import LLMResponseType
 from math_rag.infrastructure.constants.inference.openai import (
+    OPENAI_ERRORS_TO_NOT_RETRY,
     OPENAI_ERRORS_TO_RAISE,
     OPENAI_ERRORS_TO_RETRY,
 )
@@ -63,7 +64,7 @@ class OpenAIBasicLLM(BaseBasicLLM):
             response_list = await _generate(request)
             failed_request = None
 
-        except OPENAI_ERRORS_TO_RETRY as e:
+        except OPENAI_ERRORS_TO_RETRY + OPENAI_ERRORS_TO_NOT_RETRY as e:
             response_list = LLMResponseList[LLMResponseType](responses=[])
             error = LLMError(message=e.message, body=e.body)
             failed_request = LLMFailedRequest(request=request, errors=[error])

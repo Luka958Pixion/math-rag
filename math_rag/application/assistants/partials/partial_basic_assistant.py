@@ -26,6 +26,9 @@ class PartialBasicAssistant(
         request = self.encode_to_request(input)
         result = await self._llm.generate(request)
 
+        if result.failed_request:
+            return None
+
         # map BoundAssistantOutput to AssistantOutput
         for response in result.response_list.responses:
             content_dict = response.content.model_dump()
