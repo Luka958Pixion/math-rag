@@ -82,7 +82,7 @@ class DocumentRepository(
         self,
         *,
         batch_size: int,
-    ) -> AsyncGenerator[list[SourceType]]:
+    ) -> AsyncGenerator[list[SourceType], None]:
         cursor = self.collection.find().batch_size(batch_size)
         batch: list[SourceType] = []
 

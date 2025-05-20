@@ -32,7 +32,7 @@ class BaseDocumentRepository(ABC, Generic[T]):
         self,
         *,
         batch_size: int,
-    ) -> AsyncGenerator[list[T]]:
+    ) -> AsyncGenerator[list[T], None]:
         pass
 
     @abstractmethod
