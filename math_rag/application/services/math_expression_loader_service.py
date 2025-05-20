@@ -66,6 +66,9 @@ class MathExpressionLoaderService(BaseMathExpressionLoaderService):
             if name is not None and name.endswith('.tex')
         ]
 
+        num_corrected_total = 0
+        num_non_corrected_total = 0
+
         for name in file_names:
             # load and parse math articles
             math_article = self.math_article_repository.find_by_name(name)
@@ -130,6 +133,8 @@ class MathExpressionLoaderService(BaseMathExpressionLoaderService):
 
                 num_corrected = len(re_valid)
                 num_non_corrected = len(invalid) - num_corrected
+                num_corrected_total += num_corrected
+                num_non_corrected_total += num_non_corrected
                 logger.info(
                     f'Re-validated KaTeX: corrected {num_corrected}, '
                     f'still failing {num_non_corrected}'
@@ -152,5 +157,10 @@ class MathExpressionLoaderService(BaseMathExpressionLoaderService):
             await self.math_expression_repository.batch_insert_many(
                 math_expressions, batch_size=100
             )
+
+        logger.info(
+            f'Re-validated KaTeX: corrected total {num_corrected_total}, '
+            f'still failing total {num_non_corrected_total}'
+        )
 
         await self.math_expression_repository.backup()

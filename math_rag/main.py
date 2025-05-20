@@ -1,5 +1,5 @@
 from asyncio import run
-from logging import ERROR, INFO, basicConfig, getLogger
+from logging import ERROR, INFO, WARNING, basicConfig, getLogger
 
 from math_rag.application.containers import ApplicationContainer
 from math_rag.infrastructure.containers import InfrastructureContainer
@@ -7,6 +7,8 @@ from math_rag.infrastructure.containers import InfrastructureContainer
 
 basicConfig(level=INFO, format='%(asctime)s - %(levelname)s - %(message)s')
 getLogger('pylatexenc.latexwalker').setLevel(ERROR)
+getLogger('httpx').setLevel(WARNING)
+getLogger('openai').setLevel(WARNING)
 
 
 async def main():

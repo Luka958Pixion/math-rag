@@ -1,6 +1,6 @@
 from datetime import datetime
 from pathlib import Path
-from typing import Generic, cast
+from typing import AsyncGenerator, Generic, cast
 from uuid import UUID
 
 from bson.binary import UuidRepresentation
@@ -77,6 +77,26 @@ class DocumentRepository(
         items = [self.mapping_cls.to_source(doc) for doc in docs]
 
         return items
+
+    async def batch_find_many(
+        self,
+        *,
+        batch_size: int,
+    ) -> AsyncGenerator[list[SourceType]]:
+        cursor = self.collection.find().batch_size(batch_size)
+        batch: list[SourceType] = []
+
+        async for bson_doc in cursor:
+            doc = self.target_cls(**bson_doc)
+            batch.append(self.mapping_cls.to_source(doc))
+
+            if len(batch) >= batch_size:
+                yield batch
+
+                batch = []
+
+        if batch:
+            yield batch
 
     async def clear(self):
         await self.collection.delete_many({})

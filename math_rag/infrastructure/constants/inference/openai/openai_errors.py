@@ -15,6 +15,7 @@ from openai import (
 
 
 OPENAI_ERRORS_TO_RETRY = (
+    APIConnectionError,  # NOTE: occured besides having proper connection settings
     APITimeoutError,
     InternalServerError,
     RateLimitError,
@@ -27,7 +28,6 @@ OPENAI_ERRORS_TO_RETRY_NO_RATE_LIMIT = (
     UnprocessableEntityError,
 )
 OPENAI_ERRORS_TO_RAISE = (
-    APIConnectionError,
     AuthenticationError,
     BadRequestError,
     ConflictError,

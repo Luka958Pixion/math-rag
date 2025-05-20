@@ -1,5 +1,5 @@
 from abc import ABC, abstractmethod
-from typing import Generic, TypeVar
+from typing import AsyncGenerator, Generic, TypeVar
 from uuid import UUID
 
 
@@ -25,6 +25,14 @@ class BaseDocumentRepository(ABC, Generic[T]):
 
     @abstractmethod
     async def find_many(self) -> list[T]:
+        pass
+
+    @abstractmethod
+    async def batch_find_many(
+        self,
+        *,
+        batch_size: int,
+    ) -> AsyncGenerator[list[T]]:
         pass
 
     @abstractmethod

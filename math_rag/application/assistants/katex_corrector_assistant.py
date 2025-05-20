@@ -35,6 +35,7 @@ class KatexCorrectorAssistant(
                 response_type=KatexCorrectorAssistantOutput.bind(input.id),
                 metadata={'input_id': str(input.id)},
                 store=True,
+                max_completion_tokens=1024,
             ),
         )
 
