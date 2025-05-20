@@ -33,7 +33,7 @@ class BaseDocumentRepository(ABC, Generic[T]):
         *,
         batch_size: int,
     ) -> AsyncGenerator[list[T], None]:
-        pass
+        yield
 
     @abstractmethod
     async def clear(self):

@@ -77,7 +77,7 @@ class MathExpressionLoaderService(BaseMathExpressionLoaderService):
             # extract and validate KaTeX
             katexes = [str(node.latex_verbatim()).strip('$') for node in math_nodes]
             results = await self.katex_client.batch_validate_many(
-                katexes, batch_size=1000
+                katexes, batch_size=50
             )
             valid, invalid = self._split_by_validity(math_nodes, results)
             logger.info(f'Validated KaTeX: {len(valid)}/{len(results)}')
@@ -119,7 +119,7 @@ class MathExpressionLoaderService(BaseMathExpressionLoaderService):
 
                 # re-validate only the ones we have corrections for
                 re_results = await self.katex_client.batch_validate_many(
-                    corrected_katexes, batch_size=1000
+                    corrected_katexes, batch_size=50
                 )
                 re_valid, _ = self._split_by_validity(corrected_nodes, re_results)
 

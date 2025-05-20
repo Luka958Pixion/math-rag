@@ -26,7 +26,7 @@ class KatexClient(BaseKatexClient):
                 content=katex.encode('utf-8'),
                 headers={'Content-Type': 'text/plain'},
             )
-            result = response.json()
+            result = response.json() if response.status_code == 200 else None
 
             return KatexValidationResult(**result)
 
@@ -40,7 +40,15 @@ class KatexClient(BaseKatexClient):
                 json=katexes,  # json automatically encodes to utf-8
                 headers={'Content-Type': 'application/json'},
             )
-            results = response.json()
+
+            if response.status_code == 200:
+                results = response.json()
+
+            else:
+                logger.error(
+                    f'Failed with status code {response.status_code}: {response.text}'
+                )
+                response.raise_for_status()
 
         return [KatexValidationResult(**result) for result in results]
 
