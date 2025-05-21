@@ -29,7 +29,7 @@ from math_rag.infrastructure.mappings.inference.openai import (
     LLMRequestMapping,
     LLMResponseListMapping,
 )
-from math_rag.infrastructure.utils import TokenCounterUtil
+from math_rag.infrastructure.utils import LLMTokenCounterUtil
 from math_rag.infrastructure.validators.inference.openai import OpenAIValidator
 
 
@@ -155,7 +155,7 @@ class OpenAIConcurrentLLM(BaseConcurrentLLM):
                     elif requests_not_empty:
                         if requests:
                             request = requests.popleft()
-                            token_consumption = TokenCounterUtil.count(
+                            token_consumption = LLMTokenCounterUtil.count(
                                 request, model_name=model
                             )
 

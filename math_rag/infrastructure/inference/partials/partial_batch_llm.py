@@ -21,9 +21,12 @@ class PartialBatchLLM(BaseBatchLLM):
         *,
         poll_interval: float,
         max_tokens_per_day: float | None,
+        max_input_file_size: int | None,
     ) -> LLMBatchResult[LLMResponseType]:
         batch_id = await self.batch_generate_init(
-            batch_request, max_tokens_per_day=max_tokens_per_day
+            batch_request,
+            max_tokens_per_day=max_tokens_per_day,
+            max_input_file_size=max_input_file_size,
         )
 
         while True:
@@ -43,6 +46,7 @@ class PartialBatchLLM(BaseBatchLLM):
         *,
         poll_interval: float,
         max_tokens_per_day: float | None,
+        max_input_file_size: int | None,
         max_num_retries: int,
     ) -> LLMBatchResult[LLMResponseType]:
         if max_num_retries < 0:
@@ -57,6 +61,7 @@ class PartialBatchLLM(BaseBatchLLM):
                 response_type,
                 poll_interval=poll_interval,
                 max_tokens_per_day=max_tokens_per_day,
+                max_input_file_size=max_input_file_size,
             )
             response_lists.extend(batch_result.response_lists)
 
@@ -86,6 +91,7 @@ class PartialBatchLLM(BaseBatchLLM):
         *,
         poll_interval: float,
         max_tokens_per_day: float | None,
+        max_input_file_size: int | None,
         max_num_retries: int,
     ) -> LLMBatchResult[LLMResponseType]:
         if max_num_retries:
@@ -94,6 +100,7 @@ class PartialBatchLLM(BaseBatchLLM):
                 response_type,
                 poll_interval=poll_interval,
                 max_tokens_per_day=max_tokens_per_day,
+                max_input_file_size=max_input_file_size,
                 max_num_retries=max_num_retries,
             )
 
@@ -102,6 +109,7 @@ class PartialBatchLLM(BaseBatchLLM):
             response_type,
             poll_interval=poll_interval,
             max_tokens_per_day=max_tokens_per_day,
+            max_input_file_size=max_input_file_size,
         )
 
         return batch_result

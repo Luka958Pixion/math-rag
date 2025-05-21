@@ -12,6 +12,8 @@ from .em_response_list import EMResponseList
 from .em_result import EMResult
 from .em_status_tracker import EMStatusTracker
 from .llm_batch_request import LLMBatchRequest
+from .llm_batch_request_schedule import LLMBatchRequestSchedule
+from .llm_batch_request_schedule_entry import LLMBatchRequestScheduleEntry
 from .llm_batch_result import LLMBatchResult
 from .llm_concurrent_request import LLMConcurrentRequest
 from .llm_concurrent_result import LLMConcurrentResult
@@ -54,6 +56,8 @@ __all__ = [
     'LLMPrompt',
     'LLMRequest',
     'LLMBatchRequest',
+    'LLMBatchRequestSchedule',
+    'LLMBatchRequestScheduleEntry',
     'LLMConcurrentRequest',
     'LLMRequestTracker',
     'LLMResponse',

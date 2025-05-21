@@ -37,6 +37,7 @@ class TEIBatchManagedEM(BaseBatchManagedEM):
             batch_request,
             poll_interval=batch_settings.poll_interval,
             max_tokens_per_day=batch_settings.max_tokens_per_day,
+            max_input_file_size=batch_settings.max_input_file_size,
             max_num_retries=batch_settings.max_num_retries,
         )
 

@@ -24,7 +24,7 @@ from math_rag.infrastructure.mappings.inference.openai import (
     EMRequestMapping,
     EMResponseListMapping,
 )
-from math_rag.infrastructure.utils import TokenCounterUtil
+from math_rag.infrastructure.utils import EMTokenCounterUtil
 from math_rag.infrastructure.validators.inference.openai import OpenAIValidator
 
 
@@ -37,7 +37,11 @@ class OpenAIBatchEM(PartialBatchEM):
         self.batch_request_id_to_input_file_id: dict[UUID, str] = {}
 
     async def batch_embed_init(
-        self, batch_request: EMBatchRequest, *, max_tokens_per_day: float | None
+        self,
+        batch_request: EMBatchRequest,
+        *,
+        max_tokens_per_day: float | None,
+        max_input_file_size: int | None,
     ) -> str:
         # validate
         if max_tokens_per_day is None:
@@ -48,7 +52,7 @@ class OpenAIBatchEM(PartialBatchEM):
 
         # check token limit
         total_tokens = sum(
-            TokenCounterUtil.count(request, model_name=model)
+            EMTokenCounterUtil.count(request, model_name=model)
             for request in batch_request.requests
         )
 
@@ -108,7 +112,9 @@ class OpenAIBatchEM(PartialBatchEM):
                 sleep(BATCH_WAIT_AFTER_RATE_LIMIT_ERROR)
 
                 return await self.batch_embed_init(
-                    batch_request, max_tokens_per_day=max_tokens_per_day
+                    batch_request,
+                    max_tokens_per_day=max_tokens_per_day,
+                    max_input_file_size=max_input_file_size,
                 )
 
             raise

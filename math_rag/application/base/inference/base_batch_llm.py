@@ -17,6 +17,7 @@ class BaseBatchLLM(ABC):
         *,
         poll_interval: float,
         max_tokens_per_day: float | None,
+        max_input_file_size: int | None,
         max_num_retries: int,
     ) -> LLMBatchResult[LLMResponseType]:
         pass
@@ -27,6 +28,7 @@ class BaseBatchLLM(ABC):
         batch_request: LLMBatchRequest[LLMResponseType],
         *,
         max_tokens_per_day: float | None,
+        max_input_file_size: int | None,
     ) -> str:
         pass
 

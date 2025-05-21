@@ -27,7 +27,7 @@ from math_rag.infrastructure.mappings.inference.openai import (
     EMRequestMapping,
     EMResponseListMapping,
 )
-from math_rag.infrastructure.utils import TokenCounterUtil
+from math_rag.infrastructure.utils import EMTokenCounterUtil
 from math_rag.infrastructure.validators.inference.openai import OpenAIValidator
 
 
@@ -146,7 +146,7 @@ class OpenAIConcurrentEM(BaseConcurrentEM):
                     elif requests_not_empty:
                         if requests:
                             request = requests.popleft()
-                            token_consumption = TokenCounterUtil.count(
+                            token_consumption = EMTokenCounterUtil.count(
                                 request, model_name=model
                             )
                             next_request = EMRequestTracker(

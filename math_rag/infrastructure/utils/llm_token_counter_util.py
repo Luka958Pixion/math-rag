@@ -1,35 +1,13 @@
-from typing import overload
-
 from tiktoken import encoding_for_model, get_encoding
 
-from math_rag.application.models.inference import EMRequest, LLMRequest
+from math_rag.application.models.inference import LLMBatchRequest, LLMRequest
 from math_rag.application.types.inference import LLMResponseType
 
 
-class TokenCounterUtil:
-    @overload
-    @staticmethod
-    def count(
-        request: EMRequest,
-        *,
-        encoding_name: str | None = None,
-        model_name: str | None = None,
-    ) -> int:
-        pass
-
-    @overload
+class LLMTokenCounterUtil:
     @staticmethod
     def count(
         request: LLMRequest[LLMResponseType],
-        *,
-        encoding_name: str | None = None,
-        model_name: str | None = None,
-    ) -> int:
-        pass
-
-    @staticmethod
-    def count(
-        request: EMRequest | LLMRequest[LLMResponseType],
         *,
         encoding_name: str | None = None,
         model_name: str | None = None,
@@ -43,9 +21,6 @@ class TokenCounterUtil:
         else:
             raise ValueError('Missing encoding_name or model_name')
 
-        if isinstance(request, EMRequest):
-            return len(encoding.encode(request.text))
-
         prompt_tokens = sum(
             len(encoding.encode(message.content))
             for message in request.conversation.messages
@@ -55,3 +30,17 @@ class TokenCounterUtil:
         total_tokens = prompt_tokens + completion_tokens
 
         return total_tokens
+
+    @staticmethod
+    def batch_count(
+        batch_request: LLMBatchRequest[LLMResponseType],
+        *,
+        encoding_name: str | None = None,
+        model_name: str | None = None,
+    ) -> list[int]:
+        return [
+            LLMTokenCounterUtil.count(
+                request, encoding_name=encoding_name, model_name=model_name
+            )
+            for request in batch_request
+        ]

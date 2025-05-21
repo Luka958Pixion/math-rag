@@ -215,6 +215,7 @@ class TGIBatchLLM(PartialBatchLLM):
         batch_request: LLMBatchRequest[LLMResponseType],
         *,
         max_tokens_per_day: float | None,
+        max_input_file_size: int | None = None,
     ) -> str:
         # validate
         if max_tokens_per_day is not None:

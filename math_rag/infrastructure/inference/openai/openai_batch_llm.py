@@ -16,6 +16,8 @@ from math_rag.application.models.inference import (
 )
 from math_rag.application.types.inference import LLMResponseType
 from math_rag.infrastructure.constants.inference.openai import (
+    BATCH_INPUT_FILE_SIZE_LIMIT,
+    BATCH_INPUT_FILE_SIZE_LIMIT_SCALED,
     BATCH_WAIT_AFTER_RATE_LIMIT_ERROR,
 )
 from math_rag.infrastructure.enums.inference.openai import BatchErrorCode
@@ -25,7 +27,7 @@ from math_rag.infrastructure.mappings.inference.openai import (
     LLMRequestMapping,
     LLMResponseListMapping,
 )
-from math_rag.infrastructure.utils import TokenCounterUtil
+from math_rag.infrastructure.utils import LLMTokenCounterUtil
 from math_rag.infrastructure.validators.inference.openai import OpenAIValidator
 
 
@@ -42,6 +44,7 @@ class OpenAIBatchLLM(PartialBatchLLM):
         batch_request: LLMBatchRequest[LLMResponseType],
         *,
         max_tokens_per_day: float | None,
+        max_input_file_size: int | None,
     ) -> str:
         # validate
         if max_tokens_per_day is None:
@@ -52,7 +55,7 @@ class OpenAIBatchLLM(PartialBatchLLM):
 
         # check token limit
         total_tokens = sum(
-            TokenCounterUtil.count(request, model_name=model)
+            LLMTokenCounterUtil.count(request, model_name=model)
             for request in batch_request.requests
         )
 
@@ -94,6 +97,15 @@ class OpenAIBatchLLM(PartialBatchLLM):
             ]
             jsonl_str = '\n'.join(lines)
             jsonl_bytes = jsonl_str.encode('utf-8')
+            size_in_bytes = len(jsonl_bytes)
+            size_in_megabytes = size_in_bytes / (1024 * 1024)
+
+            # leaving some space for deviations in different sile systems
+            if size_in_megabytes > BATCH_INPUT_FILE_SIZE_LIMIT_SCALED:
+                raise ValueError(
+                    f'JSONL size limit exceeded: {size_in_megabytes}/'
+                    f'{BATCH_INPUT_FILE_SIZE_LIMIT_SCALED}({BATCH_INPUT_FILE_SIZE_LIMIT})MB'
+                )
 
             # create openai input file
             input_file = await self.client.files.create(
@@ -114,7 +126,9 @@ class OpenAIBatchLLM(PartialBatchLLM):
                 sleep(BATCH_WAIT_AFTER_RATE_LIMIT_ERROR)
 
                 return await self.batch_generate_init(
-                    batch_request, max_tokens_per_day=max_tokens_per_day
+                    batch_request,
+                    max_tokens_per_day=max_tokens_per_day,
+                    max_input_file_size=max_input_file_size,
                 )
 
             raise

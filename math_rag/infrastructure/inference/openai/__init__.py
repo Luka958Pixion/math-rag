@@ -3,6 +3,7 @@ from .openai_basic_llm import OpenAIBasicLLM
 from .openai_basic_managed_em import OpenAIBasicManagedEM
 from .openai_basic_managed_llm import OpenAIBasicManagedLLM
 from .openai_batch_llm import OpenAIBatchLLM
+from .openai_batch_llm_request_scheduler import OpenAIBatchLLMRequestScheduler
 from .openai_batch_managed_em import OpenAIBatchManagedEM
 from .openai_batch_managed_llm import OpenAIBatchManagedLLM
 from .openai_concurrent_em import OpenAIConcurrentEM
@@ -21,6 +22,7 @@ __all__ = [
     'OpenAIConcurrentLLM',
     'OpenAIBasicEM',
     'OpenAIBasicLLM',
+    'OpenAIBatchLLMRequestScheduler',
     'OpenAIEM',
     'OpenAILLM',
     'OpenAIBatchManagedEM',

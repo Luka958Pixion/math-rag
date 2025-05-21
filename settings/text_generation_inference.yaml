@@ -2,5 +2,5 @@ default:
   num_chunks: 1
   num_cpus: 4
   num_gpus: 1
-  mem: 34359738368  # 32 * 1024**3
+  mem: 34359738368  # 32 * 1024 * 1024 * 1024
   wall_time: 2700    # 45 * 60

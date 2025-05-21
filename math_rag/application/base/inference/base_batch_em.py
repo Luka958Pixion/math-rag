@@ -15,6 +15,7 @@ class BaseBatchEM(ABC):
         *,
         poll_interval: float,
         max_tokens_per_day: float | None,
+        max_input_file_size: int | None,
         max_num_retries: int,
     ) -> EMBatchResult:
         pass
@@ -25,6 +26,7 @@ class BaseBatchEM(ABC):
         batch_request: EMBatchRequest,
         *,
         max_tokens_per_day: float | None,
+        max_input_file_size: int | None,
     ) -> str:
         pass
 

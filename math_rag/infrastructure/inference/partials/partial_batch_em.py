@@ -19,9 +19,12 @@ class PartialBatchEM(BaseBatchEM):
         *,
         poll_interval: float,
         max_tokens_per_day: float | None,
+        max_input_file_size: int | None,
     ) -> EMBatchResult:
         batch_id = await self.batch_embed_init(
-            batch_request, max_tokens_per_day=max_tokens_per_day
+            batch_request,
+            max_tokens_per_day=max_tokens_per_day,
+            max_input_file_size=max_input_file_size,
         )
 
         while True:
@@ -38,6 +41,7 @@ class PartialBatchEM(BaseBatchEM):
         *,
         poll_interval: float,
         max_tokens_per_day: float | None,
+        max_input_file_size: int | None,
         max_num_retries: int,
     ) -> EMBatchResult:
         if max_num_retries < 0:
@@ -51,6 +55,7 @@ class PartialBatchEM(BaseBatchEM):
                 batch_request,
                 poll_interval=poll_interval,
                 max_tokens_per_day=max_tokens_per_day,
+                max_input_file_size=max_input_file_size,
             )
             response_lists.extend(batch_result.response_lists)
 
@@ -79,6 +84,7 @@ class PartialBatchEM(BaseBatchEM):
         *,
         poll_interval: float,
         max_tokens_per_day: float | None,
+        max_input_file_size: int | None,
         max_num_retries: int,
     ) -> EMBatchResult:
         if max_num_retries:
@@ -86,6 +92,7 @@ class PartialBatchEM(BaseBatchEM):
                 batch_request,
                 poll_interval=poll_interval,
                 max_tokens_per_day=max_tokens_per_day,
+                max_input_file_size=max_input_file_size,
                 max_num_retries=max_num_retries,
             )
 
@@ -93,6 +100,7 @@ class PartialBatchEM(BaseBatchEM):
             batch_request,
             poll_interval=poll_interval,
             max_tokens_per_day=max_tokens_per_day,
+            max_input_file_size=max_input_file_size,
         )
 
         return batch_result

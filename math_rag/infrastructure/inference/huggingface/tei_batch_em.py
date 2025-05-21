@@ -206,7 +206,11 @@ class TEIBatchEM(PartialBatchEM):  # TODO update
             await self._upload_file(local_path, remote_path)
 
     async def batch_embed_init(
-        self, batch_request: EMBatchRequest, *, max_tokens_per_day: float | None
+        self,
+        batch_request: EMBatchRequest,
+        *,
+        max_tokens_per_day: float | None,
+        max_input_file_size: int | None,
     ) -> str:
         # validate
         if max_tokens_per_day is not None:
