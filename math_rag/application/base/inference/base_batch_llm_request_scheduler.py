@@ -1,8 +1,10 @@
 from abc import ABC, abstractmethod
+from collections.abc import AsyncGenerator
 
 from math_rag.application.models.inference import (
     LLMBatchRequest,
     LLMBatchRequestSchedule,
+    LLMBatchResult,
 )
 from math_rag.application.types.inference import LLMResponseType
 
@@ -17,3 +19,11 @@ class BaseBatchLLMRequestScheduler(ABC):
         max_input_file_size: int,
     ) -> LLMBatchRequestSchedule[LLMResponseType]:
         pass
+
+    @abstractmethod
+    async def execute(
+        self,
+        schedule: LLMBatchRequestSchedule[LLMResponseType],
+        response_type: type[LLMResponseType],
+    ) -> AsyncGenerator[LLMBatchResult[LLMResponseType], None]:
+        yield
