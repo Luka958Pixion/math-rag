@@ -16,6 +16,7 @@ class MathExpressionLabelMapping(
             id=target.id,
             math_expression_id=target.math_expression_id,
             value=target.value,
+            timestamp=target.timestamp,
         )
 
     @staticmethod
@@ -26,4 +27,5 @@ class MathExpressionLabelMapping(
             id=source.id,
             math_expression_id=source.math_expression_id,
             value=source.value,
+            timestamp=source.timestamp,
         )

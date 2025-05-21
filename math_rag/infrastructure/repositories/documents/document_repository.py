@@ -112,7 +112,6 @@ class DocumentRepository(
 
         with open(self.backup_file_path, 'w') as file:
             async for document in cursor:
-                print(document)
                 file.write(dumps(document, json_options=self.json_options) + '\n')
 
     async def restore(self):
