@@ -1,4 +1,4 @@
-from typing import AsyncGenerator
+from collections.abc import AsyncGenerator
 
 from math_rag.infrastructure.constants.utils import CHUNK_SIZE
 

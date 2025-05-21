@@ -9,7 +9,7 @@ from math_rag.application.types.inference import LLMResponseType
 
 class BaseBatchLLMRequestScheduler(ABC):
     @abstractmethod
-    async def schedule(
+    def schedule(
         self,
         batch_request: LLMBatchRequest[LLMResponseType],
         *,

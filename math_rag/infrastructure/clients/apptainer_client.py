@@ -1,6 +1,6 @@
 from asyncio import sleep
+from collections.abc import AsyncGenerator
 from pathlib import Path
-from typing import AsyncGenerator
 from uuid import UUID
 
 from httpx import AsyncClient

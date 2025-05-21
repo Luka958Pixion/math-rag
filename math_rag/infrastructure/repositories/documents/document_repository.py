@@ -1,6 +1,7 @@
+from collections.abc import AsyncGenerator
 from datetime import datetime
 from pathlib import Path
-from typing import AsyncGenerator, Generic, cast
+from typing import Generic, cast
 from uuid import UUID
 
 from bson.binary import UuidRepresentation

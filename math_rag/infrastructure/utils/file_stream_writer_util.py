@@ -1,5 +1,5 @@
+from collections.abc import AsyncGenerator
 from pathlib import Path
-from typing import AsyncGenerator
 
 from aiofiles import open
 from asyncssh import SFTPClientFile

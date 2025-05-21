@@ -1,5 +1,6 @@
 from abc import ABC, abstractmethod
-from typing import AsyncGenerator, Generic, TypeVar
+from collections.abc import AsyncGenerator
+from typing import Generic, TypeVar
 from uuid import UUID
 
 

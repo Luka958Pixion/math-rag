@@ -1,12 +1,18 @@
 import json
 
+from asyncio import sleep
+from collections.abc import AsyncGenerator
 from datetime import datetime, timedelta
 
-from math_rag.application.base.inference import BaseBatchLLMRequestScheduler
+from math_rag.application.base.inference import (
+    BaseBatchLLMRequestScheduler,
+    BaseBatchManagedLLM,
+)
 from math_rag.application.models.inference import (
     LLMBatchRequest,
     LLMBatchRequestSchedule,
     LLMBatchRequestScheduleEntry,
+    LLMBatchResult,
 )
 from math_rag.application.types.inference import LLMResponseType
 from math_rag.infrastructure.mappings.inference.openai import LLMRequestMapping
@@ -14,7 +20,10 @@ from math_rag.infrastructure.utils import LLMTokenCounterUtil
 
 
 class OpenAIBatchLLMRequestScheduler(BaseBatchLLMRequestScheduler):
-    async def schedule(
+    def __init__(self, llm: BaseBatchManagedLLM):
+        self.llm = llm
+
+    def schedule(
         self,
         batch_request: LLMBatchRequest[LLMResponseType],
         *,
@@ -76,3 +85,16 @@ class OpenAIBatchLLMRequestScheduler(BaseBatchLLMRequestScheduler):
             schedule.entries.append(schedule_entry)
 
         return schedule
+
+    async def execute(
+        self,
+        schedule: LLMBatchRequestSchedule[LLMResponseType],
+        response_type: type[LLMResponseType],
+    ) -> AsyncGenerator[LLMBatchResult[LLMResponseType], None]:
+        for entry in schedule.entries:
+            current_timestamp = datetime.now()
+
+            if current_timestamp < entry.timestamp:
+                await sleep(entry.timestamp - current_timestamp)
+
+            yield await self.llm.batch_generate(entry.batch_request, response_type)
