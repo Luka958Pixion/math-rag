@@ -12,4 +12,4 @@ from .llm_batch_request import LLMBatchRequest
 class LLMBatchRequestScheduleEntry(BaseModel, Generic[LLMResponseType]):
     id: UUID = Field(default_factory=uuid4)
     batch_request: LLMBatchRequest[LLMResponseType]
-    scheduled_timestamp: datetime
+    timestamp: datetime

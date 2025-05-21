@@ -1,6 +1,6 @@
 from tiktoken import encoding_for_model, get_encoding
 
-from math_rag.application.models.inference import LLMBatchRequest, LLMRequest
+from math_rag.application.models.inference import LLMRequest
 from math_rag.application.types.inference import LLMResponseType
 
 
@@ -30,17 +30,3 @@ class LLMTokenCounterUtil:
         total_tokens = prompt_tokens + completion_tokens
 
         return total_tokens
-
-    @staticmethod
-    def batch_count(
-        batch_request: LLMBatchRequest[LLMResponseType],
-        *,
-        encoding_name: str | None = None,
-        model_name: str | None = None,
-    ) -> list[int]:
-        return [
-            LLMTokenCounterUtil.count(
-                request, encoding_name=encoding_name, model_name=model_name
-            )
-            for request in batch_request
-        ]

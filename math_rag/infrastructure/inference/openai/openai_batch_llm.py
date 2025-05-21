@@ -16,8 +16,6 @@ from math_rag.application.models.inference import (
 )
 from math_rag.application.types.inference import LLMResponseType
 from math_rag.infrastructure.constants.inference.openai import (
-    BATCH_INPUT_FILE_SIZE_LIMIT,
-    BATCH_INPUT_FILE_SIZE_LIMIT_SCALED,
     BATCH_WAIT_AFTER_RATE_LIMIT_ERROR,
 )
 from math_rag.infrastructure.enums.inference.openai import BatchErrorCode
@@ -97,14 +95,14 @@ class OpenAIBatchLLM(PartialBatchLLM):
             ]
             jsonl_str = '\n'.join(lines)
             jsonl_bytes = jsonl_str.encode('utf-8')
-            size_in_bytes = len(jsonl_bytes)
-            size_in_megabytes = size_in_bytes / (1024 * 1024)
+            input_file_size = len(jsonl_bytes)
+            input_file_size_mb = input_file_size / (1024 * 1024)
+            max_input_file_size_mb = max_input_file_size / (1024 * 1024)
 
-            # leaving some space for deviations in different sile systems
-            if size_in_megabytes > BATCH_INPUT_FILE_SIZE_LIMIT_SCALED:
+            if input_file_size > max_input_file_size:
                 raise ValueError(
-                    f'JSONL size limit exceeded: {size_in_megabytes}/'
-                    f'{BATCH_INPUT_FILE_SIZE_LIMIT_SCALED}({BATCH_INPUT_FILE_SIZE_LIMIT})MB'
+                    f'JSONL size limit exceeded: '
+                    f'{input_file_size_mb}/{max_input_file_size_mb}MB'
                 )
 
             # create openai input file

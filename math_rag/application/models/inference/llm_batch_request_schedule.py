@@ -14,7 +14,7 @@ class LLMBatchRequestSchedule(BaseModel, Generic[LLMResponseType]):
 
     @model_validator(mode='after')
     def check_sorted_entries(self):
-        timestamps = [entry.scheduled_timestamp for entry in self.entries]
+        timestamps = [entry.timestamp for entry in self.entries]
 
         for previous, current in zip(timestamps, timestamps[1:]):
             if previous >= current:

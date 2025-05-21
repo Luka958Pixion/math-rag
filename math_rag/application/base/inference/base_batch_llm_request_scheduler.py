@@ -13,7 +13,7 @@ class BaseBatchLLMRequestScheduler(ABC):
         self,
         batch_request: LLMBatchRequest[LLMResponseType],
         *,
-        max_tokens_per_day: float | None,
-        max_input_file_size: int | None,
+        max_tokens_per_day: float,
+        max_input_file_size: int,
     ) -> LLMBatchRequestSchedule[LLMResponseType]:
         pass
