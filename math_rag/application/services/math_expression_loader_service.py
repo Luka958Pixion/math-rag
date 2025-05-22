@@ -58,7 +58,7 @@ class MathExpressionLoaderService(BaseMathExpressionLoaderService):
 
         return valid, invalid
 
-    async def load(self):
+    async def load(self, index_id: UUID):
         # gather all .tex file names
         file_names = [
             name
@@ -147,6 +147,7 @@ class MathExpressionLoaderService(BaseMathExpressionLoaderService):
             for node, katex in zip(math_nodes, final_katexes):
                 math_expressions.append(
                     MathExpression(
+                        index_id=index_id,
                         math_article_id=math_article.id,
                         latex=str(node.latex_verbatim()),
                         katex=katex,

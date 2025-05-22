@@ -6,7 +6,7 @@ from math_rag.application.base.repositories.documents import (
     BaseMathExpressionRepository,
 )
 from math_rag.application.base.services import (
-    BaseMathExpressionLoaderService,
+    BaseMathExpressionLabelLoaderService,
 )
 from math_rag.application.models.assistants import (
     KatexCorrectorAssistantInput,
@@ -18,7 +18,7 @@ from math_rag.core.models import MathExpression
 logger = getLogger(__name__)
 
 
-class MathExpressionLabelLoaderService(...):  # BaseMathExpressionLabelLoaderService
+class MathExpressionLabelLoaderService(BaseMathExpressionLabelLoaderService):
     def __init__(
         self,
         math_expression_repository: BaseMathExpressionRepository,
@@ -27,7 +27,7 @@ class MathExpressionLabelLoaderService(...):  # BaseMathExpressionLabelLoaderSer
         self.math_expression_repository = math_expression_repository
         self.math_expression_label_repository = math_expression_label_repository
 
-    async def load(self):
+    async def load(self, index_id: UUID):
         num_math_expression_labels = 0
 
         async for batch in self.math_expression_repository.batch_find_many(

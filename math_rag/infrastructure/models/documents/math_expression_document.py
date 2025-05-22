@@ -6,6 +6,7 @@ from math_rag.infrastructure.base import BaseDocument
 
 class MathExpressionDocument(BaseDocument):
     id: UUID
+    index_id: UUID
     timestamp: datetime
     math_article_id: UUID
     latex: str

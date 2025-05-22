@@ -1,5 +1,6 @@
 from .document_repository import DocumentRepository
 from .em_failed_request_repository import EMFailedRequestRepository
+from .index_repository import IndexRepository
 from .katex_corrector_assistant_input_repository import (
     KatexCorrectorAssistantInputRepository,
 )
@@ -16,6 +17,7 @@ from .math_expression_repository import MathExpressionRepository
 __all__ = [
     'DocumentRepository',
     'EMFailedRequestRepository',
+    'IndexRepository',
     'KatexCorrectorAssistantInputRepository',
     'KatexCorrectorAssistantOutputRepository',
     'MathExpressionLabelRepository',

@@ -1,5 +1,6 @@
 from asyncio import gather
 from logging import getLogger
+from uuid import UUID
 
 from arxiv import Result
 
@@ -24,7 +25,7 @@ class MathArticleLoaderService(BaseMathArticleLoaderService):
         self.arxiv_client = arxiv_client
         self.math_article_repository = math_article_repository
 
-    async def load(self, category: BaseArxivCategory, limit: int):
+    async def load(self, index_id: UUID, category: BaseArxivCategory, limit: int):
         if limit < len(BaseArxivCategory):
             raise ValueError()
 
@@ -42,7 +43,7 @@ class MathArticleLoaderService(BaseMathArticleLoaderService):
             process_tasks = [self._process_result(result) for result in results]
             processed_files = await gather(*process_tasks)
             math_articles = [
-                MathArticle(name=name, bytes=bytes)
+                MathArticle(index_id=index_id, name=name, bytes=bytes)
                 for file in processed_files
                 if file
                 for name, bytes in file.items()

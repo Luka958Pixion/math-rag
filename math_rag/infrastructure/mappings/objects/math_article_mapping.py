@@ -11,16 +11,21 @@ class MathArticleMapping(BaseMapping[MathArticle, MathArticleObject]):
     @staticmethod
     def to_source(target: MathArticleObject) -> MathArticle:
         id = target.metadata.get('X-Amz-Meta-id')
+        index_id = target.metadata.get('X-Amz-Meta-index-id')
         timestamp = target.metadata.get('X-Amz-Meta-timestamp')
 
         if id is None:
             raise ValueError(f'Missing X-Amz-Meta-id in {target.object_name}')
+
+        if index_id is None:
+            raise ValueError(f'Missing X-Amz-Meta-index-id in {target.object_name}')
 
         if timestamp is None:
             raise ValueError(f'Missing X-Amz-Meta-timestamp in {target.object_name}')
 
         return MathArticle(
             id=UUID(id),
+            index_id=UUID(index_id),
             timestamp=datetime.fromisoformat(timestamp),
             name=target.object_name,
             bytes=target.data.read(),
@@ -36,6 +41,7 @@ class MathArticleMapping(BaseMapping[MathArticle, MathArticleObject]):
             length=data.getbuffer().nbytes,
             metadata={
                 'X-Amz-Meta-id': str(source.id),
+                'X-Amz-Meta-index-id': str(source.index_id),
                 'X-Amz-Meta-timestamp': source.timestamp.isoformat(),
             },
         )

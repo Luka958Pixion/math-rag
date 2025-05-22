@@ -23,7 +23,7 @@ async def main():
 
     # Minio
     math_article_seeder = infrastructure_container.math_article_seeder()
-    await math_article_seeder.seed()
+    math_article_seeder.seed()
 
     # Mongo
     math_expression_seeder = infrastructure_container.math_expression_seeder()

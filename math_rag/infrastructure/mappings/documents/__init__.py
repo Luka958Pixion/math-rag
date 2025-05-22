@@ -2,6 +2,7 @@ from .em_error_mapping import EMErrorMapping
 from .em_failed_request_mapping import EMFailedRequestMapping
 from .em_params_mapping import EMParamsMapping
 from .em_request_mapping import EMRequestMapping
+from .index_mapping import IndexMapping
 from .katex_corrector_assistant_input_mapping import KatexCorrectorAssistantInputMapping
 from .katex_corrector_assistant_output_mapping import (
     KatexCorrectorAssistantOutputMapping,
@@ -21,6 +22,7 @@ __all__ = [
     'EMFailedRequestMapping',
     'EMParamsMapping',
     'EMRequestMapping',
+    'IndexMapping',
     'KatexCorrectorAssistantInputMapping',
     'KatexCorrectorAssistantOutputMapping',
     'LLMConversationMapping',

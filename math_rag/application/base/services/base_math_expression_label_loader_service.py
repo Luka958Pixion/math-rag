@@ -2,7 +2,7 @@ from abc import ABC, abstractmethod
 from uuid import UUID
 
 
-class BaseMathExpressionLoaderService(ABC):
+class BaseMathExpressionLabelLoaderService(ABC):
     @abstractmethod
     async def load(self, index_id: UUID):
         pass
