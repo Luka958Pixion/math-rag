@@ -30,7 +30,7 @@ class KatexCorrectorAssistant(
                 messages=[LLMMessage(role='user', content=prompt)]
             ),
             params=LLMParams[KatexCorrectorAssistantOutput](
-                model='gpt-4o-mini',
+                model='gpt-4.1-nano',
                 temperature=0.0,
                 response_type=KatexCorrectorAssistantOutput.bind(input.id),
                 metadata={'input_id': str(input.id)},

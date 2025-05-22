@@ -6,7 +6,7 @@ from uuid import UUID
 
 from bson.binary import UuidRepresentation
 from bson.json_util import JSONOptions, dumps, loads
-from pymongo import AsyncMongoClient, InsertOne
+from pymongo import ASCENDING, AsyncMongoClient, InsertOne
 
 from math_rag.application.base.repositories.documents import BaseDocumentRepository
 from math_rag.infrastructure.types.repositories.documents import (
@@ -72,6 +72,10 @@ class DocumentRepository(
 
     async def find_many(self) -> list[SourceType]:
         cursor = self.collection.find()
+
+        if 'timestamp' in self.target_cls.model_fields:
+            cursor = cursor.sort('timestamp', ASCENDING)
+
         bson_docs = await cursor.to_list()
 
         docs = [self.target_cls(**bson_doc) for bson_doc in bson_docs]
@@ -84,7 +88,12 @@ class DocumentRepository(
         *,
         batch_size: int,
     ) -> AsyncGenerator[list[SourceType], None]:
-        cursor = self.collection.find().batch_size(batch_size)
+        cursor = self.collection.find()
+
+        if 'timestamp' in self.target_cls.model_fields:
+            cursor = cursor.sort('timestamp', ASCENDING)
+
+        cursor = cursor.batch_size(batch_size)
         batch: list[SourceType] = []
 
         async for bson_doc in cursor:

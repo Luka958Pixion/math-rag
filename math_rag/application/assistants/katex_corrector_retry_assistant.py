@@ -50,7 +50,7 @@ class KatexCorrectorRetryAssistant(
         request = LLMRequest(
             conversation=LLMConversation(messages=messages),
             params=LLMParams[KatexCorrectorRetryAssistantOutput](
-                model='gpt-4o',
+                model='gpt-4.1',
                 temperature=0.0,
                 response_type=KatexCorrectorRetryAssistantOutput.bind(input.id),
             ),

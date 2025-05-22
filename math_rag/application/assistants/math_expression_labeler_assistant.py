@@ -32,7 +32,7 @@ class MathExpressionLabelerAssistant(
                 messages=[LLMMessage(role='user', content=prompt)]
             ),
             params=LLMParams[MathExpressionLabelerAssistantOutput](
-                model='gpt-4o-mini',
+                model='gpt-4.1-nano',
                 temperature=0.0,
                 response_type=MathExpressionLabelerAssistantOutput.bind(input.id),
             ),
