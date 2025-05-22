@@ -8,6 +8,6 @@ from math_rag.core.enums import MathExpressionLabelEnum
 
 class MathExpressionLabel(BaseModel):
     id: UUID = Field(default_factory=uuid4)
+    timestamp: datetime = Field(default_factory=datetime.now)
     math_expression_id: UUID
     value: MathExpressionLabelEnum
-    timestamp: datetime = datetime.now()

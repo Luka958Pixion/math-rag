@@ -1,3 +1,4 @@
+from datetime import datetime
 from io import BytesIO
 from uuid import UUID
 
@@ -10,12 +11,17 @@ class MathArticleMapping(BaseMapping[MathArticle, MathArticleObject]):
     @staticmethod
     def to_source(target: MathArticleObject) -> MathArticle:
         id = target.metadata.get('X-Amz-Meta-id')
+        timestamp = target.metadata.get('X-Amz-Meta-timestamp')
 
         if id is None:
             raise ValueError(f'Missing X-Amz-Meta-id in {target.object_name}')
 
+        if timestamp is None:
+            raise ValueError(f'Missing X-Amz-Meta-timestamp in {target.object_name}')
+
         return MathArticle(
             id=UUID(id),
+            timestamp=datetime.fromisoformat(timestamp),
             name=target.object_name,
             bytes=target.data.read(),
         )
@@ -28,5 +34,8 @@ class MathArticleMapping(BaseMapping[MathArticle, MathArticleObject]):
             object_name=source.name,
             data=data,
             length=data.getbuffer().nbytes,
-            metadata={'X-Amz-Meta-id': str(source.id)},
+            metadata={
+                'X-Amz-Meta-id': str(source.id),
+                'X-Amz-Meta-timestamp': source.timestamp.isoformat(),
+            },
         )
