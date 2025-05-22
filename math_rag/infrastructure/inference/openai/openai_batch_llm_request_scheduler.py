@@ -27,7 +27,7 @@ class OpenAIBatchLLMRequestScheduler(BaseBatchLLMRequestScheduler):
         self,
         batch_request: LLMBatchRequest[LLMResponseType],
         *,
-        max_tokens_per_day: float,
+        max_tokens_per_day: float,  # TODO how to get rid of these?
         max_input_file_size: int,
     ) -> LLMBatchRequestSchedule[LLMResponseType]:
         current_tokens = 0
