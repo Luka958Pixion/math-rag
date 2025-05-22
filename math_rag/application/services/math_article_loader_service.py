@@ -1,4 +1,5 @@
 from asyncio import gather
+from logging import getLogger
 
 from arxiv import Result
 
@@ -10,6 +11,7 @@ from math_rag.core.models import MathArticle
 from math_rag.shared.utils import GzipExtractorUtil
 
 
+logger = getLogger(__name__)
 BATCH_SIZE = 5
 
 
@@ -28,6 +30,7 @@ class MathArticleLoaderService(BaseMathArticleLoaderService):
 
         sublimit = int(limit / len(category))
         category_list = list(category)
+        num_math_articles = 0
 
         for i in range(0, len(category_list), BATCH_SIZE):
             batch = category_list[i : i + BATCH_SIZE]
@@ -40,13 +43,17 @@ class MathArticleLoaderService(BaseMathArticleLoaderService):
             processed_files = await gather(*process_tasks)
             math_articles = [
                 MathArticle(name=name, bytes=bytes)
-                for d in processed_files
-                if d
-                for name, bytes in d.items()
+                for file in processed_files
+                if file
+                for name, bytes in file.items()
             ]
             self.math_article_repository.insert_many(math_articles)
+            num_math_articles += len(math_articles)
 
         self.math_article_repository.backup()
+        logger.info(
+            f'{self.__class__.__name__} loaded {num_math_articles} math articles'
+        )
 
     async def _process_result(self, result: Result) -> dict[str, bytes] | None:
         arxiv_id = result.entry_id.split('/')[-1]

@@ -28,8 +28,15 @@ class MathExpressionLabelLoaderService(...):  # BaseMathExpressionLabelLoaderSer
         self.math_expression_label_repository = math_expression_label_repository
 
     async def load(self):
+        num_math_expression_labels = 0
+
         async for batch in self.math_expression_repository.batch_find_many(
             batch_size=1000
         ):
             for math_expression in batch:
                 pass  # TODO math_expression is Any
+
+        await self.math_expression_label_repository.backup()
+        logger.info(
+            f'{self.__class__.__name__} loaded {num_math_expression_labels} math expression labels'
+        )

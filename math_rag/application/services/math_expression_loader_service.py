@@ -68,6 +68,7 @@ class MathExpressionLoaderService(BaseMathExpressionLoaderService):
 
         num_corrected_total = 0
         num_non_corrected_total = 0
+        num_math_expressions = 0
 
         for name in file_names:
             # load and parse math articles
@@ -157,10 +158,13 @@ class MathExpressionLoaderService(BaseMathExpressionLoaderService):
             await self.math_expression_repository.batch_insert_many(
                 math_expressions, batch_size=100
             )
+            num_math_expressions += len(math_expressions)
 
+        await self.math_expression_repository.backup()
+        logger.info(
+            f'{self.__class__.__name__} loaded {num_math_expressions} math expressions'
+        )
         logger.info(
             f'Re-validated KaTeX: corrected total {num_corrected_total}, '
             f'still failing total {num_non_corrected_total}'
         )
-
-        await self.math_expression_repository.backup()
