@@ -35,6 +35,8 @@ from math_rag.infrastructure.clients import (
 )
 from math_rag.infrastructure.inference.huggingface import TEIBatchEM, TGIBatchLLM
 from math_rag.infrastructure.inference.openai import (
+    OpenAIBatchLLMRequestManagedScheduler,
+    OpenAIBatchLLMRequestScheduler,
     OpenAIEM,
     OpenAILLM,
     OpenAIManagedEM,
@@ -158,6 +160,16 @@ class InfrastructureContainer(DeclarativeContainer):
         llm=openai_llm,
         llm_settings_loader_service=application_container.llm_settings_loader_service,
         llm_failed_request_repository=llm_failed_request_repository,
+    )
+
+    openai_scheduler = Factory(
+        OpenAIBatchLLMRequestScheduler,
+        llm=openai_managed_llm,
+    )
+    openai_managed_scheduler = Factory(
+        OpenAIBatchLLMRequestManagedScheduler,
+        scheduler=openai_scheduler,
+        llm_settings_loader_service=application_container.llm_settings_loader_service,
     )
 
     # arXiv
