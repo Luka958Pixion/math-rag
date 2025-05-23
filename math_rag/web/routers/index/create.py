@@ -2,7 +2,11 @@ import asyncio
 
 from logging import getLogger
 
-from fastapi import APIRouter
+from dependency_injector.wiring import Provide, inject
+from fastapi import APIRouter, Depends
+
+from math_rag.application.base.repositories.documents import BaseIndexRepository
+from math_rag.application.containers import ApplicationContainer
 
 
 logger = getLogger(__name__)
@@ -18,7 +22,12 @@ next_id = 0
 
 
 @router.post('/index/create')
-async def create_index():
+@inject
+async def create_index(
+    index_repository: BaseIndexRepository = Depends(
+        Provide[ApplicationContainer.index_repository]
+    ),
+):
     global next_id
     idx = next_id
     next_id += 1
