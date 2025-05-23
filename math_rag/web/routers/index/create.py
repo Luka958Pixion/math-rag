@@ -7,73 +7,95 @@ from fastapi import APIRouter, Depends
 
 from math_rag.application.base.repositories.documents import BaseIndexRepository
 from math_rag.application.containers import ApplicationContainer
+from math_rag.core.enums import IndexBuildStatus
+from math_rag.core.models import Index
+from math_rag.web.responses import IndexCreateResponse
 
+
+BUILD_INDEX_TIMEOUT = 60 * 60 * 24 * 7  # 1 week
 
 logger = getLogger(__name__)
 router = APIRouter()
 
-# Synchronization primitives
-auto_condition = asyncio.Condition()
+# synchronization primitives
+build_condition = asyncio.Condition()
 build_lock = asyncio.Lock()
 
-# In-memory store
-index_repo: dict[int, str] = {}
-next_id = 0
 
-
-@router.post('/index/create')
+@router.post('/index/create', response_model=IndexCreateResponse)
 @inject
 async def create_index(
     index_repository: BaseIndexRepository = Depends(
         Provide[ApplicationContainer.index_repository]
     ),
 ):
-    global next_id
-    idx = next_id
-    next_id += 1
-    index_repo[idx] = 'pending'
+    index = Index()
+    await index_repository.insert_one(index)
 
-    # Notify the worker immediately
-    async with auto_condition:
-        auto_condition.notify()
+    # notify the worker immediately
+    async with build_condition:
+        build_condition.notify()
 
-    return {'id': idx, 'status': index_repo[idx]}
+    return IndexCreateResponse(**index.model_dump())
 
 
-async def build_index(idx: int):
-    logger.info(f'Starting build for index {idx}')
-    # Offload blocking or CPU-heavy logic to a thread
-    await asyncio.to_thread(lambda i: None, idx)
+async def build_index(index: Index):
+    logger.info(f'Starting build for index {index.id}')
+    # offload blocking or CPU-heavy logic to a thread
+    await asyncio.to_thread(lambda: None, index)  # TODO
     await asyncio.sleep(5)  # simulate work
-    logger.info(f'Finished build for index {idx}')
+    logger.info(f'Finished build for index {index.id}')
 
 
-async def index_worker():
+@inject
+async def index_worker(
+    index_repository: BaseIndexRepository = Provide[
+        ApplicationContainer.index_repository
+    ],
+):
     while True:
-        # Wait until create_index notifies us
-        async with auto_condition:
-            await auto_condition.wait()
+        # wait until create_index runs notify()
+        async with build_condition:
+            await build_condition.wait()
 
-        # Only one build at a time
+        # only one build at a time
         async with build_lock:
-            pending = [i for i, s in index_repo.items() if s == 'pending']
+            # indexes are already sorted by timestamp
+            indexes = await index_repository.find_many()
+            current_index: Index | None = None
 
-            if not pending:
+            for index in indexes:
+                if index.build_status == IndexBuildStatus.PENDING:
+                    current_index = index
+                    break
+
+            if not current_index:
                 continue
 
-            idx = pending[0]
-            index_repo[idx] = 'building'
+            current_index = await index_repository.update_build_status(
+                current_index.id, IndexBuildStatus.RUNNING
+            )
 
             try:
-                # Timeout each build to avoid hangs
-                await asyncio.wait_for(build_index(idx), timeout=60)
-                index_repo[idx] = 'done'
-                logger.info(f'Index {idx} done')
+                # timeout each build to avoid hangs
+                await asyncio.wait_for(
+                    build_index(current_index), timeout=BUILD_INDEX_TIMEOUT
+                )
+                current_index = await index_repository.update_build_status(
+                    current_index.id, IndexBuildStatus.FINISHED
+                )
+                logger.info(f'Index {current_index.id} build finished')
 
             except asyncio.TimeoutError:
-                index_repo[idx] = 'failed'
-                logger.warning(f'Index {idx} timed out')
+                current_index = await index_repository.update_build_status(
+                    current_index.id, IndexBuildStatus.FAILED
+                )
+                logger.warning(
+                    f'Index {current_index.id} build failed due to a time out'
+                )
 
             except Exception as e:
-                index_repo[idx] = 'failed'
-                logger.exception(f'Index {idx} error: {e}')
+                current_index = await index_repository.update_build_status(
+                    current_index.id, IndexBuildStatus.FAILED
+                )
+                logger.exception(f'Index {current_index.id} build due to an error: {e}')
