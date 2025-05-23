@@ -20,6 +20,7 @@ logger = getLogger(__name__)
 
 
 async def main():
+    # inject dependecies
     infrastructure_container = InfrastructureContainer()
     infrastructure_container.application_container.override(application_container)
     infrastructure_container.init_resources()
