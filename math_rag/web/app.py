@@ -3,23 +3,35 @@ import asyncio
 from contextlib import asynccontextmanager, suppress
 from logging import getLogger
 
-from fastapi import FastAPI, Request
+from dependency_injector.wiring import Provide, inject
+from fastapi import Depends, FastAPI, Request
 from fastapi.responses import JSONResponse
 
+from math_rag.application.base.services import BaseIndexBuildTrackerService
+from math_rag.application.containers import ApplicationContainer
 from math_rag.web.constants import OPENAPI_URL, TITLE
-from math_rag.web.routers.index import index_create_router, index_worker
+from math_rag.web.routers.index import index_create_router
 
 
 logger = getLogger(__name__)
 
 
 @asynccontextmanager
-async def lifespan(app: FastAPI):
-    # start the background worker on startup
-    worker = asyncio.create_task(index_worker(), name='index_worker')
+@inject
+async def lifespan(
+    app: FastAPI,
+    index_build_tracker_service: BaseIndexBuildTrackerService = Depends(
+        Provide[ApplicationContainer.index_build_tracker_service]
+    ),
+):
+    # start IndexBuildTrackerService on startup
+    worker = asyncio.create_task(
+        index_build_tracker_service.track(),
+        name=index_build_tracker_service.__class__.__name__,
+    )
     yield
 
-    # on shutdown, cancel and await the worker
+    # cancel and await IndexBuildTrackerService on shutdown
     worker.cancel()
 
     with suppress(asyncio.CancelledError):
