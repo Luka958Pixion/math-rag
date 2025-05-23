@@ -8,6 +8,7 @@
 
 ## Environment
 Create `.env` file with the following variables:
+- `HOST=0.0.0.0`
 - `PORT=7100`
 - `JUPYTER_PORT=7035`
 - `KATEX_PORT=7025`
