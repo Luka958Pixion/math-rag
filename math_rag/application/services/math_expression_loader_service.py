@@ -163,7 +163,7 @@ class MathExpressionLoaderService(BaseMathExpressionLoaderService):
                 )
 
             await self.math_expression_repository.batch_insert_many(
-                math_expressions, batch_size=100
+                math_expressions, batch_size=1000
             )
             num_math_expressions += len(math_expressions)
 

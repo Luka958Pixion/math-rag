@@ -9,10 +9,7 @@ from math_rag.application.base.repositories.documents import (
 from math_rag.application.base.services import (
     BaseMathExpressionLabelLoaderService,
 )
-from math_rag.application.models.assistants import (
-    MathExpressionLabelerAssistantInput,
-    MathExpressionLabelerAssistantOutput,
-)
+from math_rag.application.models.assistants import MathExpressionLabelerAssistantInput
 from math_rag.core.models import MathExpressionLabel
 
 
@@ -33,25 +30,31 @@ class MathExpressionLabelLoaderService(BaseMathExpressionLabelLoaderService):
     async def load(self, index_id: UUID, foundation_index_id: UUID | None):
         num_math_expression_labels = 0
 
-        async for batch in self.math_expression_repository.batch_find_many(
+        inputs: list[MathExpressionLabelerAssistantInput] = []
+
+        async for math_expressions in self.math_expression_repository.batch_find_many(
             batch_size=1000,
             filter={'id': foundation_index_id if foundation_index_id else index_id},
         ):
-            for math_expression in batch:
-                # TODO
+            for math_expression in math_expressions:
                 input = MathExpressionLabelerAssistantInput(latex=math_expression.latex)
-                output = await self.math_expression_labeler_assistant.assist(input)
+                inputs.append(input)
 
-                math_expression_label = MathExpressionLabel(
-                    index_id=index_id,
-                    math_expression_id=math_expression.id,
-                    value=output.label,
-                )
+        outputs = await self.math_expression_labeler_assistant.batch_assist(
+            input, use_scheduler=True
+        )
+        math_expression_labels = [
+            MathExpressionLabel(
+                index_id=index_id,
+                math_expression_id=math_expression.id,
+                value=output.label,
+            )
+            for output in outputs
+        ]
 
-                await self.math_expression_label_repository.insert_many(
-                    [math_expression_label]
-                )
-
+        await self.math_expression_label_repository.batch_insert_many(
+            math_expression_labels, batch_size=1000
+        )
         await self.math_expression_label_repository.backup()
         logger.info(
             f'{self.__class__.__name__} loaded {num_math_expression_labels} math expression labels'
