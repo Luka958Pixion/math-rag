@@ -12,7 +12,7 @@ from .base_basic_assistant import BaseBasicAssistant
 class BaseBatchAssistant(BaseBasicAssistant[AssistantInputType, AssistantOutputType]):
     @abstractmethod
     async def batch_assist(
-        self, inputs: list[AssistantInputType]
+        self, inputs: list[AssistantInputType], *, use_scheduler: bool
     ) -> list[AssistantOutputType]:
         pass
 
