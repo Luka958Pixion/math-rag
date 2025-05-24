@@ -12,7 +12,10 @@ from math_rag.application.assistants import (
     MathExpressionLabelerAssistant,
 )
 from math_rag.application.base.clients import BaseArxivClient, BaseKatexClient
-from math_rag.application.base.inference import BaseManagedLLM
+from math_rag.application.base.inference import (
+    BaseBatchLLMRequestManagedScheduler,
+    BaseManagedLLM,
+)
 from math_rag.application.base.repositories.documents import (
     BaseIndexRepository,
     BaseMathExpressionLabelRepository,
@@ -44,6 +47,7 @@ class ApplicationContainer(DeclarativeContainer):
     katex_client: Provider[BaseKatexClient] = Dependency()
 
     managed_llm: Provider[BaseManagedLLM] = Dependency()
+    managed_scheduler: Provider[BaseBatchLLMRequestManagedScheduler] = Dependency()
 
     latex_parser_service: Provider[BaseLatexParserService] = Dependency()
     latex_visitor_service: Provider[BaseLatexVisitorService] = Dependency()
@@ -56,9 +60,11 @@ class ApplicationContainer(DeclarativeContainer):
     )
 
     # non-dependencies
-    katex_corrector_assistant = Factory(KatexCorrectorAssistant, llm=managed_llm)
+    katex_corrector_assistant = Factory(
+        KatexCorrectorAssistant, llm=managed_llm, scheduler=managed_scheduler
+    )
     math_expression_labeler_assistant = Factory(
-        MathExpressionLabelerAssistant, llm=managed_llm
+        MathExpressionLabelerAssistant, llm=managed_llm, scheduler=managed_scheduler
     )
 
     em_settings_loader_service = Factory(EMSettingsLoaderService)

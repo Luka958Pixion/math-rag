@@ -30,6 +30,7 @@ async def main():
         arxiv_client=infrastructure_container.arxiv_client,
         katex_client=infrastructure_container.katex_client,
         managed_llm=infrastructure_container.openai_managed_llm,
+        managed_scheduler=infrastructure_container.openai_managed_scheduler,
         latex_parser_service=infrastructure_container.latex_parser_service,
         latex_visitor_service=infrastructure_container.latex_visitor_service,
         index_repository=infrastructure_container.index_repository,
