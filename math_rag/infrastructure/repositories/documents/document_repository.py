@@ -1,8 +1,7 @@
 from collections.abc import AsyncGenerator
 from datetime import datetime
 from pathlib import Path
-from typing import Generic, cast
-from uuid import UUID
+from typing import Any, Generic, cast
 
 from bson.binary import UuidRepresentation
 from bson.json_util import JSONOptions, dumps, loads
@@ -59,8 +58,16 @@ class DocumentRepository(
             batch = operations[i : i + batch_size]
             await self.collection.bulk_write(batch)
 
-    async def find_by_id(self, id: UUID) -> SourceType | None:
-        bson_doc = await self.collection.find_one({'_id': id})
+    async def find_one(
+        self, *, filter: dict[str, Any] | None = None
+    ) -> SourceType | None:
+        if not filter:
+            filter = {}
+
+        elif 'id' in filter:
+            filter['_id'] = filter.pop('id')
+
+        bson_doc = await self.collection.find_one(filter)
 
         if bson_doc:
             doc = self.target_cls(**bson_doc)
@@ -70,8 +77,16 @@ class DocumentRepository(
 
         return None
 
-    async def find_many(self) -> list[SourceType]:
-        cursor = self.collection.find()
+    async def find_many(
+        self, *, filter: dict[str, Any] | None = None
+    ) -> list[SourceType]:
+        if not filter:
+            filter = {}
+
+        elif 'id' in filter:
+            filter['_id'] = filter.pop('id')
+
+        cursor = self.collection.find(filter)
 
         if 'timestamp' in self.target_cls.model_fields:
             cursor = cursor.sort('timestamp', ASCENDING)
@@ -84,11 +99,15 @@ class DocumentRepository(
         return items
 
     async def batch_find_many(
-        self,
-        *,
-        batch_size: int,
+        self, *, batch_size: int, filter: dict[str, Any] | None = None
     ) -> AsyncGenerator[list[SourceType], None]:
-        cursor = self.collection.find()
+        if not filter:
+            filter = {}
+
+        elif 'id' in filter:
+            filter['_id'] = filter.pop('id')
+
+        cursor = self.collection.find(filter)
 
         if 'timestamp' in self.target_cls.model_fields:
             cursor = cursor.sort('timestamp', ASCENDING)

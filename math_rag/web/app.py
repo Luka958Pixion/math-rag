@@ -24,18 +24,18 @@ async def lifespan(
         Provide[ApplicationContainer.index_build_tracker_service]
     ),
 ):
-    # start IndexBuildTrackerService on startup
-    worker = asyncio.create_task(
+    # start index build tracker service task on startup
+    index_build_tracker_service_task = asyncio.create_task(
         index_build_tracker_service.track(),
         name=index_build_tracker_service.__class__.__name__,
     )
     yield
 
-    # cancel and await IndexBuildTrackerService on shutdown
-    worker.cancel()
+    # cancel and await index build tracker service task on shutdown
+    index_build_tracker_service_task.cancel()
 
     with suppress(asyncio.CancelledError):
-        await worker
+        await index_build_tracker_service_task
 
 
 app = FastAPI(openapi_url=OPENAPI_URL, title=TITLE, lifespan=lifespan)

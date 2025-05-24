@@ -1,6 +1,4 @@
-from uuid import UUID
-
-from pymongo import AsyncMongoClient, UpdateOne
+from pymongo import AsyncMongoClient
 
 from math_rag.application.base.repositories.documents import (
     BaseMathExpressionRepository,
@@ -18,12 +16,3 @@ class MathExpressionRepository(
 ):
     def __init__(self, client: AsyncMongoClient, deployment: str):
         super().__init__(client, deployment)
-
-    async def update_katex(self, id: UUID, katex: str):
-        await self.collection.update_one({'_id': id}, {'$set': {'katex': katex}})
-
-    async def batch_update_katex(self, updates: list[tuple[UUID, str]]):
-        operations = [
-            UpdateOne({'_id': id}, {'$set': {'katex': katex}}) for id, katex in updates
-        ]
-        await self.collection.bulk_write(operations)

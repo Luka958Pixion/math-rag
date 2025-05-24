@@ -25,11 +25,12 @@ class MathExpressionLabelLoaderService(BaseMathExpressionLabelLoaderService):
         self.math_expression_repository = math_expression_repository
         self.math_expression_label_repository = math_expression_label_repository
 
-    async def load(self, index_id: UUID):
+    async def load(self, index_id: UUID, foundation_index_id: UUID | None):
         num_math_expression_labels = 0
 
         async for batch in self.math_expression_repository.batch_find_many(
-            batch_size=1000
+            batch_size=1000,
+            filter={'id': foundation_index_id if foundation_index_id else index_id},
         ):
             for math_expression in batch:
                 pass  # TODO math_expression is Any

@@ -58,7 +58,7 @@ class MathExpressionLoaderService(BaseMathExpressionLoaderService):
 
         return valid, invalid
 
-    async def load(self, index_id: UUID):
+    async def load(self, index_id: UUID, foundation_index_id: UUID | None):
         # gather all .tex file names
         file_names = [
             name
@@ -73,6 +73,12 @@ class MathExpressionLoaderService(BaseMathExpressionLoaderService):
         for name in file_names:
             # load and parse math articles
             math_article = self.math_article_repository.find_by_name(name)
+
+            if (
+                foundation_index_id and math_article.index_id != foundation_index_id
+            ) or math_article.index_id != index_id:
+                continue
+
             math_nodes = self.math_article_parser_service.parse(math_article)
 
             # extract and validate KaTeX

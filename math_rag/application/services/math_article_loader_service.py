@@ -25,12 +25,14 @@ class MathArticleLoaderService(BaseMathArticleLoaderService):
         self.arxiv_client = arxiv_client
         self.math_article_repository = math_article_repository
 
-    async def load(self, index_id: UUID, category: BaseArxivCategory, limit: int):
+    async def load(
+        self, index_id: UUID, arxiv_category_type: type[BaseArxivCategory], limit: int
+    ):
         if limit < len(BaseArxivCategory):
             raise ValueError()
 
-        sublimit = int(limit / len(category))
-        category_list = list(category)
+        sublimit = int(limit / len(arxiv_category_type))
+        category_list = list(arxiv_category_type)
         num_math_articles = 0
 
         for i in range(0, len(category_list), BATCH_SIZE):
