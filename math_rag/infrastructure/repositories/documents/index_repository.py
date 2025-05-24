@@ -19,7 +19,8 @@ class IndexRepository(
         super().__init__(client, deployment)
 
     async def update_build_status(
-        index_id: UUID, index_build_status: IndexBuildStatus
+        self, id: UUID, index_build_status: IndexBuildStatus
     ) -> Index:
-        # TODO
-        pass
+        await self.collection.update_one(
+            {'_id': id}, {'$set': {'index_build_status': index_build_status.value}}
+        )

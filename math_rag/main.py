@@ -27,7 +27,15 @@ async def main():
     infrastructure_container.wire(modules=[__name__])
 
     application_container = ApplicationContainer(
-        index_repository=infrastructure_container.index_repository
+        arxiv_client=infrastructure_container.arxiv_client,
+        katex_client=infrastructure_container.katex_client,
+        managed_llm=infrastructure_container.openai_managed_llm,
+        latex_parser_service=infrastructure_container.latex_parser_service,
+        latex_visitor_service=infrastructure_container.latex_visitor_service,
+        index_repository=infrastructure_container.index_repository,
+        math_article_repository=infrastructure_container.math_article_repository,
+        math_expression_repository=infrastructure_container.math_expression_repository,
+        math_expression_label_repository=infrastructure_container.math_expression_label_repository,
     )
     application_container.init_resources()
     application_container.wire(modules=[__name__])

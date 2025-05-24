@@ -1,6 +1,7 @@
 from logging import getLogger
 from uuid import UUID
 
+from math_rag.application.assistants import MathExpressionLabelerAssistant
 from math_rag.application.base.repositories.documents import (
     BaseMathExpressionLabelRepository,
     BaseMathExpressionRepository,
@@ -8,11 +9,6 @@ from math_rag.application.base.repositories.documents import (
 from math_rag.application.base.services import (
     BaseMathExpressionLabelLoaderService,
 )
-from math_rag.application.models.assistants import (
-    KatexCorrectorAssistantInput,
-    KatexCorrectorAssistantOutput,
-)
-from math_rag.core.models import MathExpression
 
 
 logger = getLogger(__name__)
@@ -21,9 +17,11 @@ logger = getLogger(__name__)
 class MathExpressionLabelLoaderService(BaseMathExpressionLabelLoaderService):
     def __init__(
         self,
+        math_expression_labeler_assistant: MathExpressionLabelerAssistant,
         math_expression_repository: BaseMathExpressionRepository,
         math_expression_label_repository: BaseMathExpressionLabelRepository,
     ):
+        self.math_expression_labeler_assistant = math_expression_labeler_assistant
         self.math_expression_repository = math_expression_repository
         self.math_expression_label_repository = math_expression_label_repository
 

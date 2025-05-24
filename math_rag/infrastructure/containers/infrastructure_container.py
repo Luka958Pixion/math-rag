@@ -13,16 +13,7 @@ from minio import Minio
 from openai import AsyncOpenAI
 from pymongo import AsyncMongoClient
 
-from math_rag.application.assistants import (
-    KatexCorrectorAssistant,
-    MathExpressionLabelerAssistant,
-)
 from math_rag.application.containers import ApplicationContainer
-from math_rag.application.services import (
-    MathArticleLoaderService,
-    MathArticleParserService,
-    MathExpressionLoaderService,
-)
 from math_rag.infrastructure.clients import (
     ApptainerClient,
     ArxivClient,
@@ -120,7 +111,7 @@ class InfrastructureContainer(DeclarativeContainer):
     math_expression_classification_seeder = Factory(
         MathExpressionLabelSeeder, **mongo_kwargs
     )
-    math_expression_classification_repository = Factory(
+    math_expression_label_repository = Factory(
         MathExpressionLabelRepository, **mongo_kwargs
     )
     em_failed_request_seeder = Factory(EMFailedRequestSeeder, **mongo_kwargs)
@@ -269,34 +260,4 @@ class InfrastructureContainer(DeclarativeContainer):
         hugging_face_base_url=config.hugging_face.base_url,
         hugging_face_username=config.hugging_face.username,
         hugging_face_token=config.hugging_face.token,
-    )
-
-    # -----------
-    # Application
-    # -----------
-
-    # Assistants
-    katex_corrector_assistant = Factory(KatexCorrectorAssistant, llm=openai_managed_llm)
-    math_expression_labeler_assistant = Factory(
-        MathExpressionLabelerAssistant, llm=openai_managed_llm
-    )
-
-    # Services
-    math_article_loader_service = Factory(
-        MathArticleLoaderService,
-        arxiv_client=arxiv_client,
-        math_article_repository=math_article_repository,
-    )
-    math_article_parser_service = Factory(
-        MathArticleParserService,
-        latex_parser_service=latex_parser_service,
-        latex_visitor_service=latex_visitor_service,
-    )
-    math_expression_loader_service = Factory(
-        MathExpressionLoaderService,
-        katex_client=katex_client,
-        katex_corrector_assistant=katex_corrector_assistant,
-        math_article_parser_service=math_article_parser_service,
-        math_article_repository=math_article_repository,
-        math_expression_repository=math_expression_repository,
     )
