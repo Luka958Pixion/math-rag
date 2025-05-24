@@ -92,6 +92,7 @@ class ApplicationContainer(DeclarativeContainer):
         math_article_loader_service=math_article_loader_service,
         math_expression_loader_service=math_expression_loader_service,
         math_expression_label_loader_service=math_expression_label_loader_service,
+        index_repository=index_repository,
     )
     index_build_context = Singleton(IndexBuildContext)
     index_build_tracker_service = Singleton(

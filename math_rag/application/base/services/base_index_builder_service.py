@@ -5,5 +5,5 @@ from math_rag.core.models import Index
 
 class BaseIndexBuilderService(ABC):
     @abstractmethod
-    async def build(index: Index):
+    async def build(self, index: Index):
         pass

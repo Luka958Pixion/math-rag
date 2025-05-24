@@ -108,9 +108,7 @@ class InfrastructureContainer(DeclarativeContainer):
     llm_failed_request_repository = Factory(LLMFailedRequestRepository, **mongo_kwargs)
     index_repository = Factory(IndexRepository, **mongo_kwargs)
 
-    math_expression_classification_seeder = Factory(
-        MathExpressionLabelSeeder, **mongo_kwargs
-    )
+    math_expression_label_seeder = Factory(MathExpressionLabelSeeder, **mongo_kwargs)
     math_expression_label_repository = Factory(
         MathExpressionLabelRepository, **mongo_kwargs
     )

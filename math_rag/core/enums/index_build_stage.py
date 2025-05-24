@@ -2,6 +2,6 @@ from enum import Enum
 
 
 class IndexBuildStage(str, Enum):
-    LOADING_MATH_ARTICLES = 'loading_math_articles'
-    LOADING_MATH_EXPRESSIONS = 'loading_math_expressions'
-    LOADING_MATH_EXPRESSION_LABELS = 'loading_math_expression_labels'
+    LOADED_MATH_ARTICLES = 'loaded_math_articles'
+    LOADED_MATH_EXPRESSIONS = 'loaded_math_expressions'
+    LOADED_MATH_EXPRESSION_LABELS = 'loaded_math_expression_labels'

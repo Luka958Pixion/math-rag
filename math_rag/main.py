@@ -44,9 +44,13 @@ async def main():
     # seed
     math_article_seeder = infrastructure_container.math_article_seeder()
     math_expression_seeder = infrastructure_container.math_expression_seeder()
+    math_expression_label_seeder = (
+        infrastructure_container.math_expression_label_seeder()
+    )
 
     math_article_seeder.seed()
     await math_expression_seeder.seed()
+    await math_expression_label_seeder.seed()
 
     uvicorn.run(app, host=config('HOST'), port=config('PORT'))
 
