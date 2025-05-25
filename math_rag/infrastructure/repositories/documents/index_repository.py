@@ -38,7 +38,7 @@ class IndexRepository(
     async def update_build_status(
         self, id: UUID, index_build_status: IndexBuildStatus
     ) -> Index:
-        field = 'build_stage'
+        field = 'build_status'
 
         if field not in self.target_cls.model_fields:
             raise ValueError(f'{self.target_cls.__name__} does not have field {field}')

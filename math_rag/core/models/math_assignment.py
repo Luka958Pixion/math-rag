@@ -4,10 +4,8 @@ from uuid import UUID, uuid4
 from pydantic import BaseModel, Field
 
 
-class MathProblem(BaseModel):
+class MathAssignment(BaseModel):
     id: UUID = Field(default_factory=uuid4)
     timestamp: datetime = Field(default_factory=datetime.now)
-    math_assignment_id: UUID
-    latex: str
-    katex: str | None
-    is_inline: bool
+    name: str
+    bytes: bytes

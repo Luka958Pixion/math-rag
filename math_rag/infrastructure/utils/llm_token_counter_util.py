@@ -16,7 +16,12 @@ class LLMTokenCounterUtil:
             encoding = get_encoding(encoding_name)
 
         elif model_name:
-            encoding = encoding_for_model(model_name)
+            # TODO: remove the if branch after tiktoken update
+            if model_name.startswith('gpt-4.1'):
+                encoding = get_encoding('o200k_base')
+
+            else:
+                encoding = encoding_for_model(model_name)
 
         else:
             raise ValueError('Missing encoding_name or model_name')
