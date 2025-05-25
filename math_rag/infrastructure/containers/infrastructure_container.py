@@ -62,11 +62,6 @@ from math_rag.infrastructure.services import (
 
 class InfrastructureContainer(DeclarativeContainer):
     config = Configuration()
-    application_container = Container(ApplicationContainer).container
-
-    # --------------
-    # Infrastructure
-    # --------------
 
     # Minio
     config.minio.endpoint.from_env('MINIO_ENDPOINT')
@@ -145,13 +140,13 @@ class InfrastructureContainer(DeclarativeContainer):
     openai_managed_em = Factory(
         OpenAIManagedEM,
         em=openai_em,
-        em_settings_loader_service=application_container.em_settings_loader_service,
+        em_settings_loader_service=ApplicationContainer.em_settings_loader_service,
         em_failed_request_repository=em_failed_request_repository,
     )
     openai_managed_llm = Factory(
         OpenAIManagedLLM,
         llm=openai_llm,
-        llm_settings_loader_service=application_container.llm_settings_loader_service,
+        llm_settings_loader_service=ApplicationContainer.llm_settings_loader_service,
         llm_failed_request_repository=llm_failed_request_repository,
     )
 
@@ -162,7 +157,7 @@ class InfrastructureContainer(DeclarativeContainer):
     openai_managed_scheduler = Factory(
         OpenAIBatchLLMRequestManagedScheduler,
         scheduler=openai_scheduler,
-        llm_settings_loader_service=application_container.llm_settings_loader_service,
+        llm_settings_loader_service=ApplicationContainer.llm_settings_loader_service,
     )
 
     # arXiv
@@ -258,4 +253,19 @@ class InfrastructureContainer(DeclarativeContainer):
         hugging_face_base_url=config.hugging_face.base_url,
         hugging_face_username=config.hugging_face.username,
         hugging_face_token=config.hugging_face.token,
+    )
+
+    # ApplicationContainer
+    application_container = Container(
+        ApplicationContainer,
+        arxiv_client=arxiv_client,
+        katex_client=katex_client,
+        managed_llm=openai_managed_llm,
+        managed_scheduler=openai_managed_scheduler,
+        latex_parser_service=latex_parser_service,
+        latex_visitor_service=latex_visitor_service,
+        index_repository=index_repository,
+        math_article_repository=math_article_repository,
+        math_expression_repository=math_expression_repository,
+        math_expression_label_repository=math_expression_label_repository,
     )

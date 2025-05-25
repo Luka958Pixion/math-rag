@@ -36,3 +36,6 @@ Create `.env.hpc` file with the following variables:
 - `HF_TOKEN`
 - `WANDB_API_KEY`
 - `WANDB_PROJECT=math-rag`
+
+## Run
+- `poetry run python -m math_rag.main`
