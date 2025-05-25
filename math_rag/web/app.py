@@ -1,4 +1,6 @@
 import asyncio
+import os
+import signal
 
 from contextlib import asynccontextmanager, suppress
 from logging import getLogger
@@ -15,6 +17,22 @@ from math_rag.web.routers.index import index_create_router
 logger = getLogger(__name__)
 
 
+def on_exception(task: asyncio.Task):
+    if task.cancelled():
+        return
+
+    exception = task.exception()
+
+    if exception:
+        logger.error(
+            f'Task {task.get_name()} crashed, shutting down!',
+            exc_info=exception,
+        )
+
+        # send SIGTERM to self so uvicorn will exit gracefully
+        os.kill(os.getpid(), signal.SIGTERM)
+
+
 def create_app(application_container: ApplicationContainer) -> FastAPI:
     @asynccontextmanager
     async def lifespan(app: FastAPI):
@@ -25,6 +43,7 @@ def create_app(application_container: ApplicationContainer) -> FastAPI:
             index_build_tracker_service.track(),
             name=index_build_tracker_service.__class__.__name__,
         )
+        task.add_done_callback(on_exception)
         yield
         task.cancel()
 
