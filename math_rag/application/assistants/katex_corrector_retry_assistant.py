@@ -1,4 +1,7 @@
-from math_rag.application.base.inference import BaseManagedLLM
+from math_rag.application.base.inference import (
+    BaseBatchLLMRequestManagedScheduler,
+    BaseManagedLLM,
+)
 from math_rag.application.models.assistants import (
     KatexCorrectorRetryAssistantInput,
     KatexCorrectorRetryAssistantOutput,
@@ -20,8 +23,10 @@ class KatexCorrectorRetryAssistant(
         KatexCorrectorRetryAssistantInput, KatexCorrectorRetryAssistantOutput
     ]
 ):
-    def __init__(self, llm: BaseManagedLLM):
-        super().__init__(llm)
+    def __init__(
+        self, llm: BaseManagedLLM, scheduler: BaseBatchLLMRequestManagedScheduler | None
+    ):
+        super().__init__(llm, scheduler)
 
     def encode_to_request(
         self, input: KatexCorrectorRetryAssistantInput

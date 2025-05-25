@@ -8,9 +8,8 @@ from decouple import config
 
 import math_rag.web.routers as routers
 
-from math_rag.application.containers import ApplicationContainer
 from math_rag.infrastructure.containers import InfrastructureContainer
-from math_rag.web import app
+from math_rag.web import create_app
 
 
 basicConfig(level=INFO, format='%(asctime)s - %(levelname)s - %(message)s')
@@ -43,6 +42,7 @@ async def main():
     await math_expression_seeder.seed()
     await math_expression_label_seeder.seed()
 
+    app = create_app(application_container)
     uvicorn_config = uvicorn.Config(
         app,
         host=config('HOST'),

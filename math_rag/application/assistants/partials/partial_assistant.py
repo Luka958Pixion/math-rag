@@ -1,4 +1,7 @@
-from math_rag.application.base.inference import BaseLLM
+from math_rag.application.base.inference import (
+    BaseBatchLLMRequestManagedScheduler,
+    BaseManagedLLM,
+)
 from math_rag.application.types.assistants import (
     AssistantInputType,
     AssistantOutputType,
@@ -14,7 +17,9 @@ class PartialAssistant(
     PartialBatchAssistant[AssistantInputType, AssistantOutputType],
     PartialConcurrentAssistant[AssistantInputType, AssistantOutputType],
 ):
-    def __init__(self, llm: BaseLLM):
+    def __init__(
+        self, llm: BaseManagedLLM, scheduler: BaseBatchLLMRequestManagedScheduler | None
+    ):
         PartialBasicAssistant.__init__(self, llm)
-        PartialBatchAssistant.__init__(self, llm)
+        PartialBatchAssistant.__init__(self, llm, scheduler)
         PartialConcurrentAssistant.__init__(self, llm)
