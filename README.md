@@ -30,6 +30,9 @@ Create `.env` file with the following variables:
 - `HF_BASE_URL=https://huggingface.co`
 - `HF_USERNAME`
 - `HF_TOKEN`
+- `MATHPIX_APP_ID`
+- `MATHPIX_APP_KEY`
+- `MATHPIX_URL=https://api.mathpix.com`
 
 Create `.env.hpc` file with the following variables:
 - `HF_USERNAME`

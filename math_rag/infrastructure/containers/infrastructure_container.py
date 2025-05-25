@@ -1,6 +1,6 @@
 from pathlib import Path
 
-from arxiv import Client
+from arxiv import Client as _ArxivClient
 from dependency_injector.containers import DeclarativeContainer
 from dependency_injector.providers import (
     Callable,
@@ -10,6 +10,7 @@ from dependency_injector.providers import (
     Singleton,
 )
 from minio import Minio
+from mpxpy.mathpix_client import MathpixClient as _MathpixClient
 from openai import AsyncOpenAI
 from pymongo import AsyncMongoClient
 
@@ -20,6 +21,7 @@ from math_rag.infrastructure.clients import (
     FileSystemClient,
     HPCClient,
     KatexClient,
+    MathpixClient,
     PBSProClient,
     SFTPClient,
     SSHClient,
@@ -161,8 +163,22 @@ class InfrastructureContainer(DeclarativeContainer):
     )
 
     # arXiv
-    _arxiv_client = Singleton(Client)
+    _arxiv_client = Singleton(_ArxivClient)
     arxiv_client = Factory(ArxivClient, client=_arxiv_client)
+
+    # Mathpix
+    config.mathpix.app_id.from_env('MATHPIX_APP_ID')
+    config.mathpix.app_key.from_env('MATHPIX_APP_KEY')
+    config.mathpix.api_url.from_env('MATHPIX_URL')
+
+    _mathpix_client = Singleton(
+        _MathpixClient,
+        app_id=config.mathpix.app_id,
+        app_key=config.mathpix.app_key,
+        api_url=config.mathpix.api_url,
+    )
+
+    mathpix_client = Factory(MathpixClient, client=_mathpix_client)
 
     # LaTeX
     latex_parser_service = Factory(LatexParserService)

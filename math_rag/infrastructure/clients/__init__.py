@@ -3,6 +3,7 @@ from .arxiv_client import ArxivClient
 from .file_system_client import FileSystemClient
 from .hpc_client import HPCClient
 from .katex_client import KatexClient
+from .mathpix_client import MathpixClient
 from .pbs_pro_client import PBSProClient
 from .sftp_client import SFTPClient
 from .ssh_client import SSHClient
@@ -13,6 +14,7 @@ __all__ = [
     'ArxivClient',
     'FileSystemClient',
     'KatexClient',
+    'MathpixClient',
     'HPCClient',
     'SFTPClient',
     'SSHClient',

@@ -2773,6 +2773,26 @@ gmpy = ["gmpy2 (>=2.1.0a4) ; platform_python_implementation != \"PyPy\""]
 tests = ["pytest (>=4.6)"]
 
 [[package]]
+name = "mpxpy"
+version = "0.0.8"
+description = "Official Mathpix client for Python"
+optional = false
+python-versions = ">=3.8"
+groups = ["main"]
+files = [
+    {file = "mpxpy-0.0.8-py3-none-any.whl", hash = "sha256:4a8b823635ecaddb1aafd7d4f1fefaaf5c8832e431d7d08cb472be71b46eea61"},
+    {file = "mpxpy-0.0.8.tar.gz", hash = "sha256:941d4f770187a2374f53ccc03a0a29e722b1648e6a541dd91d80246a4adf33e7"},
+]
+
+[package.dependencies]
+pydantic = ">=2.10.6"
+python-dotenv = ">=0.15.0"
+requests = ">=2.20.0"
+
+[package.extras]
+dev = ["pytest (>=7.0.0)"]
+
+[[package]]
 name = "multidict"
 version = "6.2.0"
 description = "multidict implementation"
@@ -4367,6 +4387,21 @@ groups = ["main"]
 files = [
     {file = "python_decouple_typed-3.11.0-py3-none-any.whl", hash = "sha256:967665073aec7a861844e0d9d21768324d3d819311574702cf5be7403a18da58"},
 ]
+
+[[package]]
+name = "python-dotenv"
+version = "1.1.0"
+description = "Read key-value pairs from a .env file and set them as environment variables"
+optional = false
+python-versions = ">=3.9"
+groups = ["main"]
+files = [
+    {file = "python_dotenv-1.1.0-py3-none-any.whl", hash = "sha256:d7c01d9e2293916c18baf562d95698754b0dbbb5e74d457c45d4f6561fb9d55d"},
+    {file = "python_dotenv-1.1.0.tar.gz", hash = "sha256:41f90bc6f5f177fb41f53e87666db362025010eb28f60a01c9143bfa33a2b2d5"},
+]
+
+[package.extras]
+cli = ["click (>=5.0)"]
 
 [[package]]
 name = "python-json-logger"
@@ -6486,4 +6521,4 @@ propcache = ">=0.2.0"
 [metadata]
 lock-version = "2.1"
 python-versions = ">=3.12,<4.0"
-content-hash = "bdf6eab4bba42adea25e5a6172887e005fc89e1e141dbfd5b79014a35b16f598"
+content-hash = "e89e04a3edf31b0801427e08631b74ce76c9b2452de8150fdb70676ce4b71baf"
