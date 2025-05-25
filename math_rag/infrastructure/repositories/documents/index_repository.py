@@ -21,9 +21,14 @@ class IndexRepository(
     async def update_build_stage(
         self, id: UUID, index_build_stage: IndexBuildStage
     ) -> Index:
+        field = 'build_stage'
+
+        if field not in self.target_cls.model_fields:
+            raise ValueError(f'{self.target_cls.__name__} does not have field {field}')
+
         bson_doc = await self.collection.find_one_and_update(
             filter={'_id': id},
-            update={'$set': {'index_build_stage': index_build_stage.value}},
+            update={'$set': {field: index_build_stage.value}},
             return_document=ReturnDocument.AFTER,
         )
         doc = self.target_cls.model_validate(bson_doc)
@@ -33,9 +38,14 @@ class IndexRepository(
     async def update_build_status(
         self, id: UUID, index_build_status: IndexBuildStatus
     ) -> Index:
+        field = 'build_stage'
+
+        if field not in self.target_cls.model_fields:
+            raise ValueError(f'{self.target_cls.__name__} does not have field {field}')
+
         bson_doc = await self.collection.find_one_and_update(
             filter={'_id': id},
-            update={'$set': {'index_build_status': index_build_status.value}},
+            update={'$set': {field: index_build_status.value}},
             return_document=ReturnDocument.AFTER,
         )
         doc = self.target_cls.model_validate(bson_doc)

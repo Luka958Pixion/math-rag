@@ -17,6 +17,7 @@ from math_rag.application.models.inference import (
 from math_rag.application.types.inference import LLMResponseType
 from math_rag.infrastructure.mappings.inference.openai import LLMRequestMapping
 from math_rag.infrastructure.utils import LLMTokenCounterUtil
+from math_rag.infrastructure.validators.inference.openai import OpenAIValidator
 
 
 class OpenAIBatchLLMRequestScheduler(BaseBatchLLMRequestScheduler):
@@ -30,6 +31,9 @@ class OpenAIBatchLLMRequestScheduler(BaseBatchLLMRequestScheduler):
         max_tokens_per_day: float,
         max_input_file_size: int,
     ) -> LLMBatchRequestSchedule[LLMResponseType]:
+        model = batch_request.requests[0].params.model
+        OpenAIValidator.validate_model_name(model)
+
         current_tokens = 0
         current_input_file_size = 0
         current_batch_request = LLMBatchRequest[LLMResponseType](requests=[])
@@ -38,7 +42,7 @@ class OpenAIBatchLLMRequestScheduler(BaseBatchLLMRequestScheduler):
 
         for request in batch_request.requests:
             # estimate tokens
-            tokens = LLMTokenCounterUtil.count(request)
+            tokens = LLMTokenCounterUtil.count(request, model_name=model)
 
             # estimate input file size
             request_dict = {
