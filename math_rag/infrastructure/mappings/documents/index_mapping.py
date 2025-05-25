@@ -13,7 +13,9 @@ class IndexMapping(BaseMapping[Index, IndexDocument]):
             build_stage=IndexBuildStage(target.build_stage),
             build_status=IndexBuildStatus(target.build_status),
             build_from_index_id=target.build_from_index_id,
-            build_from_stage=IndexBuildStage(target.build_from_stage),
+            build_from_stage=IndexBuildStage(target.build_from_stage)
+            if target.build_from_stage
+            else None,
         )
 
     @staticmethod
@@ -24,5 +26,7 @@ class IndexMapping(BaseMapping[Index, IndexDocument]):
             build_stage=source.build_stage.value,
             build_status=source.build_status.value,
             build_from_index_id=source.build_from_index_id,
-            build_from_stage=source.build_from_stage.value,
+            build_from_stage=source.build_from_stage.value
+            if source.build_from_stage
+            else None,
         )
