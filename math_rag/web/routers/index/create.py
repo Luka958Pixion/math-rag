@@ -31,8 +31,6 @@ async def create_index(
     ),
 ):
     index = Index(
-        build_stage=index_create_request.build_stage,
-        build_status=index_create_request.build_status,
         build_from_index_id=index_create_request.build_from_index_id,
         build_from_stage=index_create_request.build_from_stage,
     )
