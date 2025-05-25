@@ -70,7 +70,7 @@ class DocumentRepository(
         bson_doc = await self.collection.find_one(filter)
 
         if bson_doc:
-            doc = self.target_cls(**bson_doc)
+            doc = self.target_cls.model_validate(bson_doc)
             item = self.mapping_cls.to_source(doc)
 
             return item
@@ -93,7 +93,7 @@ class DocumentRepository(
 
         bson_docs = await cursor.to_list()
 
-        docs = [self.target_cls(**bson_doc) for bson_doc in bson_docs]
+        docs = [self.target_cls.model_validate(bson_doc) for bson_doc in bson_docs]
         items = [self.mapping_cls.to_source(doc) for doc in docs]
 
         return items
@@ -116,7 +116,7 @@ class DocumentRepository(
         batch: list[SourceType] = []
 
         async for bson_doc in cursor:
-            doc = self.target_cls(**bson_doc)
+            doc = self.target_cls.model_validate(bson_doc)
             batch.append(self.mapping_cls.to_source(doc))
 
             if len(batch) >= batch_size:

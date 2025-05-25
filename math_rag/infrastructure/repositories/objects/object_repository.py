@@ -77,15 +77,27 @@ class ObjectRepository(
 
         stat_response = self.client.stat_object(self.bucket_name, name)
         id = stat_response.metadata.get('X-Amz-Meta-id')
+        index_id = stat_response.metadata.get('X-Amz-Meta-index-id')
+        timestamp = stat_response.metadata.get('X-Amz-Meta-timestamp')
 
         if id is None:
             raise ValueError(f'Missing X-Amz-Meta-id in {name}')
+
+        if index_id is None:
+            raise ValueError(f'Missing X-Amz-Meta-index-id in {name}')
+
+        if timestamp is None:
+            raise ValueError(f'Missing X-Amz-Meta-timestamp in {name}')
 
         object = self.target_cls(
             object_name=name,
             data=object_bytes,
             length=object_bytes.getbuffer().nbytes,
-            metadata={'X-Amz-Meta-id': id},
+            metadata={
+                'X-Amz-Meta-id': id,
+                'X-Amz-Meta-index-id': index_id,
+                'X-Amz-Meta-timestamp': timestamp,
+            },
         )
         item = self.mapping_cls.to_source(object)
 
