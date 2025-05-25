@@ -64,7 +64,7 @@ class IndexBuilderService(BaseIndexBuilderService):
         logger.info(f'Index {index.id} build started')
 
         arxiv_category_type = MathCategory
-        limit = 200
+        limit = 32  # TODO was 200
 
         if index.build_from_index_id and index.build_from_stage:
             foundation_index = await self.index_repository.find_one(
