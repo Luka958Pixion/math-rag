@@ -8,6 +8,7 @@ from fastapi.responses import JSONResponse
 
 from math_rag.application.containers import ApplicationContainer
 from math_rag.web.constants import OPENAPI_URL, TITLE
+from math_rag.web.routers import health_router, scalar_router
 from math_rag.web.routers.index import index_create_router
 
 
@@ -37,8 +38,12 @@ def create_app(application_container: ApplicationContainer) -> FastAPI:
         dependency_overrides_provider=application_container,
     )
 
+    # routers
     app.include_router(index_create_router)
+    app.include_router(health_router)
+    app.include_router(scalar_router)
 
+    # exception handlers
     @app.exception_handler(Exception)
     async def global_exception_handler(request: Request, exception: Exception):
         logger.error(f'Unhandled exception: {exception}')
