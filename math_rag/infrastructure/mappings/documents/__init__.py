@@ -15,6 +15,7 @@ from .llm_params_mapping import LLMParamsMapping
 from .llm_request_mapping import LLMRequestMapping
 from .math_expression_label_mapping import MathExpressionLabelMapping
 from .math_expression_mapping import MathExpressionMapping
+from .math_problem_mapping import MathProblemMapping
 
 
 __all__ = [
@@ -33,4 +34,5 @@ __all__ = [
     'LLMRequestMapping',
     'MathExpressionLabelMapping',
     'MathExpressionMapping',
+    'MathProblemMapping',
 ]

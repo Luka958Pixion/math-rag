@@ -41,7 +41,7 @@ class MathExpressionLabelLoaderService(BaseMathExpressionLabelLoaderService):
                 inputs.append(input)
 
         outputs = await self.math_expression_labeler_assistant.batch_assist(
-            input, use_scheduler=True
+            inputs, use_scheduler=True
         )
         math_expression_labels = [
             MathExpressionLabel(

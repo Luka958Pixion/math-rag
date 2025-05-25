@@ -48,4 +48,5 @@ class OpenAIBatchLLMRequestManagedScheduler(BaseBatchLLMRequestManagedScheduler)
         schedule: LLMBatchRequestSchedule[LLMResponseType],
         response_type: type[LLMResponseType],
     ) -> AsyncGenerator[LLMBatchResult[LLMResponseType], None]:
-        return await self.scheduler.execute(schedule, response_type)
+        async for batch_result in self.scheduler.execute(schedule, response_type):
+            yield batch_result

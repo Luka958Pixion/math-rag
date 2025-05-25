@@ -76,5 +76,5 @@ class IndexBuildTrackerService(BaseIndexBuildTrackerService):
                         current_index.id, IndexBuildStatus.FAILED
                     )
                     logger.exception(
-                        f'Index {current_index.id} build due to an error: {e}'
+                        f'Index {current_index.id} build failed due to an error: {e}'
                     )

@@ -19,6 +19,7 @@ from .math_expression_document import MathExpressionDocument
 from .math_expression_label_document import (
     MathExpressionLabelDocument,
 )
+from .math_problem_document import MathProblemDocument
 
 
 __all__ = [
@@ -37,4 +38,5 @@ __all__ = [
     'LLMRequestDocument',
     'MathExpressionLabelDocument',
     'MathExpressionDocument',
+    'MathProblemDocument',
 ]

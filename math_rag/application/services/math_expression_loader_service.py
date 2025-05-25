@@ -72,9 +72,11 @@ class MathExpressionLoaderService(BaseMathExpressionLoaderService):
         for file_name in file_names:
             math_article = self.math_article_repository.find_by_name(file_name)
 
-            if (
-                foundation_index_id and math_article.index_id != foundation_index_id
-            ) or math_article.index_id != index_id:
+            if foundation_index_id:
+                if math_article.index_id != foundation_index_id:
+                    continue
+
+            elif math_article.index_id != index_id:
                 continue
 
             math_nodes.extend(self.math_article_parser_service.parse(math_article))

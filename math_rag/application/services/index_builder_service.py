@@ -68,7 +68,7 @@ class IndexBuilderService(BaseIndexBuilderService):
 
         if index.build_from_index_id and index.build_from_stage:
             foundation_index = await self.index_repository.find_one(
-                filter={'id': index.id}
+                filter={'id': index.build_from_index_id}
             )
 
             if not foundation_index:
