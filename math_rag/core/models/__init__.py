@@ -1,3 +1,4 @@
+from .dataset import Dataset
 from .index import Index
 from .math_article import MathArticle
 from .math_assignment import MathAssignment
@@ -7,6 +8,7 @@ from .math_problem import MathProblem
 
 
 __all__ = [
+    'Dataset',
     'Index',
     'MathArticle',
     'MathExpression',

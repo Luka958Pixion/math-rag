@@ -45,7 +45,6 @@ class MathExpressionLabelLoaderService(BaseMathExpressionLabelLoaderService):
         )
         math_expression_labels = [
             MathExpressionLabel(
-                index_id=index_id,
                 math_expression_id=math_expression.id,
                 value=output.label,
             )

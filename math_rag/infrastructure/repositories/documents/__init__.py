@@ -1,3 +1,4 @@
+from .dataset_repository import DatasetRepository
 from .document_repository import DocumentRepository
 from .em_failed_request_repository import EMFailedRequestRepository
 from .index_repository import IndexRepository
@@ -15,6 +16,7 @@ from .math_expression_repository import MathExpressionRepository
 
 
 __all__ = [
+    'DatasetRepository',
     'DocumentRepository',
     'EMFailedRequestRepository',
     'IndexRepository',

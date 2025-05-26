@@ -45,7 +45,7 @@ class MathArticleLoaderService(BaseMathArticleLoaderService):
             process_tasks = [self._process_result(result) for result in results]
             processed_files = await gather(*process_tasks)
             math_articles = [
-                MathArticle(index_id=index_id, name=name, bytes=bytes)
+                MathArticle(name=name, bytes=bytes)
                 for file in processed_files
                 if file
                 for name, bytes in file.items()

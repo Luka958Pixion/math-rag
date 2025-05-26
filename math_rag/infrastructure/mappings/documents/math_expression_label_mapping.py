@@ -14,7 +14,6 @@ class MathExpressionLabelMapping(
     ) -> MathExpressionLabel:
         return MathExpressionLabel(
             id=target.id,
-            index_id=target.index_id,
             timestamp=target.timestamp,
             math_expression_id=target.math_expression_id,
             value=target.value,
@@ -26,7 +25,6 @@ class MathExpressionLabelMapping(
     ) -> MathExpressionLabelDocument:
         return MathExpressionLabelDocument(
             id=source.id,
-            index_id=source.index_id,
             timestamp=source.timestamp,
             math_expression_id=source.math_expression_id,
             value=source.value,

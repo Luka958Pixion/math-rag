@@ -1,3 +1,4 @@
+from .dataset_mapping import DatasetMapping
 from .em_error_mapping import EMErrorMapping
 from .em_failed_request_mapping import EMFailedRequestMapping
 from .em_params_mapping import EMParamsMapping
@@ -19,6 +20,7 @@ from .math_problem_mapping import MathProblemMapping
 
 
 __all__ = [
+    'DatasetMapping',
     'EMErrorMapping',
     'EMFailedRequestMapping',
     'EMParamsMapping',

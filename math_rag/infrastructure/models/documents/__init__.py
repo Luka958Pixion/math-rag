@@ -1,3 +1,4 @@
+from .dataset_document import DatasetDocument
 from .em_error_document import EMErrorDocument
 from .em_failed_request_document import EMFailedRequestDocument
 from .em_params_document import EMParamsDocument
@@ -23,6 +24,7 @@ from .math_problem_document import MathProblemDocument
 
 
 __all__ = [
+    'DatasetDocument',
     'EMErrorDocument',
     'EMFailedRequestDocument',
     'EMParamsDocument',
