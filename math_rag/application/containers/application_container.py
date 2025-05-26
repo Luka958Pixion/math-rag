@@ -27,8 +27,9 @@ from math_rag.application.base.services import (
     BaseLatexParserService,
     BaseLatexVisitorService,
 )
-from math_rag.application.contexts import IndexBuildContext
+from math_rag.application.contexts import DatasetBuildContext, IndexBuildContext
 from math_rag.application.services import (
+    DatasetBuilderService,
     EMSettingsLoaderService,
     IndexBuilderService,
     LLMSettingsLoaderService,
@@ -95,6 +96,10 @@ class ApplicationContainer(DeclarativeContainer):
         math_expression_repository=math_expression_repository,
         math_expression_label_repository=math_expression_label_repository,
     )
+    dataset_builder_service = Singleton(  # TODO
+        DatasetBuilderService
+    )
+    dataset_build_context = Singleton
     index_builder_service = Singleton(
         IndexBuilderService,
         math_article_loader_service=math_article_loader_service,

@@ -36,19 +36,27 @@ def on_exception(task: asyncio.Task):
 def create_app(application_container: ApplicationContainer) -> FastAPI:
     @asynccontextmanager
     async def lifespan(app: FastAPI):
-        index_build_tracker_background_service = (
-            application_container.index_build_tracker_background_service()
+        index_service = application_container.index_build_tracker_background_service()
+        dataset_service = (
+            application_container.dataset_build_tracker_background_service()
         )
-        task = asyncio.create_task(
-            index_build_tracker_background_service.track(),
-            name=index_build_tracker_background_service.__class__.__name__,
+
+        index_task = asyncio.create_task(
+            index_service.track(), name=index_service.__class__.__name__
         )
-        task.add_done_callback(on_exception)
+        dataset_task = asyncio.create_task(
+            dataset_service.track(), name=dataset_service.__class__.__name__
+        )
+
+        index_task.add_done_callback(on_exception)
+        dataset_task.add_done_callback(on_exception)
+
         yield
-        task.cancel()
+        for task in (index_task, dataset_task):
+            task.cancel()
 
         with suppress(asyncio.CancelledError):
-            await task
+            await asyncio.gather(index_task, dataset_task)
 
     app = FastAPI(
         title=TITLE,

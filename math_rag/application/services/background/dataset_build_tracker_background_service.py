@@ -44,7 +44,7 @@ class DatasetBuildTrackerBackgroundService(BaseDatasetBuildTrackerBackgroundServ
                     if (
                         dataset.build_status == DatasetBuildStatus.PENDING
                     ):  # TODO write repo method instead
-                        current_dataset = dataset
+                        current_dataset = dataset  # TODO
                         break
 
                 if not current_dataset:
