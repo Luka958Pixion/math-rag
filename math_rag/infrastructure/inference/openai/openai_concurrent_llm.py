@@ -137,6 +137,9 @@ class OpenAIConcurrentLLM(BaseConcurrentLLM):
         max_tokens_per_minute: float,
         max_num_retries: int,
     ) -> LLMConcurrentResult[LLMResponseType]:
+        if not concurrent_request.requests:
+            raise ValueError(f'Batch request {concurrent_request.id} is empty')
+
         model = concurrent_request.requests[0].params.model
         OpenAIModelNameValidator.validate(model)
 

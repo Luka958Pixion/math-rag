@@ -31,6 +31,9 @@ class OpenAIBatchManagedLLM(BaseBatchManagedLLM):
         batch_request: LLMBatchRequest[LLMResponseType],
         response_type: type[LLMResponseType],
     ) -> LLMBatchResult[LLMResponseType]:
+        if not batch_request.requests:
+            raise ValueError(f'Batch request {batch_request.id} is empty')
+
         model = batch_request.requests[0].params.model
         OpenAIModelNameValidator.validate(model)
 

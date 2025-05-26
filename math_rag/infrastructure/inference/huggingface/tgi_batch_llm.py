@@ -215,13 +215,21 @@ class TGIBatchLLM(PartialBatchLLM):
         batch_request: LLMBatchRequest[LLMResponseType],
         *,
         max_tokens_per_day: float | None,
-        max_input_file_size: int | None = None,
+        max_input_file_size: int | None,
     ) -> str:
         # validate
         if max_tokens_per_day is not None:
             raise ValueError(
                 f'{self.__class__.__name__} does not support max_tokens_per_day'
             )
+
+        if max_input_file_size is not None:
+            raise ValueError(
+                f'{self.__class__.__name__} does not support max_input_file_size'
+            )
+
+        if not batch_request.requests:
+            raise ValueError(f'Batch request {batch_request.id} is empty')
 
         model = batch_request.requests[0].params.model
         HuggingFaceValidator.validate_model_name(model)

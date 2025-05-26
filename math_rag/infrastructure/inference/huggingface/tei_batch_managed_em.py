@@ -16,6 +16,9 @@ class TEIBatchManagedEM(BaseBatchManagedEM):
         self._em_settings_loader_service = em_settings_loader_service
 
     async def batch_embed(self, batch_request: EMBatchRequest) -> EMBatchResult:
+        if not batch_request.requests:
+            raise ValueError(f'Batch request {batch_request.id} is empty')
+
         model = batch_request.requests[0].params.model
         HuggingFaceValidator.validate_model_name(model)
 

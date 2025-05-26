@@ -47,6 +47,12 @@ class OpenAIBatchEM(PartialBatchEM):
         if max_tokens_per_day is None:
             raise ValueError(f'{self.__class__.__name__} requires max_tokens_per_day')
 
+        if max_input_file_size is None:
+            raise ValueError(f'{self.__class__.__name__} requires max_input_file_size')
+
+        if not batch_request.requests:
+            raise ValueError(f'Batch request {batch_request.id} is empty')
+
         model = batch_request.requests[0].params.model
         OpenAIModelNameValidator.validate(model)
 

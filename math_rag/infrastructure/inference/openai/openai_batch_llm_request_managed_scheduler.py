@@ -26,6 +26,9 @@ class OpenAIBatchLLMRequestManagedScheduler(BaseBatchLLMRequestManagedScheduler)
         self,
         batch_request: LLMBatchRequest[LLMResponseType],
     ) -> LLMBatchRequestSchedule[LLMResponseType]:
+        if not batch_request.requests:
+            raise ValueError(f'Batch request {batch_request.id} is empty')
+
         model = batch_request.requests[0].params.model
         batch_settings = self.llm_settings_loader_service.load_batch_settings(
             'openai', model

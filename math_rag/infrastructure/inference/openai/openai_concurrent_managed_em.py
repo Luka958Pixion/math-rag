@@ -26,6 +26,9 @@ class OpenAIConcurrentManagedEM(BaseConcurrentManagedEM):
     async def concurrent_embed(
         self, concurrent_request: EMConcurrentRequest
     ) -> EMConcurrentResult:
+        if not concurrent_request.requests:
+            raise ValueError(f'Batch request {concurrent_request.id} is empty')
+
         model = concurrent_request.requests[0].params.model
         OpenAIModelNameValidator.validate(model)
 
