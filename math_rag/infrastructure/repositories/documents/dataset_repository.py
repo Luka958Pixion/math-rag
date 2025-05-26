@@ -2,7 +2,7 @@ from uuid import UUID
 
 from pymongo import AsyncMongoClient, ReturnDocument
 
-from math_rag.application.base.repositories.documents import BaseIndexRepository
+from math_rag.application.base.repositories.documents import BaseDatasetRepository
 from math_rag.core.enums import DatasetBuildStage, DatasetBuildStatus
 from math_rag.core.models import Dataset
 from math_rag.infrastructure.mappings.documents import DatasetMapping
@@ -12,14 +12,14 @@ from .document_repository import DocumentRepository
 
 
 class DatasetRepository(
-    BaseIndexRepository,
+    BaseDatasetRepository,
     DocumentRepository[Dataset, DatasetDocument, DatasetMapping],
 ):
     def __init__(self, client: AsyncMongoClient, deployment: str):
         super().__init__(client, deployment)
 
     async def update_build_stage(
-        self, id: UUID, index_build_stage: DatasetBuildStage
+        self, id: UUID, build_stage: DatasetBuildStage
     ) -> Dataset:
         field = 'build_stage'
 
@@ -28,7 +28,7 @@ class DatasetRepository(
 
         bson_doc = await self.collection.find_one_and_update(
             filter={'_id': id},
-            update={'$set': {field: index_build_stage.value}},
+            update={'$set': {field: build_stage.value}},
             return_document=ReturnDocument.AFTER,
         )
         doc = self.target_cls.model_validate(bson_doc)
@@ -36,7 +36,7 @@ class DatasetRepository(
         return self.mapping_cls.to_source(doc)
 
     async def update_build_status(
-        self, id: UUID, index_build_status: DatasetBuildStatus
+        self, id: UUID, build_status: DatasetBuildStatus
     ) -> Dataset:
         field = 'build_status'
 
@@ -45,7 +45,7 @@ class DatasetRepository(
 
         bson_doc = await self.collection.find_one_and_update(
             filter={'_id': id},
-            update={'$set': {field: index_build_status.value}},
+            update={'$set': {field: build_status.value}},
             return_document=ReturnDocument.AFTER,
         )
         doc = self.target_cls.model_validate(bson_doc)

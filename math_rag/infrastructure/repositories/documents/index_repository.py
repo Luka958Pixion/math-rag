@@ -18,9 +18,7 @@ class IndexRepository(
     def __init__(self, client: AsyncMongoClient, deployment: str):
         super().__init__(client, deployment)
 
-    async def update_build_stage(
-        self, id: UUID, index_build_stage: IndexBuildStage
-    ) -> Index:
+    async def update_build_stage(self, id: UUID, build_stage: IndexBuildStage) -> Index:
         field = 'build_stage'
 
         if field not in self.target_cls.model_fields:
@@ -28,7 +26,7 @@ class IndexRepository(
 
         bson_doc = await self.collection.find_one_and_update(
             filter={'_id': id},
-            update={'$set': {field: index_build_stage.value}},
+            update={'$set': {field: build_stage.value}},
             return_document=ReturnDocument.AFTER,
         )
         doc = self.target_cls.model_validate(bson_doc)
@@ -36,7 +34,7 @@ class IndexRepository(
         return self.mapping_cls.to_source(doc)
 
     async def update_build_status(
-        self, id: UUID, index_build_status: IndexBuildStatus
+        self, id: UUID, build_status: IndexBuildStatus
     ) -> Index:
         field = 'build_status'
 
@@ -45,7 +43,7 @@ class IndexRepository(
 
         bson_doc = await self.collection.find_one_and_update(
             filter={'_id': id},
-            update={'$set': {field: index_build_status.value}},
+            update={'$set': {field: build_status.value}},
             return_document=ReturnDocument.AFTER,
         )
         doc = self.target_cls.model_validate(bson_doc)
