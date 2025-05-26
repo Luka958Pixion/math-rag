@@ -1,7 +1,7 @@
 from enum import Enum
 
 
-class BatchErrorCode(str, Enum):
+class OpenAIBatchErrorCode(str, Enum):
     """
     OpenAI batch error codes
 

@@ -8,7 +8,7 @@ from math_rag.application.models.inference import (
     LLMResult,
 )
 from math_rag.application.types.inference import LLMResponseType
-from math_rag.infrastructure.validators.inference.openai import OpenAIValidator
+from math_rag.infrastructure.validators.inference.openai import OpenAIModelNameValidator
 
 from .openai_basic_llm import OpenAIBasicLLM
 
@@ -27,7 +27,7 @@ class OpenAIBasicManagedLLM(BaseBasicManagedLLM):
     async def generate(
         self, request: LLMRequest[LLMResponseType]
     ) -> LLMResult[LLMResponseType]:
-        OpenAIValidator.validate_model_name(request.params.model)
+        OpenAIModelNameValidator.validate(request.params.model)
 
         basic_settings = self._llm_settings_loader_service.load_basic_settings(
             'openai', request.params.model

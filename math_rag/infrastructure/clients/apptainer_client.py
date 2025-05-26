@@ -6,7 +6,7 @@ from uuid import UUID
 from httpx import AsyncClient
 
 from math_rag.application.base.clients import BaseApptainerClient
-from math_rag.application.enums import (
+from math_rag.application.enums.clients import (
     ApptainerBuildStatus,
     ApptainerOverlayCreateStatus,
 )

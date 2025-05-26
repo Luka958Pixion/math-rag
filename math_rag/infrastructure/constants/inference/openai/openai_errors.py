@@ -14,26 +14,30 @@ from openai import (
 )
 
 
-OPENAI_ERRORS_TO_RETRY = (
+# OpenAI API errors
+OPENAI_API_ERRORS_TO_RETRY = (
     APIConnectionError,  # NOTE: occured besides having proper connection settings
     APITimeoutError,
     InternalServerError,
     RateLimitError,
     UnprocessableEntityError,
 )
-OPENAI_ERRORS_TO_NOT_RETRY = (
-    LengthFinishReasonError,
-    ContentFilterFinishReasonError,
-    BadRequestError,
-)
-OPENAI_ERRORS_TO_RETRY_NO_RATE_LIMIT = (
+OPENAI_API_ERRORS_TO_NOT_RETRY = (BadRequestError,)
+OPENAI_API_ERRORS_TO_RETRY_NO_RATE_LIMIT = (
+    APIConnectionError,  # NOTE: occured besides having proper connection settings
     APITimeoutError,
     InternalServerError,
     UnprocessableEntityError,
 )
-OPENAI_ERRORS_TO_RAISE = (
+OPENAI_API_ERRORS_TO_RAISE = (
     AuthenticationError,
     ConflictError,
     NotFoundError,
     PermissionDeniedError,
+)
+
+# OpenAI library errors
+OPENAI_ERRORS_TO_NOT_RETRY = (
+    LengthFinishReasonError,
+    ContentFilterFinishReasonError,
 )

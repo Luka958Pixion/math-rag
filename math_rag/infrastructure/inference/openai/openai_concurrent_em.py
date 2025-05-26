@@ -19,16 +19,16 @@ from math_rag.application.models.inference import (
 from math_rag.infrastructure.constants.inference.openai import (
     CONCURRENT_WAIT_AFTER_RATE_LIMIT_ERROR,
     CONCURRENT_WAIT_IDLE,
-    OPENAI_ERRORS_TO_NOT_RETRY,
-    OPENAI_ERRORS_TO_RAISE,
-    OPENAI_ERRORS_TO_RETRY_NO_RATE_LIMIT,
+    OPENAI_API_ERRORS_TO_NOT_RETRY,
+    OPENAI_API_ERRORS_TO_RAISE,
+    OPENAI_API_ERRORS_TO_RETRY_NO_RATE_LIMIT,
 )
 from math_rag.infrastructure.mappings.inference.openai import (
     EMRequestMapping,
     EMResponseListMapping,
 )
 from math_rag.infrastructure.utils import EMTokenCounterUtil
-from math_rag.infrastructure.validators.inference.openai import OpenAIValidator
+from math_rag.infrastructure.validators.inference.openai import OpenAIModelNameValidator
 
 
 logger = getLogger(__name__)
@@ -65,15 +65,15 @@ class OpenAIConcurrentEM(BaseConcurrentEM):
             status_tracker.time_of_last_rate_limit_error = perf_counter()
             status_tracker.num_rate_limit_errors += 1
 
-        except OPENAI_ERRORS_TO_RETRY_NO_RATE_LIMIT as e:
+        except OPENAI_API_ERRORS_TO_RETRY_NO_RATE_LIMIT as e:
             exception = e
             status_tracker.num_api_errors += 1
 
-        except OPENAI_ERRORS_TO_NOT_RETRY as e:
+        except OPENAI_API_ERRORS_TO_NOT_RETRY as e:
             exception = no_retry_exception = e
             status_tracker.num_api_errors += 1
 
-        except (*OPENAI_ERRORS_TO_RAISE, Exception) as e:
+        except (*OPENAI_API_ERRORS_TO_RAISE, Exception) as e:
             logger.error(f'Uncaught exception {type(e).__class__}: {e}')
             raise
 
@@ -120,7 +120,7 @@ class OpenAIConcurrentEM(BaseConcurrentEM):
         max_num_retries: int,
     ) -> EMConcurrentResult:
         model = concurrent_request.requests[0].params.model
-        OpenAIValidator.validate_model_name(model)
+        OpenAIModelNameValidator.validate(model)
 
         retry_queue: Queue[EMRequestTracker] = Queue()
         status_tracker = EMStatusTracker()

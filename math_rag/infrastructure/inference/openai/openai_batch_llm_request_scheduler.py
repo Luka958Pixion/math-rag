@@ -17,7 +17,7 @@ from math_rag.application.models.inference import (
 from math_rag.application.types.inference import LLMResponseType
 from math_rag.infrastructure.mappings.inference.openai import LLMRequestMapping
 from math_rag.infrastructure.utils import LLMTokenCounterUtil
-from math_rag.infrastructure.validators.inference.openai import OpenAIValidator
+from math_rag.infrastructure.validators.inference.openai import OpenAIModelNameValidator
 
 
 class OpenAIBatchLLMRequestScheduler(BaseBatchLLMRequestScheduler):
@@ -32,7 +32,7 @@ class OpenAIBatchLLMRequestScheduler(BaseBatchLLMRequestScheduler):
         max_input_file_size: int,
     ) -> LLMBatchRequestSchedule[LLMResponseType]:
         model = batch_request.requests[0].params.model
-        OpenAIValidator.validate_model_name(model)
+        OpenAIModelNameValidator.validate(model)
 
         current_tokens = 0
         current_input_file_size = 0

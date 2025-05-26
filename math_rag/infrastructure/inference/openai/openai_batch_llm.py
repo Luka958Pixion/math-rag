@@ -7,9 +7,11 @@ from uuid import UUID
 from openai import AsyncOpenAI, BadRequestError
 from openai.types.chat import ChatCompletion
 
+from math_rag.application.enums.inference import LLMErrorRetryPolicy
 from math_rag.application.models.inference import (
     LLMBatchRequest,
     LLMBatchResult,
+    LLMError,
     LLMFailedRequest,
     LLMRequest,
     LLMResponseList,
@@ -17,8 +19,9 @@ from math_rag.application.models.inference import (
 from math_rag.application.types.inference import LLMResponseType
 from math_rag.infrastructure.constants.inference.openai import (
     BATCH_WAIT_AFTER_RATE_LIMIT_ERROR,
+    OPENAI_ERRORS_TO_NOT_RETRY,
 )
-from math_rag.infrastructure.enums.inference.openai import BatchErrorCode
+from math_rag.infrastructure.enums.inference.openai import OpenAIBatchErrorCode
 from math_rag.infrastructure.inference.partials import PartialBatchLLM
 from math_rag.infrastructure.mappings.inference.openai import (
     LLMErrorMapping,
@@ -26,7 +29,7 @@ from math_rag.infrastructure.mappings.inference.openai import (
     LLMResponseListMapping,
 )
 from math_rag.infrastructure.utils import LLMTokenCounterUtil
-from math_rag.infrastructure.validators.inference.openai import OpenAIValidator
+from math_rag.infrastructure.validators.inference.openai import OpenAIModelNameValidator
 
 
 logger = getLogger(__name__)
@@ -49,7 +52,7 @@ class OpenAIBatchLLM(PartialBatchLLM):
             raise ValueError(f'{self.__class__.__name__} requires max_tokens_per_day')
 
         model = batch_request.requests[0].params.model
-        OpenAIValidator.validate_model_name(model)
+        OpenAIModelNameValidator.validate(model)
 
         # check token limit
         total_tokens = sum(
@@ -132,7 +135,7 @@ class OpenAIBatchLLM(PartialBatchLLM):
             raise
 
         # check errors
-        batch_error_codes = [code for code in BatchErrorCode]
+        batch_error_codes = [code for code in OpenAIBatchErrorCode]
 
         if batch.errors:
             logger.warning(f'Cancelling batch {batch.id} due to an error')
@@ -233,14 +236,27 @@ class OpenAIBatchLLM(PartialBatchLLM):
                 failed_requests.append(failed_request)
 
             else:
-                completion = ChatCompletion(**response['body'])
-                response_list = LLMResponseListMapping[LLMResponseType].to_source(
-                    completion,
-                    request_id=request_id,
-                    input_id=request.params.metadata['input_id'],
-                    response_type=response_type,
-                )
-                response_lists.append(response_list)
+                try:
+                    chat_completion = ChatCompletion(**response['body'])
+                    response_list = LLMResponseListMapping[LLMResponseType].to_source(
+                        chat_completion,
+                        request_id=request_id,
+                        input_id=request.params.metadata['input_id'],
+                        response_type=response_type,
+                    )
+                    response_lists.append(response_list)
+
+                except OPENAI_ERRORS_TO_NOT_RETRY as e:
+                    error = LLMError(
+                        message=str(e),
+                        body=None,
+                        retry_policy=LLMErrorRetryPolicy.NO_RETRY,
+                    )
+                    failed_request = LLMFailedRequest(
+                        request=request,
+                        errors=[error],
+                    )
+                    failed_requests.append(failed_request)
 
         batch_result = LLMBatchResult(
             batch_request_id=batch_request_id,

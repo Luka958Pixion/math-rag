@@ -6,7 +6,7 @@ from math_rag.application.base.repositories.documents import (
 )
 from math_rag.application.base.services import BaseEMSettingsLoaderService
 from math_rag.application.models.inference import EMBatchRequest, EMBatchResult
-from math_rag.infrastructure.validators.inference.openai import OpenAIValidator
+from math_rag.infrastructure.validators.inference.openai import OpenAIModelNameValidator
 
 from .openai_batch_em import OpenAIBatchEM
 
@@ -24,7 +24,7 @@ class OpenAIBatchManagedEM(BaseBatchManagedEM):
 
     async def batch_embed(self, batch_request: EMBatchRequest) -> EMBatchResult:
         model = batch_request.requests[0].params.model
-        OpenAIValidator.validate_model_name(model)
+        OpenAIModelNameValidator.validate(model)
 
         batch_settings = self._em_settings_loader_service.load_batch_settings(
             'openai', model

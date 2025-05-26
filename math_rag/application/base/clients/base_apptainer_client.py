@@ -3,7 +3,7 @@ from collections.abc import AsyncGenerator
 from pathlib import Path
 from uuid import UUID
 
-from math_rag.application.enums import (
+from math_rag.application.enums.clients import (
     ApptainerBuildStatus,
     ApptainerOverlayCreateStatus,
 )

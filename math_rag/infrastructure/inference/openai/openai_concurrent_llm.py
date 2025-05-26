@@ -6,6 +6,7 @@ from time import ctime, perf_counter
 from openai import AsyncOpenAI, RateLimitError
 
 from math_rag.application.base.inference import BaseConcurrentLLM
+from math_rag.application.enums.inference import LLMErrorRetryPolicy
 from math_rag.application.models.inference import (
     LLMConcurrentRequest,
     LLMConcurrentResult,
@@ -21,16 +22,17 @@ from math_rag.application.types.inference import LLMResponseType
 from math_rag.infrastructure.constants.inference.openai import (
     CONCURRENT_WAIT_AFTER_RATE_LIMIT_ERROR,
     CONCURRENT_WAIT_IDLE,
+    OPENAI_API_ERRORS_TO_NOT_RETRY,
+    OPENAI_API_ERRORS_TO_RAISE,
+    OPENAI_API_ERRORS_TO_RETRY_NO_RATE_LIMIT,
     OPENAI_ERRORS_TO_NOT_RETRY,
-    OPENAI_ERRORS_TO_RAISE,
-    OPENAI_ERRORS_TO_RETRY_NO_RATE_LIMIT,
 )
 from math_rag.infrastructure.mappings.inference.openai import (
     LLMRequestMapping,
     LLMResponseListMapping,
 )
 from math_rag.infrastructure.utils import LLMTokenCounterUtil
-from math_rag.infrastructure.validators.inference.openai import OpenAIValidator
+from math_rag.infrastructure.validators.inference.openai import OpenAIModelNameValidator
 
 
 logger = getLogger(__name__)
@@ -54,14 +56,14 @@ class OpenAIConcurrentLLM(BaseConcurrentLLM):
 
         try:
             request_dict = LLMRequestMapping[LLMResponseType].to_target(request)
-            completion_callback = (
+            chat_completion_callback = (
                 self.client.chat.completions.create
                 if request.params.response_type is LLMTextResponse
                 else self.client.beta.chat.completions.parse
             )
-            completion = await completion_callback(**request_dict)
+            chat_completion = await chat_completion_callback(**request_dict)
             response_list = LLMResponseListMapping[LLMResponseType].to_source(
-                completion,
+                chat_completion,
                 request_id=request.id,
                 response_type=request.params.response_type,
             )
@@ -71,18 +73,19 @@ class OpenAIConcurrentLLM(BaseConcurrentLLM):
             status_tracker.time_of_last_rate_limit_error = perf_counter()
             status_tracker.num_rate_limit_errors += 1
 
-        except OPENAI_ERRORS_TO_RETRY_NO_RATE_LIMIT as e:
+        except OPENAI_API_ERRORS_TO_RETRY_NO_RATE_LIMIT as e:
             exception = e
+            status_tracker.num_api_errors += 1
+
+        except OPENAI_API_ERRORS_TO_NOT_RETRY as e:
+            exception = no_retry_exception = e
             status_tracker.num_api_errors += 1
 
         except OPENAI_ERRORS_TO_NOT_RETRY as e:
             exception = no_retry_exception = e
-            status_tracker.num_api_errors += 1
+            status_tracker.num_non_api_errors += 1
 
-        except (*OPENAI_ERRORS_TO_RAISE, Exception) as e:
-            logger.error(
-                f'Uncaught exception {type(e)}: {e}, caused by request {request}'
-            )
+        except OPENAI_API_ERRORS_TO_RAISE as e:
             raise
 
         if exception:
@@ -90,7 +93,11 @@ class OpenAIConcurrentLLM(BaseConcurrentLLM):
                 message=exception.message
                 if hasattr(exception, 'message')
                 else str(exception),
+                code=exception.code if hasattr(exception, 'code') else None,
                 body=exception.message if hasattr(exception, 'message') else None,
+                retry_policy=LLMErrorRetryPolicy.NO_RETRY
+                if no_retry_exception
+                else LLMErrorRetryPolicy.RETRY,
             )
             request_tracker.errors.append(error)
             request_tracker.retries_left = (
@@ -127,7 +134,7 @@ class OpenAIConcurrentLLM(BaseConcurrentLLM):
         max_num_retries: int,
     ) -> LLMConcurrentResult[LLMResponseType]:
         model = concurrent_request.requests[0].params.model
-        OpenAIValidator.validate_model_name(model)
+        OpenAIModelNameValidator.validate(model)
 
         retry_queue: Queue[LLMRequestTracker] = Queue()
         status_tracker = LLMStatusTracker()

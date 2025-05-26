@@ -72,6 +72,7 @@ class PartialBatchLLM(BaseBatchLLM):
                 requests=[
                     failed_request.request
                     for failed_request in batch_result.failed_requests
+                    if failed_request.is_retry_allowed()
                 ]
             )
 

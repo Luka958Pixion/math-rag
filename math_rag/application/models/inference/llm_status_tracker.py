@@ -8,4 +8,5 @@ class LLMStatusTracker(BaseModel):
     num_tasks_failed: int = 0
     num_rate_limit_errors: int = 0
     num_api_errors: int = 0
+    num_non_api_errors: int = 0
     time_of_last_rate_limit_error: int = 0
