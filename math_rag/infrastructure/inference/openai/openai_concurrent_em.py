@@ -6,6 +6,7 @@ from time import ctime, perf_counter
 from openai import AsyncOpenAI, RateLimitError
 
 from math_rag.application.base.inference import BaseConcurrentEM
+from math_rag.application.enums.inference import EMErrorRetryPolicy
 from math_rag.application.models.inference import (
     EMConcurrentRequest,
     EMConcurrentResult,
@@ -73,7 +74,10 @@ class OpenAIConcurrentEM(BaseConcurrentEM):
             exception = no_retry_exception = e
             status_tracker.num_api_errors += 1
 
-        except (*OPENAI_API_ERRORS_TO_RAISE, Exception) as e:
+        except OPENAI_API_ERRORS_TO_RAISE as e:
+            raise
+
+        except Exception:
             logger.error(f'Uncaught exception {type(e).__class__}: {e}')
             raise
 
@@ -82,7 +86,11 @@ class OpenAIConcurrentEM(BaseConcurrentEM):
                 message=exception.message
                 if hasattr(exception, 'message')
                 else str(exception),
+                code=exception.code if hasattr(exception, 'code') else None,
                 body=exception.message if hasattr(exception, 'message') else None,
+                retry_policy=EMErrorRetryPolicy.NO_RETRY
+                if no_retry_exception
+                else EMErrorRetryPolicy.RETRY,
             )
             request_tracker.errors.append(error)
             request_tracker.retries_left = (

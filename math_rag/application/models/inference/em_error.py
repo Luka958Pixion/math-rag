@@ -2,8 +2,12 @@ from uuid import UUID, uuid4
 
 from pydantic import BaseModel, Field
 
+from math_rag.application.enums.inference import EMErrorRetryPolicy
+
 
 class EMError(BaseModel):
     id: UUID = Field(default_factory=uuid4)
     message: str
-    body: object | None
+    code: str | None = None
+    body: object | None = None
+    retry_policy: EMErrorRetryPolicy

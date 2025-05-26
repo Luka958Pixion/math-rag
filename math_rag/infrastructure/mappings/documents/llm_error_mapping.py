@@ -7,11 +7,19 @@ class LLMErrorMapping(BaseMapping[LLMError, LLMErrorDocument]):
     @staticmethod
     def to_source(target: LLMErrorDocument) -> LLMError:
         return LLMError(
-            id=target.id, code=target.code, message=target.message, body=target.body
+            id=target.id,
+            code=target.code,
+            message=target.message,
+            body=target.body,
+            retry_policy=target.retry_policy,
         )
 
     @staticmethod
     def to_target(source: LLMError) -> LLMErrorDocument:
         return LLMErrorDocument(
-            id=source.id, code=source.code, message=source.message, body=source.body
+            id=source.id,
+            code=source.code,
+            message=source.message,
+            body=source.body,
+            retry_policy=source.retry_policy,
         )

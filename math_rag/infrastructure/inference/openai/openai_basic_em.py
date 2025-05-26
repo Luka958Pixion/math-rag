@@ -2,6 +2,7 @@ from backoff import expo, on_exception
 from openai import AsyncOpenAI
 
 from math_rag.application.base.inference import BaseBasicEM
+from math_rag.application.enums.inference import EMErrorRetryPolicy
 from math_rag.application.models.inference import (
     EMError,
     EMFailedRequest,
@@ -58,9 +59,25 @@ class OpenAIBasicEM(BaseBasicEM):
             response_list = await _embed(request)
             failed_request = None
 
-        except OPENAI_API_ERRORS_TO_RETRY + OPENAI_API_ERRORS_TO_NOT_RETRY as e:
+        except OPENAI_API_ERRORS_TO_RETRY as e:
             response_list = EMResponseList(responses=[])
-            error = EMError(message=e.message, body=e.body)
+            error = EMError(
+                message=e.message,
+                code=e.code,
+                body=e.body,
+                retry_policy=EMErrorRetryPolicy.RETRY,
+            )
+            failed_request = EMFailedRequest(request=request, errors=[error])
+            pass
+
+        except OPENAI_API_ERRORS_TO_NOT_RETRY as e:
+            response_list = EMResponseList(responses=[])
+            error = EMError(
+                message=e.message,
+                code=e.code,
+                body=e.body,
+                retry_policy=EMErrorRetryPolicy.NO_RETRY,
+            )
             failed_request = EMFailedRequest(request=request, errors=[error])
             pass
 
