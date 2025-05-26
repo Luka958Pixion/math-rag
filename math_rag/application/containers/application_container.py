@@ -30,13 +30,13 @@ from math_rag.application.contexts import IndexBuildContext
 from math_rag.application.services import (
     EMSettingsLoaderService,
     IndexBuilderService,
-    IndexBuildTrackerService,
     LLMSettingsLoaderService,
     MathArticleLoaderService,
     MathArticleParserService,
     MathExpressionLabelLoaderService,
     MathExpressionLoaderService,
 )
+from math_rag.application.services.background import IndexBuildTrackerBackgroundService
 
 
 class ApplicationContainer(DeclarativeContainer):
@@ -101,8 +101,8 @@ class ApplicationContainer(DeclarativeContainer):
         index_repository=index_repository,
     )
     index_build_context = Singleton(IndexBuildContext)
-    index_build_tracker_service = Singleton(
-        IndexBuildTrackerService,
+    index_build_tracker_background_service = Singleton(
+        IndexBuildTrackerBackgroundService,
         index_repository=index_repository,
         index_builder_service=index_builder_service,
         index_build_context=index_build_context,

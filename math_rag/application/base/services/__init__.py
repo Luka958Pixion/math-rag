@@ -1,6 +1,5 @@
 from .base_dataset_publisher_service import BaseDatasetPublisherService
 from .base_em_settings_loader_service import BaseEMSettingsLoaderService
-from .base_index_build_tracker_service import BaseIndexBuildTrackerService
 from .base_index_builder_service import BaseIndexBuilderService
 from .base_latex_parser_service import BaseLatexParserService
 from .base_latex_visitor_service import BaseLatexVisitorService
@@ -16,7 +15,6 @@ from .base_math_expression_loader_service import BaseMathExpressionLoaderService
 __all__ = [
     'BaseDatasetPublisherService',
     'BaseEMSettingsLoaderService',
-    'BaseIndexBuildTrackerService',
     'BaseIndexBuilderService',
     'BaseLLMSettingsLoaderService',
     'BaseMathArticleLoaderService',

@@ -36,12 +36,12 @@ def on_exception(task: asyncio.Task):
 def create_app(application_container: ApplicationContainer) -> FastAPI:
     @asynccontextmanager
     async def lifespan(app: FastAPI):
-        index_build_tracker_service = (
-            application_container.index_build_tracker_service()
+        index_build_tracker_background_service = (
+            application_container.index_build_tracker_background_service()
         )
         task = asyncio.create_task(
-            index_build_tracker_service.track(),
-            name=index_build_tracker_service.__class__.__name__,
+            index_build_tracker_background_service.track(),
+            name=index_build_tracker_background_service.__class__.__name__,
         )
         task.add_done_callback(on_exception)
         yield
