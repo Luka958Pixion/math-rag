@@ -20,7 +20,7 @@ BACKUP_PATH = Path(__file__).parents[4] / '.tmp' / 'backups' / 'minio'
 class ObjectRepository(
     BaseObjectRepository[SourceType], Generic[SourceType, TargetType, MappingType]
 ):
-    def __init__(self, client: Minio):
+    def __init__(self, client: Minio, metadata_keys: list[str]):
         args = TypeUtil.get_type_args(self.__class__)
         self.source_cls = cast(type[SourceType], args[1][0])
         self.target_cls = cast(type[TargetType], args[1][1])
@@ -28,6 +28,7 @@ class ObjectRepository(
 
         self.client = client
         self.bucket_name = self.target_cls.__name__.lower()
+        self.metadata_keys = metadata_keys
 
     def insert_one(self, item: SourceType):
         object = self.mapping_cls.to_target(item)
@@ -76,28 +77,21 @@ class ObjectRepository(
         object_response.release_conn()
 
         stat_response = self.client.stat_object(self.bucket_name, name)
-        id = stat_response.metadata.get('X-Amz-Meta-id')
-        index_id = stat_response.metadata.get('X-Amz-Meta-index-id')
-        timestamp = stat_response.metadata.get('X-Amz-Meta-timestamp')
+        metadata = {}
 
-        if id is None:
-            raise ValueError(f'Missing X-Amz-Meta-id in {name}')
+        for key in self.metadata_keys:
+            value = stat_response.metadata.get(f'X-Amz-Meta-{key}')
 
-        if index_id is None:
-            raise ValueError(f'Missing X-Amz-Meta-index-id in {name}')
+            if value is None:
+                raise ValueError(f'Missing metadata key {key} in {name}')
 
-        if timestamp is None:
-            raise ValueError(f'Missing X-Amz-Meta-timestamp in {name}')
+            metadata[f'X-Amz-Meta-{key}'] = value
 
         object = self.target_cls(
             object_name=name,
             data=object_bytes,
             length=object_bytes.getbuffer().nbytes,
-            metadata={
-                'X-Amz-Meta-id': id,
-                'X-Amz-Meta-index-id': index_id,
-                'X-Amz-Meta-timestamp': timestamp,
-            },
+            metadata=metadata,
         )
         item = self.mapping_cls.to_source(object)
 

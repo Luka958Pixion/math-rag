@@ -18,4 +18,13 @@ class MathArticleRepository(
     ObjectRepository[MathArticle, MathArticleObject, MathArticleMapping],
 ):
     def __init__(self, client: Minio):
-        super().__init__(client)
+        metadata_keys = ['id', 'timestamp']
+
+        for key in metadata_keys:
+            if key not in MathArticleObject.model_fields:
+                raise ValueError(
+                    f'Field {key} does not exist in '
+                    f'{MathArticleObject.__class__.__name__}'
+                )
+
+        super().__init__(client, metadata_keys)
