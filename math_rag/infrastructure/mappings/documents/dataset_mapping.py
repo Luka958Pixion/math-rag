@@ -12,7 +12,7 @@ class DatasetMapping(BaseMapping[Dataset, DatasetDocument]):
             timestamp=target.timestamp,
             build_stage=DatasetBuildStage(target.build_stage),
             build_status=DatasetBuildStatus(target.build_status),
-            build_from_index_id=target.build_from_index_id,
+            build_from_dataset_id=target.build_from_dataset_id,
             build_from_stage=DatasetBuildStage(target.build_from_stage)
             if target.build_from_stage
             else None,
@@ -25,7 +25,7 @@ class DatasetMapping(BaseMapping[Dataset, DatasetDocument]):
             timestamp=source.timestamp,
             build_stage=source.build_stage.value,
             build_status=source.build_status.value,
-            build_from_index_id=source.build_from_index_id,
+            build_from_dataset_id=source.build_from_dataset_id,
             build_from_stage=source.build_from_stage.value
             if source.build_from_stage
             else None,

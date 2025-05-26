@@ -1,3 +1,4 @@
+from .base_dataset_builder_service import BaseDatasetBuilderService
 from .base_dataset_publisher_service import BaseDatasetPublisherService
 from .base_em_settings_loader_service import BaseEMSettingsLoaderService
 from .base_index_builder_service import BaseIndexBuilderService
@@ -13,6 +14,7 @@ from .base_math_expression_loader_service import BaseMathExpressionLoaderService
 
 
 __all__ = [
+    'BaseDatasetBuilderService',
     'BaseDatasetPublisherService',
     'BaseEMSettingsLoaderService',
     'BaseIndexBuilderService',

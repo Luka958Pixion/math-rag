@@ -31,7 +31,7 @@ async def create_index(
     ),
 ):
     dataset = Dataset(
-        build_from_index_id=dataset_create_request.build_from_index_id,
+        build_from_dataset_id=dataset_create_request.build_from_index_id,
         build_from_stage=dataset_create_request.build_from_stage,
     )
     await dataset_repository.insert_one(dataset)
@@ -45,6 +45,6 @@ async def create_index(
         timestamp=dataset.timestamp,
         build_stage=dataset.build_stage,
         build_status=dataset.build_status,
-        build_from_index_id=dataset.build_from_index_id,
+        build_from_index_id=dataset.build_from_dataset_id,
         build_from_stage=dataset.build_from_stage,
     )

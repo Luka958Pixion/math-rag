@@ -1,3 +1,4 @@
+from .dataset_builder_service import DatasetBuilderService
 from .em_settings_loader_service import EMSettingsLoaderService
 from .index_builder_service import IndexBuilderService
 from .llm_settings_loader_service import LLMSettingsLoaderService
@@ -8,6 +9,7 @@ from .math_expression_loader_service import MathExpressionLoaderService
 
 
 __all__ = [
+    'DatasetBuilderService',
     'EMSettingsLoaderService',
     'IndexBuilderService',
     'LLMSettingsLoaderService',
