@@ -36,7 +36,7 @@ from math_rag.infrastructure.inference.openai import (
     OpenAIManagedLLM,
 )
 from math_rag.infrastructure.repositories.documents import (
-    DocumentRepository,
+    DatasetRepository,
     EMFailedRequestRepository,
     IndexRepository,
     LLMFailedRequestRepository,
@@ -105,7 +105,7 @@ class InfrastructureContainer(DeclarativeContainer):
     em_failed_request_repository = Factory(EMFailedRequestRepository, **mongo_kwargs)
     llm_failed_request_repository = Factory(LLMFailedRequestRepository, **mongo_kwargs)
     index_repository = Factory(IndexRepository, **mongo_kwargs)
-    document_repository = Factory(DocumentRepository, **mongo_kwargs)
+    dataset_repository = Factory(DatasetRepository, **mongo_kwargs)
 
     math_expression_label_seeder = Factory(MathExpressionLabelSeeder, **mongo_kwargs)
     math_expression_label_repository = Factory(
@@ -283,7 +283,7 @@ class InfrastructureContainer(DeclarativeContainer):
         latex_parser_service=latex_parser_service,
         latex_visitor_service=latex_visitor_service,
         index_repository=index_repository,
-        document_repository=document_repository,
+        dataset_repository=dataset_repository,
         math_article_repository=math_article_repository,
         math_expression_repository=math_expression_repository,
         math_expression_label_repository=math_expression_label_repository,

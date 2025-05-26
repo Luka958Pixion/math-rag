@@ -17,7 +17,7 @@ from math_rag.application.base.inference import (
     BaseManagedLLM,
 )
 from math_rag.application.base.repositories.documents import (
-    BaseDocumentRepository,
+    BaseDatasetRepository,
     BaseIndexRepository,
     BaseMathExpressionLabelRepository,
     BaseMathExpressionRepository,
@@ -54,7 +54,7 @@ class ApplicationContainer(DeclarativeContainer):
     latex_visitor_service: Provider[BaseLatexVisitorService] = Dependency()
 
     index_repository: Provider[BaseIndexRepository] = Dependency()
-    document_repository: Provider[BaseDocumentRepository] = Dependency()
+    dataset_repository: Provider[BaseDatasetRepository] = Dependency()
     math_article_repository: Provider[BaseMathArticleRepository] = Dependency()
     math_expression_repository: Provider[BaseMathExpressionRepository] = Dependency()
     math_expression_label_repository: Provider[BaseMathExpressionLabelRepository] = (
