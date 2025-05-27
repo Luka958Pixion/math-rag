@@ -39,11 +39,16 @@ class MathExpressionSampleRepository(BaseMathExpressionSampleRepository):
         # TODO seeder for a view
 
     async def _create_index(
-        self, collection: AsyncCollection, *, field: str, type: type[BaseDocumentView]
+        self,
+        collection: AsyncCollection,
+        *,
+        field: str,
+        docume_view_type: type[BaseDocumentView],
     ):
-        if field not in type.model_fields:
+        if field not in docume_view_type.model_fields:
             raise ValueError(
-                f'Document view {type.__name__} ' f'does not have field {field}'
+                f'Document view {docume_view_type.__name__} '
+                f'does not have field {field}'
             )
 
         index_models = [IndexModel([(field, ASCENDING)], background=True)]
@@ -51,12 +56,14 @@ class MathExpressionSampleRepository(BaseMathExpressionSampleRepository):
 
     async def find_many(self) -> list[MathExpressionSample]:
         await self._create_index(
-            self.math_expression_collection, field='id', type=MathExpressionDocument
+            self.math_expression_collection,
+            field='id',
+            docume_view_type=MathExpressionDocument,
         )
         await self._create_index(
             self.math_expression_label_collection,
             field='math_expression_id',
-            type=MathExpressionLabelDocument,
+            docume_view_type=MathExpressionLabelDocument,
         )
         # TODO
         pass
