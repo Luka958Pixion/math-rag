@@ -36,14 +36,7 @@ class IndexBuildTrackerBackgroundService(BaseIndexBuildTrackerBackgroundService)
 
             # only one build at a time
             async with self.index_build_context.lock:
-                # indexes are already sorted by timestamp
-                indexes = await self.index_repository.find_many()
-                current_index: Index | None = None
-
-                for index in indexes:
-                    if index.build_status == IndexBuildStatus.PENDING:
-                        current_index = index
-                        break
+                current_index = await self.index_repository.find_first_pending()
 
                 if not current_index:
                     continue

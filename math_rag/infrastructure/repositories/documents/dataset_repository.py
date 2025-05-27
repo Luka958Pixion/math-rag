@@ -51,3 +51,16 @@ class DatasetRepository(
         doc = self.target_cls.model_validate(bson_doc)
 
         return self.mapping_cls.to_source(doc)
+
+    async def find_first_pending(self) -> Dataset | None:
+        bson_doc = await self.collection.find_one(
+            filter={'build_status': DatasetBuildStatus.PENDING.value},
+            sort=[('timestamp', 1)],
+        )
+
+        if bson_doc is None:
+            return None
+
+        doc = self.target_cls.model_validate(bson_doc)
+
+        return self.mapping_cls.to_source(doc)

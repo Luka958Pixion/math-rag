@@ -36,16 +36,7 @@ class DatasetBuildTrackerBackgroundService(BaseDatasetBuildTrackerBackgroundServ
 
             # only one build at a time
             async with self.dataset_build_context.lock:
-                # datasets are already sorted by timestamp
-                datasets = await self.dataset_repository.find_many()
-                current_dataset: Dataset | None = None
-
-                for dataset in datasets:
-                    if (
-                        dataset.build_status == DatasetBuildStatus.PENDING
-                    ):  # TODO write repo method instead
-                        current_dataset = dataset  # TODO
-                        break
+                current_dataset = await self.dataset_repository.find_first_pending()
 
                 if not current_dataset:
                     continue

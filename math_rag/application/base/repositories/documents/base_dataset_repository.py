@@ -19,3 +19,7 @@ class BaseDatasetRepository(BaseDocumentRepository[Dataset]):
         self, index_id: UUID, build_status: DatasetBuildStatus
     ) -> Dataset:
         pass
+
+    @abstractmethod
+    async def find_first_pending(self) -> Dataset | None:
+        pass

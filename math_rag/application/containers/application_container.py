@@ -38,7 +38,10 @@ from math_rag.application.services import (
     MathExpressionLabelLoaderService,
     MathExpressionLoaderService,
 )
-from math_rag.application.services.background import IndexBuildTrackerBackgroundService
+from math_rag.application.services.background import (
+    DatasetBuildTrackerBackgroundService,
+    IndexBuildTrackerBackgroundService,
+)
 
 
 class ApplicationContainer(DeclarativeContainer):
@@ -96,11 +99,21 @@ class ApplicationContainer(DeclarativeContainer):
         math_expression_repository=math_expression_repository,
         math_expression_label_repository=math_expression_label_repository,
     )
-    dataset_builder_service = Singleton(  # TODO
-        DatasetBuilderService
+    dataset_builder_service = Factory(
+        DatasetBuilderService,
+        math_article_loader_service=math_article_loader_service,
+        math_expression_loader_service=math_expression_loader_service,
+        math_expression_label_loader_service=math_expression_label_loader_service,
+        dataset_repository=dataset_repository,
     )
-    dataset_build_context = Singleton
-    index_builder_service = Singleton(
+    dataset_build_context = Singleton(DatasetBuildContext)
+    dataset_build_tracker_background_service = Singleton(
+        DatasetBuildTrackerBackgroundService,
+        dataset_repository=dataset_repository,
+        dataset_builder_service=dataset_builder_service,
+        dataset_build_context=dataset_build_context,
+    )
+    index_builder_service = Factory(
         IndexBuilderService,
         math_article_loader_service=math_article_loader_service,
         math_expression_loader_service=math_expression_loader_service,

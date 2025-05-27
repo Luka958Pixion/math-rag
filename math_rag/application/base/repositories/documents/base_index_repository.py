@@ -17,3 +17,7 @@ class BaseIndexRepository(BaseDocumentRepository[Index]):
         self, index_id: UUID, build_status: IndexBuildStatus
     ) -> Index:
         pass
+
+    @abstractmethod
+    async def find_first_pending(self) -> Index | None:
+        pass
