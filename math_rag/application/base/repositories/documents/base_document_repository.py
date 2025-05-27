@@ -1,7 +1,6 @@
 from abc import ABC, abstractmethod
 from collections.abc import AsyncGenerator
 from typing import Any, Generic, TypeVar
-from uuid import UUID
 
 
 T = TypeVar('T')
