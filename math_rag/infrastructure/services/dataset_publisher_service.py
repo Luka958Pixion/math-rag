@@ -4,6 +4,7 @@ from huggingface_hub import HfApi
 from huggingface_hub.errors import RepositoryNotFoundError
 
 from math_rag.application.base.datasets import BaseDataset, BaseSample
+from math_rag.application.base.services import BaseDatasetPublisherService
 from math_rag.application.models.datasets import (
     DatasetMetadataFile,
     DatasetSplitSettings,
@@ -15,7 +16,7 @@ from math_rag.infrastructure.utils import DatasetSplitterUtil
 logger = getLogger(__name__)
 
 
-class DatasetPublisherService:
+class DatasetPublisherService(BaseDatasetPublisherService):
     def __init__(
         self,
         hugging_face_base_url: str,

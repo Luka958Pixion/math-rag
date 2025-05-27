@@ -62,6 +62,10 @@ class DatasetBuilderService(BaseDatasetBuilderService):
         )
         logger.info(f'Dataset {dataset_id} build loaded math expression labels')
 
+    async def _publish_math_expression_dataset(self):
+        # TODO
+        pass
+
     async def build(self, dataset: Dataset):
         logger.info(f'Dataset {dataset.id} build started')
 
