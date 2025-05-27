@@ -4,6 +4,9 @@ from .index_builder_service import IndexBuilderService
 from .llm_settings_loader_service import LLMSettingsLoaderService
 from .math_article_loader_service import MathArticleLoaderService
 from .math_article_parser_service import MathArticleParserService
+from .math_expression_dataset_publisher_service import (
+    MathExpressionDatasetPublisherService,
+)
 from .math_expression_label_loader_service import MathExpressionLabelLoaderService
 from .math_expression_loader_service import MathExpressionLoaderService
 
@@ -15,6 +18,7 @@ __all__ = [
     'LLMSettingsLoaderService',
     'MathArticleLoaderService',
     'MathArticleParserService',
+    'MathExpressionDatasetPublisherService',
     'MathExpressionLabelLoaderService',
     'MathExpressionLoaderService',
 ]

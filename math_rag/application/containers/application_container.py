@@ -22,8 +22,12 @@ from math_rag.application.base.repositories.documents import (
     BaseMathExpressionLabelRepository,
     BaseMathExpressionRepository,
 )
+from math_rag.application.base.repositories.documents.views import (
+    BaseMathExpressionSampleRepository,
+)
 from math_rag.application.base.repositories.objects import BaseMathArticleRepository
 from math_rag.application.base.services import (
+    BaseDatasetPublisherService,
     BaseLatexParserService,
     BaseLatexVisitorService,
 )
@@ -35,6 +39,7 @@ from math_rag.application.services import (
     LLMSettingsLoaderService,
     MathArticleLoaderService,
     MathArticleParserService,
+    MathExpressionDatasetPublisherService,
     MathExpressionLabelLoaderService,
     MathExpressionLoaderService,
 )
@@ -64,6 +69,11 @@ class ApplicationContainer(DeclarativeContainer):
     math_expression_label_repository: Provider[BaseMathExpressionLabelRepository] = (
         Dependency()
     )
+    math_expression_sample_repository: Provider[BaseMathExpressionSampleRepository] = (
+        Dependency()
+    )
+
+    dataset_publisher_service: Provider[BaseDatasetPublisherService] = Dependency()
 
     # non-dependencies
     katex_corrector_assistant = Factory(
@@ -99,6 +109,12 @@ class ApplicationContainer(DeclarativeContainer):
         math_expression_repository=math_expression_repository,
         math_expression_label_repository=math_expression_label_repository,
     )
+    math_expression_dataset_publisher_service = Factory(
+        MathExpressionDatasetPublisherService,
+        math_expression_sample_repository=math_expression_sample_repository,
+        dataset_publisher_service=dataset_publisher_service,
+    )
+
     dataset_builder_service = Factory(
         DatasetBuilderService,
         math_article_loader_service=math_article_loader_service,
@@ -113,6 +129,7 @@ class ApplicationContainer(DeclarativeContainer):
         dataset_builder_service=dataset_builder_service,
         dataset_build_context=dataset_build_context,
     )
+
     index_builder_service = Factory(
         IndexBuilderService,
         math_article_loader_service=math_article_loader_service,

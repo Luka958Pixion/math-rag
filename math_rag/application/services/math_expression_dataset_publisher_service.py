@@ -1,10 +1,13 @@
 from logging import getLogger
 
 from math_rag.application.assistants.prompts import MATH_EXPRESSION_LABELER_PROMPT
-from math_rag.application.base.repositories.documents import (
-    BaseMathExpressionLabelRepository,
+from math_rag.application.base.repositories.documents.views import (
+    BaseMathExpressionSampleRepository,
 )
-from math_rag.application.base.services import BaseDatasetPublisherService
+from math_rag.application.base.services import (
+    BaseDatasetPublisherService,
+    BaseMathExpressionDatasetPublisherService,
+)
 from math_rag.application.models.datasets import (
     DatasetMetadataFile,
     DatasetSplitSettings,
@@ -16,29 +19,23 @@ from math_rag.application.models.datasets import (
 logger = getLogger(__name__)
 
 
-class MathExpressionDatasetPublisherService:
+class MathExpressionDatasetPublisherService(BaseMathExpressionDatasetPublisherService):
     def __init__(
         self,
-        math_expression_label_repository: BaseMathExpressionLabelRepository,
+        math_expression_sample_repository: BaseMathExpressionSampleRepository,
         dataset_publisher_service: BaseDatasetPublisherService,
     ):
-        self.math_expression_label_repository = math_expression_label_repository
+        self.math_expression_sample_repository = math_expression_sample_repository
         self.dataset_publisher_service = dataset_publisher_service
 
     async def publish(self):
-        math_expression_samples: list[MathExpressionSample] = []
-
-        async for (
-            math_expression_label_batch
-        ) in self.math_expression_label_repository.batch_find_many(batch_size=1000):
-            math_expression_sample_batch = [
-                MathExpressionSample(
-                    latex=math_expression_label.latex,  # TODO
-                    label=math_expression_label.value,
-                )
-                for math_expression_label in math_expression_label_batch
-            ]
-            math_expression_samples.extend(math_expression_sample_batch)
+        math_expression_samples = [
+            math_expression_sample
+            async for batch in self.math_expression_sample_repository.batch_find_many(
+                batch_size=1000
+            )
+            for math_expression_sample in batch
+        ]
 
         math_expression_dataset = MathExpressionDataset(math_expression_samples)
         dataset_split_settings = DatasetSplitSettings(

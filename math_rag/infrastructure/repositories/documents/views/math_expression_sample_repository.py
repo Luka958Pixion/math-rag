@@ -82,7 +82,6 @@ class MathExpressionSampleRepository(BaseMathExpressionSampleRepository):
         project_stage = {
             '$project': {
                 '_id': 0,
-                'id': '$_id',
                 'latex': 1,
                 'label': '$label_doc.label',
             }
