@@ -17,9 +17,7 @@ class PartialAssistant(
     PartialBatchAssistant[AssistantInputType, AssistantOutputType],
     PartialConcurrentAssistant[AssistantInputType, AssistantOutputType],
 ):
-    def __init__(
-        self, llm: BaseManagedLLM, scheduler: BaseBatchLLMRequestManagedScheduler | None
-    ):
+    def __init__(self, llm: BaseManagedLLM, scheduler: BaseBatchLLMRequestManagedScheduler | None):
         PartialBasicAssistant.__init__(self, llm)
         PartialBatchAssistant.__init__(self, llm, scheduler)
         PartialConcurrentAssistant.__init__(self, llm)

@@ -26,7 +26,5 @@ class DatasetMapping(BaseMapping[Dataset, DatasetDocument]):
             build_stage=source.build_stage.value,
             build_status=source.build_status.value,
             build_from_dataset_id=source.build_from_dataset_id,
-            build_from_stage=source.build_from_stage.value
-            if source.build_from_stage
-            else None,
+            build_from_stage=source.build_from_stage.value if source.build_from_stage else None,
         )

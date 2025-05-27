@@ -9,7 +9,6 @@ from math_rag.application.base.services.background import (
 )
 from math_rag.application.contexts import DatasetBuildContext
 from math_rag.core.enums import DatasetBuildStatus
-from math_rag.core.models import Dataset
 
 
 BUILD_DATASET_TIMEOUT = 60 * 60 * 24 * 7  # 1 week
@@ -60,9 +59,7 @@ class DatasetBuildTrackerBackgroundService(BaseDatasetBuildTrackerBackgroundServ
                     current_dataset = await self.dataset_repository.update_build_status(
                         current_dataset.id, DatasetBuildStatus.FAILED
                     )
-                    logger.warning(
-                        f'Dataset {current_dataset.id} build failed due to a time out'
-                    )
+                    logger.warning(f'Dataset {current_dataset.id} build failed due to a time out')
 
                 except Exception as e:
                     current_dataset = await self.dataset_repository.update_build_status(

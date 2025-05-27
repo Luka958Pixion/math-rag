@@ -8,8 +8,7 @@ class HPCGPUStatisticsMapping(BaseMapping[HPCGPUStatistics, str]):
     @staticmethod
     def to_source(target: str) -> HPCGPUStatistics:
         entries = [
-            HPCGPUStatisticsEntryMapping.to_source(line)
-            for line in target.strip().splitlines()
+            HPCGPUStatisticsEntryMapping.to_source(line) for line in target.strip().splitlines()
         ]
 
         return HPCGPUStatistics(entries=entries)

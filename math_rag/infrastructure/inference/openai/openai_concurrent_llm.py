@@ -94,9 +94,7 @@ class OpenAIConcurrentLLM(BaseConcurrentLLM):
 
         if exception:
             error = LLMError(
-                message=exception.message
-                if hasattr(exception, 'message')
-                else str(exception),
+                message=exception.message if hasattr(exception, 'message') else str(exception),
                 code=exception.code if hasattr(exception, 'code') else None,
                 body=exception.message if hasattr(exception, 'message') else None,
                 retry_policy=LLMErrorRetryPolicy.NO_RETRY
@@ -120,9 +118,7 @@ class OpenAIConcurrentLLM(BaseConcurrentLLM):
                 status_tracker.num_tasks_in_progress -= 1
                 status_tracker.num_tasks_failed += 1
 
-                logger.error(
-                    f'Request {request_tracker.request.id} failed after all retries'
-                )
+                logger.error(f'Request {request_tracker.request.id} failed after all retries')
         else:
             response_lists.append(response_list)
 
@@ -153,9 +149,7 @@ class OpenAIConcurrentLLM(BaseConcurrentLLM):
 
         requests_not_empty = True
 
-        requests: deque[LLMRequest[LLMResponseType]] = deque(
-            concurrent_request.requests
-        )
+        requests: deque[LLMRequest[LLMResponseType]] = deque(concurrent_request.requests)
         response_lists: list[LLMResponseList[LLMResponseType]] = []
         failed_requests: list[LLMFailedRequest[LLMResponseType]] = []
 
@@ -169,9 +163,7 @@ class OpenAIConcurrentLLM(BaseConcurrentLLM):
                     elif requests_not_empty:
                         if requests:
                             request = requests.popleft()
-                            token_consumption = LLMTokenCounterUtil.count(
-                                request, model_name=model
-                            )
+                            token_consumption = LLMTokenCounterUtil.count(request, model_name=model)
 
                             if token_consumption > max_tokens_per_minute:
                                 raise ValueError(
@@ -197,8 +189,7 @@ class OpenAIConcurrentLLM(BaseConcurrentLLM):
                     max_requests_per_minute,
                 )
                 available_token_capacity = min(
-                    available_token_capacity
-                    + max_tokens_per_minute * seconds_since_update / 60.0,
+                    available_token_capacity + max_tokens_per_minute * seconds_since_update / 60.0,
                     max_tokens_per_minute,
                 )
                 last_update_time = current_time
@@ -233,13 +224,9 @@ class OpenAIConcurrentLLM(BaseConcurrentLLM):
                     perf_counter() - status_tracker.time_of_last_rate_limit_error
                 )
 
-                if (
-                    seconds_since_rate_limit_error
-                    < CONCURRENT_WAIT_AFTER_RATE_LIMIT_ERROR
-                ):
+                if seconds_since_rate_limit_error < CONCURRENT_WAIT_AFTER_RATE_LIMIT_ERROR:
                     remaining_seconds_to_pause = (
-                        CONCURRENT_WAIT_AFTER_RATE_LIMIT_ERROR
-                        - seconds_since_rate_limit_error
+                        CONCURRENT_WAIT_AFTER_RATE_LIMIT_ERROR - seconds_since_rate_limit_error
                     )
                     await sleep(remaining_seconds_to_pause)
 
@@ -256,9 +243,7 @@ class OpenAIConcurrentLLM(BaseConcurrentLLM):
             )
 
         if status_tracker.num_rate_limit_errors > 0:
-            logger.warning(
-                f'{status_tracker.num_rate_limit_errors} rate limit errors received'
-            )
+            logger.warning(f'{status_tracker.num_rate_limit_errors} rate limit errors received')
 
         concurrent_result = LLMConcurrentResult(
             concurrent_request_id=concurrent_request.id,

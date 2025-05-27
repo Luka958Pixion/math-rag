@@ -45,9 +45,7 @@ class OpenAIBasicEM(BaseBasicEM):
             request: EMRequest,
         ) -> EMResponseList:
             request_dict = EMRequestMapping.to_target(request)
-            create_embedding_response = await self.client.embeddings.create(
-                **request_dict
-            )
+            create_embedding_response = await self.client.embeddings.create(**request_dict)
             response_list = EMResponseListMapping.to_source(
                 create_embedding_response,
                 request_id=request.id,

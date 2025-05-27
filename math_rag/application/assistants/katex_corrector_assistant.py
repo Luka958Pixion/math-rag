@@ -21,9 +21,7 @@ from .prompts import KATEX_CORRECTOR_PROMPT
 class KatexCorrectorAssistant(
     PartialAssistant[KatexCorrectorAssistantInput, KatexCorrectorAssistantOutput]
 ):
-    def __init__(
-        self, llm: BaseManagedLLM, scheduler: BaseBatchLLMRequestManagedScheduler | None
-    ):
+    def __init__(self, llm: BaseManagedLLM, scheduler: BaseBatchLLMRequestManagedScheduler | None):
         super().__init__(llm, scheduler)
 
     def encode_to_request(
@@ -31,9 +29,7 @@ class KatexCorrectorAssistant(
     ) -> LLMRequest[KatexCorrectorAssistantOutput]:
         prompt = KATEX_CORRECTOR_PROMPT.format(katex=input.katex, error=input.error)
         request = LLMRequest(
-            conversation=LLMConversation(
-                messages=[LLMMessage(role='user', content=prompt)]
-            ),
+            conversation=LLMConversation(messages=[LLMMessage(role='user', content=prompt)]),
             params=LLMParams[KatexCorrectorAssistantOutput](
                 model='gpt-4.1-nano',
                 temperature=0.0,

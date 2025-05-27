@@ -9,9 +9,7 @@ from .openai_concurrent_managed_llm import OpenAIConcurrentManagedLLM
 from .openai_llm import OpenAILLM
 
 
-class OpenAIManagedLLM(
-    OpenAIBasicManagedLLM, OpenAIBatchManagedLLM, OpenAIConcurrentManagedLLM
-):
+class OpenAIManagedLLM(OpenAIBasicManagedLLM, OpenAIBatchManagedLLM, OpenAIConcurrentManagedLLM):
     def __init__(
         self,
         llm: OpenAILLM,

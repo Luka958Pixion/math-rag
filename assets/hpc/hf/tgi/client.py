@@ -27,9 +27,7 @@ MAX_RETRIES = 3
 MAX_CONCURRENT_REQUESTS = 128  # max for TGI
 
 
-basicConfig(
-    level=INFO, format='%(asctime)s [%(threadName)s] %(levelname)s: %(message)s'
-)
+basicConfig(level=INFO, format='%(asctime)s [%(threadName)s] %(levelname)s: %(message)s')
 logger = getLogger(__name__)
 
 
@@ -37,11 +35,7 @@ def on_backoff_handler(details: dict):
     line = details['args'][1] if len(details['args']) > 1 else str()
     retries = details['tries']
     exception = details['exception']
-    logger.error(
-        f'Error processing line {line} '
-        f'(attempt {retries}/{MAX_RETRIES}): '
-        f'{exception}'
-    )
+    logger.error(f'Error processing line {line} (attempt {retries}/{MAX_RETRIES}): {exception}')
 
 
 @on_exception(
@@ -131,9 +125,7 @@ class ProcessorThread(Thread):
         try:
             async with asyncio.TaskGroup() as task_group:
                 for input_line in input_lines:
-                    task_group.create_task(
-                        self._process_input_line(semaphore, input_line)
-                    )
+                    task_group.create_task(self._process_input_line(semaphore, input_line))
 
         except Exception as e:
             logger.exception(f'Error in TaskGroup: {e}')
@@ -151,8 +143,7 @@ class ProcessorThread(Thread):
 
             except Exception as e:
                 logger.error(
-                    f'Failed processing line after {MAX_RETRIES} retries: '
-                    f'{input_line} - Error: {e}'
+                    f'Failed processing line after {MAX_RETRIES} retries: {input_line} - Error: {e}'
                 )
                 response = {
                     'request_id': request['request_id'],

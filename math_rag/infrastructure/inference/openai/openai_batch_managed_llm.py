@@ -37,9 +37,7 @@ class OpenAIBatchManagedLLM(BaseBatchManagedLLM):
         model = batch_request.requests[0].params.model
         OpenAIModelNameValidator.validate(model)
 
-        batch_settings = self._llm_settings_loader_service.load_batch_settings(
-            'openai', model
-        )
+        batch_settings = self._llm_settings_loader_service.load_batch_settings('openai', model)
 
         if batch_settings.poll_interval is None:
             raise ValueError('poll_interval can not be None')
@@ -60,9 +58,7 @@ class OpenAIBatchManagedLLM(BaseBatchManagedLLM):
         )
 
         if batch_result.failed_requests:
-            await self._llm_failed_request_repository.insert_many(
-                batch_result.failed_requests
-            )
+            await self._llm_failed_request_repository.insert_many(batch_result.failed_requests)
 
         return batch_result
 
@@ -78,6 +74,4 @@ class OpenAIBatchManagedLLM(BaseBatchManagedLLM):
         batch_request_id: UUID,
         response_type: type[LLMResponseType],
     ) -> LLMBatchResult[LLMResponseType] | None:
-        return await self._llm.batch_generate_result(
-            batch_id, batch_request_id, response_type
-        )
+        return await self._llm.batch_generate_result(batch_id, batch_request_id, response_type)

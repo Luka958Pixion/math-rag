@@ -63,10 +63,7 @@ class PartialBatchEM(BaseBatchEM):
                 break
 
             batch_request = EMBatchRequest(
-                requests=[
-                    failed_request.request
-                    for failed_request in batch_result.failed_requests
-                ]
+                requests=[failed_request.request for failed_request in batch_result.failed_requests]
             )
 
         batch_result.response_lists = response_lists

@@ -32,32 +32,22 @@ class IndexBuilderService(BaseIndexBuilderService):
     async def _load_math_articles(
         self, index_id: UUID, arxiv_category_type: type[BaseArxivCategory], limit: int
     ):
-        await self.index_repository.update_build_stage(
-            index_id, IndexBuildStage.LOAD_MATH_ARTICLES
-        )
-        await self.math_article_loader_service.load(
-            index_id, arxiv_category_type, limit
-        )
+        await self.index_repository.update_build_stage(index_id, IndexBuildStage.LOAD_MATH_ARTICLES)
+        await self.math_article_loader_service.load(index_id, arxiv_category_type, limit)
         logger.info(f'Index {index_id} build loaded math articles')
 
-    async def _load_math_expressions(
-        self, index_id: UUID, foundation_index_id: UUID | None
-    ):
+    async def _load_math_expressions(self, index_id: UUID, foundation_index_id: UUID | None):
         await self.index_repository.update_build_stage(
             index_id, IndexBuildStage.LOAD_MATH_EXPRESSIONS
         )
         await self.math_expression_loader_service.load(index_id, foundation_index_id)
         logger.info(f'Index {index_id} build loaded math expressions')
 
-    async def _load_math_expression_labels(
-        self, index_id: UUID, foundation_index_id: UUID | None
-    ):
+    async def _load_math_expression_labels(self, index_id: UUID, foundation_index_id: UUID | None):
         await self.index_repository.update_build_stage(
             index_id, IndexBuildStage.LOAD_MATH_EXPRESSION_LABELS
         )
-        await self.math_expression_label_loader_service.load(
-            index_id, foundation_index_id
-        )
+        await self.math_expression_label_loader_service.load(index_id, foundation_index_id)
         logger.info(f'Index {index_id} build loaded math expression labels')
 
     async def build(self, index: Index):
@@ -83,14 +73,10 @@ class IndexBuilderService(BaseIndexBuilderService):
 
                 case IndexBuildStage.LOAD_MATH_EXPRESSIONS:
                     await self._load_math_expressions(index.id, foundation_index.id)
-                    await self._load_math_expression_labels(
-                        index.id, foundation_index.id
-                    )
+                    await self._load_math_expression_labels(index.id, foundation_index.id)
 
                 case IndexBuildStage.LOAD_MATH_EXPRESSION_LABELS:
-                    await self._load_math_expression_labels(
-                        index.id, foundation_index.id
-                    )
+                    await self._load_math_expression_labels(index.id, foundation_index.id)
 
         else:
             await self._load_math_articles(index.id, arxiv_category_type, limit)

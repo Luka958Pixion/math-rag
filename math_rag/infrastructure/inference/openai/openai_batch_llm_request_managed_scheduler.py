@@ -30,9 +30,7 @@ class OpenAIBatchLLMRequestManagedScheduler(BaseBatchLLMRequestManagedScheduler)
             raise ValueError(f'Batch request {batch_request.id} is empty')
 
         model = batch_request.requests[0].params.model
-        batch_settings = self.llm_settings_loader_service.load_batch_settings(
-            'openai', model
-        )
+        batch_settings = self.llm_settings_loader_service.load_batch_settings('openai', model)
 
         if batch_settings.max_tokens_per_day is None:
             raise ValueError('max_num_retries can not be None')

@@ -9,9 +9,7 @@ class EMRequestMapping(BaseMapping[EMRequest, dict[str, Any]]):
     def to_source(target: dict[str, Any], **kwargs) -> EMRequest:
         request_id = kwargs['request_id']
 
-        return EMRequest(
-            id=request_id, text=target['text'], params=EMParams(model=target['model'])
-        )
+        return EMRequest(id=request_id, text=target['text'], params=EMParams(model=target['model']))
 
     @staticmethod
     def to_target(source: EMRequest) -> dict[str, Any]:

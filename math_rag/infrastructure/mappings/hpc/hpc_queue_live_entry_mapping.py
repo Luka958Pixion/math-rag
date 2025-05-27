@@ -12,9 +12,7 @@ class HPCQueueLiveEntryMapping(BaseMapping[HPCQueueLiveEntry, str]):
         num_cpus_free, num_cpus_total = map(int, fields[1].split('/'))
         num_gpus_free, num_gpus_total = map(int, fields[2].split('/'))
         num_nodes_free, num_nodes_total = map(int, fields[3].split('/'))
-        num_nodes_unavailable, num_nodes_unavailable_total = map(
-            int, fields[4].split('/')
-        )
+        num_nodes_unavailable, num_nodes_unavailable_total = map(int, fields[4].split('/'))
 
         return HPCQueueLiveEntry(
             queue=queue,

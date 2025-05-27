@@ -11,9 +11,7 @@ from math_rag.application.enums.clients import (
 
 class BaseApptainerClient(ABC):
     @abstractmethod
-    async def build_init(
-        self, def_path: Path, requirements_path: Path | None = None
-    ) -> UUID:
+    async def build_init(self, def_path: Path, requirements_path: Path | None = None) -> UUID:
         pass
 
     @abstractmethod
@@ -40,9 +38,7 @@ class BaseApptainerClient(ABC):
         pass
 
     @abstractmethod
-    async def overlay_create_status(
-        self, task_id: UUID
-    ) -> ApptainerOverlayCreateStatus:
+    async def overlay_create_status(self, task_id: UUID) -> ApptainerOverlayCreateStatus:
         pass
 
     @abstractmethod

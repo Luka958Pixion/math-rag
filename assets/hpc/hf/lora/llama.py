@@ -8,9 +8,7 @@ def init_llama_tokenizer(tokenizer: LlamaTokenizerFast):
     tokenizer.add_special_tokens({'pad_token': '<PAD>'})
     tokenizer.padding_side = 'left'
     tokenizer.chat_template = (
-        '{% for message in messages %}'
-        "{{ message['role'] }}: {{ message['content'] }}\n"
-        '{% endfor %}'
+        "{% for message in messages %}{{ message['role'] }}: {{ message['content'] }}\n{% endfor %}"
     )
 
     return tokenizer

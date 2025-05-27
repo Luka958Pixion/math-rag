@@ -19,13 +19,9 @@ from .prompts import KATEX_CORRECTOR_PROMPT, KATEX_CORRECTOR_RETRY_PROMPT
 
 
 class KatexCorrectorRetryAssistant(
-    PartialAssistant[
-        KatexCorrectorRetryAssistantInput, KatexCorrectorRetryAssistantOutput
-    ]
+    PartialAssistant[KatexCorrectorRetryAssistantInput, KatexCorrectorRetryAssistantOutput]
 ):
-    def __init__(
-        self, llm: BaseManagedLLM, scheduler: BaseBatchLLMRequestManagedScheduler | None
-    ):
+    def __init__(self, llm: BaseManagedLLM, scheduler: BaseBatchLLMRequestManagedScheduler | None):
         super().__init__(llm, scheduler)
 
     def encode_to_request(

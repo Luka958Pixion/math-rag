@@ -66,6 +66,4 @@ class TGIBatchManagedLLM(BaseBatchManagedLLM):
         batch_request_id: UUID,
         response_type: type[LLMResponseType],
     ) -> LLMBatchResult[LLMResponseType] | None:
-        return await self._llm.batch_generate_result(
-            batch_id, batch_request_id, response_type
-        )
+        return await self._llm.batch_generate_result(batch_id, batch_request_id, response_type)

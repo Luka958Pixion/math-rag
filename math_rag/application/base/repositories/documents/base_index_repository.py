@@ -13,9 +13,7 @@ class BaseIndexRepository(BaseDocumentRepository[Index]):
         pass
 
     @abstractmethod
-    async def update_build_status(
-        self, index_id: UUID, build_status: IndexBuildStatus
-    ) -> Index:
+    async def update_build_status(self, index_id: UUID, build_status: IndexBuildStatus) -> Index:
         pass
 
     @abstractmethod

@@ -19,13 +19,9 @@ from .prompts import MATH_EXPRESSION_LABELER_PROMPT
 
 
 class MathExpressionLabelerAssistant(
-    PartialAssistant[
-        MathExpressionLabelerAssistantInput, MathExpressionLabelerAssistantOutput
-    ]
+    PartialAssistant[MathExpressionLabelerAssistantInput, MathExpressionLabelerAssistantOutput]
 ):
-    def __init__(
-        self, llm: BaseManagedLLM, scheduler: BaseBatchLLMRequestManagedScheduler | None
-    ):
+    def __init__(self, llm: BaseManagedLLM, scheduler: BaseBatchLLMRequestManagedScheduler | None):
         super().__init__(llm, scheduler)
 
     def encode_to_request(
@@ -33,9 +29,7 @@ class MathExpressionLabelerAssistant(
     ) -> LLMRequest[MathExpressionLabelerAssistantOutput]:
         prompt = MATH_EXPRESSION_LABELER_PROMPT.format(latex=input.latex)
         request = LLMRequest(
-            conversation=LLMConversation(
-                messages=[LLMMessage(role='user', content=prompt)]
-            ),
+            conversation=LLMConversation(messages=[LLMMessage(role='user', content=prompt)]),
             params=LLMParams[MathExpressionLabelerAssistantOutput](
                 model='gpt-4.1-nano',
                 temperature=0.0,

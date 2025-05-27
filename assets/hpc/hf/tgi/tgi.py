@@ -47,9 +47,7 @@ BATCH_JOB_PATH_PATTERN = f'batch_job_{PBS_JOB_ID}_*.json'
 INACTIVE_THRESHOLD = timedelta(minutes=15)
 WALL_TIME_THRESHOLD = timedelta(minutes=5)
 
-basicConfig(
-    level=INFO, format='%(asctime)s [%(threadName)s] %(levelname)s: %(message)s'
-)
+basicConfig(level=INFO, format='%(asctime)s [%(threadName)s] %(levelname)s: %(message)s')
 logger = getLogger(__name__)
 
 
@@ -172,9 +170,7 @@ class BatchJobStatusTracker:
     def to_json(self) -> str:
         json_dict = {
             'is_status_update_allowed': self._is_status_update_allowed,
-            'id_to_status': {
-                str(key): value.value for key, value in self._id_to_status.items()
-            },
+            'id_to_status': {str(key): value.value for key, value in self._id_to_status.items()},
         }
 
         return json.dumps(json_dict)
@@ -194,9 +190,7 @@ class BatchJobStatusTracker:
 
 class HuggingFaceCLI:
     @staticmethod
-    def download_model(
-        cli_state: ProcessHandler, model_hub_id: str
-    ) -> ProcessExitStatus:
+    def download_model(cli_state: ProcessHandler, model_hub_id: str) -> ProcessExitStatus:
         logger.info(f'Starting {model_hub_id} download...')
 
         bind = f'{WORKDIR}/mount:/mount'
@@ -220,9 +214,7 @@ class HuggingFaceCLI:
 
 class ServerInstance:
     @staticmethod
-    def start(
-        server_state: ProcessHandler, mount_path: Path, data_path: Path
-    ) -> ProcessExitStatus:
+    def start(server_state: ProcessHandler, mount_path: Path, data_path: Path) -> ProcessExitStatus:
         logger.info(f'Starting {TGI_SERVER_INSTANCE_NAME}...')
 
         bindings = [
@@ -246,9 +238,7 @@ class ServerInstance:
         if not parsed_url.port:
             raise ValueError('TGI_BASE_URL does not include a port')
 
-        logger.info(
-            f'Waiting for {TGI_SERVER_INSTANCE_NAME} (TGI) to become healthy...'
-        )
+        logger.info(f'Waiting for {TGI_SERVER_INSTANCE_NAME} (TGI) to become healthy...')
 
         while True:
             connection = None
@@ -269,9 +259,7 @@ class ServerInstance:
                     )
 
             except Exception as e:
-                logger.info(
-                    f'Health check failed: {e}, retrying in {POLL_INTERVAL}s...'
-                )
+                logger.info(f'Health check failed: {e}, retrying in {POLL_INTERVAL}s...')
 
             finally:
                 if connection:
@@ -284,9 +272,7 @@ class ServerInstance:
         if not parsed_url.port:
             raise ValueError('PROMETHEUS_BASE_URL does not include a port')
 
-        logger.info(
-            f'Waiting for {TGI_SERVER_INSTANCE_NAME} (Prometheus) to become healthy...'
-        )
+        logger.info(f'Waiting for {TGI_SERVER_INSTANCE_NAME} (Prometheus) to become healthy...')
 
         while True:
             connection = None
@@ -307,9 +293,7 @@ class ServerInstance:
                     )
 
             except Exception as e:
-                logger.info(
-                    f'Health check failed: {e}, retrying in {POLL_INTERVAL}s...'
-                )
+                logger.info(f'Health check failed: {e}, retrying in {POLL_INTERVAL}s...')
 
             finally:
                 if connection:
@@ -453,10 +437,7 @@ class BatchJobReaderThread(Thread):
         DELAY = 60
 
         while True:
-            if (
-                self._inactive_stop_event.is_set()
-                or self._wall_time_stop_event.is_set()
-            ):
+            if self._inactive_stop_event.is_set() or self._wall_time_stop_event.is_set():
                 break
 
             # read batch job files
@@ -540,9 +521,7 @@ class BatchJobProcessorThread(Thread):
 
             # critical section
             self._status_tracker_resource.acquire()
-            self._status_tracker.set_status(
-                batch_job.batch_request_id, BatchJobStatus.RUNNING
-            )
+            self._status_tracker.set_status(batch_job.batch_request_id, BatchJobStatus.RUNNING)
             self._status_tracker_resource.release()
 
             # download model if it's not downloaded already
@@ -590,9 +569,7 @@ class BatchJobProcessorThread(Thread):
 
             # critical section
             self._status_tracker_resource.acquire()
-            self._status_tracker.set_status(
-                batch_job.batch_request_id, BatchJobStatus.FINISHED
-            )
+            self._status_tracker.set_status(batch_job.batch_request_id, BatchJobStatus.FINISHED)
             self._status_tracker_resource.release()
 
         if is_server_instance_running:
@@ -638,9 +615,7 @@ class WallTimeTrackerThread(Thread):
                 break
 
             # read wall time
-            result = subprocess.run(
-                cmd, check=True, capture_output=True, text=True, shell=True
-            )
+            result = subprocess.run(cmd, check=True, capture_output=True, text=True, shell=True)
             wall_times = result.stdout.strip().splitlines()
 
             if len(wall_times) == 1:

@@ -7,16 +7,12 @@ from .katex_corrector_assistant_output import KatexCorrectorAssistantOutput
 
 
 class KatexCorrectorRetryAssistantInput(BaseAssistantInput):
-    pairs: list[
-        tuple[KatexCorrectorAssistantInput, KatexCorrectorAssistantOutput | None]
-    ]
+    pairs: list[tuple[KatexCorrectorAssistantInput, KatexCorrectorAssistantOutput | None]]
 
     @field_validator('pairs')
     def validate_pairs(
         cls,
-        pairs: list[
-            tuple[KatexCorrectorAssistantInput, KatexCorrectorAssistantOutput | None]
-        ],
+        pairs: list[tuple[KatexCorrectorAssistantInput, KatexCorrectorAssistantOutput | None]],
     ):
         if not pairs:
             return pairs

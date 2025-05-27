@@ -93,9 +93,7 @@ class TGIBatchLLM(PartialBatchLLM):
 
         return local_hash != remote_hash
 
-    async def _upload_file(
-        self, local_path: Path, remote_path: Path, force: bool = False
-    ) -> bool:
+    async def _upload_file(self, local_path: Path, remote_path: Path, force: bool = False) -> bool:
         """
         Uploads a file to the remote path if it is missing or has changed.
 
@@ -194,9 +192,7 @@ class TGIBatchLLM(PartialBatchLLM):
             if not is_build_required and not is_build_required_additional:
                 continue
 
-            sif_stream = await self.apptainer_client.build(
-                def_local_path, additional_local_path
-            )
+            sif_stream = await self.apptainer_client.build(def_local_path, additional_local_path)
 
             sif_local_path = tmp_path / f'{def_local_path.stem}.sif'
             await FileStreamWriterUtil.write(sif_stream, sif_local_path)
@@ -219,14 +215,10 @@ class TGIBatchLLM(PartialBatchLLM):
     ) -> str:
         # validate
         if max_tokens_per_day is not None:
-            raise ValueError(
-                f'{self.__class__.__name__} does not support max_tokens_per_day'
-            )
+            raise ValueError(f'{self.__class__.__name__} does not support max_tokens_per_day')
 
         if max_input_file_size is not None:
-            raise ValueError(
-                f'{self.__class__.__name__} does not support max_input_file_size'
-            )
+            raise ValueError(f'{self.__class__.__name__} does not support max_input_file_size')
 
         if not batch_request.requests:
             raise ValueError(f'Batch request {batch_request.id} is empty')
@@ -244,10 +236,7 @@ class TGIBatchLLM(PartialBatchLLM):
         ]
 
         # create in-memory input file
-        lines = [
-            json.dumps(request_dict, separators=(',', ':'))
-            for request_dict in request_dicts
-        ]
+        lines = [json.dumps(request_dict, separators=(',', ':')) for request_dict in request_dicts]
         input_jsonl_str = '\n'.join(lines)
         input_jsonl_bytes = input_jsonl_str.encode('utf-8')
 
@@ -257,9 +246,7 @@ class TGIBatchLLM(PartialBatchLLM):
 
         # upload input file and avoid race-conditions
         input_remote_path = REMOTE_ROOT_PATH / input_local_path.name
-        input_remote_part_path = input_remote_path.with_name(
-            input_remote_path.name + '.part'
-        )
+        input_remote_part_path = input_remote_path.with_name(input_remote_path.name + '.part')
         await self.sftp_client.upload(input_local_path, input_remote_part_path)
         await self.file_system_client.move(input_remote_part_path, input_remote_path)
 
@@ -274,16 +261,12 @@ class TGIBatchLLM(PartialBatchLLM):
                 ) = await self.pbs_pro_client.queue_status_wall_times(job_id)
 
                 if wall_time_used is None:
-                    raise ValueError(
-                        'Wall time used can not be None because job is running'
-                    )
+                    raise ValueError('Wall time used can not be None because job is running')
 
                 wall_time_left = wall_time - wall_time_used
 
             except Exception as e:
-                logger.error(
-                    f'Failed to get wall time because job {job_id} terminated: {e}'
-                )
+                logger.error(f'Failed to get wall time because job {job_id} terminated: {e}')
                 wall_time_left = None
 
             if not wall_time_left or wall_time_left < WALL_TIME_THRESHOLD:
@@ -315,9 +298,7 @@ class TGIBatchLLM(PartialBatchLLM):
 
         job = await self.pbs_pro_client.queue_status(job_id)
         logger.info(
-            f'Job {job_id} obtained for '
-            f'batch request {batch_request.id} '
-            f'with state {job.state}'
+            f'Job {job_id} obtained for batch request {batch_request.id} with state {job.state}'
         )
 
         # create in-memory batch job file
@@ -341,9 +322,7 @@ class TGIBatchLLM(PartialBatchLLM):
             batch_job_remote_path.name + '.part'
         )
         await self.sftp_client.upload(batch_job_local_path, batch_job_remote_part_path)
-        await self.file_system_client.move(
-            batch_job_remote_part_path, batch_job_remote_path
-        )
+        await self.file_system_client.move(batch_job_remote_part_path, batch_job_remote_path)
 
         return job_id
 
@@ -370,19 +349,11 @@ class TGIBatchLLM(PartialBatchLLM):
             ):
                 return None
 
-            case (
-                PBSProJobState.RUNNING
-                | PBSProJobState.FINISHED
-                | PBSProJobState.EXITED
-            ):
+            case PBSProJobState.RUNNING | PBSProJobState.FINISHED | PBSProJobState.EXITED:
                 pass
 
-        status_tracker_remote_path = (
-            REMOTE_ROOT_PATH / f'status_tracker_{batch_id}.json'
-        )
-        status_tracker_exists = await self.file_system_client.test(
-            status_tracker_remote_path
-        )
+        status_tracker_remote_path = REMOTE_ROOT_PATH / f'status_tracker_{batch_id}.json'
+        status_tracker_exists = await self.file_system_client.test(status_tracker_remote_path)
 
         if not status_tracker_exists:
             logger.warning(
@@ -391,9 +362,7 @@ class TGIBatchLLM(PartialBatchLLM):
             )
             await sleep(STATUS_TRACKER_DELAY)
 
-        status_tracker_json = await self.file_system_client.concatenate(
-            status_tracker_remote_path
-        )
+        status_tracker_json = await self.file_system_client.concatenate(status_tracker_remote_path)
         status_tracker = BatchJobStatusTracker.model_validate_json(status_tracker_json)
 
         if batch_request_id not in status_tracker.id_to_status:
@@ -409,9 +378,7 @@ class TGIBatchLLM(PartialBatchLLM):
                 pass
 
         input_local_path = LOCAL_ROOT_PATH / '.tmp' / f'input_{batch_request_id}.jsonl'
-        output_local_path = (
-            LOCAL_ROOT_PATH / '.tmp' / f'output_{batch_request_id}.jsonl'
-        )
+        output_local_path = LOCAL_ROOT_PATH / '.tmp' / f'output_{batch_request_id}.jsonl'
         input_remote_path = REMOTE_ROOT_PATH / input_local_path.name
         output_remote_path = REMOTE_ROOT_PATH / output_local_path.name
 
@@ -450,9 +417,7 @@ class TGIBatchLLM(PartialBatchLLM):
 
             else:
                 response.pop('object')
-                completion = DataclassMapperUtil.from_dict(
-                    ChatCompletionOutput, response
-                )
+                completion = DataclassMapperUtil.from_dict(ChatCompletionOutput, response)
                 response_list = LLMResponseListMapping[LLMResponseType].to_source(
                     completion,
                     request_id=request_id,
@@ -462,12 +427,8 @@ class TGIBatchLLM(PartialBatchLLM):
                 response_lists.append(response_list)
 
         # find unfinished requests
-        failed_request_ids = [
-            failed_request.request.id for failed_request in failed_requests
-        ]
-        finished_request_ids = [
-            response_list.request_id for response_list in response_lists
-        ]
+        failed_request_ids = [failed_request.request.id for failed_request in failed_requests]
+        finished_request_ids = [response_list.request_id for response_list in response_lists]
         finished_request_ids.extend(failed_request_ids)
         unfinished_request_ids = [
             request_id

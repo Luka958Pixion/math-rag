@@ -29,9 +29,7 @@ class OpenAIBatchManagedEM(BaseBatchManagedEM):
         model = batch_request.requests[0].params.model
         OpenAIModelNameValidator.validate(model)
 
-        batch_settings = self._em_settings_loader_service.load_batch_settings(
-            'openai', model
-        )
+        batch_settings = self._em_settings_loader_service.load_batch_settings('openai', model)
 
         if batch_settings.poll_interval is None:
             raise ValueError('poll_interval can not be None')
@@ -51,9 +49,7 @@ class OpenAIBatchManagedEM(BaseBatchManagedEM):
         )
 
         if batch_result.failed_requests:
-            await self._em_failed_request_repository.insert_many(
-                batch_result.failed_requests
-            )
+            await self._em_failed_request_repository.insert_many(batch_result.failed_requests)
 
         return batch_result
 

@@ -10,6 +10,4 @@ class EMParamsMapping(BaseMapping[EMParams, EMParamsDocument]):
 
     @staticmethod
     def to_target(source: EMParams) -> EMParamsDocument:
-        return EMParamsDocument(
-            id=source.id, model=source.model, dimensions=source.dimensions
-        )
+        return EMParamsDocument(id=source.id, model=source.model, dimensions=source.dimensions)

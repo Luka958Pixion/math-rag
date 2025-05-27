@@ -52,9 +52,7 @@ class OpenAIBatchLLMRequestScheduler(BaseBatchLLMRequestScheduler):
                 'custom_id': str(request.id),
                 'method': 'POST',
                 'url': '/v1/chat/completions',
-                'body': LLMRequestMapping[LLMResponseType].to_target(
-                    request, use_parsed=True
-                ),
+                'body': LLMRequestMapping[LLMResponseType].to_target(request, use_parsed=True),
             }
             jsonl_str = json.dumps(request_dict, separators=(',', ':'))
             jsonl_bytes = jsonl_str.encode('utf-8')
@@ -62,9 +60,7 @@ class OpenAIBatchLLMRequestScheduler(BaseBatchLLMRequestScheduler):
 
             # check if adding this request would exceed limits
             exceeds_tokens = (current_tokens + tokens) > max_tokens_per_day
-            exceeds_size = (
-                current_input_file_size + input_file_size
-            ) > max_input_file_size
+            exceeds_size = (current_input_file_size + input_file_size) > max_input_file_size
 
             if current_batch_request and (exceeds_tokens or exceeds_size):
                 # append new schedule entry

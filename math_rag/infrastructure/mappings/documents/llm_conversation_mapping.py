@@ -14,7 +14,5 @@ class LLMConversationMapping(BaseMapping[LLMConversation, LLMConversationDocumen
     def to_target(source: LLMConversation) -> LLMConversationDocument:
         return LLMConversationDocument(
             id=source.id,
-            messages=[
-                LLMMessageMapping.to_target(message) for message in source.messages
-            ],
+            messages=[LLMMessageMapping.to_target(message) for message in source.messages],
         )

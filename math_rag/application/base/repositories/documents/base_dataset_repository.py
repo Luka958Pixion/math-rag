@@ -9,9 +9,7 @@ from .base_document_repository import BaseDocumentRepository
 
 class BaseDatasetRepository(BaseDocumentRepository[Dataset]):
     @abstractmethod
-    async def update_build_stage(
-        self, id: UUID, build_stage: DatasetBuildStage
-    ) -> Dataset:
+    async def update_build_stage(self, id: UUID, build_stage: DatasetBuildStage) -> Dataset:
         pass
 
     @abstractmethod

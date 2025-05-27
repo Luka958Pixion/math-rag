@@ -17,7 +17,5 @@ class BaseEMSettingsLoaderService(ABC):
         pass
 
     @abstractmethod
-    def load_concurrent_settings(
-        self, provider: str, model: str
-    ) -> ConcurrentEMSettings:
+    def load_concurrent_settings(self, provider: str, model: str) -> ConcurrentEMSettings:
         pass

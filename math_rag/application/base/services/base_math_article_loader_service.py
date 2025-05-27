@@ -6,7 +6,5 @@ from math_rag.application.enums.arxiv import BaseArxivCategory
 
 class BaseMathArticleLoaderService(ABC):
     @abstractmethod
-    async def load(
-        self, index_id: UUID, arxiv_category_type: type[BaseArxivCategory], limit: int
-    ):
+    async def load(self, index_id: UUID, arxiv_category_type: type[BaseArxivCategory], limit: int):
         pass

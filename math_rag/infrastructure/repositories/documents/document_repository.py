@@ -58,9 +58,7 @@ class DocumentRepository(
             batch = operations[i : i + batch_size]
             await self.collection.bulk_write(batch)
 
-    async def find_one(
-        self, *, filter: dict[str, Any] | None = None
-    ) -> SourceType | None:
+    async def find_one(self, *, filter: dict[str, Any] | None = None) -> SourceType | None:
         if not filter:
             filter = {}
 
@@ -77,9 +75,7 @@ class DocumentRepository(
 
         return None
 
-    async def find_many(
-        self, *, filter: dict[str, Any] | None = None
-    ) -> list[SourceType]:
+    async def find_many(self, *, filter: dict[str, Any] | None = None) -> list[SourceType]:
         if not filter:
             filter = {}
 
@@ -132,9 +128,7 @@ class DocumentRepository(
 
     async def backup(self):
         timestamp = datetime.now().strftime('%Y-%m-%d_%H-%M-%S')
-        self.backup_file_path = (
-            BACKUP_PATH / timestamp / f'{self.collection_name}.ndjson'
-        )
+        self.backup_file_path = BACKUP_PATH / timestamp / f'{self.collection_name}.ndjson'
         self.backup_file_path.parent.mkdir(parents=True, exist_ok=True)
 
         cursor = self.collection.find().batch_size(100)

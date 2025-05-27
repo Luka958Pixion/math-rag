@@ -9,7 +9,5 @@ from math_rag.application.types.inference import LLMResponseType
 
 class BaseBasicManagedLLM(ABC):
     @abstractmethod
-    async def generate(
-        self, request: LLMRequest[LLMResponseType]
-    ) -> LLMResult[LLMResponseType]:
+    async def generate(self, request: LLMRequest[LLMResponseType]) -> LLMResult[LLMResponseType]:
         pass

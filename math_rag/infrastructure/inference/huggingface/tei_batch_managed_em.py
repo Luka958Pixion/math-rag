@@ -9,9 +9,7 @@ from math_rag.infrastructure.validators.inference.huggingface import (
 
 
 class TEIBatchManagedEM(BaseBatchManagedEM):
-    def __init__(
-        self, em: BaseBatchEM, em_settings_loader_service: BaseEMSettingsLoaderService
-    ):
+    def __init__(self, em: BaseBatchEM, em_settings_loader_service: BaseEMSettingsLoaderService):
         self._em = em
         self._em_settings_loader_service = em_settings_loader_service
 

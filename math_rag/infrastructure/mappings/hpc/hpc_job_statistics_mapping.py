@@ -8,8 +8,7 @@ class HPCJobStatisticsMapping(BaseMapping[HPCJobStatistics, str]):
     @staticmethod
     def to_source(target: str) -> HPCJobStatistics:
         entries = [
-            HPCJobStatisticsEntryMapping.to_source(line)
-            for line in target.strip().splitlines()
+            HPCJobStatisticsEntryMapping.to_source(line) for line in target.strip().splitlines()
         ]
 
         return HPCJobStatistics(entries=entries)

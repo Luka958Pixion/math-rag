@@ -15,9 +15,7 @@ class LLMPrompt(BaseModel):
         if 'input_keys' not in values or not values['input_keys']:
             template = values.get('template', '')
             field_names = {
-                field_name
-                for _, field_name, _, _ in formatter.parse(template)
-                if field_name
+                field_name for _, field_name, _, _ in formatter.parse(template) if field_name
             }
             values['input_keys'] = sorted(field_names)
 

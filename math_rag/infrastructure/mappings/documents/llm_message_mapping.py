@@ -10,6 +10,4 @@ class LLMMessageMapping(BaseMapping[LLMMessage, LLMMessageDocument]):
 
     @staticmethod
     def to_target(source: LLMMessage) -> LLMMessageDocument:
-        return LLMMessageDocument(
-            id=source.id, role=source.role, content=source.content
-        )
+        return LLMMessageDocument(id=source.id, role=source.role, content=source.content)

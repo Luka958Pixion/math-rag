@@ -54,5 +54,6 @@ class MathExpressionDatasetPublisherService(BaseMathExpressionDatasetPublisherSe
         )
 
         logger.info(
-            f'{self.__class__.__name__} published {len(math_expression_samples)} math expression samples'
+            f'{self.__class__.__name__} published '
+            f'{len(math_expression_samples)} math expression samples'
         )

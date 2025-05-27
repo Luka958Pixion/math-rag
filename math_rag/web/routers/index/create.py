@@ -23,9 +23,7 @@ async def create_index(
     index_create_request: IndexCreateRequest = Body(
         ..., description='Parameters for the new index'
     ),
-    index_repository: BaseIndexRepository = Depends(
-        Provide[ApplicationContainer.index_repository]
-    ),
+    index_repository: BaseIndexRepository = Depends(Provide[ApplicationContainer.index_repository]),
     index_build_context: IndexBuildContext = Depends(
         Provide[ApplicationContainer.index_build_context]
     ),

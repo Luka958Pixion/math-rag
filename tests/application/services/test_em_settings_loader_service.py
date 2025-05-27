@@ -6,9 +6,7 @@ def test_load_basic_settings(application_container: ApplicationContainer):
     em_settings_loader_service = application_container.em_settings_loader_service()
 
     # act
-    basic_settings = em_settings_loader_service.load_basic_settings(
-        'default', 'default'
-    )
+    basic_settings = em_settings_loader_service.load_basic_settings('default', 'default')
     basic_settings_openai = em_settings_loader_service.load_basic_settings(
         'openai', 'text-embedding-3-large'
     )
@@ -26,9 +24,7 @@ def test_load_batch_settings(application_container: ApplicationContainer):
     em_settings_loader_service = application_container.em_settings_loader_service()
 
     # act
-    batch_settings = em_settings_loader_service.load_batch_settings(
-        'default', 'default'
-    )
+    batch_settings = em_settings_loader_service.load_batch_settings('default', 'default')
 
     batch_settings_openai = em_settings_loader_service.load_batch_settings(
         'openai', 'text-embedding-3-large'
@@ -49,9 +45,7 @@ def test_load_concurrent_settings(application_container: ApplicationContainer):
     em_settings_loader_service = application_container.em_settings_loader_service()
 
     # act
-    concurrent_settings = em_settings_loader_service.load_concurrent_settings(
-        'default', 'default'
-    )
+    concurrent_settings = em_settings_loader_service.load_concurrent_settings('default', 'default')
 
     concurrent_settings_openai = em_settings_loader_service.load_concurrent_settings(
         'openai', 'text-embedding-3-large'

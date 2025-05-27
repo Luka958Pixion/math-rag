@@ -3,9 +3,7 @@ from pylatexenc.latexwalker import LatexNode, LatexWalker, LatexWalkerParseError
 
 
 class LatexParserService:
-    @deprecated(
-        reason='Tolerant parsing is neccessary, but sometimes gets stuck in a loop'
-    )
+    @deprecated(reason='Tolerant parsing is neccessary, but sometimes gets stuck in a loop')
     def parse_deprecated(self, latex: str) -> list[LatexNode]:
         walker = LatexWalker(latex, tolerant_parsing=True)
         nodes, _, _ = walker.get_latex_nodes()
@@ -21,9 +19,7 @@ class LatexParserService:
         while position < length:
             try:
                 # read exactly one top-level node at a time
-                new_nodes, new_position, _ = walker.get_latex_nodes(
-                    pos=position, read_max_nodes=1
-                )
+                new_nodes, new_position, _ = walker.get_latex_nodes(pos=position, read_max_nodes=1)
 
                 # guard against no forward progress
                 if new_position <= position:

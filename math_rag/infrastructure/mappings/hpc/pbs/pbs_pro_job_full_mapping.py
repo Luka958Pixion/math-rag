@@ -14,14 +14,10 @@ class PBSProJobFullMapping(BaseMapping[PBSProJobFull, str]):
     def to_source(target: str) -> PBSProJobFull:
         fields = PBSProJobFullMapping._parse_fields(target)
         resource_list_fields = {
-            key: value
-            for key, value in fields.items()
-            if key.startswith('resource_list')
+            key: value for key, value in fields.items() if key.startswith('resource_list')
         }
         resources_used_fields = {
-            key: value
-            for key, value in fields.items()
-            if key.startswith('resources_used')
+            key: value for key, value in fields.items() if key.startswith('resources_used')
         }
 
         return PBSProJobFull(

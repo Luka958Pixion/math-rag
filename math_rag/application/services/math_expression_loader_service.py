@@ -25,9 +25,7 @@ from math_rag.core.models import MathExpression
 logger = getLogger(__name__)
 
 MathNodeResultPair: TypeAlias = tuple[LatexMathNode, KatexValidationResult]
-SplitValidationResult: TypeAlias = tuple[
-    list[MathNodeResultPair], list[MathNodeResultPair]
-]
+SplitValidationResult: TypeAlias = tuple[list[MathNodeResultPair], list[MathNodeResultPair]]
 
 
 class MathExpressionLoaderService(BaseMathExpressionLoaderService):
@@ -106,9 +104,7 @@ class MathExpressionLoaderService(BaseMathExpressionLoaderService):
                 invalid_input_id_to_node[input.id] = node
 
             # call assistant (may return fewer outputs)
-            outputs = await self.katex_corrector_assistant.batch_assist(
-                inputs, use_scheduler=True
-            )
+            outputs = await self.katex_corrector_assistant.batch_assist(inputs, use_scheduler=True)
 
             # map returned outputs back to nodes
             input_id_to_output: dict[UUID, KatexCorrectorAssistantOutput] = {
@@ -160,10 +156,6 @@ class MathExpressionLoaderService(BaseMathExpressionLoaderService):
                 )
             )
 
-        await self.math_expression_repository.batch_insert_many(
-            math_expressions, batch_size=1000
-        )
+        await self.math_expression_repository.batch_insert_many(math_expressions, batch_size=1000)
         await self.math_expression_repository.backup()
-        logger.info(
-            f'{self.__class__.__name__} loaded {len(math_expressions)} math expressions'
-        )
+        logger.info(f'{self.__class__.__name__} loaded {len(math_expressions)} math expressions')

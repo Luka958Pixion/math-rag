@@ -9,7 +9,6 @@ from math_rag.application.base.services.background import (
 )
 from math_rag.application.contexts import IndexBuildContext
 from math_rag.core.enums import IndexBuildStatus
-from math_rag.core.models import Index
 
 
 BUILD_INDEX_TIMEOUT = 60 * 60 * 24 * 7  # 1 week
@@ -60,14 +59,10 @@ class IndexBuildTrackerBackgroundService(BaseIndexBuildTrackerBackgroundService)
                     current_index = await self.index_repository.update_build_status(
                         current_index.id, IndexBuildStatus.FAILED
                     )
-                    logger.warning(
-                        f'Index {current_index.id} build failed due to a time out'
-                    )
+                    logger.warning(f'Index {current_index.id} build failed due to a time out')
 
                 except Exception as e:
                     current_index = await self.index_repository.update_build_status(
                         current_index.id, IndexBuildStatus.FAILED
                     )
-                    logger.exception(
-                        f'Index {current_index.id} build failed due to an error: {e}'
-                    )
+                    logger.exception(f'Index {current_index.id} build failed due to an error: {e}')

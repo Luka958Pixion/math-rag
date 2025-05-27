@@ -8,9 +8,7 @@ from math_rag.infrastructure.constants.utils import CHUNK_SIZE
 
 class FileStreamerUtil:
     @staticmethod
-    async def stream(
-        source: Path, offset: int | None = None
-    ) -> AsyncGenerator[bytes, None]:
+    async def stream(source: Path, offset: int | None = None) -> AsyncGenerator[bytes, None]:
         async with open(source, 'rb') as source_file:
             if offset:
                 await source_file.seek(offset, 0)

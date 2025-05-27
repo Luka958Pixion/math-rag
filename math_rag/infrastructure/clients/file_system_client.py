@@ -11,19 +11,13 @@ class FileSystemClient:
         self.ssh_client = ssh_client
 
     async def test(self, file_path: Path) -> bool:
-        stdout = await self.ssh_client.run(
-            f'test -f {file_path} && echo "true" || echo "false"'
-        )
+        stdout = await self.ssh_client.run(f'test -f {file_path} && echo "true" || echo "false"')
 
         return stdout == 'true'
 
     async def find(self, file_path: Path) -> Path | None:
         stdout = await self.ssh_client.run(
-            f'find {file_path.parent} '
-            f'-name "{file_path.name}" '
-            '-maxdepth 1 '
-            '-print '
-            '-quit'
+            f'find {file_path.parent} -name "{file_path.name}" -maxdepth 1 -print -quit'
         )
 
         return Path(stdout) if stdout else None
@@ -68,13 +62,9 @@ class FileSystemClient:
         await self.ssh_client.run(f'echo {content} > {file_path}')
 
     async def hash(self, file_path: Path, hash_function_name: str) -> str:
-        return await self.ssh_client.run(
-            f"{hash_function_name} {file_path} | awk '{{print $1}}'"
-        )
+        return await self.ssh_client.run(f"{hash_function_name} {file_path} | awk '{{print $1}}'")
 
     async def archive(self, source: Path, target: Path, *, include_root: bool):
         await self.ssh_client.run(
-            f'tar -cvf {target} {source}'
-            if include_root
-            else f'tar -cvf {target} -C {source} .'
+            f'tar -cvf {target} {source}' if include_root else f'tar -cvf {target} -C {source} .'
         )

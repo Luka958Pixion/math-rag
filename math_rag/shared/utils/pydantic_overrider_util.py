@@ -14,9 +14,7 @@ class PydanticOverriderUtil:
         override_dict = override.model_dump()
 
         result = {
-            key: override_dict[key]
-            if key in override.model_fields_set
-            else original_dict[key]
+            key: override_dict[key] if key in override.model_fields_set else original_dict[key]
             for key in original_dict
         }
 

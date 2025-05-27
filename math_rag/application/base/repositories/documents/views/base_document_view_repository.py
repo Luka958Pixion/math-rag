@@ -12,7 +12,5 @@ class BaseDocumentViewRepository(ABC, Generic[T]):
         pass
 
     @abstractmethod
-    async def batch_find_many(
-        self, *, batch_size: int
-    ) -> AsyncGenerator[list[T], None]:
+    async def batch_find_many(self, *, batch_size: int) -> AsyncGenerator[list[T], None]:
         yield

@@ -35,9 +35,7 @@ class PartialBatchAssistant(
     def _inputs_to_batch_request(
         self, inputs: list[AssistantInputType]
     ) -> LLMBatchRequest[AssistantOutputType]:
-        return LLMBatchRequest(
-            requests=[self.encode_to_request(input) for input in inputs]
-        )
+        return LLMBatchRequest(requests=[self.encode_to_request(input) for input in inputs])
 
     def _batch_result_to_outputs(
         self, batch_result: LLMBatchResult[AssistantOutputType]
@@ -65,15 +63,11 @@ class PartialBatchAssistant(
             schedule = self._scheduler.schedule(batch_request)
             outputs = []
 
-            async for batch_result in self._scheduler.execute(
-                schedule, self._response_type
-            ):
+            async for batch_result in self._scheduler.execute(schedule, self._response_type):
                 outputs.extend(self._batch_result_to_outputs(batch_result))
 
         else:
-            batch_result = await self._llm.batch_generate(
-                batch_request, self._response_type
-            )
+            batch_result = await self._llm.batch_generate(batch_request, self._response_type)
             outputs = self._batch_result_to_outputs(batch_result)
 
         return outputs

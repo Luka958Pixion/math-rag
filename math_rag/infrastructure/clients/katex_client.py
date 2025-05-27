@@ -45,9 +45,7 @@ class KatexClient(BaseKatexClient):
                 results = response.json()
 
             else:
-                logger.error(
-                    f'Failed with status code {response.status_code}: {response.text}'
-                )
+                logger.error(f'Failed with status code {response.status_code}: {response.text}')
                 response.raise_for_status()
 
         return [KatexValidationResult(**result) for result in results]
@@ -64,9 +62,7 @@ class KatexClient(BaseKatexClient):
 
         for batch_result in batch_results:
             if isinstance(batch_result, Exception):
-                logger.error(
-                    f'Batch failed after all retries: {batch_result}', exc_info=True
-                )
+                logger.error(f'Batch failed after all retries: {batch_result}', exc_info=True)
                 raise batch_result
 
             results.extend(batch_result)

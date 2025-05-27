@@ -23,9 +23,7 @@ class OpenAIConcurrentManagedEM(BaseConcurrentManagedEM):
         self._em_settings_loader_service = em_settings_loader_service
         self._em_failed_request_repository = em_failed_request_repository
 
-    async def concurrent_embed(
-        self, concurrent_request: EMConcurrentRequest
-    ) -> EMConcurrentResult:
+    async def concurrent_embed(self, concurrent_request: EMConcurrentRequest) -> EMConcurrentResult:
         if not concurrent_request.requests:
             raise ValueError(f'Batch request {concurrent_request.id} is empty')
 
@@ -53,8 +51,6 @@ class OpenAIConcurrentManagedEM(BaseConcurrentManagedEM):
         )
 
         if concurrent_result.failed_requests:
-            await self._em_failed_request_repository.insert_many(
-                concurrent_result.failed_requests
-            )
+            await self._em_failed_request_repository.insert_many(concurrent_result.failed_requests)
 
         return concurrent_result

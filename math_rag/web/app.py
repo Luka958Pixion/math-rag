@@ -37,9 +37,7 @@ def create_app(application_container: ApplicationContainer) -> FastAPI:
     @asynccontextmanager
     async def lifespan(app: FastAPI):
         index_service = application_container.index_build_tracker_background_service()
-        dataset_service = (
-            application_container.dataset_build_tracker_background_service()
-        )
+        dataset_service = application_container.dataset_build_tracker_background_service()
 
         index_task = asyncio.create_task(
             index_service.track(), name=index_service.__class__.__name__

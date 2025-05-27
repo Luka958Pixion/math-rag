@@ -24,9 +24,7 @@ class OpenAIBasicManagedLLM(BaseBasicManagedLLM):
         self._llm_settings_loader_service = llm_settings_loader_service
         self._llm_failed_request_repository = llm_failed_request_repository
 
-    async def generate(
-        self, request: LLMRequest[LLMResponseType]
-    ) -> LLMResult[LLMResponseType]:
+    async def generate(self, request: LLMRequest[LLMResponseType]) -> LLMResult[LLMResponseType]:
         OpenAIModelNameValidator.validate(request.params.model)
 
         basic_settings = self._llm_settings_loader_service.load_basic_settings(

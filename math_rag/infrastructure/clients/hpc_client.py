@@ -20,17 +20,13 @@ class HPCClient:
         self.ssh_client = ssh_client
 
     async def queue_live(self) -> HPCQueueLive:
-        awk_cmd = AwkCmdBuilderUtil.build(
-            row_number=5, col_numbers=range(1, 5 + 1), operator='>='
-        )
+        awk_cmd = AwkCmdBuilderUtil.build(row_number=5, col_numbers=range(1, 5 + 1), operator='>=')
         stdout = await self.ssh_client.run(f'qlive | {awk_cmd}')
 
         return HPCQueueLiveMapping.to_source(stdout)
 
     async def job_statistics(self) -> HPCJobStatistics | None:
-        awk_cmd = AwkCmdBuilderUtil.build(
-            row_number=4, col_numbers=range(1, 8 + 1), operator='>='
-        )
+        awk_cmd = AwkCmdBuilderUtil.build(row_number=4, col_numbers=range(1, 8 + 1), operator='>=')
         stdout = await self.ssh_client.run(f'jobstat -u {self.user} | {awk_cmd}')
 
         if stdout == 'No jobs meet the search limits':

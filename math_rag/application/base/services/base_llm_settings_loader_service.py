@@ -17,7 +17,5 @@ class BaseLLMSettingsLoaderService(ABC):
         pass
 
     @abstractmethod
-    def load_concurrent_settings(
-        self, provider: str, model: str
-    ) -> ConcurrentLLMSettings:
+    def load_concurrent_settings(self, provider: str, model: str) -> ConcurrentLLMSettings:
         pass

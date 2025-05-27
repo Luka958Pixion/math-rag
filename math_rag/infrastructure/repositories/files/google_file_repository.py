@@ -32,9 +32,7 @@ class GoogleFileRepository(BaseFileRepository):
                 credentials.refresh(Request())
 
             else:
-                flow = InstalledAppFlow.from_client_secrets_file(
-                    str(credentials_path), SCOPES
-                )
+                flow = InstalledAppFlow.from_client_secrets_file(str(credentials_path), SCOPES)
                 credentials = flow.run_local_server(port=0)
 
             token_path.write_text(credentials.to_json())
@@ -42,9 +40,7 @@ class GoogleFileRepository(BaseFileRepository):
         return build('drive', 'v3', credentials=credentials)
 
     def get_file_id(self, file_name: str, folder_name: str) -> str | None:
-        folder_query = (
-            f"name='{folder_name}' and mimeType='application/vnd.google-apps.folder'"
-        )
+        folder_query = f"name='{folder_name}' and mimeType='application/vnd.google-apps.folder'"
         folder_fields = 'files(id, name)'
         folder_results: dict = (
             self.resource.files().list(q=folder_query, fields=folder_fields).execute()
@@ -59,9 +55,7 @@ class GoogleFileRepository(BaseFileRepository):
 
         file_query = f"name='{file_name}' and '{folder_id}' in parents"
         file_fields = 'files(id, name)'
-        file_results: dict = (
-            self.resource.files().list(q=file_query, fields=file_fields).execute()
-        )
+        file_results: dict = self.resource.files().list(q=file_query, fields=file_fields).execute()
         files = file_results.get('files', [])
 
         if not files:

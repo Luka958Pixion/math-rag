@@ -90,17 +90,14 @@ class OpenAIBatchLLM(PartialBatchLLM):
                     'custom_id': str(request.id),
                     'method': 'POST',
                     'url': url,
-                    'body': LLMRequestMapping[LLMResponseType].to_target(
-                        request, use_parsed=True
-                    ),
+                    'body': LLMRequestMapping[LLMResponseType].to_target(request, use_parsed=True),
                 }
                 for request in batch_request.requests
             ]
 
             # create in-memory input file
             lines = [
-                json.dumps(request_dict, separators=(',', ':'))
-                for request_dict in request_dicts
+                json.dumps(request_dict, separators=(',', ':')) for request_dict in request_dicts
             ]
             jsonl_str = '\n'.join(lines)
             jsonl_bytes = jsonl_str.encode('utf-8')
@@ -110,14 +107,11 @@ class OpenAIBatchLLM(PartialBatchLLM):
 
             if input_file_size > max_input_file_size:
                 raise ValueError(
-                    f'JSONL size limit exceeded: '
-                    f'{input_file_size_mb}/{max_input_file_size_mb}MB'
+                    f'JSONL size limit exceeded: {input_file_size_mb}/{max_input_file_size_mb}MB'
                 )
 
             # create openai input file
-            input_file = await self.client.files.create(
-                file=jsonl_bytes, purpose='batch'
-            )
+            input_file = await self.client.files.create(file=jsonl_bytes, purpose='batch')
             self.batch_request_id_to_input_file_id[batch_request.id] = input_file.id
 
         try:
@@ -150,9 +144,7 @@ class OpenAIBatchLLM(PartialBatchLLM):
             if batch.errors.data:
                 for batch_error in batch.errors.data:
                     batch_error_code_label = (
-                        'Unknown'
-                        if batch_error.code not in batch_error_codes
-                        else 'Known'
+                        'Unknown' if batch_error.code not in batch_error_codes else 'Known'
                     )
 
                     logger.error(
@@ -163,9 +155,7 @@ class OpenAIBatchLLM(PartialBatchLLM):
                         f'param: {batch_error.param}'
                     )
 
-                raise ValueError(
-                    f'Batch {batch.id} has {len(batch.errors.data)} error(s)'
-                )
+                raise ValueError(f'Batch {batch.id} has {len(batch.errors.data)} error(s)')
 
         logger.info(
             f'Batch {batch.id} created for '

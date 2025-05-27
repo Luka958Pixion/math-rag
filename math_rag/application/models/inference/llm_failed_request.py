@@ -16,6 +16,4 @@ class LLMFailedRequest(BaseModel, Generic[LLMResponseType]):
     errors: list[LLMError]
 
     def is_retry_allowed(self) -> bool:
-        return all(
-            error.retry_policy == LLMErrorRetryPolicy.RETRY for error in self.errors
-        )
+        return all(error.retry_policy == LLMErrorRetryPolicy.RETRY for error in self.errors)

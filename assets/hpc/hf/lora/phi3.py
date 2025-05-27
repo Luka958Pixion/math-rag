@@ -9,9 +9,7 @@ def init_phi3_tokenizer(tokenizer: LlamaTokenizer):
     tokenizer.add_special_tokens({'pad_token': '<PAD>'})
     tokenizer.padding_side = 'left'
     tokenizer.chat_template = (
-        '{% for message in messages %}'
-        "{{ message['role'] }}: {{ message['content'] }}\n"
-        '{% endfor %}'
+        "{% for message in messages %}{{ message['role'] }}: {{ message['content'] }}\n{% endfor %}"
     )
 
     return tokenizer

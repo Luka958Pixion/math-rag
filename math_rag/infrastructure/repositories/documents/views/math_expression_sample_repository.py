@@ -29,12 +29,8 @@ class MathExpressionSampleRepository(BaseMathExpressionSampleRepository):
         self.db = self.client[deployment]
         self.math_expression_collection_name = MathExpression.__class__.__name__.lower()
         self.math_expression_collection = self.db[self.math_expression_collection_name]
-        self.math_expression_label_collection_name = (
-            MathExpressionLabel.__class__.__name__.lower()
-        )
-        self.math_expression_label_collection = self.db[
-            self.math_expression_label_collection_name
-        ]
+        self.math_expression_label_collection_name = MathExpressionLabel.__class__.__name__.lower()
+        self.math_expression_label_collection = self.db[self.math_expression_label_collection_name]
         self.json_options = JSONOptions(uuid_representation=UuidRepresentation.STANDARD)
 
     async def _create_index(
@@ -45,9 +41,7 @@ class MathExpressionSampleRepository(BaseMathExpressionSampleRepository):
         type: type[BaseDocumentView],
     ):
         if field not in type.model_fields:
-            raise ValueError(
-                f'Document view {type.__name__} ' f'does not have field {field}'
-            )
+            raise ValueError(f'Document view {type.__name__} does not have field {field}')
 
         index_models = [IndexModel([(field, ASCENDING)], background=True)]
         await collection.create_indexes(index_models)
@@ -76,9 +70,7 @@ class MathExpressionSampleRepository(BaseMathExpressionSampleRepository):
                 'as': 'label_doc',
             }
         }
-        unwind_stage = {
-            '$unwind': {'path': '$label_doc', 'preserveNullAndEmptyArrays': False}
-        }
+        unwind_stage = {'$unwind': {'path': '$label_doc', 'preserveNullAndEmptyArrays': False}}
         project_stage = {
             '$project': {
                 '_id': 0,
@@ -97,10 +89,7 @@ class MathExpressionSampleRepository(BaseMathExpressionSampleRepository):
         cursor = await self._find_many_cursor()
         bson_docs = await cursor.to_list()
 
-        docs = [
-            MathExpressionSampleDocumentView.model_validate(bson_doc)
-            for bson_doc in bson_docs
-        ]
+        docs = [MathExpressionSampleDocumentView.model_validate(bson_doc) for bson_doc in bson_docs]
         items = [MathExpressionSampleMapping.to_source(doc) for doc in docs]
 
         return items

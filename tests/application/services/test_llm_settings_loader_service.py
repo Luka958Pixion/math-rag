@@ -6,12 +6,8 @@ def test_load_basic_settings(application_container: ApplicationContainer):
     llm_settings_loader_service = application_container.llm_settings_loader_service()
 
     # act
-    basic_settings = llm_settings_loader_service.load_basic_settings(
-        'default', 'default'
-    )
-    basic_settings_openai = llm_settings_loader_service.load_basic_settings(
-        'openai', 'gpt-4o-mini'
-    )
+    basic_settings = llm_settings_loader_service.load_basic_settings('default', 'default')
+    basic_settings_openai = llm_settings_loader_service.load_basic_settings('openai', 'gpt-4o-mini')
 
     # assert
     assert basic_settings.max_time == 60.0
@@ -26,13 +22,9 @@ def test_load_batch_settings(application_container: ApplicationContainer):
     llm_settings_loader_service = application_container.llm_settings_loader_service()
 
     # act
-    batch_settings = llm_settings_loader_service.load_batch_settings(
-        'default', 'default'
-    )
+    batch_settings = llm_settings_loader_service.load_batch_settings('default', 'default')
 
-    batch_settings_openai = llm_settings_loader_service.load_batch_settings(
-        'openai', 'gpt-4o-mini'
-    )
+    batch_settings_openai = llm_settings_loader_service.load_batch_settings('openai', 'gpt-4o-mini')
 
     # assert
     assert batch_settings.poll_interval == 300.0
@@ -49,9 +41,7 @@ def test_load_concurrent_settings(application_container: ApplicationContainer):
     llm_settings_loader_service = application_container.llm_settings_loader_service()
 
     # act
-    concurrent_settings = llm_settings_loader_service.load_concurrent_settings(
-        'default', 'default'
-    )
+    concurrent_settings = llm_settings_loader_service.load_concurrent_settings('default', 'default')
 
     concurrent_settings_openai = llm_settings_loader_service.load_concurrent_settings(
         'openai', 'gpt-4o-mini'

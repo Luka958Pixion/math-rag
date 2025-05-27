@@ -15,9 +15,7 @@ class LLMResponseMapping(
     Generic[LLMResponseType],
 ):
     @staticmethod
-    def to_source(
-        target: ChatCompletionOutputComplete, **kwargs
-    ) -> LLMResponse[LLMResponseType]:
+    def to_source(target: ChatCompletionOutputComplete, **kwargs) -> LLMResponse[LLMResponseType]:
         response_type: type[LLMResponseType] = kwargs['response_type']
 
         return LLMResponse(

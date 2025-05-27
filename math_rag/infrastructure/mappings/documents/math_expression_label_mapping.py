@@ -5,9 +5,7 @@ from math_rag.infrastructure.models.documents import (
 )
 
 
-class MathExpressionLabelMapping(
-    BaseMapping[MathExpressionLabel, MathExpressionLabelDocument]
-):
+class MathExpressionLabelMapping(BaseMapping[MathExpressionLabel, MathExpressionLabelDocument]):
     @staticmethod
     def to_source(
         target: MathExpressionLabelDocument,

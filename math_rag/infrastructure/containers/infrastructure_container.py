@@ -109,14 +109,10 @@ class InfrastructureContainer(DeclarativeContainer):
     llm_failed_request_repository = Factory(LLMFailedRequestRepository, **mongo_kwargs)
     index_repository = Factory(IndexRepository, **mongo_kwargs)
     dataset_repository = Factory(DatasetRepository, **mongo_kwargs)
-    math_expression_sample_repository = Factory(
-        MathExpressionSampleRepository, **mongo_kwargs
-    )
+    math_expression_sample_repository = Factory(MathExpressionSampleRepository, **mongo_kwargs)
 
     math_expression_label_seeder = Factory(MathExpressionLabelSeeder, **mongo_kwargs)
-    math_expression_label_repository = Factory(
-        MathExpressionLabelRepository, **mongo_kwargs
-    )
+    math_expression_label_repository = Factory(MathExpressionLabelRepository, **mongo_kwargs)
     em_failed_request_seeder = Factory(EMFailedRequestSeeder, **mongo_kwargs)
     llm_failed_request_seeder = Factory(LLMFailedRequestSeeder, **mongo_kwargs)
     index_seeder = Factory(IndexSeeder, **mongo_kwargs)
@@ -196,9 +192,7 @@ class InfrastructureContainer(DeclarativeContainer):
     config.katex.port.from_env('KATEX_PORT')
     katex_client = Factory(
         KatexClient,
-        base_url=Callable(
-            lambda port: f'http://host.docker.internal:{port}', config.katex.port
-        ),
+        base_url=Callable(lambda port: f'http://host.docker.internal:{port}', config.katex.port),
     )
 
     ## SSH

@@ -22,9 +22,7 @@ WALL_TIME_THRESHOLD = timedelta(minutes=30)
 ENV_PATH = Path('.env.hpc')
 
 
-basicConfig(
-    level=INFO, format='%(asctime)s [%(threadName)s] %(levelname)s: %(message)s'
-)
+basicConfig(level=INFO, format='%(asctime)s [%(threadName)s] %(levelname)s: %(message)s')
 logger = getLogger(__name__)
 
 
@@ -83,9 +81,7 @@ class WallTimeTrackerThread(Thread):
                 break
 
             # read wall time
-            result = subprocess.run(
-                cmd, check=True, capture_output=True, text=True, shell=True
-            )
+            result = subprocess.run(cmd, check=True, capture_output=True, text=True, shell=True)
             wall_times = result.stdout.strip().splitlines()
 
             if len(wall_times) == 1:
@@ -116,9 +112,7 @@ def main():
     fine_tuning_processor_thread = FineTuningProcessorThread(
         training_stop_event, training_done_event
     )
-    wall_time_tracker_thread = WallTimeTrackerThread(
-        training_stop_event, training_done_event
-    )
+    wall_time_tracker_thread = WallTimeTrackerThread(training_stop_event, training_done_event)
 
     fine_tuning_processor_thread.start()
     wall_time_tracker_thread.start()

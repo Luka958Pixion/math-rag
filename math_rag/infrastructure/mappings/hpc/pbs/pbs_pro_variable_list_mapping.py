@@ -21,9 +21,7 @@ class PBSProVariableListMapping(BaseMapping[PBSProVariableList, str]):
             else [],
             mail=fields.get('PBS_O_MAIL'),
             shell=fields.get('PBS_O_SHELL'),
-            workdir=Path(fields['PBS_O_WORKDIR'])
-            if 'PBS_O_WORKDIR' in fields
-            else None,
+            workdir=Path(fields['PBS_O_WORKDIR']) if 'PBS_O_WORKDIR' in fields else None,
             host=fields.get('PBS_O_HOST'),
             lang=fields.get('PBS_O_LANG'),
             logname=fields.get('PBS_O_LOGNAME'),

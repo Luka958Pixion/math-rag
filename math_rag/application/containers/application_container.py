@@ -66,12 +66,8 @@ class ApplicationContainer(DeclarativeContainer):
     dataset_repository: Provider[BaseDatasetRepository] = Dependency()
     math_article_repository: Provider[BaseMathArticleRepository] = Dependency()
     math_expression_repository: Provider[BaseMathExpressionRepository] = Dependency()
-    math_expression_label_repository: Provider[BaseMathExpressionLabelRepository] = (
-        Dependency()
-    )
-    math_expression_sample_repository: Provider[BaseMathExpressionSampleRepository] = (
-        Dependency()
-    )
+    math_expression_label_repository: Provider[BaseMathExpressionLabelRepository] = Dependency()
+    math_expression_sample_repository: Provider[BaseMathExpressionSampleRepository] = Dependency()
 
     dataset_publisher_service: Provider[BaseDatasetPublisherService] = Dependency()
 
@@ -120,6 +116,7 @@ class ApplicationContainer(DeclarativeContainer):
         math_article_loader_service=math_article_loader_service,
         math_expression_loader_service=math_expression_loader_service,
         math_expression_label_loader_service=math_expression_label_loader_service,
+        math_expression_dataset_publisher_service=math_expression_dataset_publisher_service,
         dataset_repository=dataset_repository,
     )
     dataset_build_context = Singleton(DatasetBuildContext)

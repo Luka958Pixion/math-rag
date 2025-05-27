@@ -14,9 +14,7 @@ class LLMResponseListMapping(
     Generic[LLMResponseType],
 ):
     @staticmethod
-    def to_source(
-        target: ChatCompletionOutput, **kwargs
-    ) -> LLMResponseList[LLMResponseType]:
+    def to_source(target: ChatCompletionOutput, **kwargs) -> LLMResponseList[LLMResponseType]:
         request_id = kwargs['request_id']
         input_id = kwargs.get('input_id')
         response_type = kwargs['response_type']
@@ -27,9 +25,7 @@ class LLMResponseListMapping(
         return LLMResponseList(
             request_id=request_id,
             responses=[
-                LLMResponseMapping[LLMResponseType].to_source(
-                    choice, response_type=response_type
-                )
+                LLMResponseMapping[LLMResponseType].to_source(choice, response_type=response_type)
                 for choice in target.choices
             ],
         )

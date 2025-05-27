@@ -52,9 +52,7 @@ CACHE_DIR_PATH = Path('data')
 # TODO set HF_HOME=... and bind it
 
 
-basicConfig(
-    level=INFO, format='%(asctime)s [%(threadName)s] %(levelname)s: %(message)s'
-)
+basicConfig(level=INFO, format='%(asctime)s [%(threadName)s] %(levelname)s: %(message)s')
 logger = getLogger(__name__)
 
 

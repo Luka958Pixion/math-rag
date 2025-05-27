@@ -8,7 +8,5 @@ from math_rag.application.models.inference import (
 
 class BaseConcurrentManagedEM(ABC):
     @abstractmethod
-    async def concurrent_embed(
-        self, concurrent_request: EMConcurrentRequest
-    ) -> EMConcurrentResult:
+    async def concurrent_embed(self, concurrent_request: EMConcurrentRequest) -> EMConcurrentResult:
         pass

@@ -7,10 +7,7 @@ from .hpc_queue_live_entry_mapping import HPCQueueLiveEntryMapping
 class HPCQueueLiveMapping(BaseMapping[HPCQueueLive, str]):
     @staticmethod
     def to_source(target: str) -> HPCQueueLive:
-        entries = [
-            HPCQueueLiveEntryMapping.to_source(line)
-            for line in target.strip().splitlines()
-        ]
+        entries = [HPCQueueLiveEntryMapping.to_source(line) for line in target.strip().splitlines()]
 
         return HPCQueueLive(entries=entries)
 

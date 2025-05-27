@@ -75,9 +75,7 @@ class LoRA:
 
             if await self.file_system_client.test(remote_path):
                 local_hash = FileHasherUtil.hash(local_path, 'sha256')
-                remote_hash = await self.file_system_client.hash(
-                    remote_path, 'sha256sum'
-                )
+                remote_hash = await self.file_system_client.hash(remote_path, 'sha256sum')
 
                 if local_hash != remote_hash:
                     await self.file_system_client.remove(remote_path)
@@ -91,9 +89,7 @@ class LoRA:
             if local_path.suffix == '.def':
                 sif_stream = await self.apptainer_client.build(
                     local_path,
-                    lora_path / 'requirements.txt'
-                    if local_path.name == 'lora.def'
-                    else None,
+                    lora_path / 'requirements.txt' if local_path.name == 'lora.def' else None,
                 )
 
                 sif_local_path = tmp_path / f'{local_path.stem}.sif'

@@ -73,16 +73,10 @@ class PrometheusSnapshotLoaderService:
         )
         archive_remote_path = remote_root_path / f'snapshot_{snapshot_name}.tar'
         archive_local_path = (
-            LOCAL_ROOT_PATH
-            / '.tmp'
-            / 'prometheus'
-            / 'snapshots'
-            / archive_remote_path.name
+            LOCAL_ROOT_PATH / '.tmp' / 'prometheus' / 'snapshots' / archive_remote_path.name
         )
 
-        await self.file_system_client.archive(
-            remote_path, archive_remote_path, include_root=False
-        )
+        await self.file_system_client.archive(remote_path, archive_remote_path, include_root=False)
         await self.sftp_client.download(archive_remote_path, archive_local_path)
         TarFileExtractorUtil.extract_tar_gz_to_path(archive_local_path, local_path)
 

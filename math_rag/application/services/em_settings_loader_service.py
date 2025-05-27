@@ -16,9 +16,7 @@ DEFAULT = 'default'
 
 class EMSettingsLoaderService(BaseEMSettingsLoaderService):
     def __init__(self):
-        self._provider_settings = YamlLoaderUtil.load(
-            YAML_PATH, model=EMProviderSettings
-        )
+        self._provider_settings = YamlLoaderUtil.load(YAML_PATH, model=EMProviderSettings)
         self._default_settings = self._provider_settings[DEFAULT][DEFAULT]
 
     def load_basic_settings(self, provider: str, model: str) -> BasicEMSettings:
@@ -51,13 +49,9 @@ class EMSettingsLoaderService(BaseEMSettingsLoaderService):
             override_batch_settings,
         )
 
-    def load_concurrent_settings(
-        self, provider: str, model: str
-    ) -> ConcurrentEMSettings:
+    def load_concurrent_settings(self, provider: str, model: str) -> ConcurrentEMSettings:
         default_concurrent_settings = self._default_settings.concurrent
-        override_concurrent_settings = self._provider_settings[provider][
-            model
-        ].concurrent
+        override_concurrent_settings = self._provider_settings[provider][model].concurrent
 
         if default_concurrent_settings is None:
             raise ValueError('Default concurrent settings must not be None')

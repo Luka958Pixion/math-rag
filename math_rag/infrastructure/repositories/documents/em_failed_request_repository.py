@@ -12,9 +12,7 @@ from .document_repository import DocumentRepository
 
 class EMFailedRequestRepository(
     BaseEMFailedRequestRepository,
-    DocumentRepository[
-        EMFailedRequest, EMFailedRequestDocument, EMFailedRequestMapping
-    ],
+    DocumentRepository[EMFailedRequest, EMFailedRequestDocument, EMFailedRequestMapping],
 ):
     def __init__(self, client: AsyncMongoClient, deployment: str):
         super().__init__(client, deployment)

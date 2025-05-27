@@ -12,9 +12,7 @@ class EMResponseListMapping(BaseMapping[EMResponseList, CreateEmbeddingResponse]
 
         return EMResponseList(
             request_id=request_id,
-            responses=[
-                EMResponseMapping.to_source(embedding) for embedding in target.data
-            ],
+            responses=[EMResponseMapping.to_source(embedding) for embedding in target.data],
         )
 
     @staticmethod

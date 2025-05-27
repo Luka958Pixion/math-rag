@@ -9,9 +9,7 @@ from .openai_concurrent_managed_em import OpenAIConcurrentManagedEM
 from .openai_em import OpenAIEM
 
 
-class OpenAIManagedEM(
-    OpenAIBasicManagedEM, OpenAIBatchManagedEM, OpenAIConcurrentManagedEM
-):
+class OpenAIManagedEM(OpenAIBasicManagedEM, OpenAIBatchManagedEM, OpenAIConcurrentManagedEM):
     def __init__(
         self,
         em: OpenAIEM,

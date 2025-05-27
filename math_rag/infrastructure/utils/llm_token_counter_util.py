@@ -27,8 +27,7 @@ class LLMTokenCounterUtil:
             raise ValueError('Missing encoding_name or model_name')
 
         prompt_tokens = sum(
-            len(encoding.encode(message.content))
-            for message in request.conversation.messages
+            len(encoding.encode(message.content)) for message in request.conversation.messages
         )
         max_completion_tokens = request.params.max_completion_tokens or 0
         completion_tokens = request.params.n * max_completion_tokens

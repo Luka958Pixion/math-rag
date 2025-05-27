@@ -33,9 +33,7 @@ class IndexRepository(
 
         return self.mapping_cls.to_source(doc)
 
-    async def update_build_status(
-        self, id: UUID, build_status: IndexBuildStatus
-    ) -> Index:
+    async def update_build_status(self, id: UUID, build_status: IndexBuildStatus) -> Index:
         field = 'build_status'
 
         if field not in self.target_cls.model_fields:

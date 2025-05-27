@@ -33,8 +33,8 @@ class OpenAIConcurrentManagedLLM(BaseConcurrentManagedLLM):
         model = concurrent_request.requests[0].params.model
         OpenAIModelNameValidator.validate(model)
 
-        concurrent_settings = (
-            self._llm_settings_loader_service.load_concurrent_settings('openai', model)
+        concurrent_settings = self._llm_settings_loader_service.load_concurrent_settings(
+            'openai', model
         )
 
         if concurrent_settings.max_requests_per_minute is None:
@@ -54,8 +54,6 @@ class OpenAIConcurrentManagedLLM(BaseConcurrentManagedLLM):
         )
 
         if concurrent_result.failed_requests:
-            await self._llm_failed_request_repository.insert_many(
-                concurrent_result.failed_requests
-            )
+            await self._llm_failed_request_repository.insert_many(concurrent_result.failed_requests)
 
         return concurrent_result

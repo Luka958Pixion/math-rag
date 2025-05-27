@@ -55,9 +55,7 @@ class PBSProClient:
         return await self.ssh_client.run(cmd)
 
     async def queue_select(self, job_name: str) -> str | None:
-        stdout = await self.ssh_client.run(
-            f'qselect -u {self.ssh_client.user} -N {job_name}'
-        )
+        stdout = await self.ssh_client.run(f'qselect -u {self.ssh_client.user} -N {job_name}')
 
         return stdout or None
 
@@ -87,9 +85,7 @@ class PBSProClient:
 
         return PBSProJobFullMapping.to_source(stdout)
 
-    async def queue_status_wall_times(
-        self, job_id: str
-    ) -> tuple[timedelta, timedelta | None]:
+    async def queue_status_wall_times(self, job_id: str) -> tuple[timedelta, timedelta | None]:
         awk_cmd = AwkCmdBuilderUtil.build_wall_times()
         stdout = await self.ssh_client.run(f'qstat -f {job_id} | {awk_cmd}')
         wall_times = stdout.strip().splitlines()
@@ -107,9 +103,7 @@ class PBSProClient:
         return wall_time, wall_time_used
 
     async def queue_delete(self, job_id: str, *, force: bool):
-        await self.ssh_client.run(
-            f'qdel -W force -x {job_id}' if force else f'qdel {job_id}'
-        )
+        await self.ssh_client.run(f'qdel -W force -x {job_id}' if force else f'qdel {job_id}')
 
     async def queue_hold(self, job_id: str):
         await self.ssh_client.run(f'qhold {job_id}')

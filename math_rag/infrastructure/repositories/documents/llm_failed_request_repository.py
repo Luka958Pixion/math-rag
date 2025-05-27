@@ -12,9 +12,7 @@ from .document_repository import DocumentRepository
 
 class LLMFailedRequestRepository(
     BaseLLMFailedRequestRepository,
-    DocumentRepository[
-        LLMFailedRequest, LLMFailedRequestDocument, LLMFailedRequestMapping
-    ],
+    DocumentRepository[LLMFailedRequest, LLMFailedRequestDocument, LLMFailedRequestMapping],
 ):
     def __init__(self, client: AsyncMongoClient, deployment: str):
         super().__init__(client, deployment)

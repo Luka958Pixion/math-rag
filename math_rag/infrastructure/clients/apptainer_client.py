@@ -21,9 +21,7 @@ class ApptainerClient(BaseApptainerClient):
 
         async with AsyncClient() as client:
             with def_path.open('rb') as def_file:
-                files = {
-                    'def_file': (def_path.name, def_file, 'application/octet-stream')
-                }
+                files = {'def_file': (def_path.name, def_file, 'application/octet-stream')}
 
                 if additional_path:
                     with additional_path.open('rb') as req_file:
@@ -106,9 +104,7 @@ class ApptainerClient(BaseApptainerClient):
 
             return task_id
 
-    async def overlay_create_status(
-        self, task_id: UUID
-    ) -> ApptainerOverlayCreateStatus:
+    async def overlay_create_status(self, task_id: UUID) -> ApptainerOverlayCreateStatus:
         url = self.base_url + '/apptainer/overlay/create/status'
         payload = {'task_id': str(task_id)}
 
@@ -140,10 +136,7 @@ class ApptainerClient(BaseApptainerClient):
             status = await self.overlay_create_status(task_id)
 
             match status:
-                case (
-                    ApptainerOverlayCreateStatus.PENDING
-                    | ApptainerOverlayCreateStatus.RUNNING
-                ):
+                case ApptainerOverlayCreateStatus.PENDING | ApptainerOverlayCreateStatus.RUNNING:
                     await sleep(poll_interval)
 
                 case ApptainerOverlayCreateStatus.FINISHED:

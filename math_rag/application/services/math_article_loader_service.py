@@ -25,9 +25,7 @@ class MathArticleLoaderService(BaseMathArticleLoaderService):
         self.arxiv_client = arxiv_client
         self.math_article_repository = math_article_repository
 
-    async def load(
-        self, index_id: UUID, arxiv_category_type: type[BaseArxivCategory], limit: int
-    ):
+    async def load(self, index_id: UUID, arxiv_category_type: type[BaseArxivCategory], limit: int):
         if limit < len(BaseArxivCategory):
             raise ValueError()
 
@@ -54,9 +52,7 @@ class MathArticleLoaderService(BaseMathArticleLoaderService):
             num_math_articles += len(math_articles)
 
         self.math_article_repository.backup()
-        logger.info(
-            f'{self.__class__.__name__} loaded {num_math_articles} math articles'
-        )
+        logger.info(f'{self.__class__.__name__} loaded {num_math_articles} math articles')
 
     async def _process_result(self, result: Result) -> dict[str, bytes] | None:
         arxiv_id = result.entry_id.split('/')[-1]
@@ -73,10 +69,7 @@ class MathArticleLoaderService(BaseMathArticleLoaderService):
         if src_name.endswith('.tar.gz'):
             extracted_file_to_bytes = GzipExtractorUtil.extract_tar_gz(src_bytes)
 
-            return {
-                f'{arxiv_id}/{key}': value
-                for key, value in extracted_file_to_bytes.items()
-            }
+            return {f'{arxiv_id}/{key}': value for key, value in extracted_file_to_bytes.items()}
 
         if src_name.endswith('.gz'):
             extracted_bytes = GzipExtractorUtil.extract_gz(src_bytes)

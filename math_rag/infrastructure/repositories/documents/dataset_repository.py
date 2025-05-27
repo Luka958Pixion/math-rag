@@ -18,9 +18,7 @@ class DatasetRepository(
     def __init__(self, client: AsyncMongoClient, deployment: str):
         super().__init__(client, deployment)
 
-    async def update_build_stage(
-        self, id: UUID, build_stage: DatasetBuildStage
-    ) -> Dataset:
+    async def update_build_stage(self, id: UUID, build_stage: DatasetBuildStage) -> Dataset:
         field = 'build_stage'
 
         if field not in self.target_cls.model_fields:
@@ -35,9 +33,7 @@ class DatasetRepository(
 
         return self.mapping_cls.to_source(doc)
 
-    async def update_build_status(
-        self, id: UUID, build_status: DatasetBuildStatus
-    ) -> Dataset:
+    async def update_build_status(self, id: UUID, build_status: DatasetBuildStatus) -> Dataset:
         field = 'build_status'
 
         if field not in self.target_cls.model_fields:
