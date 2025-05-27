@@ -1,10 +1,10 @@
 from collections.abc import AsyncGenerator
-from typing import Any
 
 from bson.binary import UuidRepresentation
-from bson.json_util import JSONOptions, dumps, loads
+from bson.json_util import JSONOptions
 from pymongo import ASCENDING, AsyncMongoClient
 from pymongo.asynchronous.collection import AsyncCollection
+from pymongo.asynchronous.command_cursor import AsyncCommandCursor
 from pymongo.operations import IndexModel
 
 from math_rag.application.base.repositories.documents.views import (
@@ -52,12 +52,7 @@ class MathExpressionSampleRepository(BaseMathExpressionSampleRepository):
         index_models = [IndexModel([(field, ASCENDING)], background=True)]
         await collection.create_indexes(index_models)
 
-    async def find_many(self) -> list[MathExpressionSample]:
-        pass
-
-    async def batch_find_many(
-        self, *, batch_size: int
-    ) -> AsyncGenerator[list[MathExpressionSample], None]:
+    async def _find_many_cursor(self) -> AsyncCommandCursor:
         await self._create_index(
             self.math_expression_collection,
             field='id',
@@ -93,19 +88,37 @@ class MathExpressionSampleRepository(BaseMathExpressionSampleRepository):
             }
         }
         pipeline = [lookup_stage, unwind_stage, project_stage]
-        cursor = await self.math_expression_collection.aggregate(
+
+        return await self.math_expression_collection.aggregate(
             pipeline,
-            allowDiskUse=False,
-            batchSize=batch_size,
             jsonOptions=self.json_options,
         )
 
-        async for doc in cursor:
-            batch.append(doc)
+    async def find_many(self) -> list[MathExpressionSample]:
+        cursor = await self._find_many_cursor()
+        bson_docs = await cursor.to_list()
+
+        docs = [
+            MathExpressionSampleDocumentView.model_validate(bson_doc)
+            for bson_doc in bson_docs
+        ]
+        items = [MathExpressionSampleMapping.to_source(doc) for doc in docs]
+
+        return items
+
+    async def batch_find_many(
+        self, *, batch_size: int
+    ) -> AsyncGenerator[list[MathExpressionSample], None]:
+        cursor = await self._find_many_cursor()
+
+        async for bson_doc in cursor:
+            doc = MathExpressionSampleDocumentView.model_validate(bson_doc)
+            item = MathExpressionSampleMapping.to_source(doc)
+            batch.append(item)
 
             if len(batch) >= batch_size:
                 yield batch
                 batch = []
 
         if batch:
-            yield batch  # TODO map!
+            yield batch
