@@ -1,7 +1,7 @@
 {
-  "name": "math-rag-dev-container",
+  "name": "math-rag-devcontainer",
   "dockerComposeFile": "../docker-compose.yml",
-  "service": "math-rag-service",
+  "service": "math-rag-devcontainer",
   "workspaceFolder": "/workspaces",
   "customizations": {
     "vscode": {
@@ -20,7 +20,7 @@
   },
   "postCreateCommand": "sh ./.devcontainer/post-create.sh",
   "remoteUser": "root",
-  "forwardPorts": ["${localEnv:PORT}"],
+  "forwardPorts": [],
   "mounts": [
     "source=/var/run/docker.sock,target=/var/run/docker.sock,type=bind"
   ],
