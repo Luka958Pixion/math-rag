@@ -5,7 +5,11 @@ from mcp.server.fastmcp import FastMCP
 
 from math_rag.application.containers import ApplicationContainer
 from math_rag.mcp.constants import OPENAPI_URL, TITLE
-from math_rag.mcp.tools import echo_tool
+from math_rag.mcp.tools import (
+    add_solve_problem_tool,
+    add_validate_document_tool,
+    add_validate_problem_tool,
+)
 
 
 def create_mcp(application_container: ApplicationContainer) -> FastAPI:
@@ -15,9 +19,9 @@ def create_mcp(application_container: ApplicationContainer) -> FastAPI:
         enable_discovery_routes=True,
     )
 
-    mcp.add_tool(echo_tool, name=None, description=None, annotations=None)
-    # mcp.add_prompt()
-    # mcp.add_resource()
+    add_solve_problem_tool(mcp)
+    add_validate_document_tool(mcp)
+    add_validate_problem_tool(mcp)
 
     @asynccontextmanager
     async def lifespan(app: FastAPI):
