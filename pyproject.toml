@@ -36,6 +36,7 @@ pylatexenc = "^2.10"
 uvicorn = "^0.34.2"
 scalar-fastapi = "^1.0.3"
 mpxpy = "^0.0.8"
+mcp = {extras = ["cli"], version = "^1.9.1"}
 
 
 [tool.poetry.group.dev.dependencies]

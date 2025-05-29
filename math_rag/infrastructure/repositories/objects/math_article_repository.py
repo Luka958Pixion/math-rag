@@ -21,9 +21,7 @@ class MathArticleRepository(
         metadata_keys = ['id', 'timestamp']
 
         for key in metadata_keys:
-            if key not in MathArticleObject.model_fields:
-                raise ValueError(
-                    f'Field {key} does not exist in {MathArticleObject.__class__.__name__}'
-                )
+            if key not in MathArticle.model_fields:
+                raise ValueError(f'Field {key} does not exist in {MathArticle.__class__.__name__}')
 
         super().__init__(client, metadata_keys)

@@ -14,6 +14,7 @@ services:
       - /var/run/docker.sock:/var/run/docker.sock
     ports:
       - ${PORT}:${PORT}
+      - 7200:7200
     command: sleep infinity
 
   minio:
@@ -104,6 +105,16 @@ services:
     environment:
       - GF_SECURITY_ADMIN_USER=admin
       - GF_SECURITY_ADMIN_PASSWORD=admin
+    restart: unless-stopped
+
+  mcp-inspector:
+    build:
+      context: .
+      dockerfile: Dockerfile.inspector
+    container_name: mcp-inspector
+    ports:
+      - 6274:6274
+      - 6277:6277
     restart: unless-stopped
 
   math-rag-jupyter:

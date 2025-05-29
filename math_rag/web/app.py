@@ -33,7 +33,7 @@ def on_exception(task: asyncio.Task):
         os.kill(os.getpid(), signal.SIGTERM)
 
 
-def create_app(application_container: ApplicationContainer) -> FastAPI:
+def create_api_app(application_container: ApplicationContainer) -> FastAPI:
     @asynccontextmanager
     async def lifespan(app: FastAPI):
         index_service = application_container.index_build_tracker_background_service()
@@ -48,8 +48,8 @@ def create_app(application_container: ApplicationContainer) -> FastAPI:
 
         index_task.add_done_callback(on_exception)
         dataset_task.add_done_callback(on_exception)
-
         yield
+
         for task in (index_task, dataset_task):
             task.cancel()
 
