@@ -43,3 +43,22 @@ Create `.env.hpc` file with the following variables:
 
 ## Run
 - `poetry run python -m math_rag.main`
+
+## Model Context Protocol
+
+### Claude Desktop
+- `npm install -g mcp-remote`
+
+Open Claude Desktop and navigate `Claude` > `Settings` > `Developer` > `Edit Config` and add this to `claude_desktop_config.json`:
+
+```json
+{
+  "mcpServers": {
+    "mathrag_solver": {
+      "command": "npx",
+      "args": ["mcp-remote", "http://localhost:7200/mcp/"]
+    }
+  }
+}
+```
+

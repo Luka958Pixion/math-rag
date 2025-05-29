@@ -34,6 +34,7 @@ def create_mcp(application_container: ApplicationContainer) -> FastAPI:
         lifespan=lifespan,
         dependency_overrides_provider=application_container,
     )
+
     api.mount('/', mcp.streamable_http_app())
 
     return api
