@@ -33,7 +33,7 @@ def on_exception(task: asyncio.Task):
         os.kill(os.getpid(), signal.SIGTERM)
 
 
-def create_api_app(application_container: ApplicationContainer) -> FastAPI:
+def create_api(application_container: ApplicationContainer) -> FastAPI:
     @asynccontextmanager
     async def lifespan(app: FastAPI):
         index_service = application_container.index_build_tracker_background_service()
@@ -56,7 +56,7 @@ def create_api_app(application_container: ApplicationContainer) -> FastAPI:
         with suppress(asyncio.CancelledError):
             await asyncio.gather(index_task, dataset_task)
 
-    app = FastAPI(
+    api = FastAPI(
         title=TITLE,
         openapi_url=OPENAPI_URL,
         lifespan=lifespan,
@@ -64,12 +64,12 @@ def create_api_app(application_container: ApplicationContainer) -> FastAPI:
     )
 
     # routers
-    app.include_router(index_create_router)
-    app.include_router(health_router)
-    app.include_router(scalar_router)
+    api.include_router(index_create_router)
+    api.include_router(health_router)
+    api.include_router(scalar_router)
 
     # exception handlers
-    @app.exception_handler(Exception)
+    @api.exception_handler(Exception)
     async def global_exception_handler(request: Request, exception: Exception):
         logger.error(f'Unhandled exception: {exception}')
 
@@ -78,4 +78,4 @@ def create_api_app(application_container: ApplicationContainer) -> FastAPI:
             content={'success': False, 'error': 'Internal Server Error'},
         )
 
-    return app
+    return api

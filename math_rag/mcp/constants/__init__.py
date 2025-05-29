@@ -1,4 +1,4 @@
-from .constants import NAME
+from .constants import OPENAPI_URL, TITLE
 
 
-__all__ = ['NAME']
+__all__ = ['OPENAPI_URL', 'TITLE']

@@ -1,4 +1,4 @@
-from .app import create_mcp_app
+from .app import create_mcp
 
 
-__all__ = ['create_mcp_app']
+__all__ = ['create_mcp']

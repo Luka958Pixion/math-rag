@@ -1,4 +1,4 @@
-from .app import create_api_app
+from .app import create_api
 
 
-__all__ = ['create_api_app']
+__all__ = ['create_api']

@@ -5,15 +5,19 @@ from logging import ERROR, INFO, WARNING, basicConfig, getLogger
 import uvicorn
 
 from decouple import config
-from fastapi import FastAPI
 
 import math_rag.mcp.resources as resources
 import math_rag.mcp.tools as tools
 import math_rag.web.routers as routers
 
 from math_rag.infrastructure.containers import InfrastructureContainer
-from math_rag.mcp import create_mcp_app
-from math_rag.web import create_api_app
+from math_rag.mcp import create_mcp
+from math_rag.web import create_api
+
+
+HOST = config('HOST')
+API_PORT = config('API_PORT', cast=int)
+MCP_PORT = config('MCP_PORT', cast=int)
 
 
 basicConfig(level=INFO, format='%(asctime)s - %(levelname)s - %(message)s')
@@ -44,34 +48,30 @@ async def main():
     await math_expression_seeder.seed()
     await math_expression_label_seeder.seed()
 
-    core_app = create_api_app(application_container)
-    mcp_app = create_mcp_app(application_container)
-
-    # unified = FastAPI()
-    # unified.mount("/mcp", mcp_app)
-    # unified.mount("/api", core_app)
-
-    uvicorn_config = uvicorn.Config(
-        core_app,
-        host=config('HOST'),
-        port=config('PORT', cast=int),
+    # serve
+    api = create_api(application_container)
+    api_uvicorn_config = uvicorn.Config(
+        api,
+        host=HOST,
+        port=API_PORT,
         loop='asyncio',
         log_level='info',
     )
-    uvicorn_server = uvicorn.Server(uvicorn_config)
+    api_uvicorn_server = uvicorn.Server(api_uvicorn_config)
 
-    uvicorn_config2 = uvicorn.Config(
-        mcp_app,
-        host=config('HOST'),
-        port=7200,
+    mcp = create_mcp(application_container)
+    mcp_uvicorn_config = uvicorn.Config(
+        mcp,
+        host=HOST,
+        port=MCP_PORT,
         loop='asyncio',
         log_level='info',
     )
-    uvicorn_server2 = uvicorn.Server(uvicorn_config2)
+    mcp_uvicorn_server = uvicorn.Server(mcp_uvicorn_config)
 
-    await asyncio.gather(
-        asyncio.create_task(uvicorn_server.serve()), asyncio.create_task(uvicorn_server2.serve())
-    )
+    async with asyncio.TaskGroup() as task_group:
+        task_group.create_task(api_uvicorn_server.serve(), name='API')
+        task_group.create_task(mcp_uvicorn_server.serve(), name='MCP')
 
 
 if __name__ == '__main__':

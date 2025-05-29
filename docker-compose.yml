@@ -14,7 +14,6 @@ services:
       - /var/run/docker.sock:/var/run/docker.sock
     ports:
       - ${PORT}:${PORT}
-      - 7200:7200
     command: sleep infinity
 
   minio:

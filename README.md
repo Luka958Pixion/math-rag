@@ -9,7 +9,8 @@
 ## Environment
 Create `.env` file with the following variables:
 - `HOST=0.0.0.0`
-- `PORT=7100`
+- `API_PORT=7100`
+- `MCP_PORT=7200`
 - `JUPYTER_PORT=7035`
 - `KATEX_PORT=7025`
 - `APPTAINER_PORT=7015`
