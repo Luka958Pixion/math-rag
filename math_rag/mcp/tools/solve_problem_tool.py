@@ -34,8 +34,8 @@ def add_solve_problem_tool(mcp: FastMCP):
         name='solve_math_problem',
         description='Solve the validated math problem using the optional literature reference.',
         annotations={
-            'input_text': str,
-            'input_image': UploadFile,
-            'pdf_file': UploadFile,
+            'input_text': {'type': 'string'},
+            'input_image': {'type': 'string', 'format': 'binary'},
+            'pdf_file': {'type': 'string', 'format': 'binary'},
         },
     )

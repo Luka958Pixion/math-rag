@@ -27,5 +27,7 @@ def add_validate_document_tool(mcp: FastMCP):
         validate_document_tool,
         name='validate_document',
         description='Validate uploaded literature file (PDF only).',
-        annotations={'pdf_file': UploadFile},
+        annotations={
+            'pdf_file': {'type': 'string', 'format': 'binary'},
+        },
     )

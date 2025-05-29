@@ -35,5 +35,8 @@ def add_validate_problem_tool(mcp: FastMCP):
         validate_problem_tool,
         name='validate_problem',
         description='Ensure the user provided a valid math problem as text or image.',
-        annotations={'input_text': str, 'input_image': UploadFile},
+        annotations={
+            'input_text': {'type': 'string'},
+            'input_image': {'type': 'string', 'format': 'binary'},
+        },
     )
