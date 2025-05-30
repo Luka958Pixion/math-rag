@@ -8,8 +8,10 @@ class MathExpressionMapping(BaseMapping[MathExpression, MathExpressionDocument])
     def to_source(target: MathExpressionDocument) -> MathExpression:
         return MathExpression(
             id=target.id,
-            timestamp=target.timestamp,
             math_article_id=target.math_article_id,
+            dataset_id=target.dataset_id,
+            index_id=target.index_id,
+            timestamp=target.timestamp,
             latex=target.latex,
             katex=target.katex,
             position=target.position,
@@ -20,8 +22,10 @@ class MathExpressionMapping(BaseMapping[MathExpression, MathExpressionDocument])
     def to_target(source: MathExpression) -> MathExpressionDocument:
         return MathExpressionDocument(
             id=source.id,
-            timestamp=source.timestamp,
             math_article_id=source.math_article_id,
+            dataset_id=source.dataset_id,
+            index_id=source.index_id,
+            timestamp=source.timestamp,
             latex=source.latex,
             katex=source.katex,
             position=source.position,

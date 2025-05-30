@@ -6,8 +6,10 @@ from pydantic import BaseModel, Field
 
 class MathExpression(BaseModel):
     id: UUID = Field(default_factory=uuid4)
-    timestamp: datetime = Field(default_factory=datetime.now)
     math_article_id: UUID
+    dataset_id: UUID | None
+    index_id: UUID | None
+    timestamp: datetime = Field(default_factory=datetime.now)
     latex: str
     katex: str | None
     position: int

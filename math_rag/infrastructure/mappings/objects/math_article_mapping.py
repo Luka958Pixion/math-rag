@@ -11,6 +11,8 @@ class MathArticleMapping(BaseMapping[MathArticle, MathArticleObject]):
     @staticmethod
     def to_source(target: MathArticleObject) -> MathArticle:
         id = target.metadata.get('X-Amz-Meta-id')
+        dataset_id = target.metadata.get('X-Amz-Meta-dataset_id')
+        index_id = target.metadata.get('X-Amz-Meta-index_id')
         timestamp = target.metadata.get('X-Amz-Meta-timestamp')
 
         if id is None:
@@ -21,6 +23,8 @@ class MathArticleMapping(BaseMapping[MathArticle, MathArticleObject]):
 
         return MathArticle(
             id=UUID(id),
+            dataset_id=dataset_id,
+            index_id=index_id,
             timestamp=datetime.fromisoformat(timestamp),
             name=target.object_name,
             bytes=target.data.read(),
@@ -36,6 +40,8 @@ class MathArticleMapping(BaseMapping[MathArticle, MathArticleObject]):
             length=data.getbuffer().nbytes,
             metadata={
                 'X-Amz-Meta-id': str(source.id),
+                'X-Amz-Meta-dataset_id': str(source.dataset_id),
+                'X-Amz-Meta-index_id': str(source.index_id),
                 'X-Amz-Meta-timestamp': source.timestamp.isoformat(),
             },
         )

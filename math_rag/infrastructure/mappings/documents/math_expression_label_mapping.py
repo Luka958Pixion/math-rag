@@ -1,8 +1,6 @@
 from math_rag.core.models import MathExpressionLabel
 from math_rag.infrastructure.base import BaseMapping
-from math_rag.infrastructure.models.documents import (
-    MathExpressionLabelDocument,
-)
+from math_rag.infrastructure.models.documents import MathExpressionLabelDocument
 
 
 class MathExpressionLabelMapping(BaseMapping[MathExpressionLabel, MathExpressionLabelDocument]):
@@ -12,8 +10,10 @@ class MathExpressionLabelMapping(BaseMapping[MathExpressionLabel, MathExpression
     ) -> MathExpressionLabel:
         return MathExpressionLabel(
             id=target.id,
-            timestamp=target.timestamp,
             math_expression_id=target.math_expression_id,
+            dataset_id=target.dataset_id,
+            index_id=target.index_id,
+            timestamp=target.timestamp,
             value=target.value,
         )
 
@@ -23,7 +23,9 @@ class MathExpressionLabelMapping(BaseMapping[MathExpressionLabel, MathExpression
     ) -> MathExpressionLabelDocument:
         return MathExpressionLabelDocument(
             id=source.id,
-            timestamp=source.timestamp,
             math_expression_id=source.math_expression_id,
+            dataset_id=source.dataset_id,
+            index_id=source.index_id,
+            timestamp=source.timestamp,
             value=source.value,
         )
