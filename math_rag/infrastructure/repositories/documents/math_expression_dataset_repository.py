@@ -1,5 +1,6 @@
 from pymongo import AsyncMongoClient
 
+from math_rag.application.base.repositories.documents import BaseMathExpressionDatasetRepository
 from math_rag.core.enums import MathExpressionDatasetBuildStage
 from math_rag.core.models import MathExpressionDataset, MathExpressionSample
 from math_rag.infrastructure.mappings.documents import DatasetMapping
@@ -9,6 +10,7 @@ from .dataset_repository import DatasetRepository
 
 
 class MathExpressionDatasetRepository(
+    BaseMathExpressionDatasetRepository,
     DatasetRepository[
         MathExpressionSample,
         MathExpressionDatasetBuildStage,
