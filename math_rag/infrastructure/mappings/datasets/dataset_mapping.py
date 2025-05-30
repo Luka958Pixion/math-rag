@@ -2,7 +2,7 @@ from typing import TypeVar
 
 from datasets import Dataset, DatasetInfo
 
-from math_rag.application.base.datasets import BaseDataset, BaseSample
+from math_rag.core.base import BaseDataset, BaseSample
 from math_rag.infrastructure.base import BaseMapping
 from math_rag.infrastructure.utils import DatasetFeatureExtractorUtil
 

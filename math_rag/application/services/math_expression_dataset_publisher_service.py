@@ -8,12 +8,8 @@ from math_rag.application.base.services import (
     BaseDatasetPublisherService,
     BaseMathExpressionDatasetPublisherService,
 )
-from math_rag.application.models.datasets import (
-    DatasetMetadataFile,
-    DatasetSplitSettings,
-    MathExpressionDataset,
-    MathExpressionSample,
-)
+from math_rag.application.models.datasets import DatasetMetadataFile, DatasetSplitSettings
+from math_rag.core.models import MathExpressionDataset, MathExpressionSample
 
 
 logger = getLogger(__name__)
@@ -28,7 +24,8 @@ class MathExpressionDatasetPublisherService(BaseMathExpressionDatasetPublisherSe
         self.math_expression_sample_repository = math_expression_sample_repository
         self.dataset_publisher_service = dataset_publisher_service
 
-    async def publish(self):
+    async def publish(self, math_expression_dataset: MathExpressionDataset):
+        # TODO use dataset.id to find
         math_expression_samples = [
             math_expression_sample
             async for batch in self.math_expression_sample_repository.batch_find_many(
@@ -37,7 +34,6 @@ class MathExpressionDatasetPublisherService(BaseMathExpressionDatasetPublisherSe
             for math_expression_sample in batch
         ]
 
-        math_expression_dataset = MathExpressionDataset(math_expression_samples)
         dataset_split_settings = DatasetSplitSettings(
             train_ratio=0.8, validate_ratio=0.1, test_ratio=0.1, seed=42
         )
