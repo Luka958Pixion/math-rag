@@ -1,17 +1,15 @@
 from fastapi import FastAPI
 from mcp.server.fastmcp import FastMCP
 
-from math_rag.mcp.base import BaseTool
+from math_rag.mcp.base import BasePrompt, BaseResource, BaseTool
 from math_rag.mcp.constants import OPENAPI_URL, TITLE
+from math_rag.mcp.prompts import SummarizeTextPrompt
+from math_rag.mcp.resources import ConfigResource
 from math_rag.mcp.tools import (
     SolveProblemTool,
     ValidateDocumentTool,
     ValidateProblemTool,
 )
-
-
-# TODO implement this: https://chatgpt.com/share/6838d5e0-68a0-8007-a39c-da1abcc53e6f
-# TODO do we need DI? is it better to just consume endpoints?
 
 
 def create_mcp() -> FastAPI:
@@ -20,6 +18,17 @@ def create_mcp() -> FastAPI:
         stateless_http=True,
         enable_discovery_routes=True,
     )
+
+    prompts: list[BasePrompt] = []
+
+    for prompt in prompts:
+        prompt.add(mcp)
+
+    resources: list[BaseResource] = []
+
+    for resource in resources:
+        resource.add(mcp)
+
     tools: list[BaseTool] = [
         SolveProblemTool(),
         ValidateDocumentTool(),
@@ -32,7 +41,7 @@ def create_mcp() -> FastAPI:
     api = FastAPI(
         title=TITLE,
         openapi_url=OPENAPI_URL,
-        lifespan=lambda: mcp.session_manager.run(),
+        lifespan=lambda _: mcp.session_manager.run(),
     )
 
     api.mount('/', mcp.streamable_http_app())

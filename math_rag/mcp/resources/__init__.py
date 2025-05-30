@@ -1,4 +1,4 @@
-from .config import CONFIG_RESOURCE
+from .config_resource import ConfigResource
 
 
-__all__ = ['CONFIG_RESOURCE']
+__all__ = ['ConfigResource']

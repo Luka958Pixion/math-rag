@@ -1,4 +1,4 @@
-from .label_prompt import PROMPT
+from .summarize_text_prompt import SummarizeTextPrompt
 
 
-__all__ = ['PROMPT']
+__all__ = ['SummarizeTextPrompt']
