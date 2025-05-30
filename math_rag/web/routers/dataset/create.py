@@ -6,7 +6,7 @@ from fastapi import APIRouter, Body, Depends
 from math_rag.application.base.repositories.documents import BaseDatasetRepository
 from math_rag.application.containers import ApplicationContainer
 from math_rag.application.contexts import DatasetBuildContext
-from math_rag.core.models import Dataset
+from math_rag.core.models import MathExpressionDataset
 from math_rag.web.requests import DatasetCreateRequest
 from math_rag.web.responses import DatasetCreateResponse
 
@@ -30,7 +30,7 @@ async def create_index(
         Provide[ApplicationContainer.index_build_context]
     ),
 ):
-    dataset = Dataset(
+    dataset = MathExpressionDataset(
         build_from_dataset_id=dataset_create_request.build_from_index_id,
         build_from_stage=dataset_create_request.build_from_stage,
     )

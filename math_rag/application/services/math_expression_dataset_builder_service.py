@@ -3,21 +3,21 @@ from uuid import UUID
 
 from math_rag.application.base.repositories.documents import BaseDatasetRepository
 from math_rag.application.base.services import (
-    BaseDatasetBuilderService,
     BaseMathArticleLoaderService,
+    BaseMathExpressionDatasetBuilderService,
     BaseMathExpressionDatasetPublisherService,
     BaseMathExpressionLabelLoaderService,
     BaseMathExpressionLoaderService,
 )
 from math_rag.application.enums.arxiv import BaseArxivCategory, MathCategory
-from math_rag.core.enums import DatasetBuildStage
-from math_rag.core.models import Dataset
+from math_rag.core.enums import MathExpressionDatasetBuildStage
+from math_rag.core.models import MathExpressionDataset
 
 
 logger = getLogger(__name__)
 
 
-class DatasetBuilderService(BaseDatasetBuilderService):
+class MathExpressionDatasetBuilderService(BaseMathExpressionDatasetBuilderService):
     def __init__(
         self,
         math_article_loader_service: BaseMathArticleLoaderService,
@@ -36,14 +36,14 @@ class DatasetBuilderService(BaseDatasetBuilderService):
         self, dataset_id: UUID, arxiv_category_type: type[BaseArxivCategory], limit: int
     ):
         await self.dataset_repository.update_build_stage(
-            dataset_id, DatasetBuildStage.LOAD_MATH_ARTICLES
+            dataset_id, MathExpressionDatasetBuildStage.LOAD_MATH_ARTICLES
         )
         await self.math_article_loader_service.load(dataset_id, arxiv_category_type, limit)
         logger.info(f'Dataset {dataset_id} build loaded math articles')
 
     async def _load_math_expressions(self, dataset_id: UUID, foundation_dataset_id: UUID | None):
         await self.dataset_repository.update_build_stage(
-            dataset_id, DatasetBuildStage.LOAD_MATH_EXPRESSIONS
+            dataset_id, MathExpressionDatasetBuildStage.LOAD_MATH_EXPRESSIONS
         )
         await self.math_expression_loader_service.load(dataset_id, foundation_dataset_id)
         logger.info(f'Dataset {dataset_id} build loaded math expressions')
@@ -52,7 +52,7 @@ class DatasetBuilderService(BaseDatasetBuilderService):
         self, dataset_id: UUID, foundation_dataset_id: UUID | None
     ):
         await self.dataset_repository.update_build_stage(
-            dataset_id, DatasetBuildStage.LOAD_MATH_EXPRESSION_LABELS
+            dataset_id, MathExpressionDatasetBuildStage.LOAD_MATH_EXPRESSION_LABELS
         )
         await self.math_expression_label_loader_service.load(dataset_id, foundation_dataset_id)
         logger.info(f'Dataset {dataset_id} build loaded math expression labels')
@@ -61,7 +61,7 @@ class DatasetBuilderService(BaseDatasetBuilderService):
         # TODO what are we actually publishing? which dataset?
         await self.math_expression_dataset_publisher_service.publish()
 
-    async def build(self, dataset: Dataset):
+    async def build(self, dataset: MathExpressionDataset):
         logger.info(f'Dataset {dataset.id} build started')
 
         arxiv_category_type = MathCategory
@@ -76,17 +76,17 @@ class DatasetBuilderService(BaseDatasetBuilderService):
                 raise ValueError(f'Dataset {dataset.build_from_dataset_id} does not exist')
 
             match dataset.build_from_stage:
-                case DatasetBuildStage.LOAD_MATH_ARTICLES:
+                case MathExpressionDatasetBuildStage.LOAD_MATH_ARTICLES:
                     # NOTE: same as standard approach since it starts from the beginning
                     await self._load_math_articles(dataset.id, arxiv_category_type, limit)
                     await self._load_math_expressions(dataset.id, None)
                     await self._load_math_expression_labels(dataset.id, None)
 
-                case DatasetBuildStage.LOAD_MATH_EXPRESSIONS:
+                case MathExpressionDatasetBuildStage.LOAD_MATH_EXPRESSIONS:
                     await self._load_math_expressions(dataset.id, foundation_dataset.id)
                     await self._load_math_expression_labels(dataset.id, foundation_dataset.id)
 
-                case DatasetBuildStage.LOAD_MATH_EXPRESSION_LABELS:
+                case MathExpressionDatasetBuildStage.LOAD_MATH_EXPRESSION_LABELS:
                     await self._load_math_expression_labels(dataset.id, foundation_dataset.id)
 
         else:

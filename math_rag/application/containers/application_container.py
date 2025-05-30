@@ -33,12 +33,12 @@ from math_rag.application.base.services import (
 )
 from math_rag.application.contexts import DatasetBuildContext, IndexBuildContext
 from math_rag.application.services import (
-    DatasetBuilderService,
     EMSettingsLoaderService,
     IndexBuilderService,
     LLMSettingsLoaderService,
     MathArticleDatasetLoaderService,
     MathArticleParserService,
+    MathExpressionDatasetBuilderService,
     MathExpressionDatasetPublisherService,
     MathExpressionLabelLoaderService,
     MathExpressionLoaderService,
@@ -112,7 +112,7 @@ class ApplicationContainer(DeclarativeContainer):
     )
 
     dataset_builder_service = Factory(
-        DatasetBuilderService,
+        MathExpressionDatasetBuilderService,
         math_article_loader_service=math_article_loader_service,
         math_expression_loader_service=math_expression_loader_service,
         math_expression_label_loader_service=math_expression_label_loader_service,

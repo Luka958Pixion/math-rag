@@ -13,6 +13,3 @@ class Index(BaseModel):
     build_status: IndexBuildStatus = Field(default=IndexBuildStatus.PENDING)
     build_from_index_id: UUID | None = None
     build_from_stage: IndexBuildStage | None = None
-    math_article_ids: list[UUID] = Field(default_factory=list)
-    math_expression_ids: list[UUID] = Field(default_factory=list)
-    math_expression_label_ids: list[UUID] = Field(default_factory=list)

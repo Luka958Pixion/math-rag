@@ -1,24 +1,29 @@
+from typing import Generic
 from uuid import UUID
 
 from pymongo import AsyncMongoClient, ReturnDocument
 
 from math_rag.application.base.repositories.documents import BaseDatasetRepository
-from math_rag.core.enums import DatasetBuildStage, DatasetBuildStatus
-from math_rag.core.models import Dataset
-from math_rag.infrastructure.mappings.documents import DatasetMapping
-from math_rag.infrastructure.models.documents import DatasetDocument
+from math_rag.core.enums import DatasetBuildStatus
+from math_rag.core.types import DatasetBuildStageType, SampleType
+from math_rag.infrastructure.types.repositories.documents import (
+    MappingType,
+    SourceType,
+    TargetType,
+)
 
 from .document_repository import DocumentRepository
 
 
 class DatasetRepository(
-    BaseDatasetRepository,
-    DocumentRepository[Dataset, DatasetDocument, DatasetMapping],
+    BaseDatasetRepository[SampleType, DatasetBuildStageType],
+    DocumentRepository[SourceType, TargetType, MappingType],
+    Generic[SampleType, DatasetBuildStageType, SourceType, TargetType, MappingType],
 ):
     def __init__(self, client: AsyncMongoClient, deployment: str):
         super().__init__(client, deployment)
 
-    async def update_build_stage(self, id: UUID, build_stage: DatasetBuildStage) -> Dataset:
+    async def update_build_stage(self, id: UUID, build_stage: DatasetBuildStageType) -> SourceType:
         field = 'build_stage'
 
         if field not in self.target_cls.model_fields:
@@ -33,7 +38,7 @@ class DatasetRepository(
 
         return self.mapping_cls.to_source(doc)
 
-    async def update_build_status(self, id: UUID, build_status: DatasetBuildStatus) -> Dataset:
+    async def update_build_status(self, id: UUID, build_status: DatasetBuildStatus) -> SourceType:
         field = 'build_status'
 
         if field not in self.target_cls.model_fields:
@@ -48,7 +53,7 @@ class DatasetRepository(
 
         return self.mapping_cls.to_source(doc)
 
-    async def find_first_pending(self) -> Dataset | None:
+    async def find_first_pending(self) -> SourceType | None:
         bson_doc = await self.collection.find_one(
             filter={'build_status': DatasetBuildStatus.PENDING.value},
             sort=[('timestamp', 1)],

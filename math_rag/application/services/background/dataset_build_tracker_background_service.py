@@ -3,7 +3,7 @@ import asyncio
 from logging import getLogger
 
 from math_rag.application.base.repositories.documents import BaseDatasetRepository
-from math_rag.application.base.services import BaseDatasetBuilderService
+from math_rag.application.base.services import BaseMathExpressionDatasetBuilderService
 from math_rag.application.base.services.background import (
     BaseDatasetBuildTrackerBackgroundService,
 )
@@ -20,7 +20,7 @@ class DatasetBuildTrackerBackgroundService(BaseDatasetBuildTrackerBackgroundServ
     def __init__(
         self,
         dataset_repository: BaseDatasetRepository,
-        dataset_builder_service: BaseDatasetBuilderService,
+        dataset_builder_service: BaseMathExpressionDatasetBuilderService,
         dataset_build_context: DatasetBuildContext,
     ):
         self.dataset_repository = dataset_repository

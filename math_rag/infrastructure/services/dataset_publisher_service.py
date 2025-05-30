@@ -3,12 +3,12 @@ from logging import getLogger
 from huggingface_hub import HfApi
 from huggingface_hub.errors import RepositoryNotFoundError
 
-from math_rag.application.base.datasets import BaseDataset, BaseSample
 from math_rag.application.base.services import BaseDatasetPublisherService
 from math_rag.application.models.datasets import (
     DatasetMetadataFile,
     DatasetSplitSettings,
 )
+from math_rag.core.base import BaseDataset, BaseSample
 from math_rag.infrastructure.mappings.datasets import DatasetMapping
 from math_rag.infrastructure.utils import DatasetSplitterUtil
 
@@ -66,6 +66,7 @@ class DatasetPublisherService(BaseDatasetPublisherService):
         # push the datasets
         dataset_dict.push_to_hub(
             repo_id,
+            config_name=str(dataset.id),
             private=True,
             token=self.hugging_face_token,
         )
