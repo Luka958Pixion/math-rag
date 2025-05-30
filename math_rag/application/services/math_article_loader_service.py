@@ -16,7 +16,7 @@ logger = getLogger(__name__)
 BATCH_SIZE = 5
 
 
-class MathArticleLoaderService(BaseMathArticleLoaderService):
+class MathArticleDatasetLoaderService(BaseMathArticleLoaderService):
     def __init__(
         self,
         arxiv_client: BaseArxivClient,
@@ -25,7 +25,9 @@ class MathArticleLoaderService(BaseMathArticleLoaderService):
         self.arxiv_client = arxiv_client
         self.math_article_repository = math_article_repository
 
-    async def load(self, index_id: UUID, arxiv_category_type: type[BaseArxivCategory], limit: int):
+    async def load(
+        self, dataset_id: UUID, arxiv_category_type: type[BaseArxivCategory], limit: int
+    ):
         if limit < len(BaseArxivCategory):
             raise ValueError()
 
@@ -43,7 +45,7 @@ class MathArticleLoaderService(BaseMathArticleLoaderService):
             process_tasks = [self._process_result(result) for result in results]
             processed_files = await gather(*process_tasks)
             math_articles = [
-                MathArticle(name=name, bytes=bytes)
+                MathArticle(dataset_id=dataset_id, index_id=None, name=name, bytes=bytes)
                 for file in processed_files
                 if file
                 for name, bytes in file.items()

@@ -56,7 +56,7 @@ class MathExpressionLoaderService(BaseMathExpressionLoaderService):
 
         return valid, invalid
 
-    async def load(self, index_id: UUID, foundation_index_id: UUID | None):
+    async def load(self, dataset_id: UUID, foundation_dataset_id: UUID | None):
         # gather all .tex file names
         file_names = [
             name
@@ -70,11 +70,11 @@ class MathExpressionLoaderService(BaseMathExpressionLoaderService):
         for file_name in file_names:
             math_article = self.math_article_repository.find_by_name(file_name)
 
-            if foundation_index_id:
-                if math_article.index_id != foundation_index_id:
+            if foundation_dataset_id:
+                if math_article.index_id != foundation_dataset_id:
                     continue
 
-            elif math_article.index_id != index_id:
+            elif math_article.index_id != dataset_id:
                 continue
 
             math_nodes.extend(self.math_article_parser_service.parse(math_article))
@@ -149,6 +149,7 @@ class MathExpressionLoaderService(BaseMathExpressionLoaderService):
             math_expressions.append(
                 MathExpression(
                     math_article_id=math_article.id,
+                    dataset_id=dataset_id,
                     latex=str(node.latex_verbatim()),
                     katex=katex,
                     position=node.pos,
