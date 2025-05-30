@@ -19,12 +19,12 @@ def create_mcp() -> FastAPI:
         enable_discovery_routes=True,
     )
 
-    prompts: list[BasePrompt] = []
+    prompts: list[BasePrompt] = [SummarizeTextPrompt()]
 
     for prompt in prompts:
         prompt.add(mcp)
 
-    resources: list[BaseResource] = []
+    resources: list[BaseResource] = [ConfigResource()]
 
     for resource in resources:
         resource.add(mcp)
