@@ -59,7 +59,7 @@ async def main():
     )
     api_uvicorn_server = uvicorn.Server(api_uvicorn_config)
 
-    mcp = create_mcp(application_container)
+    mcp = create_mcp()
     mcp_uvicorn_config = uvicorn.Config(
         mcp,
         host=HOST,
