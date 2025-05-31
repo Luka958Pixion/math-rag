@@ -1,6 +1,7 @@
 from logging import getLogger
 
 from math_rag.application.assistants.prompts import MATH_EXPRESSION_LABELER_PROMPT
+from math_rag.application.base.repositories.documents import BaseMathExpressionSampleRepository
 from math_rag.application.base.services import (
     BaseDatasetPublisherService,
     BaseMathExpressionDatasetPublisherService,
@@ -22,7 +23,7 @@ class MathExpressionDatasetPublisherService(BaseMathExpressionDatasetPublisherSe
         self.dataset_publisher_service = dataset_publisher_service
 
     async def publish(self, math_expression_dataset: MathExpressionDataset):
-        # TODO use dataset.id to find
+        # TODO use math_expression_dataset_id to find
         math_expression_samples = [
             math_expression_sample
             async for batch in self.math_expression_sample_repository.batch_find_many(
@@ -30,7 +31,6 @@ class MathExpressionDatasetPublisherService(BaseMathExpressionDatasetPublisherSe
             )
             for math_expression_sample in batch
         ]
-        math_expression_dataset.samples.extend(math_expression_samples)
 
         dataset_split_settings = DatasetSplitSettings(
             train_ratio=0.8, validate_ratio=0.1, test_ratio=0.1, seed=42
@@ -41,9 +41,11 @@ class MathExpressionDatasetPublisherService(BaseMathExpressionDatasetPublisherSe
         dataset_metadata_file = DatasetMetadataFile(name='prompt.json', content=content)
 
         self.dataset_publisher_service.publish(
-            math_expression_dataset,
-            dataset_split_settings,
-            dataset_metadata_file,
+            dataset=math_expression_dataset,
+            samples=math_expression_samples,
+            sample_type=MathExpressionSample,
+            dataset_split_settings=dataset_split_settings,
+            dataset_metadata_file=dataset_metadata_file,
         )
 
         logger.info(

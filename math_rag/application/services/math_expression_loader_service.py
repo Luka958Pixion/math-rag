@@ -149,7 +149,7 @@ class MathExpressionLoaderService(BaseMathExpressionLoaderService):
             math_expressions.append(
                 MathExpression(
                     math_article_id=math_article.id,
-                    dataset_id=dataset_id,
+                    math_expression_dataset_id=dataset_id,
                     latex=str(node.latex_verbatim()),
                     katex=katex,
                     position=node.pos,

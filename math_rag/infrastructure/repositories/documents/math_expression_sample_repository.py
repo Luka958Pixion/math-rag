@@ -1,63 +1,57 @@
 from collections.abc import AsyncGenerator
+from datetime import datetime
+from uuid import UUID, uuid4
 
 from bson.binary import UuidRepresentation
 from bson.json_util import JSONOptions
-from pymongo import ASCENDING, AsyncMongoClient
-from pymongo.asynchronous.collection import AsyncCollection
-from pymongo.asynchronous.command_cursor import AsyncCommandCursor
-from pymongo.operations import IndexModel
+from pymongo import ASCENDING, AsyncMongoClient, InsertOne
 
 from math_rag.application.base.repositories.documents import BaseMathExpressionSampleRepository
 from math_rag.core.models import MathExpression, MathExpressionLabel, MathExpressionSample
-from math_rag.infrastructure.base import BaseDocumentView
-from math_rag.infrastructure.mappings.documents.views import MathExpressionSampleMapping
-from math_rag.infrastructure.models.documents import (
-    MathExpressionDocument,
-    MathExpressionLabelDocument,
-)
+from math_rag.infrastructure.mappings.documents import MathExpressionSampleMapping
+from math_rag.infrastructure.models.documents import MathExpressionSampleDocument
+
+from .projections.math_expression_sample_projection import MathExpressionSampleProjection
 
 
 class MathExpressionSampleRepository(BaseMathExpressionSampleRepository):
     def __init__(self, client: AsyncMongoClient, deployment: str):
+        super().__init__(client, deployment)
+
+        self.source_cls = MathExpressionSample
+        self.target_cls = MathExpressionSampleDocument
+        self.mapping_cls = MathExpressionSampleMapping
+
         self.client = client
         self.db = self.client[deployment]
+        self.collection_name = self.source_cls.__class__.__name__.lower()
+        self.collection = self.db[self.collection_name]
+        self.json_options = JSONOptions(uuid_representation=UuidRepresentation.STANDARD)
+
         self.math_expression_collection_name = MathExpression.__class__.__name__.lower()
         self.math_expression_collection = self.db[self.math_expression_collection_name]
         self.math_expression_label_collection_name = MathExpressionLabel.__class__.__name__.lower()
         self.math_expression_label_collection = self.db[self.math_expression_label_collection_name]
-        self.json_options = JSONOptions(uuid_representation=UuidRepresentation.STANDARD)
 
-    async def _create_index(
-        self,
-        collection: AsyncCollection,
-        *,
-        field: str,
-        type: type[BaseDocumentView],
-    ):
-        if field not in type.model_fields:
-            raise ValueError(f'Document view {type.__name__} does not have field {field}')
-
-        index_models = [IndexModel([(field, ASCENDING)], background=True)]
-        await collection.create_indexes(index_models)
-
-    async def _find_many_cursor(self) -> AsyncCommandCursor:
-        await self._create_index(
-            self.math_expression_collection,
-            field='id',
-            type=MathExpressionDocument,
-        )
-        await self._create_index(
-            self.math_expression_label_collection,
-            field='math_expression_id',
-            type=MathExpressionLabelDocument,
-        )
-
+    async def _aggregate(
+        self, math_expression_dataset_id: UUID
+    ) -> AsyncGenerator[MathExpressionSampleProjection, None]:
+        match_stage = {'$match': {'math_expression_dataset_id': math_expression_dataset_id}}
         lookup_stage = {
             '$lookup': {
                 'from': self.math_expression_label_collection_name,
-                'let': {'exprId': '$_id'},
+                'let': {'exprId': '$_id', 'datasetId': '$math_expression_dataset_id'},
                 'pipeline': [
-                    {'$match': {'$expr': {'$eq': ['$math_expression_id', '$$exprId']}}},
+                    {
+                        '$match': {
+                            '$expr': {
+                                '$and': [
+                                    {'$eq': ['$math_expression_id', '$$exprId']},
+                                    {'$eq': ['$math_expression_dataset_id', '$$datasetId']},
+                                ]
+                            }
+                        }
+                    },
                     {'$project': {'_id': 0, 'label': 1}},
                     {'$limit': 1},
                 ],
@@ -65,41 +59,55 @@ class MathExpressionSampleRepository(BaseMathExpressionSampleRepository):
             }
         }
         unwind_stage = {'$unwind': {'path': '$label_doc', 'preserveNullAndEmptyArrays': False}}
-        project_stage = {
-            '$project': {
-                '_id': 0,
-                'latex': 1,
-                'label': '$label_doc.label',
-            }
-        }
-        pipeline = [lookup_stage, unwind_stage, project_stage]
+        project_stage = {'$project': {'_id': 0, 'latex': 1, 'label': '$label_doc.label'}}
+        pipeline = [match_stage, lookup_stage, unwind_stage, project_stage]
 
-        return await self.math_expression_collection.aggregate(
+        cursor = await self.math_expression_collection.aggregate(
             pipeline,
             jsonOptions=self.json_options,
         )
 
-    async def find_many(self) -> list[MathExpressionSample]:
-        cursor = await self._find_many_cursor()
-        bson_docs = await cursor.to_list()
+        async for bson_doc in cursor:
+            yield MathExpressionSampleProjection.model_validate(bson_doc)
 
-        docs = [MathExpressionSampleDocumentView.model_validate(bson_doc) for bson_doc in bson_docs]
-        items = [MathExpressionSampleMapping.to_source(doc) for doc in docs]
+    async def aggregate_and_batch_insert_many(
+        self, math_expression_dataset_id: UUID, *, batch_size: int
+    ):
+        operations = []
 
-        return items
+        async for projection in self._aggregate(math_expression_dataset_id):
+            doc = MathExpressionSampleDocument(
+                id=uuid4(),
+                math_expression_dataset_id=math_expression_dataset_id,
+                timestamp=datetime.now(),
+                latex=projection.latex,
+                label=projection.label,
+            )
+            bson_doc = doc.model_dump()
+            operations.append(InsertOne(bson_doc))
+
+        for i in range(0, len(operations), batch_size):
+            batch = operations[i : i + batch_size]
+            await self.collection.bulk_write(batch)
 
     async def batch_find_many(
-        self, *, batch_size: int
+        self, math_expression_dataset_id: UUID, *, batch_size: int
     ) -> AsyncGenerator[list[MathExpressionSample], None]:
-        cursor = await self._find_many_cursor()
+        cursor = self.collection.find({'math_expression_dataset_id': math_expression_dataset_id})
+
+        if 'timestamp' in self.target_cls.model_fields:
+            cursor = cursor.sort('timestamp', ASCENDING)
+
+        cursor = cursor.batch_size(batch_size)
+        batch: list[MathExpressionSample] = []
 
         async for bson_doc in cursor:
-            doc = MathExpressionSampleDocumentView.model_validate(bson_doc)
-            item = MathExpressionSampleMapping.to_source(doc)
-            batch.append(item)
+            doc = self.target_cls.model_validate(bson_doc)
+            batch.append(self.mapping_cls.to_source(doc))
 
             if len(batch) >= batch_size:
                 yield batch
+
                 batch = []
 
         if batch:

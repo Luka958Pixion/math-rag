@@ -57,9 +57,10 @@ class MathExpressionDatasetBuilderService(BaseMathExpressionDatasetBuilderServic
         await self.math_expression_label_loader_service.load(dataset_id, foundation_dataset_id)
         logger.info(f'Dataset {dataset_id} build loaded math expression labels')
 
-    async def _publish_math_expression_dataset(self):
-        # TODO what are we actually publishing? which dataset?
-        await self.math_expression_dataset_publisher_service.publish()
+    async def _publish_math_expression_dataset(
+        self, math_expression_dataset: MathExpressionDataset
+    ):
+        await self.math_expression_dataset_publisher_service.publish(math_expression_dataset)
 
     async def build(self, dataset: MathExpressionDataset):
         logger.info(f'Dataset {dataset.id} build started')
@@ -81,17 +82,21 @@ class MathExpressionDatasetBuilderService(BaseMathExpressionDatasetBuilderServic
                     await self._load_math_articles(dataset.id, arxiv_category_type, limit)
                     await self._load_math_expressions(dataset.id, None)
                     await self._load_math_expression_labels(dataset.id, None)
+                    await self._publish_math_expression_dataset(dataset)
 
                 case MathExpressionDatasetBuildStage.LOAD_MATH_EXPRESSIONS:
                     await self._load_math_expressions(dataset.id, foundation_dataset.id)
                     await self._load_math_expression_labels(dataset.id, foundation_dataset.id)
+                    await self._publish_math_expression_dataset(dataset)
 
                 case MathExpressionDatasetBuildStage.LOAD_MATH_EXPRESSION_LABELS:
                     await self._load_math_expression_labels(dataset.id, foundation_dataset.id)
+                    await self._publish_math_expression_dataset(dataset)
 
         else:
             await self._load_math_articles(dataset.id, arxiv_category_type, limit)
             await self._load_math_expressions(dataset.id, None)
             await self._load_math_expression_labels(dataset.id, None)
+            await self._publish_math_expression_dataset(dataset)
 
         logger.info(f'Dataset {dataset.id} build finished')

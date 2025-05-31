@@ -7,7 +7,7 @@ from pydantic import BaseModel, Field
 class MathExpression(BaseModel):
     id: UUID = Field(default_factory=uuid4)
     math_article_id: UUID
-    dataset_id: UUID | None
+    math_expression_dataset_id: UUID | None
     index_id: UUID | None
     timestamp: datetime = Field(default_factory=datetime.now)
     latex: str

@@ -45,7 +45,9 @@ class MathArticleDatasetLoaderService(BaseMathArticleLoaderService):
             process_tasks = [self._process_result(result) for result in results]
             processed_files = await gather(*process_tasks)
             math_articles = [
-                MathArticle(dataset_id=dataset_id, index_id=None, name=name, bytes=bytes)
+                MathArticle(
+                    math_expression_dataset_id=dataset_id, index_id=None, name=name, bytes=bytes
+                )
                 for file in processed_files
                 if file
                 for name, bytes in file.items()

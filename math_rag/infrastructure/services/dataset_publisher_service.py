@@ -1,5 +1,6 @@
 from logging import getLogger
 
+from datasets import Dataset, DatasetInfo
 from huggingface_hub import HfApi
 from huggingface_hub.errors import RepositoryNotFoundError
 
@@ -8,9 +9,8 @@ from math_rag.application.models.datasets import (
     DatasetMetadataFile,
     DatasetSplitSettings,
 )
-from math_rag.core.base import BaseDataset
-from math_rag.infrastructure.mappings.datasets import DatasetMapping
-from math_rag.infrastructure.utils import DatasetSplitterUtil
+from math_rag.core.types import DatasetType, SampleType
+from math_rag.infrastructure.utils import DatasetFeatureExtractorUtil, DatasetSplitterUtil
 
 
 logger = getLogger(__name__)
@@ -30,7 +30,9 @@ class DatasetPublisherService(BaseDatasetPublisherService):
 
     def publish(
         self,
-        dataset: BaseDataset,
+        dataset: DatasetType,
+        samples: list[SampleType],
+        sample_type: type[SampleType],
         dataset_split_settings: DatasetSplitSettings,
         dataset_metadata_file: DatasetMetadataFile | None = None,
     ):
@@ -57,7 +59,22 @@ class DatasetPublisherService(BaseDatasetPublisherService):
         )
 
         # map dataset to huggingface
-        hf_dataset = DatasetMapping.to_target(dataset)
+        features = DatasetFeatureExtractorUtil.extract(sample_type)
+        info = DatasetInfo(license='mit', features=features)
+        exclude_fields = {'id', 'math_expression_dataset_id'}
+
+        for field in exclude_fields:
+            if field not in sample_type.model_fields:
+                raise ValueError(
+                    f'Field {field} does not exist in {sample_type.__class__.__name__}'
+                )
+
+        hf_dataset = Dataset.from_list(
+            mapping=[sample.model_dump(mode='json', exclude=exclude_fields) for sample in samples],
+            features=features,
+            info=info,
+            split=None,
+        )
 
         # split
         dataset_dict = DatasetSplitterUtil.split(hf_dataset, dataset_split_settings)

@@ -3,5 +3,5 @@ from abc import ABC
 from pydantic import BaseModel
 
 
-class BaseDocumentView(ABC, BaseModel):
+class BaseSample(BaseModel, ABC):
     pass
