@@ -1,4 +1,3 @@
-from .dataset_mapping import DatasetMapping
 from .em_error_mapping import EMErrorMapping
 from .em_failed_request_mapping import EMFailedRequestMapping
 from .em_params_mapping import EMParamsMapping
@@ -14,13 +13,14 @@ from .llm_failed_request_mapping import LLMFailedRequestMapping
 from .llm_message_mapping import LLMMessageMapping
 from .llm_params_mapping import LLMParamsMapping
 from .llm_request_mapping import LLMRequestMapping
+from .math_expression_dataset_mapping import MathExpressionDatasetMapping
 from .math_expression_label_mapping import MathExpressionLabelMapping
 from .math_expression_mapping import MathExpressionMapping
 from .math_problem_mapping import MathProblemMapping
 
 
 __all__ = [
-    'DatasetMapping',
+    'MathExpressionDatasetMapping',
     'EMErrorMapping',
     'EMFailedRequestMapping',
     'EMParamsMapping',

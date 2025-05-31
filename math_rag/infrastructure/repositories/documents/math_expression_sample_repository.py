@@ -7,19 +7,13 @@ from pymongo.asynchronous.collection import AsyncCollection
 from pymongo.asynchronous.command_cursor import AsyncCommandCursor
 from pymongo.operations import IndexModel
 
-from math_rag.application.base.repositories.documents.views import (
-    BaseMathExpressionSampleRepository,
-)
-from math_rag.application.models.datasets import MathExpressionSample
-from math_rag.core.models import MathExpression, MathExpressionLabel
+from math_rag.application.base.repositories.documents import BaseMathExpressionSampleRepository
+from math_rag.core.models import MathExpression, MathExpressionLabel, MathExpressionSample
 from math_rag.infrastructure.base import BaseDocumentView
 from math_rag.infrastructure.mappings.documents.views import MathExpressionSampleMapping
 from math_rag.infrastructure.models.documents import (
     MathExpressionDocument,
     MathExpressionLabelDocument,
-)
-from math_rag.infrastructure.models.documents.views import (
-    MathExpressionSampleDocumentView,
 )
 
 

@@ -1,6 +1,6 @@
 from importlib import import_module
 from types import UnionType
-from typing import Annotated, Any, Generic, TypeVar, Union, get_args, get_origin
+from typing import Generic, TypeVar, Union, get_args, get_origin
 
 
 T = TypeVar('T')

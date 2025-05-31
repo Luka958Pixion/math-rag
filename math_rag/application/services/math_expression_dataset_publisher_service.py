@@ -1,9 +1,6 @@
 from logging import getLogger
 
 from math_rag.application.assistants.prompts import MATH_EXPRESSION_LABELER_PROMPT
-from math_rag.application.base.repositories.documents.views import (
-    BaseMathExpressionSampleRepository,
-)
 from math_rag.application.base.services import (
     BaseDatasetPublisherService,
     BaseMathExpressionDatasetPublisherService,
@@ -33,6 +30,7 @@ class MathExpressionDatasetPublisherService(BaseMathExpressionDatasetPublisherSe
             )
             for math_expression_sample in batch
         ]
+        math_expression_dataset.samples.extend(math_expression_samples)
 
         dataset_split_settings = DatasetSplitSettings(
             train_ratio=0.8, validate_ratio=0.1, test_ratio=0.1, seed=42
@@ -44,7 +42,6 @@ class MathExpressionDatasetPublisherService(BaseMathExpressionDatasetPublisherSe
 
         self.dataset_publisher_service.publish(
             math_expression_dataset,
-            MathExpressionSample,
             dataset_split_settings,
             dataset_metadata_file,
         )

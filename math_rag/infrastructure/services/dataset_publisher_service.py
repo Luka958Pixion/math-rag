@@ -8,7 +8,7 @@ from math_rag.application.models.datasets import (
     DatasetMetadataFile,
     DatasetSplitSettings,
 )
-from math_rag.core.base import BaseDataset, BaseSample
+from math_rag.core.base import BaseDataset
 from math_rag.infrastructure.mappings.datasets import DatasetMapping
 from math_rag.infrastructure.utils import DatasetSplitterUtil
 
@@ -31,7 +31,6 @@ class DatasetPublisherService(BaseDatasetPublisherService):
     def publish(
         self,
         dataset: BaseDataset,
-        sample_type: type[BaseSample],
         dataset_split_settings: DatasetSplitSettings,
         dataset_metadata_file: DatasetMetadataFile | None = None,
     ):
@@ -58,7 +57,7 @@ class DatasetPublisherService(BaseDatasetPublisherService):
         )
 
         # map dataset to huggingface
-        hf_dataset = DatasetMapping.to_target(dataset, sample_type=sample_type)
+        hf_dataset = DatasetMapping.to_target(dataset)
 
         # split
         dataset_dict = DatasetSplitterUtil.split(hf_dataset, dataset_split_settings)

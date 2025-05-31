@@ -1,10 +1,10 @@
 from abc import ABC, abstractmethod
 
-from math_rag.application.base.datasets import BaseDataset, BaseSample
 from math_rag.application.models.datasets import (
     DatasetMetadataFile,
     DatasetSplitSettings,
 )
+from math_rag.core.base import BaseDataset
 
 
 class BaseDatasetPublisherService(ABC):
@@ -12,7 +12,6 @@ class BaseDatasetPublisherService(ABC):
     def publish(
         self,
         dataset: BaseDataset,
-        sample_type: type[BaseSample],
         dataset_split_settings: DatasetSplitSettings,
         dataset_metadata_file: DatasetMetadataFile | None,
     ):

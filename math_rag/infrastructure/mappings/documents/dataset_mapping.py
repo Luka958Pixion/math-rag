@@ -1,12 +1,14 @@
 from math_rag.core.enums import DatasetBuildStatus, MathExpressionDatasetBuildStage
 from math_rag.core.models import MathExpressionDataset
 from math_rag.infrastructure.base import BaseMapping
-from math_rag.infrastructure.models.documents import DatasetDocument
+from math_rag.infrastructure.models.documents import MathExpressionDatasetDocument
 
 
-class DatasetMapping(BaseMapping[MathExpressionDataset, DatasetDocument]):
+class MathExpressionDatasetMapping(
+    BaseMapping[MathExpressionDataset, MathExpressionDatasetDocument]
+):
     @staticmethod
-    def to_source(target: DatasetDocument) -> MathExpressionDataset:
+    def to_source(target: MathExpressionDatasetDocument) -> MathExpressionDataset:
         return MathExpressionDataset(
             id=target.id,
             timestamp=target.timestamp,
@@ -19,8 +21,8 @@ class DatasetMapping(BaseMapping[MathExpressionDataset, DatasetDocument]):
         )
 
     @staticmethod
-    def to_target(source: MathExpressionDataset) -> DatasetDocument:
-        return DatasetDocument(
+    def to_target(source: MathExpressionDataset) -> MathExpressionDatasetDocument:
+        return MathExpressionDatasetDocument(
             id=source.id,
             timestamp=source.timestamp,
             build_stage=source.build_stage.value,

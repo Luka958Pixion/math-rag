@@ -1,9 +1,10 @@
+from abc import ABC
 from typing import Any, Self, override
 
 from pydantic import BaseModel
 
 
-class BaseDocument(BaseModel):
+class BaseDocument(ABC, BaseModel):
     @override
     def model_dump(self, **kwargs) -> dict[str, Any]:
         model_dict = super().model_dump(**kwargs)

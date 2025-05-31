@@ -1,3 +1,4 @@
+from abc import ABC
 from io import BytesIO
 from typing import Any
 
@@ -8,7 +9,7 @@ from minio.sse import Sse
 from pydantic import BaseModel
 
 
-class BaseObject(BaseModel):
+class BaseObject(ABC, BaseModel):
     object_name: str
     data: BytesIO
     length: int

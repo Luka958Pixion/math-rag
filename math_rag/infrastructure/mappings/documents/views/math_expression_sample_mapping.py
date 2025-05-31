@@ -1,4 +1,4 @@
-from math_rag.application.models.datasets import MathExpressionSample
+from math_rag.core.models import MathExpressionSample
 from math_rag.infrastructure.base import BaseMapping
 from math_rag.infrastructure.models.documents.views import (
     MathExpressionSampleDocumentView,
