@@ -69,10 +69,9 @@ class MathExpressionDatasetBuilderService(BaseMathExpressionDatasetBuilderServic
         await self.math_expression_sample_loader_service.load(dataset_id, foundation_dataset_id)
         logger.info(f'Dataset {dataset_id} build loaded math expression samples')
 
-    async def _publish_math_expression_dataset(
-        self, math_expression_dataset: MathExpressionDataset
-    ):
-        await self.math_expression_dataset_publisher_service.publish(math_expression_dataset)
+    async def _publish_math_expression_dataset(self, dataset: MathExpressionDataset):
+        await self.math_expression_dataset_publisher_service.publish(dataset)
+        logger.info(f'Dataset {dataset.id} published')
 
     async def build(self, dataset: MathExpressionDataset):
         logger.info(f'Dataset {dataset.id} build started')

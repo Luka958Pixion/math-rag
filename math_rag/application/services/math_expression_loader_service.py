@@ -104,7 +104,9 @@ class MathExpressionLoaderService(BaseMathExpressionLoaderService):
                 invalid_input_id_to_node[input.id] = node
 
             # call assistant (may return fewer outputs)
-            outputs = await self.katex_corrector_assistant.batch_assist(inputs, use_scheduler=True)
+            # outputs = await self.katex_corrector_assistant.batch_assist(inputs, use_scheduler=True)
+            # TODO bring back
+            outputs = await self.katex_corrector_assistant.concurrent_assist(inputs)
 
             # map returned outputs back to nodes
             input_id_to_output: dict[UUID, KatexCorrectorAssistantOutput] = {

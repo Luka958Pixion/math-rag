@@ -40,6 +40,7 @@ from math_rag.application.services import (
     MathExpressionDatasetPublisherService,
     MathExpressionLabelLoaderService,
     MathExpressionLoaderService,
+    MathExpressionSampleLoaderService,
 )
 from math_rag.application.services.background import (
     IndexBuildTrackerBackgroundService,
@@ -108,13 +109,17 @@ class ApplicationContainer(DeclarativeContainer):
         math_expression_sample_repository=math_expression_sample_repository,
         dataset_publisher_service=dataset_publisher_service,
     )
+    math_expression_sample_loader_service = Factory(
+        MathExpressionSampleLoaderService,
+        math_expression_sample_repository=math_expression_sample_repository,
+    )
 
     math_expression_dataset_builder_service = Factory(
         MathExpressionDatasetBuilderService,
         math_article_loader_service=math_article_loader_service,
         math_expression_loader_service=math_expression_loader_service,
         math_expression_label_loader_service=math_expression_label_loader_service,
-        math_expression_sample_repository=math_expression_sample_repository,
+        math_expression_sample_loader_service=math_expression_sample_loader_service,
         math_expression_dataset_publisher_service=math_expression_dataset_publisher_service,
         math_expression_dataset_repository=math_expression_dataset_repository,
     )

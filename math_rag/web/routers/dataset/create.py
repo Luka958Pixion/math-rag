@@ -17,21 +17,21 @@ logger = getLogger(__name__)
 router = APIRouter()
 
 
-@router.post('/index/create', response_model=DatasetCreateResponse)
+@router.post('/dataset/create', response_model=DatasetCreateResponse)
 @inject
-async def create_index(
+async def create_dataset(
     dataset_create_request: DatasetCreateRequest = Body(
-        ..., description='Parameters for the new index'
+        ..., description='Parameters for the new dataset'
     ),
     math_expression_dataset_repository: BaseMathExpressionDatasetRepository = Depends(
-        Provide[ApplicationContainer.index_repository]
+        Provide[ApplicationContainer.math_expression_dataset_repository]
     ),
     dataset_build_context: DatasetBuildContext = Depends(
-        Provide[ApplicationContainer.index_build_context]
+        Provide[ApplicationContainer.dataset_build_context]
     ),
 ):
     dataset = MathExpressionDataset(
-        build_from_dataset_id=dataset_create_request.build_from_index_id,
+        build_from_dataset_id=dataset_create_request.build_from_dataset_id,
         build_from_stage=dataset_create_request.build_from_stage,
     )
     await math_expression_dataset_repository.insert_one(dataset)
@@ -45,6 +45,6 @@ async def create_index(
         timestamp=dataset.timestamp,
         build_stage=dataset.build_stage,
         build_status=dataset.build_status,
-        build_from_index_id=dataset.build_from_dataset_id,
+        build_from_dataset_id=dataset.build_from_dataset_id,
         build_from_stage=dataset.build_from_stage,
     )
