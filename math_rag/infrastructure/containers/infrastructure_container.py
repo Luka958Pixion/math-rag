@@ -325,7 +325,7 @@ class InfrastructureContainer(DeclarativeContainer):
         latex_visitor_service=latex_visitor_service,
         dataset_publisher_service=dataset_publisher_service,
         index_repository=index_repository,
-        dataset_repository=math_expression_dataset_repository,
+        math_expression_dataset_repository=math_expression_dataset_repository,
         math_expression_sample_repository=math_expression_sample_repository,
         math_article_repository=math_article_repository,
         math_expression_repository=math_expression_repository,

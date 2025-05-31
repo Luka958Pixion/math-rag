@@ -1,7 +1,7 @@
 from abc import ABC, abstractmethod
 
 
-class BaseDatasetBuildTrackerBackgroundService(ABC):
+class BaseMathExpressionDatasetBuildTrackerBackgroundService(ABC):
     @abstractmethod
     async def track(self):
         pass

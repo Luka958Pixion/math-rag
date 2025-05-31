@@ -14,4 +14,4 @@ FIELDS = [
 
 class MathExpressionIndexer(DocumentIndexer[MathExpressionDocument]):
     def __init__(self, client: AsyncMongoClient, deployment: str):
-        super().__init__(client, deployment)
+        super().__init__(client, deployment, FIELDS)

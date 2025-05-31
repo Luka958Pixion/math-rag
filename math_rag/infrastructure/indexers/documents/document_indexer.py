@@ -24,7 +24,8 @@ class DocumentIndexer(BaseDocumentIndexer, Generic[TargetType]):
             indexes = await self.collection.index_information()
 
             for name, _ in indexes.items():
-                await self.collection.drop_index(name)
+                if name != '_id_':
+                    await self.collection.drop_index(name)
 
         index_models = []
 

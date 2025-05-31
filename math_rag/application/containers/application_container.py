@@ -109,7 +109,7 @@ class ApplicationContainer(DeclarativeContainer):
         dataset_publisher_service=dataset_publisher_service,
     )
 
-    dataset_builder_service = Factory(
+    math_expression_dataset_builder_service = Factory(
         MathExpressionDatasetBuilderService,
         math_article_loader_service=math_article_loader_service,
         math_expression_loader_service=math_expression_loader_service,
@@ -121,8 +121,8 @@ class ApplicationContainer(DeclarativeContainer):
     dataset_build_context = Singleton(DatasetBuildContext)
     dataset_build_tracker_background_service = Singleton(
         MathExpressionDatasetBuildTrackerBackgroundService,
-        dataset_repository=math_expression_dataset_repository,
-        dataset_builder_service=dataset_builder_service,
+        math_expression_dataset_repository=math_expression_dataset_repository,
+        math_expression_dataset_builder_service=math_expression_dataset_builder_service,
         dataset_build_context=dataset_build_context,
     )
 

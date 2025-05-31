@@ -4,7 +4,9 @@ from logging import getLogger
 
 from math_rag.application.base.repositories.documents import BaseMathExpressionDatasetRepository
 from math_rag.application.base.services import BaseMathExpressionDatasetBuilderService
-from math_rag.application.base.services.background import BaseDatasetBuildTrackerBackgroundService
+from math_rag.application.base.services.background import (
+    BaseMathExpressionDatasetBuildTrackerBackgroundService,
+)
 from math_rag.application.contexts import DatasetBuildContext
 from math_rag.core.enums import MathExpressionDatasetBuildStatus
 
@@ -14,7 +16,9 @@ BUILD_DATASET_TIMEOUT = 60 * 60 * 24 * 7  # 1 week
 logger = getLogger(__name__)
 
 
-class MathExpressionDatasetBuildTrackerBackgroundService(BaseDatasetBuildTrackerBackgroundService):
+class MathExpressionDatasetBuildTrackerBackgroundService(
+    BaseMathExpressionDatasetBuildTrackerBackgroundService
+):
     def __init__(
         self,
         math_expression_dataset_repository: BaseMathExpressionDatasetRepository,
