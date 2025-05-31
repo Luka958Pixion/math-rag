@@ -40,13 +40,15 @@ async def main():
     application_container.wire(packages=[routers, tools, resources])
 
     # seed
-    math_article_seeder = infrastructure_container.math_article_seeder()
-    math_expression_seeder = infrastructure_container.math_expression_seeder()
-    math_expression_label_seeder = infrastructure_container.math_expression_label_seeder()
+    for object_seeder in infrastructure_container.object_seeders():
+        object_seeder.seed()
 
-    math_article_seeder.seed()
-    await math_expression_seeder.seed()
-    await math_expression_label_seeder.seed()
+    for document_seeder in infrastructure_container.document_seeders():
+        await document_seeder.seed()
+
+    # index
+    for document_indexer in infrastructure_container.document_indexers():
+        await document_indexer.index()
 
     # serve
     api = create_api(application_container)

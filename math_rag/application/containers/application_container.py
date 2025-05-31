@@ -114,6 +114,7 @@ class ApplicationContainer(DeclarativeContainer):
         math_article_loader_service=math_article_loader_service,
         math_expression_loader_service=math_expression_loader_service,
         math_expression_label_loader_service=math_expression_label_loader_service,
+        math_expression_sample_repository=math_expression_sample_repository,
         math_expression_dataset_publisher_service=math_expression_dataset_publisher_service,
         math_expression_dataset_repository=math_expression_dataset_repository,
     )

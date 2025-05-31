@@ -7,6 +7,8 @@ from dependency_injector.providers import (
     Configuration,
     Container,
     Factory,
+    List,
+    Provider,
     Singleton,
 )
 from minio import Minio
@@ -14,6 +16,9 @@ from mpxpy.mathpix_client import MathpixClient as _MathpixClient
 from openai import AsyncOpenAI
 from pymongo import AsyncMongoClient
 
+from math_rag.application.base.indexers.documents import BaseDocumentIndexer
+from math_rag.application.base.seeders.documents import BaseDocumentSeeder
+from math_rag.application.base.seeders.objects import BaseObjectSeeder
 from math_rag.application.containers import ApplicationContainer
 from math_rag.infrastructure.clients import (
     ApptainerClient,
@@ -25,6 +30,13 @@ from math_rag.infrastructure.clients import (
     PBSProClient,
     SFTPClient,
     SSHClient,
+)
+from math_rag.infrastructure.indexers.documents import (
+    IndexIndexer,
+    MathExpressionDatasetIndexer,
+    MathExpressionIndexer,
+    MathExpressionLabelIndexer,
+    MathExpressionSampleIndexer,
 )
 from math_rag.infrastructure.inference.huggingface import TEIBatchEM, TGIBatchLLM
 from math_rag.infrastructure.inference.openai import (
@@ -50,7 +62,9 @@ from math_rag.infrastructure.seeders.documents import (
     EMFailedRequestSeeder,
     IndexSeeder,
     LLMFailedRequestSeeder,
+    MathExpressionDatasetSeeder,
     MathExpressionLabelSeeder,
+    MathExpressionSampleSeeder,
     MathExpressionSeeder,
 )
 from math_rag.infrastructure.seeders.objects import MathArticleSeeder
@@ -81,6 +95,9 @@ class InfrastructureContainer(DeclarativeContainer):
     )
 
     math_article_seeder = Factory(MathArticleSeeder, client=minio_client)
+
+    object_seeders: Provider[list[BaseObjectSeeder]] = List(math_article_seeder)
+
     math_article_repository = Factory(
         MathArticleRepository,
         client=minio_client,
@@ -101,19 +118,45 @@ class InfrastructureContainer(DeclarativeContainer):
         'deployment': config.mongo.deployment,
     }
 
-    math_expression_seeder = Factory(MathExpressionSeeder, **mongo_kwargs)
-    math_expression_repository = Factory(MathExpressionRepository, **mongo_kwargs)
     em_failed_request_repository = Factory(EMFailedRequestRepository, **mongo_kwargs)
-    llm_failed_request_repository = Factory(LLMFailedRequestRepository, **mongo_kwargs)
     index_repository = Factory(IndexRepository, **mongo_kwargs)
+    llm_failed_request_repository = Factory(LLMFailedRequestRepository, **mongo_kwargs)
     math_expression_dataset_repository = Factory(MathExpressionDatasetRepository, **mongo_kwargs)
+    math_expression_repository = Factory(MathExpressionRepository, **mongo_kwargs)
+    math_expression_label_repository = Factory(MathExpressionLabelRepository, **mongo_kwargs)
     math_expression_sample_repository = Factory(MathExpressionSampleRepository, **mongo_kwargs)
 
-    math_expression_label_seeder = Factory(MathExpressionLabelSeeder, **mongo_kwargs)
-    math_expression_label_repository = Factory(MathExpressionLabelRepository, **mongo_kwargs)
     em_failed_request_seeder = Factory(EMFailedRequestSeeder, **mongo_kwargs)
-    llm_failed_request_seeder = Factory(LLMFailedRequestSeeder, **mongo_kwargs)
     index_seeder = Factory(IndexSeeder, **mongo_kwargs)
+    llm_failed_request_seeder = Factory(LLMFailedRequestSeeder, **mongo_kwargs)
+    math_expression_dataset_seeder = Factory(MathExpressionDatasetSeeder, **mongo_kwargs)
+    math_expression_label_seeder = Factory(MathExpressionLabelSeeder, **mongo_kwargs)
+    math_expression_seeder = Factory(MathExpressionSeeder, **mongo_kwargs)
+    math_expression_sample_seeder = Factory(MathExpressionSampleSeeder, **mongo_kwargs)
+
+    document_seeders: Provider[list[BaseDocumentSeeder]] = List(
+        em_failed_request_seeder,
+        index_seeder,
+        llm_failed_request_seeder,
+        math_expression_dataset_seeder,
+        math_expression_label_seeder,
+        math_expression_seeder,
+        math_expression_sample_seeder,
+    )
+
+    index_indexer = Factory(IndexIndexer, **mongo_kwargs)
+    math_expression_dataset_indexer = Factory(MathExpressionDatasetIndexer, **mongo_kwargs)
+    math_expression_label_indexer = Factory(MathExpressionLabelIndexer, **mongo_kwargs)
+    math_expression_indexer = Factory(MathExpressionIndexer, **mongo_kwargs)
+    math_expression_sample_indexer = Factory(MathExpressionSampleIndexer, **mongo_kwargs)
+
+    document_indexers: Provider[list[BaseDocumentIndexer]] = List(
+        index_indexer,
+        math_expression_dataset_indexer,
+        math_expression_label_indexer,
+        math_expression_indexer,
+        math_expression_sample_indexer,
+    )
 
     # Neo4j
 

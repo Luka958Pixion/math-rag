@@ -8,6 +8,7 @@ from math_rag.application.base.services import (
     BaseMathExpressionDatasetPublisherService,
     BaseMathExpressionLabelLoaderService,
     BaseMathExpressionLoaderService,
+    BaseMathExpressionSampleLoaderService,
 )
 from math_rag.application.enums.arxiv import BaseArxivCategory, MathCategory
 from math_rag.core.enums import MathExpressionDatasetBuildStage
@@ -23,12 +24,14 @@ class MathExpressionDatasetBuilderService(BaseMathExpressionDatasetBuilderServic
         math_article_loader_service: BaseMathArticleLoaderService,
         math_expression_loader_service: BaseMathExpressionLoaderService,
         math_expression_label_loader_service: BaseMathExpressionLabelLoaderService,
+        math_expression_sample_loader_service: BaseMathExpressionSampleLoaderService,
         math_expression_dataset_publisher_service: BaseMathExpressionDatasetPublisherService,
         math_expression_dataset_repository: BaseMathExpressionDatasetRepository,
     ):
         self.math_article_loader_service = math_article_loader_service
         self.math_expression_loader_service = math_expression_loader_service
         self.math_expression_label_loader_service = math_expression_label_loader_service
+        self.math_expression_sample_loader_service = math_expression_sample_loader_service
         self.math_expression_dataset_publisher_service = math_expression_dataset_publisher_service
         self.math_expression_dataset_repository = math_expression_dataset_repository
 
@@ -57,6 +60,15 @@ class MathExpressionDatasetBuilderService(BaseMathExpressionDatasetBuilderServic
         await self.math_expression_label_loader_service.load(dataset_id, foundation_dataset_id)
         logger.info(f'Dataset {dataset_id} build loaded math expression labels')
 
+    async def _load_math_expression_samples(
+        self, dataset_id: UUID, foundation_dataset_id: UUID | None
+    ):
+        await self.math_expression_dataset_repository.update_build_stage(
+            dataset_id, MathExpressionDatasetBuildStage.LOAD_MATH_EXPRESSION_SAMPLES
+        )
+        await self.math_expression_sample_loader_service.load(dataset_id, foundation_dataset_id)
+        logger.info(f'Dataset {dataset_id} build loaded math expression samples')
+
     async def _publish_math_expression_dataset(
         self, math_expression_dataset: MathExpressionDataset
     ):
@@ -82,21 +94,25 @@ class MathExpressionDatasetBuilderService(BaseMathExpressionDatasetBuilderServic
                     await self._load_math_articles(dataset.id, arxiv_category_type, limit)
                     await self._load_math_expressions(dataset.id, None)
                     await self._load_math_expression_labels(dataset.id, None)
+                    await self._load_math_expression_samples(dataset.id, None)
                     await self._publish_math_expression_dataset(dataset)
 
                 case MathExpressionDatasetBuildStage.LOAD_MATH_EXPRESSIONS:
                     await self._load_math_expressions(dataset.id, foundation_dataset.id)
                     await self._load_math_expression_labels(dataset.id, foundation_dataset.id)
+                    await self._load_math_expression_samples(dataset.id, foundation_dataset.id)
                     await self._publish_math_expression_dataset(dataset)
 
                 case MathExpressionDatasetBuildStage.LOAD_MATH_EXPRESSION_LABELS:
                     await self._load_math_expression_labels(dataset.id, foundation_dataset.id)
+                    await self._load_math_expression_samples(dataset.id, foundation_dataset.id)
                     await self._publish_math_expression_dataset(dataset)
 
         else:
             await self._load_math_articles(dataset.id, arxiv_category_type, limit)
             await self._load_math_expressions(dataset.id, None)
             await self._load_math_expression_labels(dataset.id, None)
+            await self._load_math_expression_samples(dataset.id, None)
             await self._publish_math_expression_dataset(dataset)
 
         logger.info(f'Dataset {dataset.id} build finished')
