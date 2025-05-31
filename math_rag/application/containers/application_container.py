@@ -42,8 +42,8 @@ from math_rag.application.services import (
     MathExpressionLoaderService,
 )
 from math_rag.application.services.background import (
-    DatasetBuildTrackerBackgroundService,
     IndexBuildTrackerBackgroundService,
+    MathExpressionDatasetBuildTrackerBackgroundService,
 )
 
 
@@ -120,7 +120,7 @@ class ApplicationContainer(DeclarativeContainer):
     )
     dataset_build_context = Singleton(DatasetBuildContext)
     dataset_build_tracker_background_service = Singleton(
-        DatasetBuildTrackerBackgroundService,
+        MathExpressionDatasetBuildTrackerBackgroundService,
         dataset_repository=math_expression_dataset_repository,
         dataset_builder_service=dataset_builder_service,
         dataset_build_context=dataset_build_context,

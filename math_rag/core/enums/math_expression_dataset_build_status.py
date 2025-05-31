@@ -1,7 +1,7 @@
 from enum import Enum
 
 
-class DatasetBuildStatus(str, Enum):
+class MathExpressionDatasetBuildStatus(str, Enum):
     PENDING = 'pending'
     RUNNING = 'running'
     FINISHED = 'finished'

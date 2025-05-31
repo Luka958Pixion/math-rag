@@ -1,7 +1,7 @@
 from abc import abstractmethod
 from uuid import UUID
 
-from math_rag.core.enums import DatasetBuildStatus, MathExpressionDatasetBuildStage
+from math_rag.core.enums import MathExpressionDatasetBuildStage, MathExpressionDatasetBuildStatus
 from math_rag.core.models import MathExpressionDataset
 
 from .base_document_repository import BaseDocumentRepository
@@ -18,7 +18,7 @@ class BaseMathExpressionDatasetRepository(
 
     @abstractmethod
     async def update_build_status(
-        self, id: UUID, build_status: DatasetBuildStatus
+        self, id: UUID, build_status: MathExpressionDatasetBuildStatus
     ) -> MathExpressionDataset:
         pass
 

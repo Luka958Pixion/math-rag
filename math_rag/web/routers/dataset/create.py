@@ -3,7 +3,7 @@ from logging import getLogger
 from dependency_injector.wiring import Provide, inject
 from fastapi import APIRouter, Body, Depends
 
-from math_rag.application.base.repositories.documents import BaseDatasetRepository
+from math_rag.application.base.repositories.documents import BaseMathExpressionDatasetRepository
 from math_rag.application.containers import ApplicationContainer
 from math_rag.application.contexts import DatasetBuildContext
 from math_rag.core.models import MathExpressionDataset
@@ -23,7 +23,7 @@ async def create_index(
     dataset_create_request: DatasetCreateRequest = Body(
         ..., description='Parameters for the new index'
     ),
-    dataset_repository: BaseDatasetRepository = Depends(
+    math_expression_dataset_repository: BaseMathExpressionDatasetRepository = Depends(
         Provide[ApplicationContainer.index_repository]
     ),
     dataset_build_context: DatasetBuildContext = Depends(
@@ -34,7 +34,7 @@ async def create_index(
         build_from_dataset_id=dataset_create_request.build_from_index_id,
         build_from_stage=dataset_create_request.build_from_stage,
     )
-    await dataset_repository.insert_one(dataset)
+    await math_expression_dataset_repository.insert_one(dataset)
 
     # notify immediately
     async with dataset_build_context.condition:

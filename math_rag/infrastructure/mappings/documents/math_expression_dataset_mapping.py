@@ -1,4 +1,4 @@
-from math_rag.core.enums import DatasetBuildStatus, MathExpressionDatasetBuildStage
+from math_rag.core.enums import MathExpressionDatasetBuildStage, MathExpressionDatasetBuildStatus
 from math_rag.core.models import MathExpressionDataset
 from math_rag.infrastructure.base import BaseMapping
 from math_rag.infrastructure.models.documents import MathExpressionDatasetDocument
@@ -13,7 +13,7 @@ class MathExpressionDatasetMapping(
             id=target.id,
             timestamp=target.timestamp,
             build_stage=MathExpressionDatasetBuildStage(target.build_stage),
-            build_status=DatasetBuildStatus(target.build_status),
+            build_status=MathExpressionDatasetBuildStatus(target.build_status),
             build_from_dataset_id=target.build_from_dataset_id,
             build_from_stage=MathExpressionDatasetBuildStage(target.build_from_stage)
             if target.build_from_stage
