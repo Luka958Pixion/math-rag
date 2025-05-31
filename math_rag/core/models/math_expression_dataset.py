@@ -1,17 +1,12 @@
-from datetime import datetime
-from uuid import UUID, uuid4
+from pydantic import Field
 
-from pydantic import BaseModel, Field
+from math_rag.core.enums import MathExpressionDatasetBuildStage
 
-from math_rag.core.enums import DatasetBuildStatus, MathExpressionDatasetBuildStage
-
-from .math_expression_sample import MathExpressionSample
+from .dataset import Dataset
 
 
-class MathExpressionDataset(BaseModel):
-    id: UUID = Field(default_factory=uuid4)
-    timestamp: datetime = Field(default_factory=datetime.now)
-    build_stage: MathExpressionDatasetBuildStage
-    build_status: DatasetBuildStatus
-    build_from_dataset_id: UUID | None = None
+class MathExpressionDataset(Dataset):
+    build_stage: MathExpressionDatasetBuildStage = Field(
+        default=MathExpressionDatasetBuildStage.LOAD_MATH_ARTICLES
+    )
     build_from_stage: MathExpressionDatasetBuildStage | None = None
