@@ -23,11 +23,10 @@ class MathExpressionDatasetPublisherService(BaseMathExpressionDatasetPublisherSe
         self.dataset_publisher_service = dataset_publisher_service
 
     async def publish(self, math_expression_dataset: MathExpressionDataset):
-        # TODO use math_expression_dataset_id to find
         math_expression_samples = [
             math_expression_sample
             async for batch in self.math_expression_sample_repository.batch_find_many(
-                batch_size=1000
+                math_expression_dataset.id, batch_size=1000
             )
             for math_expression_sample in batch
         ]

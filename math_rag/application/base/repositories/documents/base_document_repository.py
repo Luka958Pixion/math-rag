@@ -20,18 +20,22 @@ class BaseDocumentRepository(ABC, Generic[T]):
         pass
 
     @abstractmethod
-    async def find_one(self, *, filter: dict[str, Any] | None = None) -> T | None:
+    async def find_one(self, *, filter: dict[str, Any] | None) -> T | None:
         pass
 
     @abstractmethod
-    async def find_many(self, *, filter: dict[str, Any] | None = None) -> list[T]:
+    async def find_many(self, *, filter: dict[str, Any] | None) -> list[T]:
         pass
 
     @abstractmethod
     async def batch_find_many(
-        self, *, batch_size: int, filter: dict[str, Any] | None = None
+        self, *, batch_size: int, filter: dict[str, Any] | None
     ) -> AsyncGenerator[list[T], None]:
         yield
+
+    @abstractmethod
+    async def count(self, *, filter: dict[str, Any] | None) -> int:
+        pass
 
     @abstractmethod
     async def clear(self):

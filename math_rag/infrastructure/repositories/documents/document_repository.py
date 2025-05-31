@@ -126,6 +126,15 @@ class DocumentRepository(
     async def clear(self):
         await self.collection.delete_many({})
 
+    async def count(self, filter: dict[str, Any] | None = None) -> int:
+        if not filter:
+            filter = {}
+
+        elif 'id' in filter:
+            filter['_id'] = filter.pop('id')
+
+        return await self.collection.count_documents(filter)
+
     async def backup(self):
         timestamp = datetime.now().strftime('%Y-%m-%d_%H-%M-%S')
         self.backup_file_path = BACKUP_PATH / timestamp / f'{self.collection_name}.ndjson'

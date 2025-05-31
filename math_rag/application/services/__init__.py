@@ -9,6 +9,7 @@ from .math_expression_dataset_publisher_service import (
 )
 from .math_expression_label_loader_service import MathExpressionLabelLoaderService
 from .math_expression_loader_service import MathExpressionLoaderService
+from .math_expression_sample_loader_service import MathExpressionSampleLoaderService
 
 
 __all__ = [
@@ -21,4 +22,5 @@ __all__ = [
     'MathExpressionDatasetPublisherService',
     'MathExpressionLabelLoaderService',
     'MathExpressionLoaderService',
+    'MathExpressionSampleLoaderService',
 ]
