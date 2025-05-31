@@ -2,7 +2,7 @@ from collections.abc import AsyncGenerator
 from datetime import datetime
 from uuid import UUID, uuid4
 
-from pymongo import ASCENDING, AsyncMongoClient, InsertOne
+from pymongo import AsyncMongoClient, InsertOne
 
 from math_rag.application.base.repositories.documents import BaseMathExpressionSampleRepository
 from math_rag.core.models import MathExpression, MathExpressionLabel, MathExpressionSample

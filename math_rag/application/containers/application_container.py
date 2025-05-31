@@ -17,12 +17,10 @@ from math_rag.application.base.inference import (
     BaseManagedLLM,
 )
 from math_rag.application.base.repositories.documents import (
-    BaseDatasetRepository,
     BaseIndexRepository,
+    BaseMathExpressionDatasetRepository,
     BaseMathExpressionLabelRepository,
     BaseMathExpressionRepository,
-)
-from math_rag.application.base.repositories.documents.views import (
     BaseMathExpressionSampleRepository,
 )
 from math_rag.application.base.repositories.objects import BaseMathArticleRepository
@@ -63,7 +61,7 @@ class ApplicationContainer(DeclarativeContainer):
     latex_visitor_service: Provider[BaseLatexVisitorService] = Dependency()
 
     index_repository: Provider[BaseIndexRepository] = Dependency()
-    dataset_repository: Provider[BaseDatasetRepository] = Dependency()
+    math_expression_dataset_repository: Provider[BaseMathExpressionDatasetRepository] = Dependency()
     math_article_repository: Provider[BaseMathArticleRepository] = Dependency()
     math_expression_repository: Provider[BaseMathExpressionRepository] = Dependency()
     math_expression_label_repository: Provider[BaseMathExpressionLabelRepository] = Dependency()
@@ -117,12 +115,12 @@ class ApplicationContainer(DeclarativeContainer):
         math_expression_loader_service=math_expression_loader_service,
         math_expression_label_loader_service=math_expression_label_loader_service,
         math_expression_dataset_publisher_service=math_expression_dataset_publisher_service,
-        dataset_repository=dataset_repository,
+        math_expression_dataset_repository=math_expression_dataset_repository,
     )
     dataset_build_context = Singleton(DatasetBuildContext)
     dataset_build_tracker_background_service = Singleton(
         DatasetBuildTrackerBackgroundService,
-        dataset_repository=dataset_repository,
+        dataset_repository=math_expression_dataset_repository,
         dataset_builder_service=dataset_builder_service,
         dataset_build_context=dataset_build_context,
     )

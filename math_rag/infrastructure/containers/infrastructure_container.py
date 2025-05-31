@@ -36,14 +36,12 @@ from math_rag.infrastructure.inference.openai import (
     OpenAIManagedLLM,
 )
 from math_rag.infrastructure.repositories.documents import (
-    DatasetRepository,
     EMFailedRequestRepository,
     IndexRepository,
     LLMFailedRequestRepository,
+    MathExpressionDatasetRepository,
     MathExpressionLabelRepository,
     MathExpressionRepository,
-)
-from math_rag.infrastructure.repositories.documents.views import (
     MathExpressionSampleRepository,
 )
 from math_rag.infrastructure.repositories.files import GoogleFileRepository
@@ -108,7 +106,7 @@ class InfrastructureContainer(DeclarativeContainer):
     em_failed_request_repository = Factory(EMFailedRequestRepository, **mongo_kwargs)
     llm_failed_request_repository = Factory(LLMFailedRequestRepository, **mongo_kwargs)
     index_repository = Factory(IndexRepository, **mongo_kwargs)
-    dataset_repository = Factory(DatasetRepository, **mongo_kwargs)
+    math_expression_dataset_repository = Factory(MathExpressionDatasetRepository, **mongo_kwargs)
     math_expression_sample_repository = Factory(MathExpressionSampleRepository, **mongo_kwargs)
 
     math_expression_label_seeder = Factory(MathExpressionLabelSeeder, **mongo_kwargs)
@@ -284,7 +282,7 @@ class InfrastructureContainer(DeclarativeContainer):
         latex_visitor_service=latex_visitor_service,
         dataset_publisher_service=dataset_publisher_service,
         index_repository=index_repository,
-        dataset_repository=dataset_repository,
+        dataset_repository=math_expression_dataset_repository,
         math_expression_sample_repository=math_expression_sample_repository,
         math_article_repository=math_article_repository,
         math_expression_repository=math_expression_repository,

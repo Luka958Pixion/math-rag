@@ -1,4 +1,3 @@
-from .dataset_repository import DatasetRepository
 from .document_repository import DocumentRepository
 from .em_failed_request_repository import EMFailedRequestRepository
 from .index_repository import IndexRepository
@@ -8,6 +7,7 @@ from .llm_failed_request_repository import LLMFailedRequestRepository
 from .math_expression_dataset_repository import MathExpressionDatasetRepository
 from .math_expression_label_repository import MathExpressionLabelRepository
 from .math_expression_repository import MathExpressionRepository
+from .math_expression_sample_repository import MathExpressionSampleRepository
 
 
 __all__ = [
@@ -17,8 +17,9 @@ __all__ = [
     'IndexRepository',
     'KatexCorrectorAssistantInputRepository',
     'KatexCorrectorAssistantOutputRepository',
+    'LLMFailedRequestRepository',
     'MathExpressionDatasetRepository',
     'MathExpressionLabelRepository',
     'MathExpressionRepository',
-    'LLMFailedRequestRepository',
+    'MathExpressionSampleRepository',
 ]
