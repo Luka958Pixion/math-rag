@@ -20,7 +20,7 @@ router = APIRouter()
 @router.post('/datasets', response_model=DatasetCreateResponse)
 @inject
 async def create_dataset(
-    request: DatasetCreateRequest = Body(..., description='Parameters for the new dataset'),
+    request: DatasetCreateRequest = Body(...),
     math_expression_dataset_repository: BaseMathExpressionDatasetRepository = Depends(
         Provide[ApplicationContainer.math_expression_dataset_repository]
     ),

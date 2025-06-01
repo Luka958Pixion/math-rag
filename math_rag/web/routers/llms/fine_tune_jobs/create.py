@@ -22,7 +22,7 @@ router = APIRouter()
 @router.post('/llms/fine-tune-jobs', response_model=LLMFineTuneJobCreateResponse)
 @inject
 async def create_llm_fine_tune_job(
-    request: LLMFineTuneJobCreateRequest = Body(..., description='Parameters for the new index'),
+    request: LLMFineTuneJobCreateRequest = Body(...),
     index_repository: BaseIndexRepository = Depends(Provide[ApplicationContainer.index_repository]),
     index_build_context: IndexBuildContext = Depends(
         Provide[ApplicationContainer.index_build_context]

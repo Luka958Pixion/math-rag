@@ -20,7 +20,7 @@ router = APIRouter()
 @router.post('/indexes', response_model=IndexCreateResponse)
 @inject
 async def create_index(
-    request: IndexCreateRequest = Body(..., description='Parameters for the new index'),
+    request: IndexCreateRequest = Body(...),
     index_repository: BaseIndexRepository = Depends(Provide[ApplicationContainer.index_repository]),
     index_build_context: IndexBuildContext = Depends(
         Provide[ApplicationContainer.index_build_context]

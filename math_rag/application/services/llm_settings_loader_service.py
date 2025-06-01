@@ -1,7 +1,7 @@
 from pathlib import Path
 
 from math_rag.application.base.services import BaseLLMSettingsLoaderService
-from math_rag.application.models.settings import (
+from math_rag.application.models.inference.settings import (
     BasicLLMSettings,
     BatchLLMSettings,
     ConcurrentLLMSettings,

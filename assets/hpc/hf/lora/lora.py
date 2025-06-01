@@ -19,6 +19,7 @@ HTTPS_PROXY = 'http://10.150.1.1:3128'
 WALL_TIME_THRESHOLD = timedelta(minutes=30)
 
 # paths
+LORA_SIF_PATH = Path('lora.sif')
 ENV_PATH = Path('.env.hpc')
 
 
@@ -39,7 +40,6 @@ class FineTuningProcessorThread(Thread):
         # TODO - switch logic for different providers and models for each of them
         MODEL_NAME = ...
         TOKENIZER_NAME = ...
-        PROVIDER_SIF_PATH = ...
         cmd = (
             'apptainer run '
             '--nv '
@@ -48,7 +48,7 @@ class FineTuningProcessorThread(Thread):
             f'--env TOKENIZER_NAME={TOKENIZER_NAME} '
             f'--env http_proxy={HTTP_PROXY} '
             f'--env https_proxy={HTTPS_PROXY} '
-            f'{PROVIDER_SIF_PATH}'
+            f'{LORA_SIF_PATH}'
         )
         # process = Popen(cmd, shell=True)
         # exit_status = cli_state.wait(process)

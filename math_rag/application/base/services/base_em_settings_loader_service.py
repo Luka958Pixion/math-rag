@@ -1,6 +1,6 @@
 from abc import ABC, abstractmethod
 
-from math_rag.application.models.settings import (
+from math_rag.application.models.inference.settings import (
     BasicEMSettings,
     BatchEMSettings,
     ConcurrentEMSettings,
