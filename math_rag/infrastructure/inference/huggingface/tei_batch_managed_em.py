@@ -4,7 +4,7 @@ from math_rag.application.base.inference import BaseBatchEM, BaseBatchManagedEM
 from math_rag.application.base.services import BaseEMSettingsLoaderService
 from math_rag.application.models.inference import EMBatchRequest, EMBatchResult
 from math_rag.infrastructure.validators.inference.huggingface import (
-    HuggingFaceValidator,
+    HuggingFaceModelNameValidator,
 )
 
 
@@ -18,7 +18,7 @@ class TEIBatchManagedEM(BaseBatchManagedEM):
             raise ValueError(f'Batch request {batch_request.id} is empty')
 
         model = batch_request.requests[0].params.model
-        HuggingFaceValidator.validate_model_name(model)
+        HuggingFaceModelNameValidator.validate(model)
 
         batch_settings = self._em_settings_loader_service.load_batch_settings(
             'text-embeddings-inference', model

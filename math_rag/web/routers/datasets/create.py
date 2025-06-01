@@ -17,12 +17,10 @@ logger = getLogger(__name__)
 router = APIRouter()
 
 
-@router.post('/dataset/create', response_model=DatasetCreateResponse)
+@router.post('/datasets', response_model=DatasetCreateResponse)
 @inject
 async def create_dataset(
-    dataset_create_request: DatasetCreateRequest = Body(
-        ..., description='Parameters for the new dataset'
-    ),
+    request: DatasetCreateRequest = Body(..., description='Parameters for the new dataset'),
     math_expression_dataset_repository: BaseMathExpressionDatasetRepository = Depends(
         Provide[ApplicationContainer.math_expression_dataset_repository]
     ),
@@ -31,12 +29,11 @@ async def create_dataset(
     ),
 ):
     dataset = MathExpressionDataset(
-        build_from_dataset_id=dataset_create_request.build_from_dataset_id,
-        build_from_stage=dataset_create_request.build_from_stage,
+        build_from_dataset_id=request.build_from_dataset_id,
+        build_from_stage=request.build_from_stage,
     )
     await math_expression_dataset_repository.insert_one(dataset)
 
-    # notify immediately
     async with dataset_build_context.condition:
         dataset_build_context.condition.notify()
 

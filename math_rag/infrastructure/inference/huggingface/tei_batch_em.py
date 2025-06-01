@@ -39,7 +39,7 @@ from math_rag.infrastructure.utils import (
     FileWriterUtil,
 )
 from math_rag.infrastructure.validators.inference.huggingface import (
-    HuggingFaceValidator,
+    HuggingFaceModelNameValidator,
 )
 
 
@@ -219,7 +219,7 @@ class TEIBatchEM(PartialBatchEM):  # TODO update
             raise ValueError(f'Batch request {batch_request.id} is empty')
 
         model = batch_request.requests[0].params.model
-        HuggingFaceValidator.validate_model_name(model)
+        HuggingFaceModelNameValidator.validate(model)
 
         # map requests
         request_dicts = [

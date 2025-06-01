@@ -1,4 +1,4 @@
-from .huggingface_validator import HuggingFaceValidator
+from .huggingface_validator import HuggingFaceModelNameValidator
 
 
-__all__ = ['HuggingFaceValidator']
+__all__ = ['HuggingFaceModelNameValidator']

@@ -22,7 +22,7 @@ from math_rag.infrastructure.utils import (
     FileWriterUtil,
 )
 from math_rag.infrastructure.validators.inference.huggingface import (
-    HuggingFaceValidator,
+    HuggingFaceModelNameValidator,
 )
 
 
