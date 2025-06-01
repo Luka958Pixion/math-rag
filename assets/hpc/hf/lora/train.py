@@ -4,9 +4,11 @@ import json
 
 from logging import INFO, basicConfig, getLogger
 from pathlib import Path
-from typing import Any, cast
+from typing import cast
 
 import huggingface_hub
+import numpy as np
+import torch
 import wandb
 
 from datasets import DatasetDict, load_dataset
@@ -14,6 +16,7 @@ from datasets.download import DownloadConfig
 from decouple import config
 from optuna import Trial
 from peft import LoraConfig, get_peft_model, prepare_model_for_kbit_training
+from sklearn.metrics import f1_score
 from torch.optim import AdamW
 from transformers import (
     AutoModelForCausalLM,
@@ -47,19 +50,16 @@ WANDB_PROJECT = config('WANDB_PROJECT', default=None)
 WANDB_API_KEY = config('WANDB_API_KEY', default=None)
 
 # paths
-CACHE_DIR_PATH = Path('data')
+HF_HOME = Path(...)
+
 
 # TODO set HF_HOME=... and bind it
 MODEL_NAME = ...
+DATASET_NAME = ...
 
 
 basicConfig(level=INFO, format='%(asctime)s [%(threadName)s] %(levelname)s: %(message)s')
 logger = getLogger(__name__)
-
-import numpy as np
-import torch
-
-from sklearn.metrics import f1_score
 
 
 def compute_metrics(
@@ -105,7 +105,7 @@ class GracefulStopCallback(TrainerCallback):
         return control
 
 
-def main(trial: Trial, resume: bool, dataset_name: str):
+def main(trial: Trial):
     # initialization
     huggingface_hub.login(token=HF_TOKEN)
     wandb.login(key=WANDB_API_KEY)
@@ -122,7 +122,7 @@ def main(trial: Trial, resume: bool, dataset_name: str):
     tokenizer = cast(PreTrainedTokenizerBase, tokenizer)
     init_tokenizer(tokenizer)
 
-    repo_id = f'{HF_USERNAME}/{dataset_name}'
+    repo_id = f'{HF_USERNAME}/{DATASET_NAME}'
 
     download_config = DownloadConfig(
         max_retries=3,
@@ -192,7 +192,7 @@ def main(trial: Trial, resume: bool, dataset_name: str):
     )
 
     sft_config = SFTConfig(
-        output_dir=f'outputs/{MODEL_NAME}_trial_{trial._trial_id}',
+        output_dir=f'out/trainer/{trial._trial_id}',
         do_train=True,
         do_eval=True,
         do_predict=False,
@@ -244,12 +244,12 @@ def main(trial: Trial, resume: bool, dataset_name: str):
     )
 
     trainer.train(
-        resume_from_checkpoint=resume,
+        resume_from_checkpoint=True,
         trial=trial,
         ignore_keys_for_eval=['past_key_values', 'hidden_states', 'attentions'],
     )
     trainer.model.save_pretrained(
-        save_directory=f'outputs/{MODEL_NAME}_trial_{trial._trial_id}',
+        save_directory=f'out/trainer/model/{trial._trial_id}',
         push_to_hub=False,
         token=None,
         save_peft_format=True,
