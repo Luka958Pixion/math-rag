@@ -17,7 +17,6 @@ from math_rag.application.base.services import (
 from math_rag.application.models import KatexValidationResult
 from math_rag.application.models.assistants import (
     KatexCorrectorAssistantInput,
-    KatexCorrectorAssistantOutput,
 )
 from math_rag.core.models import MathExpression
 
@@ -96,7 +95,7 @@ class MathExpressionLoaderService(BaseMathExpressionLoaderService):
         if invalid:
             # create the inputs
             inputs: list[KatexCorrectorAssistantInput] = []
-            invalid_input_id_to_node: dict[UUID, LatexMathNode] = {}
+            input_id_to_node: dict[UUID, LatexMathNode] = {}
 
             for node, result in invalid:
                 input = KatexCorrectorAssistantInput(
@@ -104,40 +103,26 @@ class MathExpressionLoaderService(BaseMathExpressionLoaderService):
                     error=result.error,
                 )
                 inputs.append(input)
-                invalid_input_id_to_node[input.id] = node
+                input_id_to_node[input.id] = node
 
             # call assistant (may return fewer outputs)
             # outputs = await self.katex_corrector_assistant.batch_assist(inputs, use_scheduler=True)
             # TODO bring back
             outputs = await self.katex_corrector_assistant.concurrent_assist(inputs)
 
-            # map returned outputs back to nodes
-            input_id_to_output: dict[UUID, KatexCorrectorAssistantOutput] = {
-                output.input_id: output for output in outputs
-            }
+            corrected_katexes = [output.katex for output in outputs]
+            corrected_nodes = [input_id_to_node[output.input_id] for output in outputs]
 
-            # prepare lists for only those we actually got back
-            corrected_katexes: list[str] = []
-            corrected_nodes: list[LatexMathNode] = []
-
-            for input_id, node in invalid_input_id_to_node.items():
-                if input_id in input_id_to_output:
-                    corrected_nodes.append(node)
-                    corrected_katexes.append(input_id_to_output[input_id].katex)
-
-            # re-validate only the ones we have corrections for
             re_results = await self.katex_client.batch_validate_many(
                 corrected_katexes, batch_size=50
             )
             re_valid, _ = self._split_by_validity(corrected_nodes, re_results)
 
             # merge only the successfully re-validated corrections
-            for node, corrected_katex, re_result in zip(
-                corrected_nodes, corrected_katexes, re_results
-            ):
-                if re_result.valid:
+            for node, katex, result in zip(corrected_nodes, corrected_katexes, re_results):
+                if result.valid:
                     idx = math_nodes.index(node)
-                    final_katexes[idx] = corrected_katex
+                    final_katexes[idx] = katex
 
             num_corrected = len(re_valid)
             num_non_corrected = len(invalid) - num_corrected

@@ -6,13 +6,8 @@ from math_rag.application.base.repositories.documents import (
     BaseMathExpressionLabelRepository,
     BaseMathExpressionRepository,
 )
-from math_rag.application.base.services import (
-    BaseMathExpressionLabelLoaderService,
-)
-from math_rag.application.models.assistants import (
-    MathExpressionLabelerAssistantInput,
-    MathExpressionLabelerAssistantOutput,
-)
+from math_rag.application.base.services import BaseMathExpressionLabelLoaderService
+from math_rag.application.models.assistants import MathExpressionLabelerAssistantInput
 from math_rag.core.models import MathExpressionLabel
 
 
@@ -31,7 +26,6 @@ class MathExpressionLabelLoaderService(BaseMathExpressionLabelLoaderService):
         self.math_expression_label_repository = math_expression_label_repository
 
     async def load(self, dataset_id: UUID, build_from_dataset_id: UUID | None):
-        math_expression_ids: list[UUID] = []
         inputs: list[MathExpressionLabelerAssistantInput] = []
         input_id_to_math_expression_id: dict[UUID, UUID] = {}
 
@@ -44,7 +38,6 @@ class MathExpressionLabelLoaderService(BaseMathExpressionLabelLoaderService):
             },
         ):
             for math_expression in math_expressions:
-                math_expression_ids.append(math_expression.id)
                 input = MathExpressionLabelerAssistantInput(latex=math_expression.latex)
                 inputs.append(input)
                 input_id_to_math_expression_id[input.id] = math_expression.id
@@ -54,19 +47,16 @@ class MathExpressionLabelLoaderService(BaseMathExpressionLabelLoaderService):
         # )
         # TODO bring back
         outputs = await self.math_expression_labeler_assistant.concurrent_assist(inputs)
-        output_math_expression_ids: list[tuple[MathExpressionLabelerAssistantOutput, UUID]] = [
-            (output, input_id_to_math_expression_id[output.input_id]) for output in outputs
-        ]
+
         math_expression_labels = [
             MathExpressionLabel(
-                math_expression_id=math_expression_id,
+                math_expression_id=input_id_to_math_expression_id[output.input_id],
                 math_expression_dataset_id=dataset_id,
                 index_id=None,
                 value=output.label,
             )
-            for output, math_expression_id in output_math_expression_ids
+            for output in outputs
         ]
-
         await self.math_expression_label_repository.batch_insert_many(
             math_expression_labels, batch_size=1000
         )
