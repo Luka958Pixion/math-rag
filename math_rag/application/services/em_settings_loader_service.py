@@ -10,7 +10,7 @@ from math_rag.application.models.inference.settings import (
 from math_rag.shared.utils import PydanticOverriderUtil, YamlLoaderUtil
 
 
-YAML_PATH = Path(__file__).parents[3] / 'settings' / 'embedding_models.yaml'
+YAML_PATH = Path(__file__).parents[3] / 'settings' / 'inference' / 'embedding_models.yaml'
 DEFAULT = 'default'
 
 

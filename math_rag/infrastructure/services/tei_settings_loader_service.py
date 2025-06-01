@@ -4,7 +4,7 @@ from math_rag.infrastructure.models.settings import TEIModelSettings, TEISetting
 from math_rag.shared.utils import PydanticOverriderUtil, YamlLoaderUtil
 
 
-YAML_PATH = Path(__file__).parents[3] / 'settings' / 'text_embeddings_inference.yaml'
+YAML_PATH = Path(__file__).parents[3] / 'settings' / 'inference' / 'text_embeddings_inference.yaml'
 DEFAULT = 'default'
 
 

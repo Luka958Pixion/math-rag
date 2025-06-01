@@ -37,6 +37,7 @@ uvicorn = "^0.34.2"
 scalar-fastapi = "^1.0.3"
 mpxpy = "^0.0.8"
 mcp = {extras = ["cli"], version = "^1.9.1"}
+neomodel = "^5.4.5"
 
 
 [tool.poetry.group.dev.dependencies]
@@ -74,6 +75,7 @@ wandb = "^0.19.9"
 huggingface-hub = "^0.30.2"
 python-decouple = "^3.8"
 optuna = "^4.3.0"
+scikit-learn = "^1.6.1"
 
 
 [tool.pytest.ini_options]

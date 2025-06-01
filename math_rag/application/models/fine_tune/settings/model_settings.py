@@ -2,4 +2,5 @@ from pydantic import BaseModel
 
 
 class ModelSettings(BaseModel):
-    pass
+    model_name: str
+    target_modules: list[str]

@@ -4,7 +4,7 @@ from math_rag.infrastructure.models.settings import TGIModelSettings, TGISetting
 from math_rag.shared.utils import PydanticOverriderUtil, YamlLoaderUtil
 
 
-YAML_PATH = Path(__file__).parents[3] / 'settings' / 'text_generation_inference.yaml'
+YAML_PATH = Path(__file__).parents[3] / 'settings' / 'inference' / 'text_generation_inference.yaml'
 DEFAULT = 'default'
 
 
