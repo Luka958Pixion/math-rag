@@ -12,5 +12,6 @@ class BaseMathArticleLoaderService(ABC):
         *,
         arxiv_category_type: type[ArxivCategoryType] | None,
         arxiv_category: ArxivCategoryType | None,
+        limit: int,
     ):
         pass

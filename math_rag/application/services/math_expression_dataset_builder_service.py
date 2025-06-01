@@ -10,7 +10,7 @@ from math_rag.application.base.services import (
     BaseMathExpressionLoaderService,
     BaseMathExpressionSampleLoaderService,
 )
-from math_rag.application.enums.arxiv import BaseArxivCategory, MathCategory
+from math_rag.application.enums.arxiv import MathCategory
 from math_rag.core.enums import MathExpressionDatasetBuildStage
 from math_rag.core.models import MathExpressionDataset
 
@@ -35,9 +35,7 @@ class MathExpressionDatasetBuilderService(BaseMathExpressionDatasetBuilderServic
         self.math_expression_dataset_publisher_service = math_expression_dataset_publisher_service
         self.math_expression_dataset_repository = math_expression_dataset_repository
 
-    async def _load_math_articles(
-        self, dataset_id: UUID, arxiv_category_type: type[BaseArxivCategory], limit: int
-    ):
+    async def _load_math_articles(self, dataset_id: UUID):
         logger.info(f'Dataset {dataset_id} build loading math articles...')
 
         # update build stage
@@ -48,7 +46,10 @@ class MathExpressionDatasetBuilderService(BaseMathExpressionDatasetBuilderServic
         logger.info(f'Dataset {dataset_id} build stage updated to {build_stage}')
 
         # load
-        await self.math_article_loader_service.load(dataset_id, arxiv_category_type, limit)
+        # TODO
+        await self.math_article_loader_service.load(
+            dataset_id, arxiv_category_type=None, arxiv_category=MathCategory.GM, limit=1
+        )
         logger.info(f'Dataset {dataset_id} build loaded math articles')
 
     async def _load_math_expressions(self, dataset_id: UUID, build_from_dataset_id: UUID | None):
@@ -105,9 +106,6 @@ class MathExpressionDatasetBuilderService(BaseMathExpressionDatasetBuilderServic
     async def build(self, dataset: MathExpressionDataset):
         logger.info(f'Dataset {dataset.id} build started')
 
-        arxiv_category_type = MathCategory
-        limit = 32  # TODO was 200
-
         if dataset.build_from_dataset_id and dataset.build_from_stage:
             build_from_dataset_exists = await self.math_expression_dataset_repository.exists(
                 dataset.build_from_dataset_id
@@ -119,7 +117,7 @@ class MathExpressionDatasetBuilderService(BaseMathExpressionDatasetBuilderServic
             match dataset.build_from_stage:
                 case MathExpressionDatasetBuildStage.LOAD_MATH_ARTICLES:
                     # NOTE: same as standard approach since it starts from the beginning
-                    await self._load_math_articles(dataset.id, arxiv_category_type, limit)
+                    await self._load_math_articles(dataset.id)
                     await self._load_math_expressions(dataset.id, None)
                     await self._load_math_expression_labels(dataset.id, None)
                     await self._load_math_expression_samples(dataset.id, None)
@@ -145,7 +143,7 @@ class MathExpressionDatasetBuilderService(BaseMathExpressionDatasetBuilderServic
                     await self._publish_math_expression_dataset(dataset)
 
         else:
-            await self._load_math_articles(dataset.id, arxiv_category_type, limit)
+            await self._load_math_articles(dataset.id)
             await self._load_math_expressions(dataset.id, None)
             await self._load_math_expression_labels(dataset.id, None)
             await self._load_math_expression_samples(dataset.id, None)
