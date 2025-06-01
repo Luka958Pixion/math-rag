@@ -1,6 +1,7 @@
 from abc import ABC, abstractmethod
 from collections.abc import AsyncGenerator
 from typing import Any, Generic, TypeVar
+from uuid import UUID
 
 
 T = TypeVar('T')
@@ -35,6 +36,10 @@ class BaseDocumentRepository(ABC, Generic[T]):
 
     @abstractmethod
     async def count(self, *, filter: dict[str, Any] | None) -> int:
+        pass
+
+    @abstractmethod
+    async def exists(self, id: UUID) -> bool:
         pass
 
     @abstractmethod

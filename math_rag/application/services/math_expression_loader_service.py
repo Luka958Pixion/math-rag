@@ -56,13 +56,14 @@ class MathExpressionLoaderService(BaseMathExpressionLoaderService):
 
         return valid, invalid
 
-    async def load(self, dataset_id: UUID, foundation_dataset_id: UUID | None):
+    async def load(self, dataset_id: UUID, build_from_dataset_id: UUID | None):
         # gather all .tex file names
         file_names = [
             name
             for name in self.math_article_repository.list_names()
             if name is not None and name.endswith('.tex')
         ]
+        logger.info(f'Found {len(file_names)} .tex files')
 
         # load and parse math articles
         math_nodes: list[LatexMathNode] = []
@@ -70,14 +71,16 @@ class MathExpressionLoaderService(BaseMathExpressionLoaderService):
         for file_name in file_names:
             math_article = self.math_article_repository.find_by_name(file_name)
 
-            if foundation_dataset_id:
-                if math_article.index_id != foundation_dataset_id:
+            if build_from_dataset_id:
+                if math_article.math_expression_dataset_id != build_from_dataset_id:
                     continue
 
-            elif math_article.index_id != dataset_id:
+            elif math_article.math_expression_dataset_id != dataset_id:
                 continue
 
-            math_nodes.extend(self.math_article_parser_service.parse(math_article))
+            math_nodes_ = self.math_article_parser_service.parse(math_article)
+            math_nodes.extend(math_nodes_)
+            logger.info(f'Parsed {len(math_nodes_)} math nodes from {file_name}')
 
         # extract and validate KaTeX
         katexes = [str(node.latex_verbatim()).strip('$') for node in math_nodes]

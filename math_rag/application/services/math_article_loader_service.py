@@ -7,7 +7,7 @@ from arxiv import Result
 from math_rag.application.base.clients import BaseArxivClient
 from math_rag.application.base.repositories.objects import BaseMathArticleRepository
 from math_rag.application.base.services import BaseMathArticleLoaderService
-from math_rag.application.enums.arxiv import BaseArxivCategory
+from math_rag.application.types.arxiv import ArxivCategoryType
 from math_rag.core.models import MathArticle
 from math_rag.shared.utils import GzipExtractorUtil
 
@@ -26,37 +26,46 @@ class MathArticleDatasetLoaderService(BaseMathArticleLoaderService):
         self.math_article_repository = math_article_repository
 
     async def load(
-        self, dataset_id: UUID, arxiv_category_type: type[BaseArxivCategory], limit: int
+        self,
+        dataset_id: UUID,
+        *,
+        arxiv_category_type: type[ArxivCategoryType] | None = None,
+        arxiv_category: ArxivCategoryType | None = None,
+        limit: int,
     ):
-        if limit < len(BaseArxivCategory):
+        if arxiv_category_type:
+            arxiv_categories = list(arxiv_category_type)
+
+        elif arxiv_category:
+            arxiv_categories = [arxiv_category]
+
+        else:
             raise ValueError()
 
-        sublimit = int(limit / len(arxiv_category_type))
-        category_list = list(arxiv_category_type)
         num_math_articles = 0
 
-        for i in range(0, len(category_list), BATCH_SIZE):
-            batch = category_list[i : i + BATCH_SIZE]
-            results = [
-                result
-                for subcategory in batch
-                for result in self.arxiv_client.search(subcategory, sublimit)
-            ]
-            process_tasks = [self._process_result(result) for result in results]
-            processed_files = await gather(*process_tasks)
-            math_articles = [
-                MathArticle(
-                    math_expression_dataset_id=dataset_id, index_id=None, name=name, bytes=bytes
-                )
-                for file in processed_files
-                if file
-                for name, bytes in file.items()
-            ]
-            self.math_article_repository.insert_many(math_articles)
-            num_math_articles += len(math_articles)
+        for category in arxiv_categories:
+            num_math_articles += await self._process_arxiv_category(dataset_id, category, limit)
 
         self.math_article_repository.backup()
-        logger.info(f'{self.__class__.__name__} loaded {num_math_articles} math articles')
+        logger.info(f'{self.__class__.__name__} {num_math_articles} math articles in total')
+
+    async def _process_arxiv_category(
+        self, dataset_id: UUID, arxiv_category: ArxivCategoryType, limit: int
+    ) -> int:
+        results = self.arxiv_client.search(arxiv_category, limit)
+        process_tasks = [self._process_result(result) for result in results]
+        processed_files = await gather(*process_tasks)
+        math_articles = [
+            MathArticle(
+                math_expression_dataset_id=dataset_id, index_id=None, name=name, bytes=bytes
+            )
+            for file in processed_files
+            if file
+            for name, bytes in file.items()
+        ]
+        self.math_article_repository.insert_many(math_articles)
+        logger.info(f'{self.__class__.__name__} loaded {len(math_articles)} math articles')
 
     async def _process_result(self, result: Result) -> dict[str, bytes] | None:
         arxiv_id = result.entry_id.split('/')[-1]

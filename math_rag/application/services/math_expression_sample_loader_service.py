@@ -15,9 +15,9 @@ class MathExpressionSampleLoaderService(BaseMathExpressionSampleLoaderService):
     ):
         self.math_expression_sample_repository = math_expression_sample_repository
 
-    async def load(self, dataset_id: UUID, foundation_dataset_id: UUID | None):
+    async def load(self, dataset_id: UUID, build_from_dataset_id: UUID | None):
         await self.math_expression_sample_repository.aggregate_and_batch_insert_many(
-            foundation_dataset_id if foundation_dataset_id else dataset_id, batch_size=1000
+            build_from_dataset_id if build_from_dataset_id else dataset_id, batch_size=1000
         )
 
         await self.math_expression_sample_repository.backup()

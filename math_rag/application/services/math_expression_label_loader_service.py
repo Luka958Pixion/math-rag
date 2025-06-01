@@ -27,14 +27,14 @@ class MathExpressionLabelLoaderService(BaseMathExpressionLabelLoaderService):
         self.math_expression_repository = math_expression_repository
         self.math_expression_label_repository = math_expression_label_repository
 
-    async def load(self, dataset_id: UUID, foundation_dataset_id: UUID | None):
+    async def load(self, dataset_id: UUID, build_from_dataset_id: UUID | None):
         num_math_expression_labels = 0
 
         inputs: list[MathExpressionLabelerAssistantInput] = []
 
         async for math_expressions in self.math_expression_repository.batch_find_many(
             batch_size=1000,
-            filter={'id': foundation_dataset_id if foundation_dataset_id else dataset_id},
+            filter={'id': build_from_dataset_id if build_from_dataset_id else dataset_id},
         ):
             for math_expression in math_expressions:
                 input = MathExpressionLabelerAssistantInput(latex=math_expression.latex)

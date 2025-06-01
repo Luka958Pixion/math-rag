@@ -2,6 +2,7 @@ from collections.abc import AsyncGenerator
 from datetime import datetime
 from pathlib import Path
 from typing import Any, Generic, cast
+from uuid import UUID
 
 from bson.binary import UuidRepresentation
 from bson.json_util import JSONOptions, dumps, loads
@@ -134,6 +135,9 @@ class DocumentRepository(
             filter['_id'] = filter.pop('id')
 
         return await self.collection.count_documents(filter)
+
+    async def exists(self, id: UUID) -> bool:
+        return await self.collection.find_one({'_id': id}) is not None
 
     async def backup(self):
         timestamp = datetime.now().strftime('%Y-%m-%d_%H-%M-%S')

@@ -23,8 +23,10 @@ class MathArticleMapping(BaseMapping[MathArticle, MathArticleObject]):
 
         return MathArticle(
             id=UUID(id),
-            math_expression_dataset_id=math_expression_dataset_id,
-            index_id=index_id,
+            math_expression_dataset_id=UUID(math_expression_dataset_id)
+            if math_expression_dataset_id
+            else None,
+            index_id=UUID(index_id) if index_id else None,
             timestamp=datetime.fromisoformat(timestamp),
             name=target.object_name,
             bytes=target.data.read(),
@@ -33,15 +35,22 @@ class MathArticleMapping(BaseMapping[MathArticle, MathArticleObject]):
     @staticmethod
     def to_target(source: MathArticle) -> MathArticleObject:
         data = BytesIO(source.bytes)
+        metadata = {
+            'X-Amz-Meta-id': str(source.id),
+            'X-Amz-Meta-timestamp': source.timestamp.isoformat(),
+        }
+
+        if source.math_expression_dataset_id:
+            metadata['X-Amz-Meta-math_expression_dataset_id'] = str(
+                source.math_expression_dataset_id
+            )
+
+        if source.index_id:
+            metadata['X-Amz-Meta-index_id'] = str(source.index_id)
 
         return MathArticleObject(
             object_name=source.name,
             data=data,
             length=data.getbuffer().nbytes,
-            metadata={
-                'X-Amz-Meta-id': str(source.id),
-                'X-Amz-Meta-math_expression_dataset_id': str(source.math_expression_dataset_id),
-                'X-Amz-Meta-index_id': str(source.index_id),
-                'X-Amz-Meta-timestamp': source.timestamp.isoformat(),
-            },
+            metadata=metadata,
         )

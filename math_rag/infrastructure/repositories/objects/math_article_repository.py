@@ -18,7 +18,7 @@ class MathArticleRepository(
     ObjectRepository[MathArticle, MathArticleObject, MathArticleMapping],
 ):
     def __init__(self, client: Minio):
-        metadata_keys = ['id', 'timestamp']
+        metadata_keys = ['id', 'math_expression_dataset_id', 'index_id', 'timestamp']
 
         for key in metadata_keys:
             if key not in MathArticle.model_fields:

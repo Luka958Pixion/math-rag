@@ -31,7 +31,7 @@ class ObjectSeeder(BaseObjectSeeder, Generic[TargetType]):
         if not self.client.bucket_exists(self.bucket_name):
             return
 
-        objects = self.client.list_objects(self.bucket_name, recursive=True)
+        objects = list(self.client.list_objects(self.bucket_name, recursive=True))
 
         for object in objects:
             self.client.remove_object(self.bucket_name, object.object_name)

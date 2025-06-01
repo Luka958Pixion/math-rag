@@ -82,10 +82,8 @@ class ObjectRepository(
         for key in self.metadata_keys:
             value = stat_response.metadata.get(f'X-Amz-Meta-{key}')
 
-            if value is None:
-                raise ValueError(f'Missing metadata key {key} in {name}')
-
-            metadata[f'X-Amz-Meta-{key}'] = value
+            if value:
+                metadata[f'X-Amz-Meta-{key}'] = value
 
         object = self.target_cls(
             object_name=name,
