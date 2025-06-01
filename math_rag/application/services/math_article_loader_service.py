@@ -67,6 +67,8 @@ class MathArticleDatasetLoaderService(BaseMathArticleLoaderService):
         self.math_article_repository.insert_many(math_articles)
         logger.info(f'{self.__class__.__name__} loaded {len(math_articles)} math articles')
 
+        return len(math_articles)
+
     async def _process_result(self, result: Result) -> dict[str, bytes] | None:
         arxiv_id = result.entry_id.split('/')[-1]
         src = await self.arxiv_client.get_src(arxiv_id)

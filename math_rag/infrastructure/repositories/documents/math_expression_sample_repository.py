@@ -5,9 +5,13 @@ from uuid import UUID, uuid4
 from pymongo import AsyncMongoClient, InsertOne
 
 from math_rag.application.base.repositories.documents import BaseMathExpressionSampleRepository
-from math_rag.core.models import MathExpression, MathExpressionLabel, MathExpressionSample
+from math_rag.core.models import MathExpressionSample
 from math_rag.infrastructure.mappings.documents import MathExpressionSampleMapping
-from math_rag.infrastructure.models.documents import MathExpressionSampleDocument
+from math_rag.infrastructure.models.documents import (
+    MathExpressionDocument,
+    MathExpressionLabelDocument,
+    MathExpressionSampleDocument,
+)
 
 from .document_repository import DocumentRepository
 from .projections.math_expression_sample_projection import MathExpressionSampleProjection
@@ -22,9 +26,9 @@ class MathExpressionSampleRepository(
     def __init__(self, client: AsyncMongoClient, deployment: str):
         super().__init__(client, deployment)
 
-        self.math_expression_collection_name = MathExpression.__class__.__name__.lower()
+        self.math_expression_collection_name = MathExpressionDocument.__name__.lower()
         self.math_expression_collection = self.db[self.math_expression_collection_name]
-        self.math_expression_label_collection_name = MathExpressionLabel.__class__.__name__.lower()
+        self.math_expression_label_collection_name = MathExpressionLabelDocument.__name__.lower()
         self.math_expression_label_collection = self.db[self.math_expression_label_collection_name]
 
     async def _aggregate(
@@ -34,32 +38,16 @@ class MathExpressionSampleRepository(
         lookup_stage = {
             '$lookup': {
                 'from': self.math_expression_label_collection_name,
-                'let': {'exprId': '$_id', 'datasetId': '$math_expression_dataset_id'},
-                'pipeline': [
-                    {
-                        '$match': {
-                            '$expr': {
-                                '$and': [
-                                    {'$eq': ['$math_expression_id', '$$exprId']},
-                                    {'$eq': ['$math_expression_dataset_id', '$$datasetId']},
-                                ]
-                            }
-                        }
-                    },
-                    {'$project': {'_id': 0, 'label': 1}},
-                    {'$limit': 1},
-                ],
+                'localField': '_id',
+                'foreignField': 'math_expression_id',
                 'as': 'label_doc',
             }
         }
         unwind_stage = {'$unwind': {'path': '$label_doc', 'preserveNullAndEmptyArrays': False}}
-        project_stage = {'$project': {'_id': 0, 'latex': 1, 'label': '$label_doc.label'}}
+        project_stage = {'$project': {'_id': 0, 'latex': 1, 'label': '$label_doc.value'}}
         pipeline = [match_stage, lookup_stage, unwind_stage, project_stage]
 
-        cursor = await self.math_expression_collection.aggregate(
-            pipeline,
-            jsonOptions=self.json_options,
-        )
+        cursor = await self.math_expression_collection.aggregate(pipeline)
 
         async for bson_doc in cursor:
             yield MathExpressionSampleProjection.model_validate(bson_doc)

@@ -1,4 +1,5 @@
 from logging import getLogger
+from uuid import UUID
 
 from datasets import Dataset, DatasetInfo
 from huggingface_hub import HfApi
@@ -9,7 +10,7 @@ from math_rag.application.models.datasets import (
     DatasetMetadataFile,
     DatasetSplitSettings,
 )
-from math_rag.core.types import DatasetType, SampleType
+from math_rag.core.types import SampleType
 from math_rag.infrastructure.utils import DatasetFeatureExtractorUtil, DatasetSplitterUtil
 
 
@@ -30,13 +31,15 @@ class DatasetPublisherService(BaseDatasetPublisherService):
 
     def publish(
         self,
-        dataset: DatasetType,
+        dataset_id: UUID,
+        dataset_name: str,
         samples: list[SampleType],
         sample_type: type[SampleType],
+        fields: list[str],
         dataset_split_settings: DatasetSplitSettings,
         dataset_metadata_file: DatasetMetadataFile | None = None,
     ):
-        repo_id = f'{self.hugging_face_username}/{dataset.__class__.__name__.lower()}'
+        repo_id = f'{self.hugging_face_username}/{dataset_name}'
 
         # create a repository if it doesn't exist
         try:
@@ -59,18 +62,10 @@ class DatasetPublisherService(BaseDatasetPublisherService):
         )
 
         # map dataset to huggingface
-        features = DatasetFeatureExtractorUtil.extract(sample_type)
+        features = DatasetFeatureExtractorUtil.extract(sample_type, fields)
         info = DatasetInfo(license='mit', features=features)
-        exclude_fields = {'id', 'math_expression_dataset_id'}
-
-        for field in exclude_fields:
-            if field not in sample_type.model_fields:
-                raise ValueError(
-                    f'Field {field} does not exist in {sample_type.__class__.__name__}'
-                )
-
         hf_dataset = Dataset.from_list(
-            mapping=[sample.model_dump(mode='json', exclude=exclude_fields) for sample in samples],
+            mapping=[sample.model_dump(mode='json', include=fields) for sample in samples],
             features=features,
             info=info,
             split=None,
@@ -82,7 +77,7 @@ class DatasetPublisherService(BaseDatasetPublisherService):
         # push the datasets
         dataset_dict.push_to_hub(
             repo_id,
-            config_name=str(dataset.id),
+            config_name=str(dataset_id),
             private=True,
             token=self.hugging_face_token,
         )

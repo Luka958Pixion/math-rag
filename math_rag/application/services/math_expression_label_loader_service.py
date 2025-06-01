@@ -28,13 +28,16 @@ class MathExpressionLabelLoaderService(BaseMathExpressionLabelLoaderService):
         self.math_expression_label_repository = math_expression_label_repository
 
     async def load(self, dataset_id: UUID, build_from_dataset_id: UUID | None):
-        num_math_expression_labels = 0
+        field = 'math_expression_dataset_id'
+
+        if field not in MathExpressionLabel.model_fields:
+            raise ValueError()
 
         inputs: list[MathExpressionLabelerAssistantInput] = []
 
         async for math_expressions in self.math_expression_repository.batch_find_many(
             batch_size=1000,
-            filter={'id': build_from_dataset_id if build_from_dataset_id else dataset_id},
+            filter={field: build_from_dataset_id if build_from_dataset_id else dataset_id},
         ):
             for math_expression in math_expressions:
                 input = MathExpressionLabelerAssistantInput(latex=math_expression.latex)
@@ -49,6 +52,7 @@ class MathExpressionLabelLoaderService(BaseMathExpressionLabelLoaderService):
             MathExpressionLabel(
                 math_expression_id=math_expression.id,
                 math_expression_dataset_id=dataset_id,
+                index_id=None,
                 value=output.label,
             )
             for output in outputs
@@ -59,5 +63,5 @@ class MathExpressionLabelLoaderService(BaseMathExpressionLabelLoaderService):
         )
         await self.math_expression_label_repository.backup()
         logger.info(
-            f'{self.__class__.__name__} loaded {num_math_expression_labels} math expression labels'
+            f'{self.__class__.__name__} loaded {len(math_expression_labels)} math expression labels'
         )

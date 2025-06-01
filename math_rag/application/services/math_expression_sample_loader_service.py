@@ -25,5 +25,5 @@ class MathExpressionSampleLoaderService(BaseMathExpressionSampleLoaderService):
             filter={'math_expression_dataset_id': dataset_id}
         )
         logger.info(
-            f'{self.__class__.__name__} loaded {num_math_expression_samples} math expression labels'
+            f'{self.__class__.__name__} loaded {num_math_expression_samples} math expression samples'
         )

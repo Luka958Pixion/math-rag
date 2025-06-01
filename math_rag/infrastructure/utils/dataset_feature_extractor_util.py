@@ -19,14 +19,21 @@ TYPE_DICT: dict[type[Any], str] = {
 
 class DatasetFeatureExtractorUtil:
     @staticmethod
-    def extract(model: type[BaseModel]) -> Features:
+    def extract(model_type: type[BaseModel], fields: list[str]) -> Features:
         """
         Convert a Pydantic BaseModel into a Hugging Face Datasets Features mapping.
         """
+        for field in fields:
+            if field not in model_type.model_fields:
+                raise ValueError(f'Field {field} does not exist in model {model_type.__name__}')
+
         features: dict[str, Value] = {}
 
-        for name, field in model.model_fields.items():
-            annotation = TypeUtil.extract_optional_type(field.annotation)
+        for name, field_info in model_type.model_fields.items():
+            if name not in fields:
+                continue
+
+            annotation = TypeUtil.extract_optional_type(field_info.annotation)
 
             if isinstance(annotation, type) and issubclass(annotation, Enum):
                 class_label_names = [member.value for member in annotation]

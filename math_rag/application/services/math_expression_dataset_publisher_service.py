@@ -1,4 +1,5 @@
 from logging import getLogger
+from uuid import UUID
 
 from math_rag.application.assistants.prompts import MATH_EXPRESSION_LABELER_PROMPT
 from math_rag.application.base.repositories.documents import BaseMathExpressionSampleRepository
@@ -12,6 +13,8 @@ from math_rag.core.models import MathExpressionDataset, MathExpressionSample
 
 logger = getLogger(__name__)
 
+FIELDS = ['latex', 'label']
+
 
 class MathExpressionDatasetPublisherService(BaseMathExpressionDatasetPublisherService):
     def __init__(
@@ -22,11 +25,11 @@ class MathExpressionDatasetPublisherService(BaseMathExpressionDatasetPublisherSe
         self.math_expression_sample_repository = math_expression_sample_repository
         self.dataset_publisher_service = dataset_publisher_service
 
-    async def publish(self, math_expression_dataset: MathExpressionDataset):
+    async def publish(self, dataset_id: UUID, build_from_dataset_id: UUID | None):
         math_expression_samples = [
             math_expression_sample
             async for batch in self.math_expression_sample_repository.batch_find_many(
-                math_expression_dataset.id, batch_size=1000
+                build_from_dataset_id if build_from_dataset_id else dataset_id, batch_size=1000
             )
             for math_expression_sample in batch
         ]
@@ -40,9 +43,11 @@ class MathExpressionDatasetPublisherService(BaseMathExpressionDatasetPublisherSe
         dataset_metadata_file = DatasetMetadataFile(name='prompt.json', content=content)
 
         self.dataset_publisher_service.publish(
-            dataset=math_expression_dataset,
+            dataset_id=dataset_id,
+            dataset_name=MathExpressionDataset.__name__.lower(),
             samples=math_expression_samples,
             sample_type=MathExpressionSample,
+            fields=FIELDS,
             dataset_split_settings=dataset_split_settings,
             dataset_metadata_file=dataset_metadata_file,
         )

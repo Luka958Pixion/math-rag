@@ -155,6 +155,7 @@ class MathExpressionLoaderService(BaseMathExpressionLoaderService):
                 MathExpression(
                     math_article_id=math_article.id,
                     math_expression_dataset_id=dataset_id,
+                    index_id=None,
                     latex=str(node.latex_verbatim()),
                     katex=katex,
                     position=node.pos,
