@@ -1,5 +1,3 @@
-# train.py
-
 import json
 
 from logging import INFO, basicConfig, getLogger
@@ -12,6 +10,8 @@ import wandb
 from datasets import DatasetDict, load_dataset
 from datasets.download import DownloadConfig
 from decouple import config
+from fine_tune_settings import FineTuneSettings
+from metrics import compute_metrics
 from optuna import Trial
 from peft import LoraConfig, get_peft_model, prepare_model_for_kbit_training
 from torch.optim import AdamW
@@ -36,8 +36,6 @@ from .llama_3_1_8b import (
     init_language_model,
     init_tokenizer,
 )
-from .metrics import compute_metrics
-from .optuna import FineTuneSettings
 
 
 # huggingface

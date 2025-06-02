@@ -1,10 +1,9 @@
 from logging import INFO, basicConfig, getLogger
 
+from fine_tune_settings import FineTuneSettings, OptunaTrialSettings
 from optuna import Trial, create_study
 from optuna.trial import FrozenTrial
 from train import main as train_main
-
-from .settings import FineTuneSettings, OptunaTrialSettings
 
 
 basicConfig(level=INFO, format='%(asctime)s - %(levelname)s - %(message)s')
