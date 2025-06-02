@@ -1,49 +1,39 @@
 from logging import INFO, basicConfig, getLogger
 
 from optuna import Trial, create_study
+from optuna.trial import FrozenTrial
 from train import main as train_main
+
+from .settings import FineTuneSettings, OptunaTrialSettings
 
 
 basicConfig(level=INFO, format='%(asctime)s - %(levelname)s - %(message)s')
 logger = getLogger(__name__)
 
 
-N_TRIALS = 20
-R = ...
-LORA_ALPHA = ...
-LORA_DROPOUT = ...
-DIRECTION = ...
-
-
-def objective(trial: Trial) -> float:
-    trial.suggest_int('r', 4, 32, step=1)  # TODO
-    trial.suggest_int('lora_alpha', 8, 64, step=8)
-    trial.suggest_float('lora_dropout', 0.0, 0.3, step=0.05)
+def objective(trial: Trial, trial_settings: OptunaTrialSettings) -> float:
+    trial.suggest_int(**trial_settings.r.model_dump())
+    trial.suggest_int(**trial_settings.lora_alpha.model_dump())
+    trial.suggest_float(**trial_settings.lora_dropout.model_dump())
 
     return train_main(trial)
 
 
-if __name__ == '__main__':
-    storage_name = 'sqlite:///optuna_lora_study.db'
-    study_name = 'lora_hyperparam_search'
+def log(trial: FrozenTrial):
+    logger.info(f'Trial number: {trial.number}')
+    logger.info(f'F1: {trial.value}')
+    logger.info('Hyperparameters:')
 
-    study = create_study(
-        study_name=study_name, storage=storage_name, direction=DIRECTION, load_if_exists=True
-    )
-    study.enqueue_trial(
-        {
-            'r': R,
-            'lora_alpha': LORA_ALPHA,
-            'lora_dropout': LORA_DROPOUT,
-        }
-    )
-    study.optimize(objective, n_trials=N_TRIALS)
-
-    best_trial = study.best_trial
-    logger.info('Best trial')
-    logger.info(f'  number: {best_trial.number}')
-    logger.info(f'  F1: {best_trial.value}')
-    logger.info(f'  hyperparameters')
-
-    for key, value in best_trial.params.items():
+    for key, value in trial.params.items():
         logger.info(f'      {key}: {value}')
+
+
+if __name__ == '__main__':
+    # TODO load
+    fine_tune_settings: FineTuneSettings = ...
+    optuna_settings = fine_tune_settings.optuna_settings
+
+    study = create_study(**optuna_settings.study_settings.model_dump())
+    study.enqueue_trial(optuna_settings.trial_start_settings.model_dump())
+    study.optimize(objective, n_trials=optuna_settings.n_trials)
+    log(study.best_trial)

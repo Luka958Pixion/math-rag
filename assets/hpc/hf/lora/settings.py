@@ -30,25 +30,31 @@ class OptimizerSettings(BaseModel):
     weight_decay: float
 
 
-class OptunaLoRAInitialSettings(BaseModel):
+class OptunaStudySettings(BaseModel):
+    storage_name: str
+    study_name: str
+    direction: str
+    load_if_exists: bool
+
+
+class OptunaTrialStartSettings(BaseModel):
     r: int
     lora_alpha: int
     lora_dropout: float
 
 
-class OptunaLoRASettings(BaseModel):
+class OptunaTrialSettings(BaseModel):
     r: OptunaIntParam
     lora_alpha: OptunaIntParam
     lora_dropout: OptunaFloatParam
 
 
 class OptunaSettings(BaseModel):
-    study_name: str
-    metric_name: str
-    direction: str
+    study_settings: OptunaStudySettings
+    trial_start_settings: OptunaTrialStartSettings
+    trial_settings: OptunaTrialSettings
     n_trials: int
-    lora_initial_settings: OptunaLoRAInitialSettings
-    lora_settings: OptunaLoRASettings
+    metric_name: str
 
 
 class SFTSettings(BaseModel):
@@ -66,9 +72,3 @@ class FineTuneSettings(BaseModel):
     optimizer_settings: OptimizerSettings
     optuna_settings: OptunaSettings
     sft_settings: SFTSettings
-
-
-# TODO remove FineTuneProviderSettings???
-class FineTuneProviderSettings(RootModel[dict[str, FineTuneSettings]]):
-    def __getitem__(self, key: str) -> FineTuneSettings:
-        return self.root[key]

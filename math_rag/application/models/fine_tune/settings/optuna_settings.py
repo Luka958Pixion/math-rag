@@ -1,13 +1,13 @@
 from pydantic import BaseModel
 
-from .optuna_lora_initial_settings import OptunaLoRAInitialSettings
-from .optuna_lora_settings import OptunaLoRASettings
+from .optuna_lora_settings import OptunaTrialSettings
+from .optuna_lora_start_settings import OptunaTrialStartSettings
+from .optuna_study_settings import OptunaStudySettings
 
 
 class OptunaSettings(BaseModel):
-    study_name: str
-    metric_name: str
-    direction: str
+    study_settings: OptunaStudySettings
+    trial_start_settings: OptunaTrialStartSettings
+    trial_settings: OptunaTrialSettings
     n_trials: int
-    lora_initial_settings: OptunaLoRAInitialSettings
-    lora_settings: OptunaLoRASettings
+    metric_name: str

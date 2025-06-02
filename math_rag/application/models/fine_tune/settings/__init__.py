@@ -4,9 +4,10 @@ from .model_settings import ModelSettings
 from .optimizer_settings import OptimizerSettings
 from .optuna_float_param import OptunaFloatParam
 from .optuna_int_param import OptunaIntParam
-from .optuna_lora_initial_settings import OptunaLoRAInitialSettings
-from .optuna_lora_settings import OptunaLoRASettings
+from .optuna_lora_settings import OptunaTrialSettings
+from .optuna_lora_start_settings import OptunaTrialStartSettings
 from .optuna_settings import OptunaSettings
+from .optuna_study_settings import OptunaStudySettings
 from .sft_settings import SFTSettings
 
 
@@ -16,9 +17,10 @@ __all__ = [
     'OptunaFloatParam',
     'OptunaIntParam',
     'ModelSettings',
-    'OptunaLoRAInitialSettings',
-    'OptunaLoRASettings',
+    'OptunaTrialStartSettings',
+    'OptunaTrialSettings',
     'OptimizerSettings',
     'OptunaSettings',
+    'OptunaStudySettings',
     'SFTSettings',
 ]
