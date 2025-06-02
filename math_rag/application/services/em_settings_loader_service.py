@@ -7,7 +7,7 @@ from math_rag.application.models.inference.settings import (
     ConcurrentEMSettings,
     EMProviderSettings,
 )
-from math_rag.shared.utils import PydanticOverriderUtil, YamlLoaderUtil
+from math_rag.shared.utils import PydanticOverriderUtil, YamlReaderUtil
 
 
 YAML_PATH = Path(__file__).parents[3] / 'settings' / 'inference' / 'embedding_models.yaml'
@@ -16,7 +16,7 @@ DEFAULT = 'default'
 
 class EMSettingsLoaderService(BaseEMSettingsLoaderService):
     def __init__(self):
-        self._provider_settings = YamlLoaderUtil.load(YAML_PATH, model=EMProviderSettings)
+        self._provider_settings = YamlReaderUtil.read(YAML_PATH, model=EMProviderSettings)
         self._default_settings = self._provider_settings[DEFAULT][DEFAULT]
 
     def load_basic_settings(self, provider: str, model: str) -> BasicEMSettings:

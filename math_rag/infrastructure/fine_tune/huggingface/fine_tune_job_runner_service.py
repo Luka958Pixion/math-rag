@@ -1,3 +1,4 @@
+from asyncio import sleep
 from datetime import datetime, timedelta
 from logging import getLogger
 from pathlib import Path
@@ -11,8 +12,13 @@ from math_rag.infrastructure.clients import (
     PBSProClient,
     SFTPClient,
 )
+from math_rag.infrastructure.enums.fine_tune.huggingface import HelperJobStatus
 from math_rag.infrastructure.enums.hpc import HPCQueue
 from math_rag.infrastructure.enums.hpc.pbs import PBSProJobState
+from math_rag.infrastructure.models.fine_tune.huggingface import (
+    HelperJob,
+    HelperJobStatusTracker,
+)
 from math_rag.infrastructure.services import (
     FineTuneSettingsLoaderService,
     PBSProResourceListLoaderService,
@@ -24,6 +30,7 @@ from math_rag.infrastructure.utils import (
     FileWriterUtil,
 )
 from math_rag.infrastructure.validators.inference.huggingface import HuggingFaceModelNameValidator
+from math_rag.shared.utils import YamlWriterUtil
 
 
 PBS_JOB_NAME = 'lora'
@@ -32,6 +39,7 @@ REMOTE_ROOT_PATH = Path('lora_default_root')
 
 # must be greater than WALL_TIME_THRESHOLD in lora.py
 WALL_TIME_THRESHOLD = timedelta(minutes=35)
+STATUS_TRACKER_DELAY = 30
 
 logger = getLogger(__name__)
 
@@ -111,9 +119,18 @@ class FineTuneJobRunnerService(BaseFineTuneJobRunnerService):
 
             await self.sftp_client.upload(local_path, remote_path)
 
-    async def run(self, fine_tune_job: FineTuneJob):
+    async def init(self, fine_tune_job: FineTuneJob) -> str:
         model = f'{fine_tune_job.provider_name}/{fine_tune_job.model_name}'
         HuggingFaceModelNameValidator.validate(model)
+
+        # load settings
+        fine_tune_settings = self.fine_tune_settings_loader_service.load(
+            fine_tune_job.provider_name, fine_tune_job.model_name
+        )
+
+        # write input file
+        input_local_path = LOCAL_ROOT_PATH / '.tmp' / f'input_{fine_tune_job.id}.yaml'
+        YamlWriterUtil.write(input_local_path, model=fine_tune_settings)
 
         # upload input file and avoid race-conditions
         input_remote_path = REMOTE_ROOT_PATH / input_local_path.name
@@ -169,30 +186,107 @@ class FineTuneJobRunnerService(BaseFineTuneJobRunnerService):
 
         job = await self.pbs_pro_client.queue_status(job_id)
         logger.info(
-            f'Job {job_id} obtained for batch request {batch_request.id} with state {job.state}'
+            f'Job {job_id} obtained for fine tune job {fine_tune_job.id} with state {job.state}'
         )
 
-        # create in-memory batch job file
-        batch_job = BatchJob(
-            batch_request_id=batch_request.id,
-            model_hub_id=model,
+        # create in-memory helper job file
+        helper_job = HelperJob(
+            fine_tune_job_id=fine_tune_job.id,
             timestamp=int(datetime.now().timestamp()),
         )
-        batch_job_json_str = batch_job.model_dump_json()
-        batch_job_json_bytes = batch_job_json_str.encode('utf-8')
+        helper_job_json_str = helper_job.model_dump_json()
+        helper_job_json_bytes = helper_job_json_str.encode('utf-8')
 
-        # write batch job file
-        batch_job_local_path = (
-            LOCAL_ROOT_PATH / '.tmp' / f'batch_job_{job_id}_{batch_request.id}.json'
+        # write helper job file
+        helper_job_local_path = (
+            LOCAL_ROOT_PATH / '.tmp' / f'helper_job_{job_id}_{fine_tune_job.id}.json'
         )
-        await FileWriterUtil.write(batch_job_json_bytes, batch_job_local_path)
+        await FileWriterUtil.write(helper_job_json_bytes, helper_job_local_path)
 
-        # upload batch job file and avoid race-conditions
-        batch_job_remote_path = REMOTE_ROOT_PATH / batch_job_local_path.name
-        batch_job_remote_part_path = batch_job_remote_path.with_name(
-            batch_job_remote_path.name + '.part'
+        # upload helper job file and avoid race-conditions
+        helper_job_remote_path = REMOTE_ROOT_PATH / helper_job_local_path.name
+        helper_job_remote_part_path = helper_job_remote_path.with_name(
+            helper_job_remote_path.name + '.part'
         )
-        await self.sftp_client.upload(batch_job_local_path, batch_job_remote_part_path)
-        await self.file_system_client.move(batch_job_remote_part_path, batch_job_remote_path)
+        await self.sftp_client.upload(helper_job_local_path, helper_job_remote_part_path)
+        await self.file_system_client.move(helper_job_remote_part_path, helper_job_remote_path)
 
         return job_id
+
+    async def result(
+        self,
+        job_id: str,
+        fine_tune_job_id: UUID,
+    ) -> dict | None:
+        job = await self.pbs_pro_client.queue_status(job_id)
+        logger.info(f'Job {job_id} state {job.state}')
+
+        match job.state:
+            case (
+                PBSProJobState.BEGUN
+                | PBSProJobState.QUEUED
+                | PBSProJobState.EXITING
+                | PBSProJobState.WAITING
+                | PBSProJobState.TRANSITING
+                | PBSProJobState.SUSPENDED
+                | PBSProJobState.USER_SUSPENDED
+                | PBSProJobState.HELD
+                | PBSProJobState.MOVED
+            ):
+                return None
+
+            case PBSProJobState.RUNNING | PBSProJobState.FINISHED | PBSProJobState.EXITED:
+                pass
+
+        status_tracker_remote_path = REMOTE_ROOT_PATH / f'status_tracker_{job_id}.json'
+        status_tracker_exists = await self.file_system_client.test(status_tracker_remote_path)
+
+        if not status_tracker_exists:
+            logger.warning(
+                f'Status tracker {status_tracker_remote_path} is not created yet, '
+                f'waiting for {STATUS_TRACKER_DELAY}s'
+            )
+            await sleep(STATUS_TRACKER_DELAY)
+
+        status_tracker_json = await self.file_system_client.concatenate(status_tracker_remote_path)
+        status_tracker = HelperJobStatusTracker.model_validate_json(status_tracker_json)
+
+        if fine_tune_job_id not in status_tracker.id_to_status:
+            return None
+
+        status = status_tracker.id_to_status[fine_tune_job_id]
+
+        match status:
+            case HelperJobStatus.WAITING | HelperJobStatus.RUNNING:
+                return None
+
+            case HelperJobStatus.FINISHED | HelperJobStatus.UNFINISHED:
+                pass
+
+        input_local_path = LOCAL_ROOT_PATH / '.tmp' / f'input_{fine_tune_job_id}.yaml'
+        output_local_path = LOCAL_ROOT_PATH / '.tmp' / f'output_{fine_tune_job_id}.json'
+        input_remote_path = REMOTE_ROOT_PATH / input_local_path.name
+        output_remote_path = REMOTE_ROOT_PATH / output_local_path.name
+
+        await self.sftp_client.download(output_remote_path, output_local_path)
+
+        # TODO make output class
+        result = FileReaderUtil.read_json(output_local_path)
+        print(result)
+
+        await self.file_system_client.remove([input_remote_path, output_remote_path])
+        input_local_path.unlink()
+        output_local_path.unlink()
+
+        return result
+
+    async def run(self, fine_tune_job: FineTuneJob, *, poll_interval: float) -> dict:
+        job_id = await self.init(fine_tune_job)
+
+        while True:
+            result = await self.result(job_id, fine_tune_job.id)
+
+            if result is not None:
+                return result
+
+            await sleep(poll_interval)

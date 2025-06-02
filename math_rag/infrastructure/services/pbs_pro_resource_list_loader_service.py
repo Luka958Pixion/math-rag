@@ -3,10 +3,10 @@ from pathlib import Path
 from pydantic import RootModel
 
 from math_rag.infrastructure.models.hpc.pbs import PBSProResourceList
-from math_rag.shared.utils import PydanticOverriderUtil, YamlLoaderUtil
+from math_rag.shared.utils import PydanticOverriderUtil, YamlReaderUtil
 
 
-YAML_PATH = Path(__file__).parents[3] / 'inference' / 'text_generation_inference.yaml'
+YAML_PATH = Path(__file__).parents[3] / 'settings' / 'inference' / 'text_generation_inference.yaml'
 DEFAULT = 'default'
 
 
@@ -29,7 +29,7 @@ class _PBSProResourceListMapping(RootModel[dict[str, PBSProResourceList]]):
 
 class PBSProResourceListLoaderService:
     def __init__(self):
-        self._model_settings = YamlLoaderUtil.load(YAML_PATH, model=_PBSProResourceListMapping)
+        self._model_settings = YamlReaderUtil.read(YAML_PATH, model=_PBSProResourceListMapping)
 
     def load(self, model: str) -> PBSProResourceList:
         default_settings = self._model_settings[DEFAULT]
