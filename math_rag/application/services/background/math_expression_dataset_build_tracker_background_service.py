@@ -11,7 +11,7 @@ from math_rag.application.contexts import DatasetBuildContext
 from math_rag.core.enums import MathExpressionDatasetBuildStatus
 
 
-BUILD_DATASET_TIMEOUT = 60 * 60 * 24 * 7  # 1 week
+TIMEOUT = 60 * 60 * 24 * 7  # 1 week
 
 logger = getLogger(__name__)
 
@@ -50,7 +50,7 @@ class MathExpressionDatasetBuildTrackerBackgroundService(
                     # timeout each build to avoid hangs
                     await asyncio.wait_for(
                         self.math_expression_dataset_builder_service.build(current_dataset),
-                        timeout=BUILD_DATASET_TIMEOUT,
+                        timeout=TIMEOUT,
                     )
                     current_dataset = (
                         await self.math_expression_dataset_repository.update_build_status(

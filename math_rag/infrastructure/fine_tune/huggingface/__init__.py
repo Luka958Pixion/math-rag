@@ -1,4 +1,4 @@
-from .lora import LoRA
+from .fine_tune_job_runner_service import FineTuneJobRunnerService
 
 
-__all__ = ['LoRA']
+__all__ = ['FineTuneJobRunnerService']

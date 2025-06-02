@@ -5,6 +5,7 @@ from logging import getLogger
 from pathlib import Path
 from uuid import UUID
 
+from math_rag.application.base.fine_tune import BaseFineTuneJobRunnerService
 from math_rag.infrastructure.clients import (
     ApptainerClient,
     FileSystemClient,
@@ -36,7 +37,7 @@ WALL_TIME_THRESHOLD = timedelta(minutes=35)
 logger = getLogger(__name__)
 
 
-class LoRA:
+class FineTuneJobRunnerService(BaseFineTuneJobRunnerService):
     def __init__(
         self,
         file_system_client: FileSystemClient,
@@ -104,5 +105,5 @@ class LoRA:
 
             await self.sftp_client.upload(local_path, remote_path)
 
-    def train(self):
+    async def run(self):
         pass

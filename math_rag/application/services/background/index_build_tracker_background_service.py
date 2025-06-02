@@ -11,7 +11,7 @@ from math_rag.application.contexts import IndexBuildContext
 from math_rag.core.enums import IndexBuildStatus
 
 
-BUILD_INDEX_TIMEOUT = 60 * 60 * 24 * 7  # 1 week
+TIMEOUT = 60 * 60 * 24 * 7  # 1 week
 
 logger = getLogger(__name__)
 
@@ -48,7 +48,7 @@ class IndexBuildTrackerBackgroundService(BaseIndexBuildTrackerBackgroundService)
                     # timeout each build to avoid hangs
                     await asyncio.wait_for(
                         self.index_builder_service.build(current_index),
-                        timeout=BUILD_INDEX_TIMEOUT,
+                        timeout=TIMEOUT,
                     )
                     current_index = await self.index_repository.update_build_status(
                         current_index.id, IndexBuildStatus.FINISHED
