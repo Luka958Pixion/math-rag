@@ -14,7 +14,7 @@ from math_rag.infrastructure.clients import (
 from math_rag.infrastructure.enums.hpc.pbs import PBSProJobState
 from math_rag.infrastructure.enums.inference.huggingface import BatchJobStatus
 from math_rag.infrastructure.inference.partials import PartialBatchEM
-from math_rag.infrastructure.services import LoRASettingsLoaderService
+from math_rag.infrastructure.services import FineTuneSettingsLoaderService
 from math_rag.infrastructure.utils import (
     FileHasherUtil,
     FileReaderUtil,
@@ -43,7 +43,7 @@ class LoRA:
         pbs_pro_client: PBSProClient,
         sftp_client: SFTPClient,
         apptainer_client: ApptainerClient,
-        lora_settings_loader_service: LoRASettingsLoaderService,
+        lora_settings_loader_service: FineTuneSettingsLoaderService,
     ):
         self.file_system_client = file_system_client
         self.pbs_pro_client = pbs_pro_client

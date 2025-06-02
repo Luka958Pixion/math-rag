@@ -1,4 +1,4 @@
-from pydantic import BaseModel, RootModel
+from pydantic import BaseModel
 
 
 class OptunaFloatParam(BaseModel):
@@ -50,11 +50,11 @@ class OptunaTrialSettings(BaseModel):
 
 
 class OptunaSettings(BaseModel):
+    n_trials: int
+    metric_name: str
     study_settings: OptunaStudySettings
     trial_start_settings: OptunaTrialStartSettings
     trial_settings: OptunaTrialSettings
-    n_trials: int
-    metric_name: str
 
 
 class SFTSettings(BaseModel):

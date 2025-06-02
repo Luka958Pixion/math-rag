@@ -15,18 +15,20 @@ optimizer_settings:
   weight_decay: 0.01
 
 optuna_settings: 
-  storage_name: sqlite:///optuna_lora_study.db
-  study_name: optuna_lora_study
-  metric_name: f1
-  direction: maximize
   n_trials: 1
+  metric_name: f1
 
-  lora_initial_settings:
+  study_settings:
+    storage_name: sqlite:///optuna_lora_study.db
+    study_name: optuna_lora_study
+    direction: maximize
+
+  trial_start_settings:
     r: 8
     lora_alpha: 16
     lora_dropout: 0.0
 
-  lora_settings:
+  trial_settings:
     r:
       name: r
       low: 2
