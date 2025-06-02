@@ -31,6 +31,7 @@ from math_rag.infrastructure.clients import (
     SFTPClient,
     SSHClient,
 )
+from math_rag.infrastructure.fine_tune.huggingface import FineTuneJobRunnerService
 from math_rag.infrastructure.indexers.documents import (
     FineTuneJobIndexer,
     IndexIndexer,
@@ -73,11 +74,11 @@ from math_rag.infrastructure.seeders.documents import (
 from math_rag.infrastructure.seeders.objects import MathArticleSeeder
 from math_rag.infrastructure.services import (
     DatasetPublisherService,
+    FineTuneSettingsLoaderService,
     LatexParserService,
     LatexVisitorService,
     PBSProResourceListLoaderService,
     PrometheusSnapshotLoaderService,
-    TEIResourcesLoaderService,
 )
 
 
@@ -278,7 +279,6 @@ class InfrastructureContainer(DeclarativeContainer):
         ),
     )
 
-    # pbs_pro_resource_list_loader_service
     pbs_pro_resource_list_loader_service = Factory(PBSProResourceListLoaderService)
 
     # TEI
@@ -298,6 +298,18 @@ class InfrastructureContainer(DeclarativeContainer):
         pbs_pro_client=pbs_pro_client,
         sftp_client=sftp_client,
         apptainer_client=apptainer_client,
+        pbs_pro_resource_list_loader_service=pbs_pro_resource_list_loader_service,
+    )
+
+    # LoRA
+    fine_tune_settings_loader_service = Factory(PBSProResourceListLoaderService)
+    fine_tune_job_runner_service = Factory(
+        FineTuneJobRunnerService,
+        file_system_client=file_system_client,
+        pbs_pro_client=pbs_pro_client,
+        sftp_client=sftp_client,
+        apptainer_client=apptainer_client,
+        fine_tune_settings_loader_service=fine_tune_settings_loader_service,
         pbs_pro_resource_list_loader_service=pbs_pro_resource_list_loader_service,
     )
 
