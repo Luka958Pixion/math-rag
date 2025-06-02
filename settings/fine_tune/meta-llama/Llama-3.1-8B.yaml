@@ -21,6 +21,7 @@ optuna_settings:
     storage_name: sqlite:///optuna_lora_study.db
     study_name: optuna_lora_study
     direction: maximize
+    load_if_exists: true
 
   trial_start_settings:
     r: 8
