@@ -1,5 +1,6 @@
 from .document_repository import DocumentRepository
 from .em_failed_request_repository import EMFailedRequestRepository
+from .fine_tune_job_repository import FineTuneJobRepository
 from .index_repository import IndexRepository
 from .katex_corrector_assistant_input_repository import KatexCorrectorAssistantInputRepository
 from .katex_corrector_assistant_output_repository import KatexCorrectorAssistantOutputRepository
@@ -11,9 +12,9 @@ from .math_expression_sample_repository import MathExpressionSampleRepository
 
 
 __all__ = [
-    'DatasetRepository',
     'DocumentRepository',
     'EMFailedRequestRepository',
+    'FineTuneJobRepository',
     'IndexRepository',
     'KatexCorrectorAssistantInputRepository',
     'KatexCorrectorAssistantOutputRepository',

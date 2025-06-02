@@ -1,3 +1,4 @@
+from .fine_tune_job import FineTuneJob
 from .index import Index
 from .math_article import MathArticle
 from .math_expression import MathExpression
@@ -8,6 +9,7 @@ from .math_problem import MathProblem
 
 
 __all__ = [
+    'FineTuneJob',
     'Index',
     'MathArticle',
     'MathExpression',

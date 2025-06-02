@@ -1,6 +1,6 @@
 from pathlib import Path
 
-from math_rag.infrastructure.models.settings import TEIModelSettings, TEISettings
+from math_rag.infrastructure.models.inference.settings import TEIModelSettings, TEISettings
 from math_rag.shared.utils import PydanticOverriderUtil, YamlLoaderUtil
 
 

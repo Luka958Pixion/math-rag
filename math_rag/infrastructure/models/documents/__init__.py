@@ -2,6 +2,7 @@ from .em_error_document import EMErrorDocument
 from .em_failed_request_document import EMFailedRequestDocument
 from .em_params_document import EMParamsDocument
 from .em_request_document import EMRequestDocument
+from .fine_tune_job_document import FineTuneJobDocument
 from .index_document import IndexDocument
 from .katex_corrector_assistant_input_document import KatexCorrectorAssistantInputDocument
 from .katex_corrector_assistant_output_document import KatexCorrectorAssistantOutputDocument
@@ -23,6 +24,7 @@ __all__ = [
     'EMFailedRequestDocument',
     'EMParamsDocument',
     'EMRequestDocument',
+    'FineTuneJobDocument',
     'IndexDocument',
     'KatexCorrectorAssistantInputDocument',
     'KatexCorrectorAssistantOutputDocument',

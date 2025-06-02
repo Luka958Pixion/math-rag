@@ -24,7 +24,7 @@ def log(trial: FrozenTrial):
     logger.info('Hyperparameters:')
 
     for key, value in trial.params.items():
-        logger.info(f'      {key}: {value}')
+        logger.info(f'  {key}: {value}')
 
 
 if __name__ == '__main__':

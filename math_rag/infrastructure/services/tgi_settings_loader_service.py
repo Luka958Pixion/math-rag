@@ -1,6 +1,6 @@
 from pathlib import Path
 
-from math_rag.infrastructure.models.settings import TGIModelSettings, TGISettings
+from math_rag.infrastructure.models.inference.settings import TGIModelSettings, TGISettings
 from math_rag.shared.utils import PydanticOverriderUtil, YamlLoaderUtil
 
 

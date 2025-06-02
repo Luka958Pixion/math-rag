@@ -11,8 +11,6 @@ from math_rag.web.requests import IndexCreateRequest
 from math_rag.web.responses import IndexCreateResponse
 
 
-BUILD_INDEX_TIMEOUT = 60 * 60 * 24 * 7  # 1 week
-
 logger = getLogger(__name__)
 router = APIRouter()
 
