@@ -49,6 +49,10 @@ HF_TOKEN = config('HF_TOKEN', default=None)
 WANDB_PROJECT = config('WANDB_PROJECT', default=None)
 WANDB_API_KEY = config('WANDB_API_KEY', default=None)
 
+# paths
+TRAINER_STATE_PATH = HF_HOME / 'trainer' / 'state'
+TRAINER_MODEL_PATH = HF_HOME / 'trainer' / 'model'
+
 
 basicConfig(level=INFO, format='%(asctime)s [%(threadName)s] %(levelname)s: %(message)s')
 logger = getLogger(__name__)
@@ -156,7 +160,7 @@ def main(trial: Trial, settings: FineTuneSettings):
 
     # fine-tune
     sft_config = SFTConfig(
-        output_dir=f'out/trainer/{trial._trial_id}',
+        output_dir=f'{TRAINER_STATE_PATH}/{trial._trial_id}',
         do_train=True,
         do_eval=True,
         do_predict=False,
@@ -213,7 +217,7 @@ def main(trial: Trial, settings: FineTuneSettings):
         ignore_keys_for_eval=['past_key_values', 'hidden_states', 'attentions'],
     )
     trainer.model.save_pretrained(
-        save_directory=f'out/trainer/model/{trial._trial_id}',
+        save_directory=f'{TRAINER_MODEL_PATH}/{trial._trial_id}',
         push_to_hub=False,
         token=None,
         save_peft_format=True,
