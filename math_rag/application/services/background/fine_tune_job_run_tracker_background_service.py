@@ -2,8 +2,8 @@ import asyncio
 
 from logging import getLogger
 
+from math_rag.application.base.fine_tune import BaseFineTuneJobRunnerService
 from math_rag.application.base.repositories.documents import BaseFineTuneJobRepository
-from math_rag.application.base.services import BaseIndexBuilderService
 from math_rag.application.base.services.background import BaseFineTuneJobRunTrackerBackgroundService
 from math_rag.application.contexts import FineTuneJobRunContext
 from math_rag.core.enums import FineTuneJobRunStatus
@@ -18,11 +18,11 @@ class FineTuneJobRunTrackerBackgroundService(BaseFineTuneJobRunTrackerBackground
     def __init__(
         self,
         fine_tune_job_repository: BaseFineTuneJobRepository,
-        # index_builder_service: BaseIndexBuilderService,
+        fine_tune_job_runner_service: BaseFineTuneJobRunnerService,
         fine_tune_job_run_context: FineTuneJobRunContext,
     ):
         self.fine_tune_job_repository = fine_tune_job_repository
-        # self.index_builder_service = index_builder_service
+        self.fine_tune_job_runner_service = fine_tune_job_runner_service
         self.fine_tune_job_run_context = fine_tune_job_run_context
 
     async def track(self):
@@ -45,7 +45,7 @@ class FineTuneJobRunTrackerBackgroundService(BaseFineTuneJobRunTrackerBackground
                 try:
                     # timeout each build to avoid hangs
                     await asyncio.wait_for(
-                        self.index_builder_service.build(current_fine_tune_job),
+                        self.fine_tune_job_runner_service.build(current_fine_tune_job),
                         timeout=TIMEOUT,
                     )
                     current_fine_tune_job = await self.fine_tune_job_repository.update_build_status(

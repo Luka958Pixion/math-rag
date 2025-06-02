@@ -27,7 +27,7 @@ class PBSProClient:
         job_name: str,
         env_vars: dict[str, str] | None = None,
         *,
-        num_chunks: int,
+        num_nodes: int,
         num_cpus: int,
         num_gpus: int,
         mem: int,
@@ -46,7 +46,7 @@ class PBSProClient:
 
         cmd += (
             f'-q {queue.value} '
-            f'-l select={num_chunks}:ncpus={num_cpus}:mem={mem}B:ngpus={num_gpus},'
+            f'-l select={num_nodes}:ncpus={num_cpus}:mem={mem}B:ngpus={num_gpus},'
             f'walltime={wall_time} '
             f'-N {job_name} '
             f'{job_name}.sh'

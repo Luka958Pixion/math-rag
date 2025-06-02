@@ -35,7 +35,7 @@ from math_rag.infrastructure.models.inference.huggingface import (
     BatchJob,
     BatchJobStatusTracker,
 )
-from math_rag.infrastructure.services import TGISettingsLoaderService
+from math_rag.infrastructure.services import PBSProResourceListLoaderService
 from math_rag.infrastructure.utils import (
     FileHasherUtil,
     FileReaderUtil,
@@ -66,13 +66,13 @@ class TGIBatchLLM(PartialBatchLLM):
         pbs_pro_client: PBSProClient,
         sftp_client: SFTPClient,
         apptainer_client: ApptainerClient,
-        tgi_settings_loader_service: TGISettingsLoaderService,
+        pbs_pro_resource_list_loader_service: PBSProResourceListLoaderService,
     ):
         self.file_system_client = file_system_client
         self.pbs_pro_client = pbs_pro_client
         self.sftp_client = sftp_client
         self.apptainer_client = apptainer_client
-        self.tgi_settings_loader_service = tgi_settings_loader_service
+        self.pbs_pro_resource_list_loader_service = pbs_pro_resource_list_loader_service
 
     async def _has_file_changed(self, local_path: Path, remote_path: Path) -> bool:
         """
@@ -270,29 +270,29 @@ class TGIBatchLLM(PartialBatchLLM):
                 wall_time_left = None
 
             if not wall_time_left or wall_time_left < WALL_TIME_THRESHOLD:
-                tgi_settings = self.tgi_settings_loader_service.load(model)
+                resources = self.pbs_pro_resource_list_loader_service.load(model)
                 job_id = await self.pbs_pro_client.queue_submit(
                     REMOTE_ROOT_PATH,
                     PBS_JOB_NAME,
-                    num_chunks=tgi_settings.num_chunks,
-                    num_cpus=tgi_settings.num_cpus,
-                    num_gpus=tgi_settings.num_gpus,
-                    mem=tgi_settings.mem,
-                    wall_time=tgi_settings.wall_time,
+                    num_nodes=resources.num_nodes,
+                    num_cpus=resources.num_cpus,
+                    num_gpus=resources.num_gpus,
+                    mem=resources.mem,
+                    wall_time=resources.wall_time,
                     depend_job_id=job_id,
                     queue=HPCQueue.GPU,
                 )
 
         else:
-            tgi_settings = self.tgi_settings_loader_service.load(model)
+            resources = self.pbs_pro_resource_list_loader_service.load(model)
             job_id = await self.pbs_pro_client.queue_submit(
                 REMOTE_ROOT_PATH,
                 PBS_JOB_NAME,
-                num_chunks=tgi_settings.num_chunks,
-                num_cpus=tgi_settings.num_cpus,
-                num_gpus=tgi_settings.num_gpus,
-                mem=tgi_settings.mem,
-                wall_time=tgi_settings.wall_time,
+                num_nodes=resources.num_chunks,
+                num_cpus=resources.num_cpus,
+                num_gpus=resources.num_gpus,
+                mem=resources.mem,
+                wall_time=resources.wall_time,
                 queue=HPCQueue.GPU,
             )
 

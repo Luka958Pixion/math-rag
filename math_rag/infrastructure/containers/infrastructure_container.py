@@ -75,9 +75,9 @@ from math_rag.infrastructure.services import (
     DatasetPublisherService,
     LatexParserService,
     LatexVisitorService,
+    PBSProResourceListLoaderService,
     PrometheusSnapshotLoaderService,
-    TEISettingsLoaderService,
-    TGISettingsLoaderService,
+    TEIResourcesLoaderService,
 )
 
 
@@ -278,28 +278,27 @@ class InfrastructureContainer(DeclarativeContainer):
         ),
     )
 
-    # TEI
-    tei_settings_loader_service = Factory(TEISettingsLoaderService)
+    # pbs_pro_resource_list_loader_service
+    pbs_pro_resource_list_loader_service = Factory(PBSProResourceListLoaderService)
 
+    # TEI
     tei_batch_em = Factory(
         TEIBatchEM,
         file_system_client=file_system_client,
         pbs_pro_client=pbs_pro_client,
         sftp_client=sftp_client,
         apptainer_client=apptainer_client,
-        tei_settings_loader_service=tei_settings_loader_service,
+        pbs_pro_resource_list_loader_service=pbs_pro_resource_list_loader_service,
     )
 
     # TGI
-    tgi_settings_loader_service = Factory(TGISettingsLoaderService)
-
     tgi_batch_llm = Factory(
         TGIBatchLLM,
         file_system_client=file_system_client,
         pbs_pro_client=pbs_pro_client,
         sftp_client=sftp_client,
         apptainer_client=apptainer_client,
-        tgi_settings_loader_service=tgi_settings_loader_service,
+        pbs_pro_resource_list_loader_service=pbs_pro_resource_list_loader_service,
     )
 
     # Prometheus

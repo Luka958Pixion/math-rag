@@ -31,7 +31,7 @@ from math_rag.infrastructure.models.inference.huggingface import (
     BatchJob,
     BatchJobStatusTracker,
 )
-from math_rag.infrastructure.services import TEISettingsLoaderService
+from math_rag.infrastructure.services import PBSProResourceListLoaderService
 from math_rag.infrastructure.utils import (
     FileHasherUtil,
     FileReaderUtil,
@@ -61,13 +61,13 @@ class TEIBatchEM(PartialBatchEM):  # TODO update
         pbs_pro_client: PBSProClient,
         sftp_client: SFTPClient,
         apptainer_client: ApptainerClient,
-        tei_settings_loader_service: TEISettingsLoaderService,
+        pbs_pro_resource_list_loader_service: PBSProResourceListLoaderService,
     ):
         self.file_system_client = file_system_client
         self.pbs_pro_client = pbs_pro_client
         self.sftp_client = sftp_client
         self.apptainer_client = apptainer_client
-        self.tei_settings_loader_service = tei_settings_loader_service
+        self.pbs_pro_resource_list_loader_service = pbs_pro_resource_list_loader_service
 
     async def _has_file_changed(self, local_path: Path, remote_path: Path) -> bool:
         """
@@ -265,28 +265,28 @@ class TEIBatchEM(PartialBatchEM):  # TODO update
                 wall_time_left = None
 
             if not wall_time_left or wall_time_left < WALL_TIME_THRESHOLD:
-                tei_settings = self.tei_settings_loader_service.load(model)
+                resources = self.pbs_pro_resource_list_loader_service.load(model)
                 job_id = await self.pbs_pro_client.queue_submit(
                     REMOTE_ROOT_PATH,
                     PBS_JOB_NAME,
-                    num_chunks=tei_settings.num_chunks,
-                    num_cpus=tei_settings.num_cpus,
-                    num_gpus=tei_settings.num_gpus,
-                    mem=tei_settings.mem,
-                    wall_time=tei_settings.wall_time,
+                    num_nodes=resources.num_nodes,
+                    num_cpus=resources.num_cpus,
+                    num_gpus=resources.num_gpus,
+                    mem=resources.mem,
+                    wall_time=resources.wall_time,
                     depend_job_id=job_id,
                 )
 
         else:
-            tei_settings = self.tei_settings_loader_service.load(model)
+            resources = self.pbs_pro_resource_list_loader_service.load(model)
             job_id = await self.pbs_pro_client.queue_submit(
                 REMOTE_ROOT_PATH,
                 PBS_JOB_NAME,
-                num_chunks=tei_settings.num_chunks,
-                num_cpus=tei_settings.num_cpus,
-                num_gpus=tei_settings.num_gpus,
-                mem=tei_settings.mem,
-                wall_time=tei_settings.wall_time,
+                num_nodes=resources.num_nodes,
+                num_cpus=resources.num_cpus,
+                num_gpus=resources.num_gpus,
+                mem=resources.mem,
+                wall_time=resources.wall_time,
             )
 
         job = await self.pbs_pro_client.queue_status(job_id)
