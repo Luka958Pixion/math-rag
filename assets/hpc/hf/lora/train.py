@@ -71,19 +71,19 @@ def compute_metrics(
     """
     logits, labels = eval_preds
 
-    # Ensure logits is a Tensor
+    # ensure logits is a Tensor
     if not isinstance(logits, torch.Tensor):
         logits = torch.tensor(logits)
 
     preds = logits.argmax(dim=-1).cpu().numpy()
 
-    # Ensure labels is a Tensor
+    # ensure labels is a Tensor
     if not isinstance(labels, torch.Tensor):
         labels = torch.tensor(labels)
 
     labels = labels.cpu().numpy()
 
-    # Determine if binary or multiclass
+    # determine if binary or multiclass
     unique_labels = set(labels.flatten().tolist())
     f1 = f1_score(
         labels.flatten(),
@@ -106,7 +106,7 @@ class GracefulStopCallback(TrainerCallback):
 
 
 def main(trial: Trial):
-    # initialization
+    # login
     huggingface_hub.login(token=HF_TOKEN)
     wandb.login(key=WANDB_API_KEY)
     wandb.init(
@@ -114,6 +114,7 @@ def main(trial: Trial):
         name=f'{MODEL_NAME}_{trial.study._study_id}_{trial._trial_id}_qlora',
     )
 
+    # initialize tokenizer
     tokenizer = AutoTokenizer.from_pretrained(
         pretrained_model_name_or_path=MODEL_NAME,
         use_fast=True,
@@ -122,8 +123,8 @@ def main(trial: Trial):
     tokenizer = cast(PreTrainedTokenizerBase, tokenizer)
     init_tokenizer(tokenizer)
 
+    # load dataset
     repo_id = f'{HF_USERNAME}/{DATASET_NAME}'
-
     download_config = DownloadConfig(
         max_retries=3,
         disable_tqdm=True,
@@ -152,6 +153,7 @@ def main(trial: Trial):
     validate_dataset = dataset_dict['validate']
     test_dataset = dataset_dict['test']
 
+    # initialize model
     bits_and_bytes_config = BitsAndBytesConfig(
         load_in_8bit=True,
         llm_int8_threshold=6.0,
@@ -167,9 +169,10 @@ def main(trial: Trial):
     model = cast(PreTrainedModel, model)
     init_language_model(model)
 
-    r = trial.suggest_int('r', 4, 32, step=1)
-    lora_alpha = trial.suggest_int('lora_alpha', 8, 64, step=8)
-    lora_dropout = trial.suggest_float('lora_dropout', 0.0, 0.3, step=0.05)
+    # configure
+    r = trial.params['r']
+    lora_alpha = trial.params['lora_alpha']
+    lora_dropout = trial.params['lora_dropout']
 
     peft_config = LoraConfig(
         r=r,
@@ -237,7 +240,10 @@ def main(trial: Trial):
         test_dataset=test_dataset,
         processing_class=tokenizer,
         callbacks=[wandb_callback],
-        optimizer_cls_and_kwargs=(AdamW, {'lr': 2e-4, 'weight_decay': 0.01}),
+        optimizer_cls_and_kwargs=(
+            AdamW,
+            {'lr': ..., 'weight_decay': ...},
+        ),  # TODO read from settigns
         preprocess_logits_for_metrics=False,
         compute_metrics=compute_metrics,
         formatting_func=lambda batch: formatting_func(tokenizer, batch),

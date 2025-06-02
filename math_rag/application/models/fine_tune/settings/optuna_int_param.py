@@ -1,7 +1,8 @@
 from pydantic import BaseModel
 
 
-class IntRange(BaseModel):
+class OptunaIntParam(BaseModel):
+    name: str
     low: int
     high: int
     step: int

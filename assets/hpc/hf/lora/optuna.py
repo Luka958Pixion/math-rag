@@ -16,6 +16,10 @@ DIRECTION = ...
 
 
 def objective(trial: Trial) -> float:
+    trial.suggest_int('r', 4, 32, step=1)  # TODO
+    trial.suggest_int('lora_alpha', 8, 64, step=8)
+    trial.suggest_float('lora_dropout', 0.0, 0.3, step=0.05)
+
     return train_main(trial)
 
 
