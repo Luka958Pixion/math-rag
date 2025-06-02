@@ -19,21 +19,19 @@ router = APIRouter()
 @inject
 async def create_dataset(
     request: DatasetCreateRequest = Body(...),
-    math_expression_dataset_repository: BaseMathExpressionDatasetRepository = Depends(
+    repository: BaseMathExpressionDatasetRepository = Depends(
         Provide[ApplicationContainer.math_expression_dataset_repository]
     ),
-    dataset_build_context: DatasetBuildContext = Depends(
-        Provide[ApplicationContainer.dataset_build_context]
-    ),
+    context: DatasetBuildContext = Depends(Provide[ApplicationContainer.dataset_build_context]),
 ):
     dataset = MathExpressionDataset(
         build_from_dataset_id=request.build_from_dataset_id,
         build_from_stage=request.build_from_stage,
     )
-    await math_expression_dataset_repository.insert_one(dataset)
+    await repository.insert_one(dataset)
 
-    async with dataset_build_context.condition:
-        dataset_build_context.condition.notify()
+    async with context.condition:
+        context.condition.notify()
 
     return DatasetCreateResponse(
         id=dataset.id,

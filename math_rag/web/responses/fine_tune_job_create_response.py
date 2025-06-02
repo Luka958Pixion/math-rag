@@ -9,6 +9,6 @@ from math_rag.core.enums import FineTuneJobRunStatus
 class FineTuneJobCreateResponse(BaseModel):
     id: UUID
     timestamp: datetime
-    status: FineTuneJobRunStatus
+    run_status: FineTuneJobRunStatus
     provider_name: str
     model_name: str

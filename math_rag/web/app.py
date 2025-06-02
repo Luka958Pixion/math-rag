@@ -12,6 +12,7 @@ from math_rag.application.containers import ApplicationContainer
 from math_rag.web.constants import OPENAPI_URL, TITLE
 from math_rag.web.routers import health_router, scalar_router
 from math_rag.web.routers.datasets import dataset_create_router
+from math_rag.web.routers.fine_tune_jobs import fine_tune_job_create_router
 from math_rag.web.routers.indexes import index_create_router
 
 
@@ -66,6 +67,7 @@ def create_api(application_container: ApplicationContainer) -> FastAPI:
 
     # routers
     api.include_router(dataset_create_router)
+    api.include_router(fine_tune_job_create_router)
     api.include_router(index_create_router)
     api.include_router(health_router)
     api.include_router(scalar_router)

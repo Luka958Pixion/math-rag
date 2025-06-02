@@ -19,19 +19,17 @@ router = APIRouter()
 @inject
 async def create_index(
     request: IndexCreateRequest = Body(...),
-    index_repository: BaseIndexRepository = Depends(Provide[ApplicationContainer.index_repository]),
-    index_build_context: IndexBuildContext = Depends(
-        Provide[ApplicationContainer.index_build_context]
-    ),
+    repository: BaseIndexRepository = Depends(Provide[ApplicationContainer.index_repository]),
+    context: IndexBuildContext = Depends(Provide[ApplicationContainer.index_build_context]),
 ):
     index = Index(
         build_from_index_id=request.build_from_index_id,
         build_from_stage=request.build_from_stage,
     )
-    await index_repository.insert_one(index)
+    await repository.insert_one(index)
 
-    async with index_build_context.condition:
-        index_build_context.condition.notify()
+    async with context.condition:
+        context.condition.notify()
 
     return IndexCreateResponse(
         id=index.id,
