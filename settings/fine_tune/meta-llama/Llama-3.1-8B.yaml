@@ -5,7 +5,6 @@ dataset_settings:
 
 model_settings:
   model_name: meta-llama/Llama-3.1-8B
-  tokenizer_name: meta-llama/Llama-3.1-8B
   target_modules: 
     - q_proj
     - v_proj

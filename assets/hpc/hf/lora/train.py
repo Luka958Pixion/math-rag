@@ -7,8 +7,6 @@ from pathlib import Path
 from typing import cast
 
 import huggingface_hub
-import numpy as np
-import torch
 import wandb
 
 from datasets import DatasetDict, load_dataset
@@ -16,7 +14,6 @@ from datasets.download import DownloadConfig
 from decouple import config
 from optuna import Trial
 from peft import LoraConfig, get_peft_model, prepare_model_for_kbit_training
-from sklearn.metrics import f1_score
 from torch.optim import AdamW
 from transformers import (
     AutoModelForCausalLM,
@@ -39,9 +36,12 @@ from .llama_3_1_8b import (
     init_language_model,
     init_tokenizer,
 )
+from .metrics import compute_metrics
+from .optuna import FineTuneSettings
 
 
 # huggingface
+HF_HOME = Path(...)  # TODO and bind!
 HF_USERNAME = config('HF_USERNAME', default=None)
 HF_TOKEN = config('HF_TOKEN', default=None)
 
@@ -49,49 +49,9 @@ HF_TOKEN = config('HF_TOKEN', default=None)
 WANDB_PROJECT = config('WANDB_PROJECT', default=None)
 WANDB_API_KEY = config('WANDB_API_KEY', default=None)
 
-# paths
-HF_HOME = Path(...)
-
-
-# TODO set HF_HOME=... and bind it
-MODEL_NAME = ...
-DATASET_NAME = ...
-
 
 basicConfig(level=INFO, format='%(asctime)s [%(threadName)s] %(levelname)s: %(message)s')
 logger = getLogger(__name__)
-
-
-def compute_metrics(
-    eval_preds: tuple[np.ndarray | torch.Tensor, np.ndarray | torch.Tensor],
-) -> dict[str, float]:
-    """
-    Compute F1 for either binary or multiclass classification.
-    eval_preds is a tuple (logits, labels) coming from SFTTrainer.evaluate().
-    """
-    logits, labels = eval_preds
-
-    # ensure logits is a Tensor
-    if not isinstance(logits, torch.Tensor):
-        logits = torch.tensor(logits)
-
-    preds = logits.argmax(dim=-1).cpu().numpy()
-
-    # ensure labels is a Tensor
-    if not isinstance(labels, torch.Tensor):
-        labels = torch.tensor(labels)
-
-    labels = labels.cpu().numpy()
-
-    # determine if binary or multiclass
-    unique_labels = set(labels.flatten().tolist())
-    f1 = f1_score(
-        labels.flatten(),
-        preds.flatten(),
-        average='binary' if len(unique_labels) == 2 else 'weighted',
-    )
-
-    return {'f1': f1}
 
 
 class GracefulStopCallback(TrainerCallback):
@@ -105,18 +65,18 @@ class GracefulStopCallback(TrainerCallback):
         return control
 
 
-def main(trial: Trial):
+def main(trial: Trial, settings: FineTuneSettings):
     # login
     huggingface_hub.login(token=HF_TOKEN)
     wandb.login(key=WANDB_API_KEY)
     wandb.init(
         project=WANDB_PROJECT,
-        name=f'{MODEL_NAME}_{trial.study._study_id}_{trial._trial_id}_qlora',
+        name=f'{settings.model_settings.model_name}_{trial.study._study_id}_{trial._trial_id}_qlora',
     )
 
     # initialize tokenizer
     tokenizer = AutoTokenizer.from_pretrained(
-        pretrained_model_name_or_path=MODEL_NAME,
+        pretrained_model_name_or_path=settings.model_settings.model_name,
         use_fast=True,
         trust_remote_code=True,
     )
@@ -124,13 +84,14 @@ def main(trial: Trial):
     init_tokenizer(tokenizer)
 
     # load dataset
-    repo_id = f'{HF_USERNAME}/{DATASET_NAME}'
+    repo_id = f'{HF_USERNAME}/{settings.dataset_settings.dataset_name}'
     download_config = DownloadConfig(
         max_retries=3,
         disable_tqdm=True,
     )
     dataset_dict: DatasetDict = load_dataset(
         path=repo_id,
+        name=settings.dataset_settings.config_name,
         split=None,
         download_config=download_config,
         token=HF_TOKEN,
@@ -161,7 +122,7 @@ def main(trial: Trial):
     )
 
     model = AutoModelForCausalLM.from_pretrained(
-        pretrained_model_name_or_path=MODEL_NAME,
+        pretrained_model_name_or_path=settings.model_settings.model_name,
         trust_remote_code=True,
         quantization_config=bits_and_bytes_config,
         device_map='auto',
@@ -169,16 +130,15 @@ def main(trial: Trial):
     model = cast(PreTrainedModel, model)
     init_language_model(model)
 
-    # configure
-    r = trial.params['r']
-    lora_alpha = trial.params['lora_alpha']
-    lora_dropout = trial.params['lora_dropout']
+    r = trial.params[settings.optuna_settings.trial_settings.r.name]
+    lora_alpha = trial.params[settings.optuna_settings.trial_settings.lora_alpha.name]
+    lora_dropout = trial.params[settings.optuna_settings.trial_settings.lora_dropout.name]
 
     peft_config = LoraConfig(
         r=r,
         lora_alpha=lora_alpha,
         lora_dropout=lora_dropout,
-        target_modules=...,  # NOTE depends on model
+        target_modules=settings.model_settings.target_modules,
         use_dora=True,
     )
 
@@ -194,6 +154,7 @@ def main(trial: Trial):
         mixed=False,
     )
 
+    # fine-tune
     sft_config = SFTConfig(
         output_dir=f'out/trainer/{trial._trial_id}',
         do_train=True,
@@ -205,18 +166,19 @@ def main(trial: Trial):
         save_steps=100,
         save_total_limit=2,
         disable_tqdm=True,
-        per_device_train_batch_size=8,
-        gradient_accumulation_steps=4,
-        learning_rate=2e-4,
-        num_train_epochs=3,
-        fp16=True,
-        weight_decay=0.01,
+        per_device_train_batch_size=settings.sft_settings.per_device_train_batch_size,
+        gradient_accumulation_steps=settings.sft_settings.gradient_accumulation_steps,
+        learning_rate=settings.sft_settings.learning_rate,
+        num_train_epochs=settings.sft_settings.num_train_epochs,
+        fp16=settings.sft_settings.fp16,
+        weight_decay=settings.sft_settings.weight_decay,
         report_to='wandb',
         logging_strategy='steps',
         logging_steps=100,
         logging_first_step=True,
     )
 
+    graceful_stop_callback = GracefulStopCallback()
     wandb_callback = WandbCallback(
         wandb_kwargs={
             'name': f'lora-optuna-run-{trial.number}',
@@ -239,16 +201,12 @@ def main(trial: Trial):
         eval_dataset=validate_dataset,
         test_dataset=test_dataset,
         processing_class=tokenizer,
-        callbacks=[wandb_callback],
-        optimizer_cls_and_kwargs=(
-            AdamW,
-            {'lr': ..., 'weight_decay': ...},
-        ),  # TODO read from settigns
+        callbacks=[graceful_stop_callback, wandb_callback],
+        optimizer_cls_and_kwargs=(AdamW, settings.optimizer_settings.model_dump()),
         preprocess_logits_for_metrics=False,
         compute_metrics=compute_metrics,
         formatting_func=lambda batch: formatting_func(tokenizer, batch),
     )
-
     trainer.train(
         resume_from_checkpoint=True,
         trial=trial,
@@ -260,6 +218,8 @@ def main(trial: Trial):
         token=None,
         save_peft_format=True,
     )
+
+    # evaluate
     eval_results = trainer.evaluate(eval_dataset=validate_dataset)
     f1 = eval_results['eval_f1']
 
