@@ -1,11 +1,11 @@
 from abc import ABC, abstractmethod
+from typing import Generic, TypeVar
 
 
-class BaseGraphRepository(ABC):
+T = TypeVar('T')
+
+
+class BaseGraphRepository(ABC, Generic[T]):
     @abstractmethod
-    async def create_node(self, name: str):
-        pass
-
-    @abstractmethod
-    async def delete_node(self, name: str):
+    async def create_node(self):
         pass

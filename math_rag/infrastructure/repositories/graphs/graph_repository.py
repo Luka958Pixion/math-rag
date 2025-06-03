@@ -1,10 +1,19 @@
+from typing import Generic
+
 from neo4j import AsyncGraphDatabase
 from neomodel import AsyncNodeSet, AsyncStructuredNode, db
 
 from math_rag.application.base.repositories.graphs import BaseGraphRepository
+from math_rag.infrastructure.types.repositories.graphs.nodes import (
+    MappingType,
+    SourceType,
+    TargetType,
+)
 
 
-class GraphRepository(BaseGraphRepository):
+class GraphRepository(
+    BaseGraphRepository[SourceType], Generic[SourceType, TargetType, MappingType]
+):
     def __init__(self, uri: str, username: str, password: str):
         driver = AsyncGraphDatabase.driver(uri=uri, auth=(username, password))
         db.set_connection(driver=driver)
@@ -12,14 +21,14 @@ class GraphRepository(BaseGraphRepository):
     async def close(self):
         await db.close_connection()
 
-    async def close(self):
-        await db.close_connection()
-
-    async def insert_node(self, node: AsyncStructuredNode):
+    async def insert_node(self, node: SourceType):
+        # TODO map
         async with db.transaction:
             await node.save()
 
-    async def find_nodes(self, model_class: type[AsyncStructuredNode], match_properties: dict):
+    async def find_nodes(
+        self, model_class: type[AsyncStructuredNode], match_properties: dict
+    ):  # TODO make better
         async with db.transaction:
             node_set: AsyncNodeSet = model_class.nodes
 
@@ -44,7 +53,7 @@ class GraphRepository(BaseGraphRepository):
             node: AsyncStructuredNode | None = await node_set.get_or_none(**match_properties)
 
             if not node:
-                raise ValueError(f'Node {node.uid}')
+                raise ValueError(f'Node with properties {match_properties} not found')
 
             if node:
                 for key, value in update_properties.items():
