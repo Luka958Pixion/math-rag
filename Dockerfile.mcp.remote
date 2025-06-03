@@ -1,0 +1,9 @@
+FROM node:22-alpine
+
+WORKDIR /app
+
+RUN npm install -g mcp-remote
+
+EXPOSE 3334
+
+ENTRYPOINT ["mcp-remote"]
