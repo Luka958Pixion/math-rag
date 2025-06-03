@@ -75,6 +75,9 @@ async def main():
         task_group.create_task(api_uvicorn_server.serve(), name='API')
         task_group.create_task(mcp_uvicorn_server.serve(), name='MCP')
 
+    application_container.shutdown_resources()
+    infrastructure_container.shutdown_resources()
+
 
 if __name__ == '__main__':
     try:
