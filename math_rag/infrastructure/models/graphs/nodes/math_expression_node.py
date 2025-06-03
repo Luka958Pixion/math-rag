@@ -1,10 +1,13 @@
-from neomodel import AsyncRelationshipTo, AsyncStructuredNode, UniqueIdProperty
+from neomodel import AsyncRelationshipTo, AsyncStructuredNode, AsyncZeroOrMore, UniqueIdProperty
 
 from math_rag.infrastructure.models.graphs.rels import AppliesToRel
 
 
 class MathExpressionNode(AsyncStructuredNode):
-    id = UniqueIdProperty(required=True)
+    uid = UniqueIdProperty(required=True)
     applies_to = AsyncRelationshipTo(
-        'MathExpression', AppliesToRel.__name__.removesuffix('Rel').upper(), model=AppliesToRel
+        cls_name='MathExpression',
+        relation_type=AppliesToRel.__name__.removesuffix('Rel').upper(),
+        cardinality=AsyncZeroOrMore,
+        model=AppliesToRel,
     )

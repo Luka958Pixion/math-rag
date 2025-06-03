@@ -1,4 +1,4 @@
-from .neo4j_graph_repository import Neo4jGraphRepository
+from .graph_repository import GraphRepository
 
 
-__all__ = ['Neo4jGraphRepository']
+__all__ = ['GraphRepository']
