@@ -7,3 +7,4 @@ RUN npm install -g mcp-remote
 EXPOSE 3334
 
 ENTRYPOINT ["mcp-remote"]
+CMD ["http://host.docker.internal:7200/mcp/", "--allow-http"]

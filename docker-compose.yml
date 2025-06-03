@@ -122,18 +122,6 @@ services:
       - 6277:6277
     restart: unless-stopped
 
-  mcp-remote:
-    build:
-      context: .
-      dockerfile: Dockerfile.mcp.remote
-    container_name: mcp-remote
-    ports:
-      - 3334:3334
-    command:
-      - http://host.docker.internal:${MCP_PORT}/mcp/
-      - --allow-http
-    restart: no
-
   math-rag-jupyter:
     image: ghcr.io/luka958pixion/math_rag_jupyter:latest
     platform: linux/amd64

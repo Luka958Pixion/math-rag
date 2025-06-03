@@ -47,7 +47,9 @@ Create `.env.hpc` file with the following variables:
 ## Model Context Protocol
 
 ### Claude Desktop
-Run `pwd` in the project root on the host to get the absolute path, then replace `<PATH>` with that value under the `-f` flag configuration below.
+Build `mcp-remote` image for **local** development.
+`docker build -f Dockerfile.mcp.remote -t math-rag/mcp-remote:latest .`
+
 Open Claude Desktop and navigate `Claude` > `Settings` > `Developer` > `Edit Config` and add this to `claude_desktop_config.json`:
 
 ```json
@@ -56,14 +58,10 @@ Open Claude Desktop and navigate `Claude` > `Settings` > `Developer` > `Edit Con
     "mathRagMcp": {
       "command": "docker",
       "args": [
-        "compose",
-        "-f",
-        "<PATH>/docker-compose.yml",
-        "--project-name",
-        "math-rag",
         "run",
         "--rm",
-        "mcp-remote"
+        "-i",
+        "math-rag/mcp-remote:latest"
       ]
     }
   }
