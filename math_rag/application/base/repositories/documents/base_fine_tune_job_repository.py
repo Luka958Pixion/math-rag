@@ -9,9 +9,7 @@ from .base_document_repository import BaseDocumentRepository
 
 class BaseFineTuneJobRepository(BaseDocumentRepository[FineTuneJob]):
     @abstractmethod
-    async def update_build_status(
-        self, job_id: UUID, run_status: FineTuneJobRunStatus
-    ) -> FineTuneJob:
+    async def update_build_status(self, id: UUID, run_status: FineTuneJobRunStatus) -> FineTuneJob:
         pass
 
     @abstractmethod

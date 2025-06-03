@@ -62,7 +62,7 @@ class ApplicationContainer(DeclarativeContainer):
     latex_parser_service: Provider[BaseLatexParserService] = Dependency()
     latex_visitor_service: Provider[BaseLatexVisitorService] = Dependency()
 
-    fine_tune_job_repository = Provider[BaseFineTuneJobRepository] = Dependency()
+    fine_tune_job_repository: Provider[BaseFineTuneJobRepository] = Dependency()
     index_repository: Provider[BaseIndexRepository] = Dependency()
     math_expression_dataset_repository: Provider[BaseMathExpressionDatasetRepository] = Dependency()
     math_article_repository: Provider[BaseMathArticleRepository] = Dependency()

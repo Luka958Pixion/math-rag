@@ -18,9 +18,7 @@ class FineTuneJobRepository(
     def __init__(self, client: AsyncMongoClient, deployment: str):
         super().__init__(client, deployment)
 
-    async def update_build_status(
-        self, job_id: UUID, run_status: FineTuneJobRunStatus
-    ) -> FineTuneJob:
+    async def update_build_status(self, id: UUID, run_status: FineTuneJobRunStatus) -> FineTuneJob:
         field = 'run_status'
 
         if field not in self.target_cls.model_fields:
