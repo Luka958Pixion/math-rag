@@ -302,7 +302,7 @@ class InfrastructureContainer(DeclarativeContainer):
     )
 
     # LoRA
-    fine_tune_settings_loader_service = Factory(PBSProResourceListLoaderService)
+    fine_tune_settings_loader_service = Factory(FineTuneSettingsLoaderService)
     fine_tune_job_runner_service = Factory(
         FineTuneJobRunnerService,
         file_system_client=file_system_client,
