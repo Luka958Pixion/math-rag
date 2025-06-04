@@ -1,4 +1,4 @@
-from .qdrant_embedding_seeder import QdrantEmbeddingSeeder
+from .embedding_seeder import EmbeddingSeeder
 
 
-__all__ = ['QdrantEmbeddingSeeder']
+__all__ = ['EmbeddingSeeder']

@@ -7,8 +7,9 @@ from pylatexenc.latexwalker import (
     LatexSpecialsNode,
 )
 
-from math_rag.infrastructure.base import BaseLatexNodeVisitor
 from math_rag.infrastructure.types.services import LatexNodeVisitor
+
+from .base_latex_node_visitor import BaseLatexNodeVisitor
 
 
 class LatexMathNodeHelper(BaseLatexNodeVisitor):
