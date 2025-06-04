@@ -7,6 +7,7 @@ from .math_expression_dataset_seeder import MathExpressionDatasetSeeder
 from .math_expression_label_seeder import MathExpressionLabelSeeder
 from .math_expression_sample_seeder import MathExpressionSampleSeeder
 from .math_expression_seeder import MathExpressionSeeder
+from .object_metadata_seeder import ObjectMetadataSeeder
 
 
 __all__ = [
@@ -14,9 +15,10 @@ __all__ = [
     'EMFailedRequestSeeder',
     'FineTuneJobSeeder',
     'IndexSeeder',
+    'LLMFailedRequestSeeder',
     'MathExpressionDatasetSeeder',
     'MathExpressionLabelSeeder',
     'MathExpressionSampleSeeder',
     'MathExpressionSeeder',
-    'LLMFailedRequestSeeder',
+    'ObjectMetadataSeeder',
 ]

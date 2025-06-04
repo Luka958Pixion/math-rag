@@ -1,3 +1,5 @@
+import asyncio
+
 from datetime import datetime
 from io import BytesIO
 from pathlib import Path
@@ -6,6 +8,8 @@ from typing import Generic, cast
 from minio import Minio
 
 from math_rag.application.base.repositories.objects import BaseObjectRepository
+from math_rag.infrastructure.models.documents import ObjectMetadataDocument
+from math_rag.infrastructure.repositories.documents import ObjectMetadataRepository
 from math_rag.infrastructure.types.repositories.objects import (
     MappingType,
     SourceType,
@@ -20,7 +24,12 @@ BACKUP_PATH = Path(__file__).parents[4] / '.tmp' / 'backups' / 'minio'
 class ObjectRepository(
     BaseObjectRepository[SourceType], Generic[SourceType, TargetType, MappingType]
 ):
-    def __init__(self, client: Minio, metadata_keys: list[str]):
+    def __init__(
+        self,
+        client: Minio,
+        metadata_keys: list[str],
+        object_metadata_repository: ObjectMetadataRepository,
+    ):
         args = TypeUtil.get_type_args(self.__class__)
         self.source_cls = cast(type[SourceType], args[1][0])
         self.target_cls = cast(type[TargetType], args[1][1])
@@ -29,6 +38,7 @@ class ObjectRepository(
         self.client = client
         self.bucket_name = self.target_cls.__name__.lower()
         self.metadata_keys = metadata_keys
+        self.object_metadata_repository = object_metadata_repository
 
     def insert_one(self, item: SourceType):
         object = self.mapping_cls.to_target(item)
@@ -48,6 +58,14 @@ class ObjectRepository(
             retention=object.retention,
             legal_hold=object.legal_hold,
         )
+        metadata = ObjectMetadataDocument(
+            object_name=object.object_name,
+            metadata={
+                key.removeprefix('X-Amz-Meta-'): value for key, value in object.metadata.items()
+            },
+        )
+        coro = self.object_metadata_repository.insert_one(metadata)
+        asyncio.run(coro)
 
     def insert_many(self, items: list[SourceType]):
         objects = [self.mapping_cls.to_target(item) for item in items]
@@ -69,6 +87,18 @@ class ObjectRepository(
                 retention=object.retention,
                 legal_hold=object.legal_hold,
             )
+
+        metadatas = [
+            ObjectMetadataDocument(
+                object_name=object.object_name,
+                metadata={
+                    key.removeprefix('X-Amz-Meta-'): value for key, value in object.metadata.items()
+                },
+            )
+            for object in objects
+        ]
+        coro = self.object_metadata_repository.insert_many(metadatas)
+        asyncio.run(coro)
 
     def find_by_name(self, name: str) -> SourceType:
         object_response = self.client.get_object(self.bucket_name, name)

@@ -5,6 +5,7 @@ from .math_expression_dataset_indexer import MathExpressionDatasetIndexer
 from .math_expression_indexer import MathExpressionIndexer
 from .math_expression_label_indexer import MathExpressionLabelIndexer
 from .math_expression_sample_indexer import MathExpressionSampleIndexer
+from .object_metadata_indexer import ObjectMetadataIndexer
 
 
 __all__ = [
@@ -15,4 +16,5 @@ __all__ = [
     'MathExpressionIndexer',
     'MathExpressionLabelIndexer',
     'MathExpressionSampleIndexer',
+    'ObjectMetadataIndexer',
 ]

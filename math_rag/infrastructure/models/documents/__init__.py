@@ -17,6 +17,7 @@ from .math_expression_document import MathExpressionDocument
 from .math_expression_label_document import MathExpressionLabelDocument
 from .math_expression_sample_document import MathExpressionSampleDocument
 from .math_problem_document import MathProblemDocument
+from .object_metadata_document import ObjectMetadataDocument
 
 
 __all__ = [
@@ -39,4 +40,5 @@ __all__ = [
     'MathExpressionDocument',
     'MathExpressionSampleDocument',
     'MathProblemDocument',
+    'ObjectMetadataDocument',
 ]

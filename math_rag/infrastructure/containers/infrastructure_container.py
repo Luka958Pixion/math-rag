@@ -39,6 +39,7 @@ from math_rag.infrastructure.indexers.documents import (
     MathExpressionIndexer,
     MathExpressionLabelIndexer,
     MathExpressionSampleIndexer,
+    ObjectMetadataIndexer,
 )
 from math_rag.infrastructure.inference.huggingface import TEIBatchEM, TGIBatchLLM
 from math_rag.infrastructure.inference.openai import (
@@ -58,6 +59,7 @@ from math_rag.infrastructure.repositories.documents import (
     MathExpressionLabelRepository,
     MathExpressionRepository,
     MathExpressionSampleRepository,
+    ObjectMetadataRepository,
 )
 from math_rag.infrastructure.repositories.files import GoogleDriveRepository
 from math_rag.infrastructure.repositories.objects import MathArticleRepository
@@ -70,6 +72,7 @@ from math_rag.infrastructure.seeders.documents import (
     MathExpressionLabelSeeder,
     MathExpressionSampleSeeder,
     MathExpressionSeeder,
+    ObjectMetadataSeeder,
 )
 from math_rag.infrastructure.seeders.objects import MathArticleSeeder
 from math_rag.infrastructure.services import (
@@ -84,28 +87,6 @@ from math_rag.infrastructure.services import (
 
 class InfrastructureContainer(DeclarativeContainer):
     config = Configuration()
-
-    # Minio
-    config.minio.endpoint.from_env('MINIO_ENDPOINT')
-    config.minio.access_key.from_env('MINIO_ACCESS_KEY')
-    config.minio.secret_key.from_env('MINIO_SECRET_KEY')
-
-    minio_client = Singleton(
-        Minio,
-        endpoint=config.minio.endpoint,
-        access_key=config.minio.access_key,
-        secret_key=config.minio.secret_key,
-        secure=False,
-    )
-
-    math_article_seeder = Factory(MathArticleSeeder, client=minio_client)
-
-    object_seeders: Provider[list[BaseObjectSeeder]] = List(math_article_seeder)
-
-    math_article_repository = Factory(
-        MathArticleRepository,
-        client=minio_client,
-    )
 
     # Mongo
     config.mongo.host.from_env('MONGO_HOST')
@@ -130,6 +111,7 @@ class InfrastructureContainer(DeclarativeContainer):
     math_expression_repository = Factory(MathExpressionRepository, **mongo_kwargs)
     math_expression_label_repository = Factory(MathExpressionLabelRepository, **mongo_kwargs)
     math_expression_sample_repository = Factory(MathExpressionSampleRepository, **mongo_kwargs)
+    object_metadata_repository = Factory(ObjectMetadataRepository, **mongo_kwargs)
 
     em_failed_request_seeder = Factory(EMFailedRequestSeeder, **mongo_kwargs)
     fine_tune_job_seeder = Factory(FineTuneJobSeeder, **mongo_kwargs)
@@ -139,6 +121,7 @@ class InfrastructureContainer(DeclarativeContainer):
     math_expression_label_seeder = Factory(MathExpressionLabelSeeder, **mongo_kwargs)
     math_expression_seeder = Factory(MathExpressionSeeder, **mongo_kwargs)
     math_expression_sample_seeder = Factory(MathExpressionSampleSeeder, **mongo_kwargs)
+    object_metadata_seeder = Factory(ObjectMetadataSeeder, **mongo_kwargs)
 
     document_seeders: Provider[list[BaseDocumentSeeder]] = List(
         em_failed_request_seeder,
@@ -149,6 +132,7 @@ class InfrastructureContainer(DeclarativeContainer):
         math_expression_label_seeder,
         math_expression_seeder,
         math_expression_sample_seeder,
+        object_metadata_seeder,
     )
 
     fine_tune_job_indexer = Factory(FineTuneJobIndexer, **mongo_kwargs)
@@ -157,6 +141,7 @@ class InfrastructureContainer(DeclarativeContainer):
     math_expression_label_indexer = Factory(MathExpressionLabelIndexer, **mongo_kwargs)
     math_expression_indexer = Factory(MathExpressionIndexer, **mongo_kwargs)
     math_expression_sample_indexer = Factory(MathExpressionSampleIndexer, **mongo_kwargs)
+    object_metadata_indexer = Factory(ObjectMetadataIndexer, **mongo_kwargs)
 
     document_indexers: Provider[list[BaseDocumentIndexer]] = List(
         fine_tune_job_indexer,
@@ -165,6 +150,30 @@ class InfrastructureContainer(DeclarativeContainer):
         math_expression_label_indexer,
         math_expression_indexer,
         math_expression_sample_indexer,
+        object_metadata_indexer,
+    )
+
+    # Minio
+    config.minio.endpoint.from_env('MINIO_ENDPOINT')
+    config.minio.access_key.from_env('MINIO_ACCESS_KEY')
+    config.minio.secret_key.from_env('MINIO_SECRET_KEY')
+
+    minio_client = Singleton(
+        Minio,
+        endpoint=config.minio.endpoint,
+        access_key=config.minio.access_key,
+        secret_key=config.minio.secret_key,
+        secure=False,
+    )
+
+    math_article_seeder = Factory(MathArticleSeeder, client=minio_client)
+
+    object_seeders: Provider[list[BaseObjectSeeder]] = List(math_article_seeder)
+
+    math_article_repository = Factory(
+        MathArticleRepository,
+        client=minio_client,
+        object_metadata_repository=object_metadata_repository,
     )
 
     # Neo4j
