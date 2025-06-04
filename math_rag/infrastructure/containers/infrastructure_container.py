@@ -59,7 +59,7 @@ from math_rag.infrastructure.repositories.documents import (
     MathExpressionRepository,
     MathExpressionSampleRepository,
 )
-from math_rag.infrastructure.repositories.files import GoogleFileRepository
+from math_rag.infrastructure.repositories.files import GoogleDriveRepository
 from math_rag.infrastructure.repositories.objects import MathArticleRepository
 from math_rag.infrastructure.seeders.documents import (
     EMFailedRequestSeeder,
@@ -111,14 +111,14 @@ class InfrastructureContainer(DeclarativeContainer):
     config.mongo.host.from_env('MONGO_HOST')
     config.mongo.deployment.from_env('MONGO_DEPLOYMENT')
 
-    mongo_client = Singleton(
+    async_mongo_client = Singleton(
         AsyncMongoClient,
         host=config.mongo.host,
         uuidRepresentation='standard',
     )
 
     mongo_kwargs = {
-        'client': mongo_client,
+        'client': async_mongo_client,
         'deployment': config.mongo.deployment,
     }
 
@@ -173,12 +173,12 @@ class InfrastructureContainer(DeclarativeContainer):
 
     # Google
     resource = Singleton(
-        GoogleFileRepository.get_resource,
+        GoogleDriveRepository.get_resource,
         credentials_path=Path('../secrets/google/credentials.json'),
         token_path=Path('../secrets/google/token.json'),
     )
 
-    google_file_repository = Factory(GoogleFileRepository, resource=resource)
+    google_drive_repository = Factory(GoogleDriveRepository, resource=resource)
 
     # OpenAI
     config.openai.base_url.from_env('OPENAI_BASE_URL')

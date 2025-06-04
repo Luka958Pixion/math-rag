@@ -1,4 +1,4 @@
-from .google_file_repository import GoogleFileRepository
+from .google_drive_repository import GoogleDriveRepository
 
 
-__all__ = ['GoogleFileRepository']
+__all__ = ['GoogleDriveRepository']

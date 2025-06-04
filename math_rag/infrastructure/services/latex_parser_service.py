@@ -1,8 +1,10 @@
 from deprecated import deprecated
 from pylatexenc.latexwalker import LatexNode, LatexWalker, LatexWalkerParseError
 
+from math_rag.application.base.services import BaseLatexParserService
 
-class LatexParserService:
+
+class LatexParserService(BaseLatexParserService):
     @deprecated(reason='Tolerant parsing is neccessary, but sometimes gets stuck in a loop')
     def parse_deprecated(self, latex: str) -> list[LatexNode]:
         walker = LatexWalker(latex, tolerant_parsing=True)

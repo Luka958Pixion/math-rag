@@ -6,8 +6,10 @@ from pylatexenc.latexwalker import (
     LatexNode,
 )
 
+from math_rag.application.base.services import BaseLatexVisitorService
 
-class LatexVisitorService:
+
+class LatexVisitorService(BaseLatexVisitorService):
     def visit(
         self,
         nodes: list[LatexNode],

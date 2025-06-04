@@ -8,15 +8,13 @@ from google_auth_oauthlib.flow import InstalledAppFlow
 from googleapiclient.discovery import Resource, build
 from googleapiclient.http import MediaIoBaseDownload
 
-from math_rag.application.base.repositories.files import BaseFileRepository
-
 
 logger = getLogger(__name__)
 
 SCOPES = ['https://www.googleapis.com/auth/drive']
 
 
-class GoogleFileRepository(BaseFileRepository):
+class GoogleDriveRepository:
     def __init__(self, resource: Resource):
         self.resource = resource
 
@@ -39,30 +37,41 @@ class GoogleFileRepository(BaseFileRepository):
 
         return build('drive', 'v3', credentials=credentials)
 
-    def get_file_id(self, file_name: str, folder_name: str) -> str | None:
-        folder_query = f"name='{folder_name}' and mimeType='application/vnd.google-apps.folder'"
-        folder_fields = 'files(id, name)'
-        folder_results: dict = (
-            self.resource.files().list(q=folder_query, fields=folder_fields).execute()
+    def get_file_id(self, file_path: Path) -> str | None:
+        folders = file_path.parent
+        target_name = file_path.name
+
+        parent_id = 'root'
+
+        if folders != Path('.'):
+            for segment in folders.parts:
+                folder_query = (
+                    f"name='{segment}' "
+                    f"and mimeType='application/vnd.google-apps.folder' "
+                    f"and '{parent_id}' in parents"
+                )
+                folder_results: dict = (
+                    self.resource.files().list(q=folder_query, fields='files(id, name)').execute()
+                )
+                subfolders = folder_results.get('files', [])
+
+                if not subfolders:
+                    logger.info(f"Folder '{segment}' not found under parent ID '{parent_id}'")
+                    return None
+
+                parent_id = subfolders[0]['id']
+
+        file_query = f"name='{target_name}' and '{parent_id}' in parents"
+        file_results: dict = (
+            self.resource.files().list(q=file_query, fields='files(id, name)').execute()
         )
-        folders = folder_results.get('files', [])
+        matches = file_results.get('files', [])
 
-        if not folders:
-            logger.info(f'Folder {folder_name} not found')
+        if not matches:
+            logger.info(f"File '{target_name}' not found under '{folders}'")
             return None
 
-        folder_id = folders[0]['id']
-
-        file_query = f"name='{file_name}' and '{folder_id}' in parents"
-        file_fields = 'files(id, name)'
-        file_results: dict = self.resource.files().list(q=file_query, fields=file_fields).execute()
-        files = file_results.get('files', [])
-
-        if not files:
-            logger.info(f'File {file_name} not found in directory {folder_name}')
-            return None
-
-        return files[0]['id']
+        return matches[0]['id']
 
     def get_file_by_id(self, file_id: str) -> BytesIO:
         request = self.resource.files().get_media(fileId=file_id)
