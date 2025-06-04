@@ -54,30 +54,24 @@ class MathExpressionLoaderService(BaseMathExpressionLoaderService):
         return valid, invalid
 
     async def load_for_dataset(self, dataset_id: UUID, build_from_dataset_id: UUID | None):
-        # list .tex file names
-        file_names = [
-            name
-            for name in self.math_article_repository.list_names()
-            if name is not None and name.endswith('.tex')
-        ]
-        logger.info(f'Found {len(file_names)} .tex files')
-
         # load and parse math articles
+        dataset_id_ = build_from_dataset_id if build_from_dataset_id else dataset_id
+        math_articles = self.math_article_repository.find_many_by_math_expression_dataset_id(
+            dataset_id_
+        )
+
+        if not math_articles:
+            raise ValueError(f'Math articles with dataset id {dataset_id_} not found')
+
         math_nodes: list[LatexMathNode] = []
 
-        for file_name in file_names:
-            math_article = self.math_article_repository.find_by_name(file_name)
-
-            if build_from_dataset_id:
-                if math_article.math_expression_dataset_id != build_from_dataset_id:
-                    continue
-
-            elif math_article.math_expression_dataset_id != dataset_id:
+        for math_article in math_articles:
+            if not math_article.name.endswith('.tex'):
                 continue
 
             math_nodes_ = self.math_article_parser_service.parse_for_dataset(math_article)
             math_nodes.extend(math_nodes_)
-            logger.info(f'Parsed {len(math_nodes_)} math nodes from {file_name}')
+            logger.info(f'Parsed {len(math_nodes_)} math nodes from {math_article.id}')
 
         # extract and validate KaTeX
         katexes = [node.latex.strip('$') for node in math_nodes]
@@ -151,21 +145,16 @@ class MathExpressionLoaderService(BaseMathExpressionLoaderService):
         logger.info(f'{self.__class__.__name__} loaded {len(math_expressions)} math expressions')
 
     async def load_for_index(self, index_id: UUID):
-        # list .tex file names
-        file_names = [
-            name
-            for name in self.math_article_repository.list_names()
-            if name is not None and name.endswith('.tex')
-        ]
-        logger.info(f'Found {len(file_names)} .tex files')
-
         # load and parse math articles
+        math_articles = self.math_article_repository.find_many_by_index_id(index_id)
+
+        if not math_articles:
+            raise ValueError(f'Math articles with index id {index_id} not found')
+
         math_nodes: list[LatexMathNode] = []
 
-        for file_name in file_names:
-            math_article = self.math_article_repository.find_by_name(file_name)
-
-            if math_article.index_id != index_id:
+        for math_article in math_articles:
+            if not math_article.name.endswith('.tex'):
                 continue
 
             # TODO
@@ -173,7 +162,7 @@ class MathExpressionLoaderService(BaseMathExpressionLoaderService):
                 math_article
             )
             math_nodes.extend(math_nodes_)
-            logger.info(f'Parsed {len(math_nodes_)} math nodes from {file_name}')
+            logger.info(f'Parsed {len(math_nodes_)} math nodes from {math_article.id}')
 
         # extract and validate KaTeX
         katexes = [node.latex.strip('$') for node in math_nodes]
