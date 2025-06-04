@@ -61,7 +61,9 @@ class MathExpressionDatasetBuilderService(BaseMathExpressionDatasetBuilderServic
         logger.info(f'Dataset {dataset_id} build stage updated to {build_stage}')
 
         # load
-        await self.math_expression_loader_service.load(dataset_id, build_from_dataset_id)
+        await self.math_expression_loader_service.load_for_dataset(
+            dataset_id, build_from_dataset_id
+        )
         logger.info(f'Dataset {dataset_id} build loaded math expressions')
 
     async def _stage_2(self, dataset_id: UUID, build_from_dataset_id: UUID | None):

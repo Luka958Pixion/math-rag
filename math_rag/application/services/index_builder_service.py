@@ -40,7 +40,7 @@ class IndexBuilderService(BaseIndexBuilderService):
         await self.index_repository.update_build_stage(
             index_id, IndexBuildStage.LOAD_MATH_EXPRESSIONS
         )
-        await self.math_expression_loader_service.load(index_id, foundation_index_id)
+        await self.math_expression_loader_service.load_for_dataset(index_id, foundation_index_id)
         logger.info(f'Index {index_id} build loaded math expressions')
 
     async def _load_math_expression_labels(self, index_id: UUID, foundation_index_id: UUID | None):
