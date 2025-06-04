@@ -8,7 +8,6 @@ from math_rag.application.base.services import (
     BaseMathExpressionLabelLoaderService,
     BaseMathExpressionLoaderService,
 )
-from math_rag.application.enums.arxiv import BaseArxivCategory, MathCategory
 from math_rag.core.enums import IndexBuildStage
 from math_rag.core.models import Index
 
@@ -29,58 +28,34 @@ class IndexBuilderService(BaseIndexBuilderService):
         self.math_expression_label_loader_service = math_expression_label_loader_service
         self.index_repository = index_repository
 
-    async def _load_math_articles(
-        self, index_id: UUID, arxiv_category_type: type[BaseArxivCategory], limit: int
-    ):
-        await self.index_repository.update_build_stage(index_id, IndexBuildStage.LOAD_MATH_ARTICLES)
-        await self.math_article_loader_service.load(index_id, arxiv_category_type, limit)
-        logger.info(f'Index {index_id} build loaded math articles')
+    async def _stage_0(self, index_id: UUID):
+        logger.info(f'Index {index_id} build loading math expressions...')
 
-    async def _load_math_expressions(self, index_id: UUID, foundation_index_id: UUID | None):
-        await self.index_repository.update_build_stage(
-            index_id, IndexBuildStage.LOAD_MATH_EXPRESSIONS
-        )
-        await self.math_expression_loader_service.load_for_dataset(index_id, foundation_index_id)
+        # update build stage
+        build_stage = IndexBuildStage.LOAD_MATH_EXPRESSIONS
+        await self.index_repository.update_build_stage(index_id, build_stage)
+        logger.info(f'Index {index_id} build stage updated to {build_stage}')
+
+        # load
+        await self.math_expression_loader_service.load_for_index(index_id)
         logger.info(f'Index {index_id} build loaded math expressions')
 
-    async def _load_math_expression_labels(self, index_id: UUID, foundation_index_id: UUID | None):
-        await self.index_repository.update_build_stage(
-            index_id, IndexBuildStage.LOAD_MATH_EXPRESSION_LABELS
-        )
-        await self.math_expression_label_loader_service.load(index_id, foundation_index_id)
+    async def _stage_1(self, index_id: UUID):
+        logger.info(f'Index {index_id} build loading math expression labels...')
+
+        # update build stage
+        build_stage = IndexBuildStage.LOAD_MATH_EXPRESSION_LABELS
+        await self.index_repository.update_build_stage(index_id, build_stage)
+        logger.info(f'Index {index_id} build stage updated to {build_stage}')
+
+        # load
+        await self.math_expression_label_loader_service.load(index_id)
         logger.info(f'Index {index_id} build loaded math expression labels')
 
     async def build(self, index: Index):
         logger.info(f'Index {index.id} build started')
 
-        arxiv_category_type = MathCategory
-        limit = 32  # TODO was 200
-
-        if index.build_from_index_id and index.build_from_stage:
-            foundation_index = await self.index_repository.find_one(
-                filter={'id': index.build_from_index_id}
-            )
-
-            if not foundation_index:
-                raise ValueError(f'Index {index.build_from_index_id} does not exist')
-
-            match index.build_from_stage:
-                case IndexBuildStage.LOAD_MATH_ARTICLES:
-                    # NOTE: same as standard approach since it starts from the beginning
-                    await self._load_math_articles(index.id, arxiv_category_type, limit)
-                    await self._load_math_expressions(index.id, None)
-                    await self._load_math_expression_labels(index.id, None)
-
-                case IndexBuildStage.LOAD_MATH_EXPRESSIONS:
-                    await self._load_math_expressions(index.id, foundation_index.id)
-                    await self._load_math_expression_labels(index.id, foundation_index.id)
-
-                case IndexBuildStage.LOAD_MATH_EXPRESSION_LABELS:
-                    await self._load_math_expression_labels(index.id, foundation_index.id)
-
-        else:
-            await self._load_math_articles(index.id, arxiv_category_type, limit)
-            await self._load_math_expressions(index.id, None)
-            await self._load_math_expression_labels(index.id, None)
+        await self._stage_0(index.id)
+        await self._stage_1(index.id)
 
         logger.info(f'Index {index.id} build finished')

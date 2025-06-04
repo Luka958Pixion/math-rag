@@ -22,10 +22,7 @@ async def create_index(
     repository: BaseIndexRepository = Depends(Provide[ApplicationContainer.index_repository]),
     context: IndexBuildContext = Depends(Provide[ApplicationContainer.index_build_context]),
 ):
-    index = Index(
-        build_from_index_id=request.build_from_index_id,
-        build_from_stage=request.build_from_stage,
-    )
+    index = Index()
     await repository.insert_one(index)
 
     async with context.condition:
@@ -36,6 +33,4 @@ async def create_index(
         timestamp=index.timestamp,
         build_stage=index.build_stage,
         build_status=index.build_status,
-        build_from_index_id=index.build_from_index_id,
-        build_from_stage=index.build_from_stage,
     )

@@ -168,6 +168,7 @@ class MathExpressionLoaderService(BaseMathExpressionLoaderService):
             if math_article.index_id != index_id:
                 continue
 
+            # TODO
             math_nodes_, positions, template = self.math_article_parser_service.parse_for_index(
                 math_article
             )

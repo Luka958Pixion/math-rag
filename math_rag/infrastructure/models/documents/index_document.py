@@ -9,5 +9,3 @@ class IndexDocument(BaseDocument):
     timestamp: datetime
     build_stage: str
     build_status: str
-    build_from_index_id: UUID | None
-    build_from_stage: str | None
