@@ -75,8 +75,8 @@ from math_rag.infrastructure.seeders.objects import MathArticleSeeder
 from math_rag.infrastructure.services import (
     DatasetPublisherService,
     FineTuneSettingsLoaderService,
+    LatexNodeWalkerService,
     LatexParserService,
-    LatexVisitorService,
     PBSProResourceListLoaderService,
     PrometheusSnapshotLoaderService,
 )
@@ -236,7 +236,7 @@ class InfrastructureContainer(DeclarativeContainer):
 
     # LaTeX
     latex_parser_service = Factory(LatexParserService)
-    latex_visitor_service = Factory(LatexVisitorService)
+    latex_node_walker_service = Factory(LatexNodeWalkerService)
 
     # KaTeX
     config.katex.port.from_env('KATEX_PORT')
@@ -341,7 +341,7 @@ class InfrastructureContainer(DeclarativeContainer):
         managed_llm=openai_managed_llm,
         managed_scheduler=openai_managed_scheduler,
         latex_parser_service=latex_parser_service,
-        latex_visitor_service=latex_visitor_service,
+        latex_node_walker_service=latex_node_walker_service,
         dataset_publisher_service=dataset_publisher_service,
         fine_tune_job_repository=fine_tune_job_repository,
         index_repository=index_repository,

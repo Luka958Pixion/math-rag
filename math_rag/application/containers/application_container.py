@@ -27,8 +27,8 @@ from math_rag.application.base.repositories.documents import (
 from math_rag.application.base.repositories.objects import BaseMathArticleRepository
 from math_rag.application.base.services import (
     BaseDatasetPublisherService,
+    BaseLatexNodeWalkerService,
     BaseLatexParserService,
-    BaseLatexVisitorService,
 )
 from math_rag.application.contexts import DatasetBuildContext, IndexBuildContext
 from math_rag.application.services import (
@@ -60,7 +60,7 @@ class ApplicationContainer(DeclarativeContainer):
     managed_scheduler: Provider[BaseBatchLLMRequestManagedScheduler] = Dependency()
 
     latex_parser_service: Provider[BaseLatexParserService] = Dependency()
-    latex_visitor_service: Provider[BaseLatexVisitorService] = Dependency()
+    latex_node_walker_service: Provider[BaseLatexNodeWalkerService] = Dependency()
 
     fine_tune_job_repository: Provider[BaseFineTuneJobRepository] = Dependency()
     index_repository: Provider[BaseIndexRepository] = Dependency()
@@ -85,7 +85,7 @@ class ApplicationContainer(DeclarativeContainer):
     math_article_parser_service = Factory(
         MathArticleParserService,
         latex_parser_service=latex_parser_service,
-        latex_visitor_service=latex_visitor_service,
+        latex_node_walker_service=latex_node_walker_service,
     )
     math_article_loader_service = Factory(
         MathArticleDatasetLoaderService,

@@ -1,4 +1,4 @@
-from typing import Callable, Iterator
+from typing import Iterator
 
 from pylatexenc.latexwalker import (
     LatexEnvironmentNode,
@@ -6,14 +6,14 @@ from pylatexenc.latexwalker import (
     LatexNode,
 )
 
-from math_rag.application.base.services import BaseLatexVisitorService
+from math_rag.infrastructure.types.services import LatexNodeVisitor
 
 
-class LatexVisitorService(BaseLatexVisitorService):
-    def visit(
+class LatexNodeWalkerService:
+    def walk(
         self,
         nodes: list[LatexNode],
-        callbacks: dict[type[LatexNode], Callable[[LatexNode], None]],
+        visitors: list[LatexNodeVisitor],
     ):
         stack: list[Iterator[LatexNode]] = [iter(nodes)]
 
@@ -26,8 +26,10 @@ class LatexVisitorService(BaseLatexVisitorService):
 
             node_type = type(node)
 
-            if node_type in callbacks:
-                callbacks[node_type](node)
+            for visitor in visitors:
+                if node_type in visitor:
+                    visit = visitor[node_type]
+                    visit(node)
 
             if isinstance(node, (LatexEnvironmentNode, LatexGroupNode)):
                 stack.append(iter(node.nodelist))

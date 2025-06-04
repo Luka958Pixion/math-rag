@@ -2,8 +2,6 @@ from logging import getLogger
 from typing import TypeAlias
 from uuid import UUID
 
-from pylatexenc.latexwalker import LatexMathNode
-
 from math_rag.application.assistants import KatexCorrectorAssistant
 from math_rag.application.base.clients import BaseKatexClient
 from math_rag.application.base.repositories.documents import (
@@ -18,7 +16,7 @@ from math_rag.application.models import KatexValidationResult
 from math_rag.application.models.assistants import (
     KatexCorrectorAssistantInput,
 )
-from math_rag.core.models import MathExpression
+from math_rag.core.models import LatexMathNode, MathExpression
 
 
 logger = getLogger(__name__)
@@ -77,12 +75,12 @@ class MathExpressionLoaderService(BaseMathExpressionLoaderService):
             elif math_article.math_expression_dataset_id != dataset_id:
                 continue
 
-            math_nodes_ = self.math_article_parser_service.parse(math_article)
+            math_nodes_ = self.math_article_parser_service.parse_for_dataset(math_article)
             math_nodes.extend(math_nodes_)
             logger.info(f'Parsed {len(math_nodes_)} math nodes from {file_name}')
 
         # extract and validate KaTeX
-        katexes = [str(node.latex_verbatim()).strip('$') for node in math_nodes]
+        katexes = [node.latex.strip('$') for node in math_nodes]
         results = await self.katex_client.batch_validate_many(katexes, batch_size=50)
         valid, invalid = self._split_by_validity(math_nodes, results)
         logger.info(f'Validated KaTeX: {len(valid)}/{len(results)}')
@@ -99,7 +97,7 @@ class MathExpressionLoaderService(BaseMathExpressionLoaderService):
 
             for node, result in invalid:
                 input = KatexCorrectorAssistantInput(
-                    katex=str(node.latex_verbatim()).strip('$'),
+                    katex=node.latex.strip('$'),
                     error=result.error,
                 )
                 inputs.append(input)
@@ -121,8 +119,8 @@ class MathExpressionLoaderService(BaseMathExpressionLoaderService):
             # merge only the successfully re-validated corrections
             for node, katex, result in zip(corrected_nodes, corrected_katexes, re_results):
                 if result.valid:
-                    idx = math_nodes.index(node)
-                    final_katexes[idx] = katex
+                    index = math_nodes.index(node)
+                    final_katexes[index] = katex
 
             num_corrected = len(re_valid)
             num_non_corrected = len(invalid) - num_corrected
@@ -141,10 +139,10 @@ class MathExpressionLoaderService(BaseMathExpressionLoaderService):
                     math_article_id=math_article.id,
                     math_expression_dataset_id=dataset_id,
                     index_id=None,
-                    latex=str(node.latex_verbatim()),
+                    latex=node.latex,
                     katex=katex,
-                    position=node.pos,
-                    is_inline=node.displaytype == 'inline',
+                    position=node.position,
+                    is_inline=node.is_inline,
                 )
             )
 
