@@ -15,18 +15,12 @@ class LatexMathNodeHelper(BaseLatexNodeVisitor):
     def __init__(self):
         self._math_nodes: list[LatexMathNode] = []
         self._visitor = {
-            LatexCharsNode,
-            self.visit_latex_chars_node,
-            LatexCommentNode,
-            self.visit_latex_comment_node,
-            LatexEnvironmentNode,
-            self.visit_latex_environment_node,
-            LatexMacroNode,
-            self.visit_latex_macro_node,
-            LatexMathNode,
-            self.visit_latex_math_node,
-            LatexSpecialsNode,
-            self.visit_latex_specials_node,
+            LatexCharsNode: self.visit_latex_chars_node,
+            LatexCommentNode: self.visit_latex_comment_node,
+            LatexEnvironmentNode: self.visit_latex_environment_node,
+            LatexMacroNode: self.visit_latex_macro_node,
+            LatexMathNode: self.visit_latex_math_node,
+            LatexSpecialsNode: self.visit_latex_specials_node,
         }
 
     @property
