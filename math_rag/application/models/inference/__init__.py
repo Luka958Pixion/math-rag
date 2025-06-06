@@ -1,4 +1,6 @@
 from .em_batch_request import EMBatchRequest
+from .em_batch_request_schedule import EMBatchRequestSchedule
+from .em_batch_request_schedule_entry import EMBatchRequestScheduleEntry
 from .em_batch_result import EMBatchResult
 from .em_concurrent_request import EMConcurrentRequest
 from .em_concurrent_result import EMConcurrentResult
@@ -35,6 +37,8 @@ from .llm_text_response import LLMTextResponse
 
 __all__ = [
     'EMBatchRequest',
+    'EMBatchRequestSchedule',
+    'EMBatchRequestScheduleEntry',
     'EMBatchResult',
     'EMConcurrentRequest',
     'EMConcurrentResult',

@@ -1,4 +1,5 @@
-from abc import abstractmethod
+from abc import ABC, abstractmethod
+from typing import Generic
 from uuid import UUID
 
 from math_rag.application.types.assistants import (
@@ -6,10 +7,8 @@ from math_rag.application.types.assistants import (
     AssistantOutputType,
 )
 
-from .base_basic_assistant import BaseBasicAssistant
 
-
-class BaseBatchAssistant(BaseBasicAssistant[AssistantInputType, AssistantOutputType]):
+class BaseBatchAssistant(ABC, Generic[AssistantInputType, AssistantOutputType]):
     @abstractmethod
     async def batch_assist(
         self, inputs: list[AssistantInputType], *, use_scheduler: bool
