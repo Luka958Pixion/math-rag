@@ -13,5 +13,5 @@ class BaseEmbeddingService(ABC, Generic[T]):
         pass
 
     @abstractmethod
-    async def search(self, limit: int) -> list[T]:
+    async def search(self, query: str, *, limit: int) -> list[T]:
         pass

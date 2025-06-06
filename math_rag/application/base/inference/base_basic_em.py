@@ -2,7 +2,7 @@ from abc import ABC, abstractmethod
 
 from math_rag.application.models.inference import (
     EMRequest,
-    EMResponse,
+    EMResult,
 )
 
 
@@ -14,5 +14,5 @@ class BaseBasicEM(ABC):
         *,
         max_time: float,
         max_num_retries: int,
-    ) -> EMResponse:
+    ) -> EMResult:
         pass
