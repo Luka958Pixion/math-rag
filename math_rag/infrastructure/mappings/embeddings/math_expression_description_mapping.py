@@ -1,26 +1,34 @@
+from datetime import datetime
+from uuid import UUID
+
+from qdrant_client.http.models import PointStruct, Record, ScoredPoint
+
 from math_rag.core.models import MathExpressionDescription
-from math_rag.infrastructure.base import BaseMapping
-from math_rag.infrastructure.models.embeddings import MathExpressionDescriptionEmbedding
+from math_rag.infrastructure.base import BaseTripleMapping
 
 
 class MathExpressionDescriptionMapping(
-    BaseMapping[MathExpressionDescription, MathExpressionDescriptionEmbedding]
+    BaseTripleMapping[MathExpressionDescription, PointStruct, Record, ScoredPoint]
 ):
     @staticmethod
-    def to_source(target: MathExpressionDescriptionEmbedding) -> MathExpressionDescription:
-        return MathExpressionDescription(  # TODO
-            id=target.id,
-            math_expression_id=target.math_expression_id,
-            index_id=target.index_id,
-            timestamp=target.timestamp,
-            description=target.description,
+    def to_source(target: Record | ScoredPoint) -> MathExpressionDescription:
+        return MathExpressionDescription(
+            id=UUID(target.id),
+            math_expression_id=UUID(target.payload['math_expression_id']),
+            index_id=target.payload['index_id'],
+            timestamp=datetime.fromisoformat(target.payload['timestamp']),
+            description=target.payload['description'],
         )
 
     @staticmethod
-    def to_target(source: MathExpressionDescription) -> MathExpressionDescriptionEmbedding:
-        # TODO vector??
-        return MathExpressionDescriptionEmbedding(
+    def to_target(source: MathExpressionDescription, *, embedding: list[float]) -> PointStruct:
+        return PointStruct(
             id=str(source.id),
-            vector=...,
-            payload=...,  # TODO
+            vector=embedding,
+            payload={
+                'math_expression_id': str(source.math_expression_id),
+                'index_id': source.index_id,
+                'timestamp': source.timestamp.isoformat(),
+                'description': source.description,
+            },
         )

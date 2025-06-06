@@ -1,6 +1,6 @@
 from typing import TypeVar
 
-from math_rag.infrastructure.base import BaseEmbedding
+from pydantic import BaseModel
 
 
-TargetType = TypeVar('TargetType', bound=BaseEmbedding)
+TargetType = TypeVar('TargetType', bound=BaseModel)
