@@ -13,7 +13,9 @@ from math_rag.application.assistants import (
 )
 from math_rag.application.base.clients import BaseArxivClient, BaseKatexClient
 from math_rag.application.base.inference import (
+    BaseBatchEMRequestManagedScheduler,
     BaseBatchLLMRequestManagedScheduler,
+    BaseManagedEM,
     BaseManagedLLM,
 )
 from math_rag.application.base.repositories.documents import (
@@ -30,6 +32,7 @@ from math_rag.application.base.services import (
     BaseMathArticleParserService,
 )
 from math_rag.application.contexts import DatasetBuildContext, IndexBuildContext
+from math_rag.application.embedants import MathExpressionDescriptionEmbedant
 from math_rag.application.services import (
     EMSettingsLoaderService,
     IndexBuilderService,
@@ -54,8 +57,11 @@ class ApplicationContainer(DeclarativeContainer):
     arxiv_client: Provider[BaseArxivClient] = Dependency()
     katex_client: Provider[BaseKatexClient] = Dependency()
 
+    managed_em: Provider[BaseManagedEM] = Dependency()
     managed_llm: Provider[BaseManagedLLM] = Dependency()
-    managed_scheduler: Provider[BaseBatchLLMRequestManagedScheduler] = Dependency()
+
+    managed_em_scheduler: Provider[BaseBatchEMRequestManagedScheduler] = Dependency()
+    managed_llm_scheduler: Provider[BaseBatchLLMRequestManagedScheduler] = Dependency()
 
     fine_tune_job_repository: Provider[BaseFineTuneJobRepository] = Dependency()
     index_repository: Provider[BaseIndexRepository] = Dependency()
@@ -70,10 +76,16 @@ class ApplicationContainer(DeclarativeContainer):
 
     # non-dependencies
     katex_corrector_assistant = Factory(
-        KatexCorrectorAssistant, llm=managed_llm, scheduler=managed_scheduler
+        KatexCorrectorAssistant, llm=managed_llm, scheduler=managed_llm_scheduler
     )
     math_expression_labeler_assistant = Factory(
-        MathExpressionLabelerAssistant, llm=managed_llm, scheduler=managed_scheduler
+        MathExpressionLabelerAssistant, llm=managed_llm, scheduler=managed_llm_scheduler
+    )
+
+    math_expression_description_embedant = Factory(
+        MathExpressionDescriptionEmbedant,
+        em=managed_em,
+        scheduler=managed_em_scheduler,
     )
 
     em_settings_loader_service = Factory(EMSettingsLoaderService)

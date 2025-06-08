@@ -15,8 +15,8 @@ from .partials import PartialEmbedant
 
 
 class MathExpressionDescriptionEmbedant(PartialEmbedant[EmbedantInput, EmbedantOutput]):
-    def __init__(self, llm: BaseManagedEM, scheduler: BaseBatchEMRequestManagedScheduler | None):
-        super().__init__(llm, scheduler)
+    def __init__(self, em: BaseManagedEM, scheduler: BaseBatchEMRequestManagedScheduler | None):
+        super().__init__(em, scheduler)
 
         self._request_id_to_input_id: dict[UUID, UUID] = {}
 

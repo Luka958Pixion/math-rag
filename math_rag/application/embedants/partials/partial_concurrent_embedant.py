@@ -1,6 +1,6 @@
 from typing import cast
 
-from math_rag.application.base.assistants import BaseAssistantProtocol, BaseConcurrentAssistant
+from math_rag.application.base.embedants import BaseConcurrentEmbedant, BaseEmbedantProtocol
 from math_rag.application.base.inference import BaseConcurrentManagedEM
 from math_rag.application.models.inference import EMConcurrentRequest
 from math_rag.application.types.embedants import EmbedantInputType, EmbedantOutputType
@@ -8,8 +8,8 @@ from math_rag.shared.utils import TypeUtil
 
 
 class PartialConcurrentEmbedant(
-    BaseConcurrentAssistant[EmbedantInputType, EmbedantOutputType],
-    BaseAssistantProtocol[EmbedantInputType, EmbedantOutputType],
+    BaseConcurrentEmbedant[EmbedantInputType, EmbedantOutputType],
+    BaseEmbedantProtocol[EmbedantInputType, EmbedantOutputType],
 ):
     def __init__(self, em: BaseConcurrentManagedEM):
         self._em = em
@@ -17,7 +17,7 @@ class PartialConcurrentEmbedant(
         args = TypeUtil.get_type_args(self.__class__)
         self._response_type = cast(type[EmbedantOutputType], args[0][1])
 
-    async def concurrent_assist(
+    async def concurrent_embed(
         self,
         inputs: list[EmbedantInputType],
     ) -> list[EmbedantOutputType]:

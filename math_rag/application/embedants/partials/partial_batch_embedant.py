@@ -1,6 +1,6 @@
 from uuid import UUID
 
-from math_rag.application.base.assistants import BaseAssistantProtocol, BaseBatchAssistant
+from math_rag.application.base.embedants import BaseBatchEmbedant, BaseEmbedantProtocol
 from math_rag.application.base.inference import (
     BaseBatchEMRequestManagedScheduler,
     BaseBatchManagedEM,
@@ -10,8 +10,8 @@ from math_rag.application.types.embedants import EmbedantInputType, EmbedantOutp
 
 
 class PartialBatchEmbedant(
-    BaseBatchAssistant[EmbedantInputType, EmbedantOutputType],
-    BaseAssistantProtocol[EmbedantInputType, EmbedantOutputType],
+    BaseBatchEmbedant[EmbedantInputType, EmbedantOutputType],
+    BaseEmbedantProtocol[EmbedantInputType, EmbedantOutputType],
 ):
     def __init__(
         self,
@@ -34,7 +34,7 @@ class PartialBatchEmbedant(
             for response_list in batch_result.response_lists
         ]
 
-    async def batch_assist(
+    async def batch_embed(
         self, inputs: list[EmbedantInputType], *, use_scheduler: bool
     ) -> list[EmbedantOutputType]:
         batch_request = self._inputs_to_batch_request(inputs)
@@ -55,13 +55,13 @@ class PartialBatchEmbedant(
 
         return outputs
 
-    async def batch_assist_init(self, inputs: list[EmbedantInputType]) -> str:
+    async def batch_embed_init(self, inputs: list[EmbedantInputType]) -> str:
         batch_request = self._inputs_to_batch_request(inputs)
         batch_id = await self._em.batch_embed_init(batch_request)
 
         return batch_id
 
-    async def batch_assist_result(
+    async def batch_embed_result(
         self, batch_id: str, batch_request_id: UUID
     ) -> list[EmbedantOutputType] | None:
         batch_result = await self._em.batch_embed_result(batch_id, batch_request_id)

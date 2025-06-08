@@ -7,17 +7,17 @@ from math_rag.application.types.embedants import EmbedantInputType, EmbedantOutp
 
 class BaseBatchEmbedant(ABC, Generic[EmbedantInputType]):
     @abstractmethod
-    async def batch_assist(
+    async def batch_embed(
         self, inputs: list[EmbedantInputType], *, use_scheduler: bool
     ) -> list[EmbedantOutputType]:
         pass
 
     @abstractmethod
-    async def batch_assist_init(self, inputs: list[EmbedantInputType]) -> str:
+    async def batch_embed_init(self, inputs: list[EmbedantInputType]) -> str:
         pass
 
     @abstractmethod
-    async def batch_assist_result(
+    async def batch_embed_result(
         self,
         batch_id: str,
         batch_request_id: UUID,
