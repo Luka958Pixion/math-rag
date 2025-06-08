@@ -367,8 +367,6 @@ class InfrastructureContainer(DeclarativeContainer):
         katex_client=katex_client,
         managed_llm=openai_managed_llm,
         managed_scheduler=openai_batch_llm_request_managed_scheduler,
-        latex_parser_service=latex_parser_service,
-        latex_node_walker_service=latex_node_walker_service,
         dataset_publisher_service=dataset_publisher_service,
         math_article_parser_service=math_article_parser_service,
         fine_tune_job_repository=fine_tune_job_repository,
