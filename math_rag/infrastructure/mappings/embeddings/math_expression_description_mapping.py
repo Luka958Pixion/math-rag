@@ -1,17 +1,16 @@
 from datetime import datetime
 from uuid import UUID
 
-from qdrant_client.http.models import PointStruct, Record, ScoredPoint
-
 from math_rag.core.models import MathExpressionDescription
-from math_rag.infrastructure.base import BaseTripleMapping
+from math_rag.infrastructure.base import BaseMapping
+from math_rag.infrastructure.models.embeddings import MathExpressionDescriptionEmbedding
 
 
 class MathExpressionDescriptionMapping(
-    BaseTripleMapping[MathExpressionDescription, PointStruct, Record, ScoredPoint]
+    BaseMapping[MathExpressionDescription, MathExpressionDescriptionEmbedding]
 ):
     @staticmethod
-    def to_source(target: Record | ScoredPoint) -> MathExpressionDescription:
+    def to_source(target: MathExpressionDescriptionEmbedding) -> MathExpressionDescription:
         return MathExpressionDescription(
             id=UUID(target.id),
             math_expression_id=UUID(target.payload['math_expression_id']),
@@ -21,8 +20,10 @@ class MathExpressionDescriptionMapping(
         )
 
     @staticmethod
-    def to_target(source: MathExpressionDescription, *, embedding: list[float]) -> PointStruct:
-        return PointStruct(
+    def to_target(
+        source: MathExpressionDescription, *, embedding: list[float]
+    ) -> MathExpressionDescriptionEmbedding:
+        return MathExpressionDescriptionEmbedding(
             id=str(source.id),
             vector=embedding,
             payload={

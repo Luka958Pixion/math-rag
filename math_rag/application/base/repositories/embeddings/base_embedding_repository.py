@@ -16,6 +16,10 @@ class BaseEmbeddingRepository(ABC, Generic[T]):
         pass
 
     @abstractmethod
+    async def find_one(self, id: UUID) -> T | None:
+        pass
+
+    @abstractmethod
     async def find_many(self, ids: list[UUID]) -> list[T]:
         pass
 

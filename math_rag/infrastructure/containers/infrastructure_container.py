@@ -15,6 +15,7 @@ from minio import Minio
 from mpxpy.mathpix_client import MathpixClient as _MathpixClient
 from openai import AsyncOpenAI
 from pymongo import AsyncMongoClient
+from qdrant_client import AsyncQdrantClient
 
 from math_rag.application.base.indexers.documents import BaseDocumentIndexer
 from math_rag.application.base.seeders.documents import BaseDocumentSeeder
@@ -63,6 +64,7 @@ from math_rag.infrastructure.repositories.documents import (
     MathExpressionSampleRepository,
     ObjectMetadataRepository,
 )
+from math_rag.infrastructure.repositories.embeddings import MathExpressionDescriptionRepository
 from math_rag.infrastructure.repositories.files import GoogleDriveRepository
 from math_rag.infrastructure.repositories.objects import MathArticleRepository
 from math_rag.infrastructure.seeders.documents import (
@@ -76,6 +78,7 @@ from math_rag.infrastructure.seeders.documents import (
     MathExpressionSeeder,
     ObjectMetadataSeeder,
 )
+from math_rag.infrastructure.seeders.embeddings import MathExpressionDescriptionSeeder
 from math_rag.infrastructure.seeders.objects import MathArticleSeeder
 from math_rag.infrastructure.services import (
     DatasetPublisherService,
@@ -182,6 +185,20 @@ class InfrastructureContainer(DeclarativeContainer):
     # Neo4j
 
     # Qdrant
+    config.qdrant.url.from_env('QDRANT_URL')
+
+    async_qdrant_client = Singleton(
+        AsyncQdrantClient,
+        url=config.qdrant.url,
+    )
+
+    math_expression_description_seeder = Factory(
+        MathExpressionDescriptionSeeder, client=async_qdrant_client
+    )
+
+    math_expression_description_repository = Factory(
+        MathExpressionDescriptionRepository, client=async_qdrant_client
+    )
 
     # Google
     resource = Singleton(
