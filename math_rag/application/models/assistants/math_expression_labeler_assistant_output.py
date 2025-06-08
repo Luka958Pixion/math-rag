@@ -1,6 +1,6 @@
 from pydantic import AliasChoices, Field
 
-from math_rag.application.base.assistants import BaseAssistantOutput
+from math_rag.application.models.assistants.base import BaseAssistantOutput
 from math_rag.core.enums import MathExpressionLabelEnum
 
 

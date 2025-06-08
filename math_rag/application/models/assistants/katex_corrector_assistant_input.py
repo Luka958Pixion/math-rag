@@ -1,4 +1,4 @@
-from math_rag.application.base.assistants import BaseAssistantInput
+from math_rag.application.models.assistants.base import BaseAssistantInput
 
 
 class KatexCorrectorAssistantInput(BaseAssistantInput):

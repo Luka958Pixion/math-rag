@@ -1,4 +1,4 @@
-from math_rag.application.base.assistants import BaseAssistantOutput
+from math_rag.application.models.assistants.base import BaseAssistantOutput
 
 
 class KatexCorrectorRetryAssistantOutput(BaseAssistantOutput):

@@ -1,5 +1,3 @@
-from .base_assistant_input import BaseAssistantInput
-from .base_assistant_output import BaseAssistantOutput
 from .base_assistant_protocol import BaseAssistantProtocol
 from .base_basic_assistant import BaseBasicAssistant
 from .base_batch_assistant import BaseBatchAssistant
@@ -11,6 +9,4 @@ __all__ = [
     'BaseBatchAssistant',
     'BaseConcurrentAssistant',
     'BaseAssistantProtocol',
-    'BaseAssistantInput',
-    'BaseAssistantOutput',
 ]

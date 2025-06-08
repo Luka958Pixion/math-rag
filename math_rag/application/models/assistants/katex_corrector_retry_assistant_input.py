@@ -1,6 +1,6 @@
 from pydantic import field_validator
 
-from math_rag.application.base.assistants import BaseAssistantInput
+from math_rag.application.models.assistants.base import BaseAssistantInput
 
 from .katex_corrector_assistant_input import KatexCorrectorAssistantInput
 from .katex_corrector_assistant_output import KatexCorrectorAssistantOutput
