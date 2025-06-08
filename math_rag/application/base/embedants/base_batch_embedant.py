@@ -5,7 +5,7 @@ from uuid import UUID
 from math_rag.application.types.embedants import EmbedantInputType, EmbedantOutputType
 
 
-class BaseBatchEmbedant(ABC, Generic[EmbedantInputType]):
+class BaseBatchEmbedant(ABC, Generic[EmbedantInputType, EmbedantOutputType]):
     @abstractmethod
     async def batch_embed(
         self, inputs: list[EmbedantInputType], *, use_scheduler: bool

@@ -1,9 +1,6 @@
 from uuid import UUID
 
-from math_rag.application.base.inference import (
-    BaseBatchEMRequestManagedScheduler,
-    BaseManagedEM,
-)
+from math_rag.application.base.inference import BaseBatchEMRequestManagedScheduler, BaseManagedEM
 from math_rag.application.models.embedants import EmbedantInput, EmbedantOutput
 from math_rag.application.models.inference import (
     EMParams,

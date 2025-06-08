@@ -1,10 +1,7 @@
 from abc import ABC, abstractmethod
 from typing import Generic
 
-from math_rag.application.types.assistants import (
-    AssistantInputType,
-    AssistantOutputType,
-)
+from math_rag.application.types.assistants import AssistantInputType, AssistantOutputType
 
 
 class BaseConcurrentAssistant(ABC, Generic[AssistantInputType, AssistantOutputType]):

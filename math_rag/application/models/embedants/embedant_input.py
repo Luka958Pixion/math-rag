@@ -1,4 +1,4 @@
-from math_rag.application.base.embedants import BaseEmbedantInput
+from math_rag.application.models.embedants.base import BaseEmbedantInput
 
 
 class EmbedantInput(BaseEmbedantInput):

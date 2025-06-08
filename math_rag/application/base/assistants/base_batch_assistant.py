@@ -2,10 +2,7 @@ from abc import ABC, abstractmethod
 from typing import Generic
 from uuid import UUID
 
-from math_rag.application.types.assistants import (
-    AssistantInputType,
-    AssistantOutputType,
-)
+from math_rag.application.types.assistants import AssistantInputType, AssistantOutputType
 
 
 class BaseBatchAssistant(ABC, Generic[AssistantInputType, AssistantOutputType]):

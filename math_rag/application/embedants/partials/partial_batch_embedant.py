@@ -21,14 +21,10 @@ class PartialBatchEmbedant(
         self._em = em
         self._scheduler = scheduler
 
-    def _inputs_to_batch_request(
-        self, inputs: list[EmbedantInputType]
-    ) -> EMBatchRequest[EmbedantOutputType]:
+    def _inputs_to_batch_request(self, inputs: list[EmbedantInputType]) -> EMBatchRequest:
         return EMBatchRequest(requests=[self.encode_to_request(input) for input in inputs])
 
-    def _batch_result_to_outputs(
-        self, batch_result: EMBatchResult[EmbedantOutputType]
-    ) -> list[EmbedantOutputType]:
+    def _batch_result_to_outputs(self, batch_result: EMBatchResult) -> list[EmbedantOutputType]:
         return [
             self.decode_from_response_list(response_list)
             for response_list in batch_result.response_lists

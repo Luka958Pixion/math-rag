@@ -4,7 +4,7 @@ from typing import Generic
 from math_rag.application.types.embedants import EmbedantInputType, EmbedantOutputType
 
 
-class BaseBasicEmbedant(ABC, Generic[EmbedantInputType]):
+class BaseBasicEmbedant(ABC, Generic[EmbedantInputType, EmbedantOutputType]):
     @abstractmethod
     async def embed(self, input: EmbedantInputType) -> EmbedantOutputType | None:
         pass

@@ -1,14 +1,8 @@
 from abc import ABC, abstractmethod
 from typing import Generic
 
-from math_rag.application.models.inference import (
-    LLMRequest,
-    LLMResponseList,
-)
-from math_rag.application.types.assistants import (
-    AssistantInputType,
-    AssistantOutputType,
-)
+from math_rag.application.models.inference import LLMRequest, LLMResponseList
+from math_rag.application.types.assistants import AssistantInputType, AssistantOutputType
 
 
 class BaseAssistantProtocol(ABC, Generic[AssistantInputType, AssistantOutputType]):
