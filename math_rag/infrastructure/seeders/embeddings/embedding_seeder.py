@@ -39,4 +39,4 @@ class EmbeddingSeeder(BaseEmbeddingSeeder, Generic[TargetType]):
         )
 
     async def _delete_collection(self):
-        self.client.delete_collection(collection_name=self.collection_name)
+        await self.client.delete_collection(collection_name=self.collection_name)
