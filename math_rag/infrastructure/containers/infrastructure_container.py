@@ -43,6 +43,8 @@ from math_rag.infrastructure.indexers.documents import (
 )
 from math_rag.infrastructure.inference.huggingface import TEIBatchEM, TGIBatchLLM
 from math_rag.infrastructure.inference.openai import (
+    OpenAIBatchEMRequestManagedScheduler,
+    OpenAIBatchEMRequestScheduler,
     OpenAIBatchLLMRequestManagedScheduler,
     OpenAIBatchLLMRequestScheduler,
     OpenAIEM,
@@ -80,6 +82,7 @@ from math_rag.infrastructure.services import (
     FineTuneSettingsLoaderService,
     LatexNodeWalkerService,
     LatexParserService,
+    MathArticleParserService,
     PBSProResourceListLoaderService,
     PrometheusSnapshotLoaderService,
 )
@@ -215,13 +218,23 @@ class InfrastructureContainer(DeclarativeContainer):
         llm_failed_request_repository=llm_failed_request_repository,
     )
 
-    openai_scheduler = Factory(
+    openai_batch_em_request_scheduler = Factory(
+        OpenAIBatchEMRequestScheduler,
+        em=openai_managed_em,
+    )
+    openai_batch_llm_request_scheduler = Factory(
         OpenAIBatchLLMRequestScheduler,
         llm=openai_managed_llm,
     )
-    openai_managed_scheduler = Factory(
+
+    openai_batch_em_request_managed_scheduler = Factory(
+        OpenAIBatchEMRequestManagedScheduler,
+        scheduler=openai_batch_em_request_scheduler,
+        em_settings_loader_service=ApplicationContainer.em_settings_loader_service,
+    )
+    openai_batch_llm_request_managed_scheduler = Factory(
         OpenAIBatchLLMRequestManagedScheduler,
-        scheduler=openai_scheduler,
+        scheduler=openai_batch_llm_request_scheduler,
         llm_settings_loader_service=ApplicationContainer.llm_settings_loader_service,
     )
 
@@ -246,6 +259,11 @@ class InfrastructureContainer(DeclarativeContainer):
     # LaTeX
     latex_parser_service = Factory(LatexParserService)
     latex_node_walker_service = Factory(LatexNodeWalkerService)
+    math_article_parser_service = Factory(
+        MathArticleParserService,
+        latex_parser_service=latex_parser_service,
+        latex_node_walker_service=latex_node_walker_service,
+    )
 
     # KaTeX
     config.katex.port.from_env('KATEX_PORT')
@@ -348,10 +366,11 @@ class InfrastructureContainer(DeclarativeContainer):
         arxiv_client=arxiv_client,
         katex_client=katex_client,
         managed_llm=openai_managed_llm,
-        managed_scheduler=openai_managed_scheduler,
+        managed_scheduler=openai_batch_llm_request_managed_scheduler,
         latex_parser_service=latex_parser_service,
         latex_node_walker_service=latex_node_walker_service,
         dataset_publisher_service=dataset_publisher_service,
+        math_article_parser_service=math_article_parser_service,
         fine_tune_job_repository=fine_tune_job_repository,
         index_repository=index_repository,
         math_expression_dataset_repository=math_expression_dataset_repository,

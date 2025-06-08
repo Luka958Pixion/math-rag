@@ -27,8 +27,7 @@ from math_rag.application.base.repositories.documents import (
 from math_rag.application.base.repositories.objects import BaseMathArticleRepository
 from math_rag.application.base.services import (
     BaseDatasetPublisherService,
-    BaseLatexNodeWalkerService,
-    BaseLatexParserService,
+    BaseMathArticleParserService,
 )
 from math_rag.application.contexts import DatasetBuildContext, IndexBuildContext
 from math_rag.application.services import (
@@ -36,7 +35,6 @@ from math_rag.application.services import (
     IndexBuilderService,
     LLMSettingsLoaderService,
     MathArticleDatasetLoaderService,
-    MathArticleParserService,
     MathExpressionDatasetBuilderService,
     MathExpressionDatasetPublisherService,
     MathExpressionLabelLoaderService,
@@ -59,9 +57,6 @@ class ApplicationContainer(DeclarativeContainer):
     managed_llm: Provider[BaseManagedLLM] = Dependency()
     managed_scheduler: Provider[BaseBatchLLMRequestManagedScheduler] = Dependency()
 
-    latex_parser_service: Provider[BaseLatexParserService] = Dependency()
-    latex_node_walker_service: Provider[BaseLatexNodeWalkerService] = Dependency()
-
     fine_tune_job_repository: Provider[BaseFineTuneJobRepository] = Dependency()
     index_repository: Provider[BaseIndexRepository] = Dependency()
     math_expression_dataset_repository: Provider[BaseMathExpressionDatasetRepository] = Dependency()
@@ -71,6 +66,7 @@ class ApplicationContainer(DeclarativeContainer):
     math_expression_sample_repository: Provider[BaseMathExpressionSampleRepository] = Dependency()
 
     dataset_publisher_service: Provider[BaseDatasetPublisherService] = Dependency()
+    math_article_parser_service: Provider[BaseMathArticleParserService] = Dependency()
 
     # non-dependencies
     katex_corrector_assistant = Factory(
@@ -82,11 +78,6 @@ class ApplicationContainer(DeclarativeContainer):
 
     em_settings_loader_service = Factory(EMSettingsLoaderService)
     llm_settings_loader_service = Factory(LLMSettingsLoaderService)
-    math_article_parser_service = Factory(
-        MathArticleParserService,
-        latex_parser_service=latex_parser_service,
-        latex_node_walker_service=latex_node_walker_service,
-    )
     math_article_loader_service = Factory(
         MathArticleDatasetLoaderService,
         arxiv_client=arxiv_client,
