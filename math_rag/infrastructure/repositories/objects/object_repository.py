@@ -136,20 +136,20 @@ class ObjectRepository(
         for object in objects:
             self.client.remove_object(self.bucket_name, object.object_name)
 
-    def backup(self):
+    def backup(self) -> Path:
         timestamp = datetime.now().strftime('%Y-%m-%d_%H-%M-%S')
-        self.backup_dir_path = BACKUP_PATH / timestamp / self.bucket_name
-        self.backup_dir_path.mkdir(parents=True, exist_ok=True)
+        backup_path = BACKUP_PATH / timestamp / self.bucket_name
+        backup_path.mkdir(parents=True, exist_ok=True)
 
         for object_name in self.list_names():
-            local_path = self.backup_dir_path / object_name
+            local_path = backup_path / object_name
             local_path.parent.mkdir(parents=True, exist_ok=True)
             self.client.fget_object(self.bucket_name, object_name, str(local_path))
 
-    def restore(self):
+    def restore(self, backup_path: Path):
         self.clear()
 
-        for path in self.backup_dir_path.rglob('*'):
+        for path in backup_path.rglob('*'):
             if path.is_file():
-                object_name = str(path.relative_to(self.backup_dir_path))
+                object_name = str(path.relative_to(backup_path))
                 self.client.fput_object(self.bucket_name, object_name, str(path))

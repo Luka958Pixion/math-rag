@@ -1,8 +1,11 @@
+from datetime import datetime
+from pathlib import Path
 from typing import Generic, cast
 from uuid import UUID
 
+from httpx import AsyncClient
 from qdrant_client import AsyncQdrantClient
-from qdrant_client.http.models import PointStruct
+from qdrant_client.http.models import Filter, PointStruct, SnapshotPriority
 
 from math_rag.application.base.repositories.embeddings import BaseEmbeddingRepository
 from math_rag.infrastructure.types.repositories.embeddings import (
@@ -11,6 +14,9 @@ from math_rag.infrastructure.types.repositories.embeddings import (
     TargetType,
 )
 from math_rag.shared.utils import TypeUtil
+
+
+BACKUP_PATH = Path(__file__).parents[4] / '.tmp' / 'backups' / 'qdrant'
 
 
 class EmbeddingRepository(
@@ -69,3 +75,48 @@ class EmbeddingRepository(
             self.mapping_cls.to_source(self.target_cls(**scored_point.model_dump()))
             for scored_point in scored_points
         ]
+
+    async def clear(self):
+        await self.client.delete(
+            collection_name=self.collection_name,
+            points_selector=Filter(must=[]),  # NOTE: empty must selects all points
+            wait=True,
+        )
+
+    async def backup(self) -> Path:
+        timestamp = datetime.now().strftime('%Y-%m-%d_%H-%M-%S')
+        backup_path = BACKUP_PATH / timestamp / f'{self.collection_name}.snapshot'
+        backup_path.parent.mkdir(parents=True, exist_ok=True)
+
+        snapshot_description = await self.client.create_snapshot(
+            collection_name=self.collection_name,
+            wait=True,
+        )
+        snapshot_url = (
+            f'{self.client.init_options.get('url')}'
+            f'/collections/{self.collection_name}'
+            f'/snapshots/{snapshot_description.name}'
+        )
+
+        async with AsyncClient() as http_client:
+            response = await http_client.get(snapshot_url, timeout=None)
+            response.raise_for_status()
+            snapshot_bytes = response.content
+
+        with open(backup_path, 'wb') as file:
+            file.write(snapshot_bytes)
+
+        return backup_path
+
+    async def restore(self, backup_path: Path):
+        await self.clear()
+
+        with open(backup_path, 'rb') as file:
+            snapshot_bytes = file.read()
+
+        await self.client.http.snapshots_api.recover_from_uploaded_snapshot(
+            collection_name=self.collection_name,
+            snapshot=snapshot_bytes,
+            priority=SnapshotPriority.SNAPSHOT,
+            wait=True,
+        )

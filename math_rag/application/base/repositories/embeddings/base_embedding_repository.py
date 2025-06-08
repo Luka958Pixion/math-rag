@@ -1,4 +1,5 @@
 from abc import ABC, abstractmethod
+from pathlib import Path
 from typing import Generic, TypeVar
 from uuid import UUID
 
@@ -25,4 +26,16 @@ class BaseEmbeddingRepository(ABC, Generic[T]):
 
     @abstractmethod
     async def search(self, embedding: list[float], *, limit: int) -> list[T]:
+        pass
+
+    @abstractmethod
+    async def clear(self):
+        pass
+
+    @abstractmethod
+    async def backup(self) -> Path:
+        pass
+
+    @abstractmethod
+    async def restore(self, backup_path: Path):
         pass

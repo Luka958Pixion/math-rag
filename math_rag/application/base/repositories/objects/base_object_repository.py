@@ -1,4 +1,5 @@
 from abc import ABC, abstractmethod
+from pathlib import Path
 from typing import Generic, TypeVar
 
 
@@ -27,9 +28,9 @@ class BaseObjectRepository(ABC, Generic[T]):
         pass
 
     @abstractmethod
-    def backup(self):
+    def backup(self) -> Path:
         pass
 
     @abstractmethod
-    def restore(self):
+    def restore(self, backup_path: Path):
         pass

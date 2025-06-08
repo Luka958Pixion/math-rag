@@ -139,23 +139,25 @@ class DocumentRepository(
     async def exists(self, id: UUID) -> bool:
         return await self.collection.find_one({'_id': id}) is not None
 
-    async def backup(self):
+    async def backup(self) -> Path:
         timestamp = datetime.now().strftime('%Y-%m-%d_%H-%M-%S')
-        self.backup_file_path = BACKUP_PATH / timestamp / f'{self.collection_name}.ndjson'
-        self.backup_file_path.parent.mkdir(parents=True, exist_ok=True)
+        backup_path = BACKUP_PATH / timestamp / f'{self.collection_name}.ndjson'
+        backup_path.parent.mkdir(parents=True, exist_ok=True)
 
         cursor = self.collection.find().batch_size(100)
 
-        with open(self.backup_file_path, 'w') as file:
+        with open(backup_path, 'w') as file:
             async for document in cursor:
                 file.write(dumps(document, json_options=self.json_options) + '\n')
 
-    async def restore(self):
+        return backup_path
+
+    async def restore(self, backup_path: Path):
         await self.clear()
 
         batch = []
 
-        with open(self.backup_file_path, 'r') as file:
+        with open(backup_path, 'r') as file:
             for line in file:
                 document = loads(line, json_options=self.json_options)
                 batch.append(document)

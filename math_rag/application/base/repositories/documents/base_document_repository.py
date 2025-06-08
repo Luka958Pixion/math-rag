@@ -1,5 +1,6 @@
 from abc import ABC, abstractmethod
 from collections.abc import AsyncGenerator
+from pathlib import Path
 from typing import Any, Generic, TypeVar
 from uuid import UUID
 
@@ -47,9 +48,9 @@ class BaseDocumentRepository(ABC, Generic[T]):
         pass
 
     @abstractmethod
-    async def backup(self):
+    async def backup(self) -> Path:
         pass
 
     @abstractmethod
-    async def restore(self):
+    async def restore(self, backup_path: Path):
         pass
