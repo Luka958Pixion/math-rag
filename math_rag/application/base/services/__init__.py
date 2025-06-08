@@ -1,6 +1,5 @@
 from .base_dataset_publisher_service import BaseDatasetPublisherService
 from .base_em_settings_loader_service import BaseEMSettingsLoaderService
-from .base_embedding_service import BaseEmbeddingService
 from .base_index_builder_service import BaseIndexBuilderService
 from .base_llm_settings_loader_service import BaseLLMSettingsLoaderService
 from .base_math_article_loader_service import BaseMathArticleLoaderService
@@ -17,7 +16,6 @@ from .base_math_expression_sample_loader_service import BaseMathExpressionSample
 __all__ = [
     'BaseDatasetPublisherService',
     'BaseEMSettingsLoaderService',
-    'BaseEmbeddingService',
     'BaseIndexBuilderService',
     'BaseLLMSettingsLoaderService',
     'BaseMathArticleLoaderService',
