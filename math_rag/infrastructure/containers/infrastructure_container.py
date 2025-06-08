@@ -19,6 +19,7 @@ from qdrant_client import AsyncQdrantClient
 
 from math_rag.application.base.indexers.documents import BaseDocumentIndexer
 from math_rag.application.base.seeders.documents import BaseDocumentSeeder
+from math_rag.application.base.seeders.embeddings import BaseEmbeddingSeeder
 from math_rag.application.base.seeders.objects import BaseObjectSeeder
 from math_rag.application.containers import ApplicationContainer
 from math_rag.infrastructure.clients import (
@@ -194,6 +195,10 @@ class InfrastructureContainer(DeclarativeContainer):
 
     math_expression_description_seeder = Factory(
         MathExpressionDescriptionSeeder, client=async_qdrant_client
+    )
+
+    embedding_seeders: Provider[list[BaseEmbeddingSeeder]] = List(
+        math_expression_description_seeder
     )
 
     math_expression_description_repository = Factory(

@@ -32,7 +32,7 @@ class MathArticleRepository(
         super().__init__(client, metadata_keys, object_metadata_repository)
 
     def find_by_id(self, id: UUID) -> MathArticle | None:
-        coro = self.object_metadata_repository.find_one({'metadata.id': str(id)})
+        coro = self.object_metadata_repository.find_one(filter={'metadata.id': str(id)})
         doc: ObjectMetadataDocument | None = asyncio.run(coro)
 
         if not doc:
@@ -41,7 +41,7 @@ class MathArticleRepository(
         return self.find_by_name(doc.object_name)
 
     def find_many_by_index_id(self, id: UUID) -> list[MathArticle]:
-        coro = self.object_metadata_repository.find_many({'metadata.index_id': str(id)})
+        coro = self.object_metadata_repository.find_many(filter={'metadata.index_id': str(id)})
         docs: list[ObjectMetadataDocument] = asyncio.run(coro)
 
         if not docs:
@@ -51,7 +51,7 @@ class MathArticleRepository(
 
     def find_many_by_math_expression_dataset_id(self, id: UUID) -> list[MathArticle]:
         coro = self.object_metadata_repository.find_many(
-            {'metadata.math_expression_dataset_id': str(id)}
+            filter={'metadata.math_expression_dataset_id': str(id)}
         )
         docs: list[ObjectMetadataDocument] = asyncio.run(coro)
 

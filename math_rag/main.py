@@ -46,6 +46,9 @@ async def main():
     for document_seeder in infrastructure_container.document_seeders():
         await document_seeder.seed()
 
+    for embedding_seeder in infrastructure_container.embedding_seeders():
+        await embedding_seeder.seed()
+
     # index
     for document_indexer in infrastructure_container.document_indexers():
         await document_indexer.index()
