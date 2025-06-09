@@ -1,0 +1,8 @@
+default:
+  mem: 34359738368  # 32 * 1024 * 1024 * 1024
+  num_cpus: 4
+  num_gpus: 1
+  num_nodes: 1
+  place: pack
+  select: ""
+  wall_time: 604800    # 7 * 24 * 60 * 60
