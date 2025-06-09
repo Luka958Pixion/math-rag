@@ -11,6 +11,12 @@ from datasets import DatasetDict, load_dataset
 from datasets.download import DownloadConfig
 from decouple import config
 from fine_tune_settings import FineTuneSettings
+from llama_3_1_8b import (
+    format_prompt,
+    formatting_func,
+    init_language_model,
+    init_tokenizer,
+)
 from metrics import compute_metrics
 from optuna import Trial
 from peft import LoraConfig, get_peft_model, prepare_model_for_kbit_training
@@ -30,16 +36,9 @@ from transformers import (
 from transformers.integrations import WandbCallback
 from trl import SFTConfig, SFTTrainer
 
-from .llama_3_1_8b import (
-    format_prompt,
-    formatting_func,
-    init_language_model,
-    init_tokenizer,
-)
-
 
 # huggingface
-HF_HOME = Path(...)  # TODO and bind!
+HF_HOME = Path('home')
 HF_USERNAME = config('HF_USERNAME', default=None)
 HF_TOKEN = config('HF_TOKEN', default=None)
 
@@ -50,6 +49,9 @@ WANDB_API_KEY = config('WANDB_API_KEY', default=None)
 # paths
 TRAINER_STATE_PATH = HF_HOME / 'trainer' / 'state'
 TRAINER_MODEL_PATH = HF_HOME / 'trainer' / 'model'
+
+TRAINER_STATE_PATH.mkdir(exist_ok=True)
+TRAINER_MODEL_PATH.mkdir(exist_ok=True)
 
 
 basicConfig(level=INFO, format='%(asctime)s [%(threadName)s] %(levelname)s: %(message)s')
@@ -67,7 +69,7 @@ class GracefulStopCallback(TrainerCallback):
         return control
 
 
-def main(trial: Trial, settings: FineTuneSettings):
+def fine_tune_and_evaluate(trial: Trial, settings: FineTuneSettings) -> float:
     # login
     huggingface_hub.login(token=HF_TOKEN)
     wandb.login(key=WANDB_API_KEY)
@@ -226,7 +228,3 @@ def main(trial: Trial, settings: FineTuneSettings):
     f1 = eval_results['eval_f1']
 
     return f1
-
-
-if __name__ == '__main__':
-    main()

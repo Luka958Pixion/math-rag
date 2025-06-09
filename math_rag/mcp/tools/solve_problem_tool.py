@@ -24,7 +24,6 @@ class SolveProblemTool(BaseTool):
         if not full_pdf:
             raise HTTPException(status_code=400, detail='Failed to read PDF content.')
 
-        # TODO: integrate LLM solver here
         solution = '[Solution placeholder]'
 
         return {'solution': solution}

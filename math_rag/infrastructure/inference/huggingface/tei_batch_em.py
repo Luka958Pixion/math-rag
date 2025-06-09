@@ -265,7 +265,7 @@ class TEIBatchEM(PartialBatchEM):  # TODO update
                 wall_time_left = None
 
             if not wall_time_left or wall_time_left < WALL_TIME_THRESHOLD:
-                resources = self.pbs_pro_resource_list_loader_service.load(model)
+                resources = self.pbs_pro_resource_list_loader_service.load(model, use_case='tei')
                 job_id = await self.pbs_pro_client.queue_submit(
                     REMOTE_ROOT_PATH,
                     PBS_JOB_NAME,
@@ -278,7 +278,7 @@ class TEIBatchEM(PartialBatchEM):  # TODO update
                 )
 
         else:
-            resources = self.pbs_pro_resource_list_loader_service.load(model)
+            resources = self.pbs_pro_resource_list_loader_service.load(model, use_case='tei')
             job_id = await self.pbs_pro_client.queue_submit(
                 REMOTE_ROOT_PATH,
                 PBS_JOB_NAME,

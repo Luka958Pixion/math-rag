@@ -25,7 +25,6 @@ from math_rag.infrastructure.services import (
 )
 from math_rag.infrastructure.utils import (
     FileHasherUtil,
-    FileReaderUtil,
     FileStreamWriterUtil,
     FileWriterUtil,
 )
@@ -73,9 +72,10 @@ class FineTuneJobRunnerService(BaseFineTuneJobRunnerService):
             lora_path / 'lora.py',
             lora_path / 'lora.sh',
             lora_path / 'optuna.py',
-            lora_path / 'train.py',
             lora_path / 'metrics.py',
+            lora_path / 'utils.py',
             lora_path / 'fine_tune_settings.py',
+            lora_path / 'fine_tune.py',
             lora_path / 'llama_3_1_8b.py',
             LOCAL_ROOT_PATH / '.env.hpc',
         ]
@@ -84,6 +84,7 @@ class FineTuneJobRunnerService(BaseFineTuneJobRunnerService):
             assert local_path.exists()
 
         await self.file_system_client.make_directory(REMOTE_ROOT_PATH)
+        await self.file_system_client.make_directory(REMOTE_ROOT_PATH / 'home')
 
         for local_path in local_paths:
             remote_path = REMOTE_ROOT_PATH / local_path.name
@@ -158,7 +159,7 @@ class FineTuneJobRunnerService(BaseFineTuneJobRunnerService):
                 wall_time_left = None
 
             if not wall_time_left or wall_time_left < WALL_TIME_THRESHOLD:
-                resources = self.pbs_pro_resource_list_loader_service.load(model)
+                resources = self.pbs_pro_resource_list_loader_service.load(model, use_case='ft')
                 job_id = await self.pbs_pro_client.queue_submit(
                     REMOTE_ROOT_PATH,
                     PBS_JOB_NAME,
@@ -172,7 +173,7 @@ class FineTuneJobRunnerService(BaseFineTuneJobRunnerService):
                 )
 
         else:
-            resources = self.pbs_pro_resource_list_loader_service.load(model)
+            resources = self.pbs_pro_resource_list_loader_service.load(model, use_case='ft')
             job_id = await self.pbs_pro_client.queue_submit(
                 REMOTE_ROOT_PATH,
                 PBS_JOB_NAME,
@@ -264,21 +265,13 @@ class FineTuneJobRunnerService(BaseFineTuneJobRunnerService):
                 pass
 
         input_local_path = LOCAL_ROOT_PATH / '.tmp' / f'input_{fine_tune_job_id}.yaml'
-        output_local_path = LOCAL_ROOT_PATH / '.tmp' / f'output_{fine_tune_job_id}.json'
         input_remote_path = REMOTE_ROOT_PATH / input_local_path.name
-        output_remote_path = REMOTE_ROOT_PATH / output_local_path.name
 
-        await self.sftp_client.download(output_remote_path, output_local_path)
-
-        # TODO make output class
-        result = FileReaderUtil.read_json(output_local_path)
-        print(result)
-
-        await self.file_system_client.remove([input_remote_path, output_remote_path])
+        await self.file_system_client.remove([input_remote_path])
         input_local_path.unlink()
-        output_local_path.unlink()
 
-        return result
+        # NOTE: we are not sure what to return here at the moment
+        return {}
 
     async def run(self, fine_tune_job: FineTuneJob, *, poll_interval: float) -> dict:
         job_id = await self.init(fine_tune_job)

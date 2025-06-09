@@ -1,4 +1,5 @@
 from pathlib import Path
+from typing import Literal
 
 from pydantic import RootModel
 
@@ -6,7 +7,7 @@ from math_rag.infrastructure.models.hpc.pbs import PBSProResourceList
 from math_rag.shared.utils import PydanticOverriderUtil, YamlReaderUtil
 
 
-YAML_PATH = Path(__file__).parents[3] / 'settings' / 'inference' / 'text_generation_inference.yaml'
+RESOURCES_PATH = Path(__file__).parents[3] / 'settings' / 'resources'
 DEFAULT = 'default'
 
 
@@ -29,11 +30,22 @@ class _PBSProResourceListMapping(RootModel[dict[str, PBSProResourceList]]):
 
 class PBSProResourceListLoaderService:
     def __init__(self):
-        self._model_settings = YamlReaderUtil.read(YAML_PATH, model=_PBSProResourceListMapping)
+        self._model_settings_dict = {
+            'ft': YamlReaderUtil.read(
+                RESOURCES_PATH / 'fine_tune.yaml', model=_PBSProResourceListMapping
+            ),
+            'tgi': YamlReaderUtil.read(
+                RESOURCES_PATH / 'text_embeddings_inference.yaml', model=_PBSProResourceListMapping
+            ),
+            'tei': YamlReaderUtil.read(
+                'text_generation_inference.yaml', model=_PBSProResourceListMapping
+            ),
+        }
 
-    def load(self, model: str) -> PBSProResourceList:
-        default_settings = self._model_settings[DEFAULT]
-        override_settings = self._model_settings.get(model, None)
+    def load(self, model: str, *, use_case: Literal['ft', 'tgi', 'tei']) -> PBSProResourceList:
+        model_settings = self._model_settings_dict[use_case]
+        default_settings = model_settings[DEFAULT]
+        override_settings = model_settings.get(model, None)
 
         if not override_settings:
             return default_settings
