@@ -185,7 +185,7 @@ class LoRA:
         cmd = (
             'apptainer run '
             '--nv '
-            f'--bind {bind}'
+            f'--bind {bind} '
             f'--env-file {ENV_PATH} '
             f'--env FINE_TUNE_JOB_ID={fine_tune_job_id} '
             f'{LORA_SIF_PATH}'
@@ -230,7 +230,7 @@ class FineTuneJobReaderThread(Thread):
             for path in WORKDIR.glob(JOB_PATH_PATTERN):
                 with path.open('r') as file:
                     json_dict = json.load(file)
-                    json_dict['id'] = UUID(json_dict['id'])
+                    json_dict['fine_tune_job_id'] = UUID(json_dict['fine_tune_job_id'])
                     job = FineTuneJob(**json_dict)
 
                 self._job_queue.put((job.timestamp, job))

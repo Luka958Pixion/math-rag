@@ -17,6 +17,14 @@ from math_rag.infrastructure.utils import AwkCmdBuilderUtil
 from .ssh_client import SSHClient
 
 
+def _format(td: timedelta) -> str:
+    total_seconds = int(td.total_seconds())
+    hours, remainder = divmod(total_seconds, 3600)
+    minutes, seconds = divmod(remainder, 60)
+
+    return f'{hours:02}:{minutes:02}:{seconds:02}'
+
+
 class PBSProClient:
     def __init__(self, ssh_client: SSHClient):
         self.ssh_client = ssh_client
@@ -47,7 +55,7 @@ class PBSProClient:
         cmd += (
             f'-q {queue.value} '
             f'-l select={num_nodes}:ncpus={num_cpus}:mem={mem}B:ngpus={num_gpus},'
-            f'walltime={wall_time} '
+            f'walltime={_format(wall_time)} '
             f'-N {job_name} '
             f'{job_name}.sh'
         )

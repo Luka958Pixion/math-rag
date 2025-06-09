@@ -38,7 +38,7 @@ REMOTE_ROOT_PATH = Path('lora_default_root')
 
 # must be greater than WALL_TIME_THRESHOLD in lora.py
 WALL_TIME_THRESHOLD = timedelta(minutes=35)
-STATUS_TRACKER_DELAY = 30
+STATUS_TRACKER_DELAY = 60
 
 logger = getLogger(__name__)
 
@@ -60,65 +60,138 @@ class FineTuneJobRunnerService(BaseFineTuneJobRunnerService):
         self.fine_tune_settings_loader_service = fine_tune_settings_loader_service
         self.pbs_pro_resource_list_loader_service = pbs_pro_resource_list_loader_service
 
+    async def _has_file_changed(self, local_path: Path, remote_path: Path) -> bool:
+        """
+        Determines whether a local file differs from its remote counterpart based on SHA-256 hash comparison.
+
+        Computes the SHA-256 hash of both the local and remote files and compares them.
+
+        Args:
+            local_path (Path): Path to the local file.
+            remote_path (Path): Path to the remote file.
+
+        Returns:
+            bool: True if the local and remote file hashes differ, False otherwise.
+        """
+
+        local_hash = FileHasherUtil.hash(local_path, 'sha256')
+        remote_hash = await self.file_system_client.hash(remote_path, 'sha256sum')
+
+        return local_hash != remote_hash
+
+    async def _upload_file(self, local_path: Path, remote_path: Path, force: bool = False) -> bool:
+        """
+        Uploads a file to the remote path if it is missing or has changed.
+
+        If the remote file exists:
+            - Reuploads the file if `force` is True or the local file content differs.
+            - Skips upload if the file is unchanged and `force` is False.
+
+        If the remote file does not exist, uploads it directly.
+
+        Args:
+            local_path (Path): Path to the local file to upload.
+            remote_path (Path): Destination path on the remote system.
+            force (bool, optional): If True, reupload the file regardless of changes. Defaults to False.
+
+        Returns:
+            bool: True if the file was uploaded or reuploaded, False if upload was skipped.
+        """
+
+        if await self.file_system_client.test(remote_path):
+            if force or await self._has_file_changed(local_path, remote_path):
+                await self.file_system_client.remove(remote_path)
+                await self.sftp_client.upload(local_path, remote_path)
+                logger.info(f'Reupload completed: {remote_path}')
+
+                return True
+
+            else:
+                logger.info(f'Upload skipped: {local_path} unchanged')
+
+                return False
+
+        else:
+            await self.sftp_client.upload(local_path, remote_path)
+            logger.info(f'Upload completed: {remote_path}')
+
+            return True
+
     async def init_resources(self):
+        # common directory paths
         tmp_path = LOCAL_ROOT_PATH / '.tmp'
         hf_path = LOCAL_ROOT_PATH / 'assets/hpc/hf'
         lora_path = hf_path / 'lora'
 
-        # NOTE: order matters
-        local_paths = [
-            lora_path / 'requirements.txt',
-            lora_path / 'lora.def',
-            lora_path / 'lora.py',
-            lora_path / 'lora.sh',
-            lora_path / 'optuna.py',
+        # build paths
+        lora_def_path = lora_path / 'lora.def'
+        requirements_txt_path = lora_path / 'requirements.txt'
+
+        build_local_paths_dict: dict[Path, Path | None] = {
+            lora_def_path: requirements_txt_path,
+        }
+
+        # runtime paths
+        runtime_local_paths = [
+            LOCAL_ROOT_PATH / '.env.hpc',
+            lora_path / 'optuna_optimizer.py',
             lora_path / 'metrics.py',
             lora_path / 'utils.py',
             lora_path / 'fine_tune_settings.py',
             lora_path / 'fine_tune.py',
             lora_path / 'llama_3_1_8b.py',
-            LOCAL_ROOT_PATH / '.env.hpc',
+            lora_path / 'lora.py',
+            lora_path / 'lora.sh',
         ]
 
-        for local_path in local_paths:
-            assert local_path.exists()
+        # verify local paths
+        local_paths = (
+            runtime_local_paths
+            + [key for key in build_local_paths_dict.keys()]
+            + [value for value in build_local_paths_dict.values() if value is not None]
+        )
 
+        for local_path in local_paths:
+            assert local_path.exists(), f'Local path {local_path} does not exist'
+
+        # create remote root directory
         await self.file_system_client.make_directory(REMOTE_ROOT_PATH)
-        await self.file_system_client.make_directory(REMOTE_ROOT_PATH / 'home')
 
-        for local_path in local_paths:
-            remote_path = REMOTE_ROOT_PATH / local_path.name
+        # create remote data directory for prometheus
+        await self.file_system_client.make_directory(REMOTE_ROOT_PATH / 'data')
 
-            if await self.file_system_client.test(remote_path):
-                local_hash = FileHasherUtil.hash(local_path, 'sha256')
-                remote_hash = await self.file_system_client.hash(remote_path, 'sha256sum')
+        for def_local_path, additional_local_path in build_local_paths_dict.items():
+            is_build_required = False
+            is_build_required_additional = False
 
-                if local_hash != remote_hash:
-                    await self.file_system_client.remove(remote_path)
-
-                    logger.info(f'Upload started: {local_path}')
-
-                else:
-                    logger.info(f'Upload skipped: {local_path} unchanged')
-                    continue
-
-            if local_path.suffix == '.def':
-                sif_stream = await self.apptainer_client.build(
-                    local_path,
-                    lora_path / 'requirements.txt' if local_path.name == 'lora.def' else None,
+            # upload additional file
+            if additional_local_path:
+                additional_remote_path = REMOTE_ROOT_PATH / additional_local_path.name
+                is_build_required_additional = await self._upload_file(
+                    additional_local_path, additional_remote_path
                 )
 
-                sif_local_path = tmp_path / f'{local_path.stem}.sif'
-                await FileStreamWriterUtil.write(sif_stream, sif_local_path)
+            # upload definition file
+            def_remote_path = REMOTE_ROOT_PATH / def_local_path.name
+            is_build_required = await self._upload_file(def_local_path, def_remote_path)
 
-                sif_remote_path = REMOTE_ROOT_PATH / sif_local_path.name
+            # (re)build and (re)upload singularity image file
+            if not is_build_required and not is_build_required_additional:
+                continue
 
-                if await self.file_system_client.test(sif_remote_path):
-                    await self.file_system_client.remove(sif_remote_path)
+            sif_stream = await self.apptainer_client.build(def_local_path, additional_local_path)
 
-                await self.sftp_client.upload(sif_local_path, sif_remote_path)
+            sif_local_path = tmp_path / f'{def_local_path.stem}.sif'
+            await FileStreamWriterUtil.write(sif_stream, sif_local_path)
 
-            await self.sftp_client.upload(local_path, remote_path)
+            # force upload to skip hashing for large images (hash always differs here)
+            sif_remote_path = REMOTE_ROOT_PATH / sif_local_path.name
+            await self._upload_file(sif_local_path, sif_remote_path, force=True)
+
+        # upload runtime paths
+        for local_path in runtime_local_paths:
+            remote_path = REMOTE_ROOT_PATH / local_path.name
+            await self._upload_file(local_path, remote_path)
 
     async def init(self, fine_tune_job: FineTuneJob) -> str:
         model = f'{fine_tune_job.provider_name}/{fine_tune_job.model_name}'
@@ -177,7 +250,7 @@ class FineTuneJobRunnerService(BaseFineTuneJobRunnerService):
             job_id = await self.pbs_pro_client.queue_submit(
                 REMOTE_ROOT_PATH,
                 PBS_JOB_NAME,
-                num_nodes=resources.num_chunks,
+                num_nodes=resources.num_nodes,
                 num_cpus=resources.num_cpus,
                 num_gpus=resources.num_gpus,
                 mem=resources.mem,
@@ -200,7 +273,7 @@ class FineTuneJobRunnerService(BaseFineTuneJobRunnerService):
 
         # write helper job file
         helper_job_local_path = (
-            LOCAL_ROOT_PATH / '.tmp' / f'helper_job_{job_id}_{fine_tune_job.id}.json'
+            LOCAL_ROOT_PATH / '.tmp' / f'fine_tune_job_{job_id}_{fine_tune_job.id}.json'
         )
         await FileWriterUtil.write(helper_job_json_bytes, helper_job_local_path)
 

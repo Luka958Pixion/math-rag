@@ -38,7 +38,7 @@ class PBSProResourceListLoaderService:
                 RESOURCES_PATH / 'text_embeddings_inference.yaml', model=_PBSProResourceListMapping
             ),
             'tei': YamlReaderUtil.read(
-                'text_generation_inference.yaml', model=_PBSProResourceListMapping
+                RESOURCES_PATH / 'text_generation_inference.yaml', model=_PBSProResourceListMapping
             ),
         }
 

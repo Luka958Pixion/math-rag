@@ -288,7 +288,7 @@ class TGIBatchLLM(PartialBatchLLM):
             job_id = await self.pbs_pro_client.queue_submit(
                 REMOTE_ROOT_PATH,
                 PBS_JOB_NAME,
-                num_nodes=resources.num_chunks,
+                num_nodes=resources.num_nodes,
                 num_cpus=resources.num_cpus,
                 num_gpus=resources.num_gpus,
                 mem=resources.mem,
