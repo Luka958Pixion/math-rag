@@ -4,6 +4,7 @@ from .pydantic_overrider_util import PydanticOverriderUtil
 from .type_util import TypeUtil
 from .yaml_reader_util import YamlReaderUtil
 from .yaml_writer_util import YamlWriterUtil
+from .zip_extractor_util import ZipExtractorUtil
 
 
 __all__ = [
@@ -13,4 +14,5 @@ __all__ = [
     'PydanticOverriderUtil',
     'YamlReaderUtil',
     'YamlWriterUtil',
+    'ZipExtractorUtil',
 ]

@@ -33,7 +33,7 @@ from transformers import (
     TrainerState,
     TrainingArguments,
 )
-from transformers.integrations import WandbCallback
+from transformers.trainer_utils import get_last_checkpoint
 from trl import SFTConfig, SFTTrainer
 
 
@@ -53,6 +53,8 @@ TRAINER_MODEL_PATH = HF_HOME / 'trainer' / 'model'
 TRAINER_STATE_PATH.mkdir(parents=True, exist_ok=True)
 TRAINER_MODEL_PATH.mkdir(parents=True, exist_ok=True)
 
+SUPPORTED_MODEL_NAMES = {'meta-llama/Llama-3.1-8B'}
+
 
 basicConfig(level=INFO, format='%(asctime)s [%(threadName)s] %(levelname)s: %(message)s')
 logger = getLogger(__name__)
@@ -70,6 +72,9 @@ class GracefulStopCallback(TrainerCallback):
 
 
 def fine_tune_and_evaluate(trial: Trial, settings: FineTuneSettings) -> float:
+    if settings.model_settings.model_name not in SUPPORTED_MODEL_NAMES:
+        raise ValueError(f'Model {settings.model_settings.model_name} is not supported')
+
     r = trial.params[settings.optuna_settings.trial_settings.r.name]
     lora_alpha = trial.params[settings.optuna_settings.trial_settings.lora_alpha.name]
     lora_dropout = trial.params[settings.optuna_settings.trial_settings.lora_dropout.name]
@@ -143,6 +148,8 @@ def fine_tune_and_evaluate(trial: Trial, settings: FineTuneSettings) -> float:
     )
     model = cast(PreTrainedModel, model)
     init_language_model(model)
+    model.resize_token_embeddings(len(tokenizer))
+    model.config.pad_token_id = tokenizer.pad_token_id
 
     peft_config = LoraConfig(
         r=r,
@@ -186,10 +193,10 @@ def fine_tune_and_evaluate(trial: Trial, settings: FineTuneSettings) -> float:
         logging_strategy='steps',
         logging_steps=100,
         logging_first_step=True,
+        label_names=['labels'],
     )
 
     graceful_stop_callback = GracefulStopCallback()
-    wandb_callback = WandbCallback()
 
     data_collator = DataCollatorForLanguageModeling(tokenizer, mlm=False)
 
@@ -198,16 +205,18 @@ def fine_tune_and_evaluate(trial: Trial, settings: FineTuneSettings) -> float:
         args=sft_config,
         data_collator=data_collator,
         train_dataset=train_dataset,
-        eval_dataset=test_dataset,
+        eval_dataset=validate_dataset,
         processing_class=tokenizer,
-        callbacks=[graceful_stop_callback, wandb_callback],
+        callbacks=[graceful_stop_callback],
         optimizer_cls_and_kwargs=(AdamW, settings.optimizer_settings.model_dump()),
         preprocess_logits_for_metrics=False,
         compute_metrics=compute_metrics,
         formatting_func=lambda batch: formatting_func(tokenizer, batch),
     )
+    last_checkpoint = get_last_checkpoint(sft_config.output_dir)
+
     trainer.train(
-        resume_from_checkpoint=True,
+        resume_from_checkpoint=last_checkpoint,
         trial=trial,
         ignore_keys_for_eval=['past_key_values', 'hidden_states', 'attentions'],
     )
@@ -219,7 +228,7 @@ def fine_tune_and_evaluate(trial: Trial, settings: FineTuneSettings) -> float:
     )
 
     # evaluate
-    eval_results = trainer.evaluate(eval_dataset=validate_dataset)
+    eval_results = trainer.evaluate(eval_dataset=test_dataset)
     f1 = eval_results['eval_f1']
 
     return f1

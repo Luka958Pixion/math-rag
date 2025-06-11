@@ -91,10 +91,17 @@ def formatting_func(tokenizer: LlamaTokenizerFast, batch: dict[str, Any]) -> dic
     input_strs: list[str] = []
 
     for msgs in batch['messages']:
-        system_part = msgs[0]['content']
-        user_and_assistant = msgs[1:]
+        if isinstance(msgs, list):
+            system_part = msgs[0]['content']
+            user_and_assistant = msgs[1:]
+            conversation = {'system_message': system_part, 'messages': user_and_assistant}
+
+        else:
+            system_part = msgs['content']
+            conversation = {'system_message': system_part}
+
         full_prompt = tokenizer.apply_chat_template(
-            {'system_message': system_part, 'messages': user_and_assistant},
+            conversation,
             tokenize=False,
             add_special_tokens=True,
         )

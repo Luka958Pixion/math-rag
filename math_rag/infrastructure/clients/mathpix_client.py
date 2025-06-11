@@ -28,14 +28,15 @@ ALLOWED_IMAGE_TYPES = {
     'hdr',
     'pic',
 }
-UPLOADS_PATH = Path(__file__).parents[2] / '.tmp' / 'uploads'  # TODO??
+UPLOADS_PATH = Path(__file__).parents[3] / '.tmp' / 'mathpix' / 'uploads'  # TODO??
+DOWNLOADS_PATH = Path(__file__).parents[3] / '.tmp' / 'mathpix' / 'downloads'
 
 
 class MathpixClient(BaseLatexConverterClient):
     def __init__(self, client: _MathpixClient):
         self.client = client
 
-    def convert_image(self, *, file_path: Path | None, url: str | None) -> str:
+    def convert_image(self, *, file_path: Path | None = None, url: str | None = None) -> str:
         image_type = file_path.suffix.removeprefix('.')
 
         if image_type not in ALLOWED_IMAGE_TYPES:
@@ -49,12 +50,15 @@ class MathpixClient(BaseLatexConverterClient):
 
         return results['text']
 
-    def convert_pdf(self, *, file_path: Path | None, url: str | None) -> str:
+    def convert_pdf(self, *, file_path: Path | None = None, url: str | None = None) -> str:
         pdf = self.client.pdf_new(
             file_path=file_path,
             url=url,
             convert_to_tex_zip=True,
         )
         pdf.wait_until_complete(timeout=60)
-        pdf.to_tex_zip_bytes()
+        content = pdf.to_tex_zip_bytes()
         # TODO
+
+        with open(DOWNLOADS_PATH / 'data.zip', 'wb') as file:
+            file.write(content)
