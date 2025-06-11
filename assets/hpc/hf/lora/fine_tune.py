@@ -1,10 +1,12 @@
 import json
+import os
 
 from logging import INFO, basicConfig, getLogger
 from pathlib import Path
 from typing import cast
 
 import huggingface_hub
+import torch
 import wandb
 
 from datasets import DatasetDict, load_dataset
@@ -33,6 +35,7 @@ from transformers import (
     TrainerState,
     TrainingArguments,
 )
+from transformers.integrations import WandbCallback
 from transformers.trainer_utils import get_last_checkpoint
 from trl import SFTConfig, SFTTrainer
 
@@ -71,6 +74,42 @@ class GracefulStopCallback(TrainerCallback):
         return control
 
 
+class CustomWandbCallback(WandbCallback):
+    def __init__(self, trial: Trial, settings: FineTuneSettings):
+        super().__init__()
+        self.trial = trial
+        self.r = trial.params[settings.optuna_settings.trial_settings.r.name]
+        self.lora_alpha = trial.params[settings.optuna_settings.trial_settings.lora_alpha.name]
+        self.lora_dropout = trial.params[settings.optuna_settings.trial_settings.lora_dropout.name]
+
+    def on_train_begin(self, args, state, control, **kwargs):
+        if wandb.run is not None:
+            wandb.finish()
+
+        wandb.init(
+            project=os.environ['WANDB_PROJECT'],
+            name=f'lora-optuna-run-{self.trial.number}',
+            tags=[
+                f'r={self.r}',
+                f'alpha={self.lora_alpha}',
+                f'dropout={self.lora_dropout}',
+            ],
+            notes=f'Optuna trial #{self.trial.number} with params {self.trial.params}',
+        )
+
+        return control
+
+    def on_train_end(self, args, state, control, **kwargs):
+        wandb.finish()
+
+
+def preprocess_logits_for_metrics(logits, labels):
+    lm_logits = logits[0]
+    pred_ids = torch.argmax(lm_logits, dim=-1)
+
+    return pred_ids, labels
+
+
 def fine_tune_and_evaluate(trial: Trial, settings: FineTuneSettings) -> float:
     if settings.model_settings.model_name not in SUPPORTED_MODEL_NAMES:
         raise ValueError(f'Model {settings.model_settings.model_name} is not supported')
@@ -82,16 +121,6 @@ def fine_tune_and_evaluate(trial: Trial, settings: FineTuneSettings) -> float:
     # login
     huggingface_hub.login(token=HF_TOKEN)
     wandb.login(key=WANDB_API_KEY)
-    wandb.init(
-        project=WANDB_PROJECT,
-        name=f'lora-optuna-run-{trial.number}',
-        tags=[
-            f'r={r}',
-            f'alpha={lora_alpha}',
-            f'dropout={lora_dropout}',
-        ],
-        notes=f'Optuna trial #{trial.number} with params {trial.params}',
-    )
 
     # initialize tokenizer
     tokenizer = AutoTokenizer.from_pretrained(
@@ -127,6 +156,12 @@ def fine_tune_and_evaluate(trial: Trial, settings: FineTuneSettings) -> float:
 
     dataset_dict = dataset_dict.map(
         lambda x: format_prompt(x, prompt), remove_columns=dataset_dict['train'].column_names
+    )
+    dataset_dict = dataset_dict.map(
+        lambda batch: formatting_func(tokenizer, {'messages': batch['messages']}),
+        batched=True,
+        batch_size=settings.sft_settings.per_device_train_batch_size,
+        remove_columns=['messages'],
     )
 
     train_dataset = dataset_dict['train']
@@ -189,14 +224,18 @@ def fine_tune_and_evaluate(trial: Trial, settings: FineTuneSettings) -> float:
         num_train_epochs=settings.sft_settings.num_train_epochs,
         fp16=settings.sft_settings.fp16,
         weight_decay=settings.sft_settings.weight_decay,
-        report_to='wandb',
+        report_to='none',
         logging_strategy='steps',
         logging_steps=100,
         logging_first_step=True,
         label_names=['labels'],
+        remove_unused_columns=True,
+        per_device_eval_batch_size=2,
+        eval_accumulation_steps=4,
     )
 
     graceful_stop_callback = GracefulStopCallback()
+    custom_wandb_callback = CustomWandbCallback(trial, settings)
 
     data_collator = DataCollatorForLanguageModeling(tokenizer, mlm=False)
 
@@ -207,11 +246,10 @@ def fine_tune_and_evaluate(trial: Trial, settings: FineTuneSettings) -> float:
         train_dataset=train_dataset,
         eval_dataset=validate_dataset,
         processing_class=tokenizer,
-        callbacks=[graceful_stop_callback],
+        callbacks=[graceful_stop_callback, custom_wandb_callback],
         optimizer_cls_and_kwargs=(AdamW, settings.optimizer_settings.model_dump()),
-        preprocess_logits_for_metrics=False,
+        preprocess_logits_for_metrics=preprocess_logits_for_metrics,
         compute_metrics=compute_metrics,
-        formatting_func=lambda batch: formatting_func(tokenizer, batch),
     )
     last_checkpoint = get_last_checkpoint(sft_config.output_dir)
 

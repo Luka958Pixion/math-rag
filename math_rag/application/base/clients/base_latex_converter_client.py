@@ -8,5 +8,5 @@ class BaseLatexConverterClient(ABC):
         pass
 
     @abstractmethod
-    def convert_pdf(self, *, file_path: Path | None, url: str | None) -> str:
+    def convert_pdf(self, *, file_path: Path | None, url: str | None) -> bytes:
         pass
