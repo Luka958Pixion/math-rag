@@ -3,6 +3,8 @@ import shlex
 from pathlib import Path
 from typing import Iterable, overload
 
+from math_rag.infrastructure.models.clients import ChangeModePermission
+
 from .ssh_client import SSHClient
 
 
@@ -68,3 +70,6 @@ class FileSystemClient:
         await self.ssh_client.run(
             f'tar -cvf {target} {source}' if include_root else f'tar -cvf {target} -C {source} .'
         )
+
+    async def change_mode(self, permission: ChangeModePermission, path: Path):
+        await self.ssh_client.run(f'chmod {permission.value} {path}')

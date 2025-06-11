@@ -31,7 +31,7 @@ class OptimizerSettings(BaseModel):
 
 
 class OptunaStudySettings(BaseModel):
-    storage_name: str
+    storage: str
     study_name: str
     direction: str
     load_if_exists: bool

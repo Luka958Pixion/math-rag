@@ -8,4 +8,4 @@ module load utils/python/3.12.2
 
 export PYTHONUNBUFFERED=1
 
-python3 optuna_optimizer.py
+python3 lora.py

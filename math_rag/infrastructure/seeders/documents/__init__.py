@@ -7,6 +7,7 @@ from .math_expression_dataset_seeder import MathExpressionDatasetSeeder
 from .math_expression_label_seeder import MathExpressionLabelSeeder
 from .math_expression_sample_seeder import MathExpressionSampleSeeder
 from .math_expression_seeder import MathExpressionSeeder
+from .math_problem_seeder import MathProblemSeeder
 from .object_metadata_seeder import ObjectMetadataSeeder
 
 
@@ -20,5 +21,6 @@ __all__ = [
     'MathExpressionLabelSeeder',
     'MathExpressionSampleSeeder',
     'MathExpressionSeeder',
+    'MathProblemSeeder',
     'ObjectMetadataSeeder',
 ]

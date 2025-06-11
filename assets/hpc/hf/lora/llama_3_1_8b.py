@@ -79,13 +79,13 @@ def format_prompt(sample: dict[str, str], prompt: dict[str, Any]) -> dict[str, A
 def formatting_func(tokenizer: LlamaTokenizerFast, batch: dict[str, Any]) -> dict[str, Any]:
     """
     Expects batch['messages'] as a list of lists of dicts:
-      [
-        [ {'role':'system','content':...},
-          {'role':'user','content':...},
-          {'role':'assistant','content':...}
+    [
+        [
+            {'role': 'system', 'content': ...},
+            {'role':'user', 'content': ...},
+            {'role': 'assistant', 'content':...},
         ],
-        ...
-      ]
+    ]
     Returns a dict with 'input_ids', 'attention_mask', and 'labels'.
     """
     input_strs: list[str] = []

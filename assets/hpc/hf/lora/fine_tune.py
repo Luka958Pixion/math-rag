@@ -50,8 +50,8 @@ WANDB_API_KEY = config('WANDB_API_KEY', default=None)
 TRAINER_STATE_PATH = HF_HOME / 'trainer' / 'state'
 TRAINER_MODEL_PATH = HF_HOME / 'trainer' / 'model'
 
-TRAINER_STATE_PATH.mkdir(exist_ok=True)
-TRAINER_MODEL_PATH.mkdir(exist_ok=True)
+TRAINER_STATE_PATH.mkdir(parents=True, exist_ok=True)
+TRAINER_MODEL_PATH.mkdir(parents=True, exist_ok=True)
 
 
 basicConfig(level=INFO, format='%(asctime)s [%(threadName)s] %(levelname)s: %(message)s')
@@ -70,12 +70,22 @@ class GracefulStopCallback(TrainerCallback):
 
 
 def fine_tune_and_evaluate(trial: Trial, settings: FineTuneSettings) -> float:
+    r = trial.params[settings.optuna_settings.trial_settings.r.name]
+    lora_alpha = trial.params[settings.optuna_settings.trial_settings.lora_alpha.name]
+    lora_dropout = trial.params[settings.optuna_settings.trial_settings.lora_dropout.name]
+
     # login
     huggingface_hub.login(token=HF_TOKEN)
     wandb.login(key=WANDB_API_KEY)
     wandb.init(
         project=WANDB_PROJECT,
-        name=f'{settings.model_settings.model_name}_{trial.study._study_id}_{trial._trial_id}_qlora',
+        name=f'lora-optuna-run-{trial.number}',
+        tags=[
+            f'r={r}',
+            f'alpha={lora_alpha}',
+            f'dropout={lora_dropout}',
+        ],
+        notes=f'Optuna trial #{trial.number} with params {trial.params}',
     )
 
     # initialize tokenizer
@@ -134,10 +144,6 @@ def fine_tune_and_evaluate(trial: Trial, settings: FineTuneSettings) -> float:
     model = cast(PreTrainedModel, model)
     init_language_model(model)
 
-    r = trial.params[settings.optuna_settings.trial_settings.r.name]
-    lora_alpha = trial.params[settings.optuna_settings.trial_settings.lora_alpha.name]
-    lora_dropout = trial.params[settings.optuna_settings.trial_settings.lora_dropout.name]
-
     peft_config = LoraConfig(
         r=r,
         lora_alpha=lora_alpha,
@@ -183,17 +189,7 @@ def fine_tune_and_evaluate(trial: Trial, settings: FineTuneSettings) -> float:
     )
 
     graceful_stop_callback = GracefulStopCallback()
-    wandb_callback = WandbCallback(
-        wandb_kwargs={
-            'name': f'lora-optuna-run-{trial.number}',
-            'tags': [
-                f'r={r}',
-                f'alpha={lora_alpha}',
-                f'dropout={lora_dropout}',
-            ],
-            'notes': f'Optuna trial #{trial.number} with params {trial.params}',
-        }
-    )
+    wandb_callback = WandbCallback()
 
     data_collator = DataCollatorForLanguageModeling(tokenizer, mlm=False)
 
@@ -202,8 +198,7 @@ def fine_tune_and_evaluate(trial: Trial, settings: FineTuneSettings) -> float:
         args=sft_config,
         data_collator=data_collator,
         train_dataset=train_dataset,
-        eval_dataset=validate_dataset,
-        test_dataset=test_dataset,
+        eval_dataset=test_dataset,
         processing_class=tokenizer,
         callbacks=[graceful_stop_callback, wandb_callback],
         optimizer_cls_and_kwargs=(AdamW, settings.optimizer_settings.model_dump()),

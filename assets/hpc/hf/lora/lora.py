@@ -187,6 +187,8 @@ class LoRA:
             '--nv '
             f'--bind {bind} '
             f'--env-file {ENV_PATH} '
+            f'--env http_proxy={HTTP_PROXY} '
+            f'--env https_proxy={HTTPS_PROXY} '
             f'--env FINE_TUNE_JOB_ID={fine_tune_job_id} '
             f'{LORA_SIF_PATH}'
         )

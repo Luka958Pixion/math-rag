@@ -3,12 +3,11 @@ from logging import INFO, basicConfig, getLogger
 from pathlib import Path
 
 from decouple import Config, RepositoryEnv
+from fine_tune import fine_tune_and_evaluate
 from fine_tune_settings import FineTuneSettings
 from optuna import Trial, create_study
 from optuna.trial import FrozenTrial
 from utils import YamlReaderUtil
-
-from assets.hpc.hf.lora.fine_tune import fine_tune_and_evaluate
 
 
 config = Config(repository=RepositoryEnv('.env.hpc'))

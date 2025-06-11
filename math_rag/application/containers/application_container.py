@@ -11,7 +11,11 @@ from math_rag.application.assistants import (
     KatexCorrectorAssistant,
     MathExpressionLabelerAssistant,
 )
-from math_rag.application.base.clients import BaseArxivClient, BaseKatexClient
+from math_rag.application.base.clients import (
+    BaseArxivClient,
+    BaseKatexClient,
+    BaseLatexConverterClient,
+)
 from math_rag.application.base.inference import (
     BaseBatchEMRequestManagedScheduler,
     BaseBatchLLMRequestManagedScheduler,
@@ -25,6 +29,7 @@ from math_rag.application.base.repositories.documents import (
     BaseMathExpressionLabelRepository,
     BaseMathExpressionRepository,
     BaseMathExpressionSampleRepository,
+    BaseMathProblemRepository,
 )
 from math_rag.application.base.repositories.objects import BaseMathArticleRepository
 from math_rag.application.base.services import (
@@ -56,6 +61,7 @@ class ApplicationContainer(DeclarativeContainer):
     # dependencies
     arxiv_client: Provider[BaseArxivClient] = Dependency()
     katex_client: Provider[BaseKatexClient] = Dependency()
+    latex_converter_client: Provider[BaseLatexConverterClient] = Dependency()
 
     managed_em: Provider[BaseManagedEM] = Dependency()
     managed_llm: Provider[BaseManagedLLM] = Dependency()
@@ -70,6 +76,7 @@ class ApplicationContainer(DeclarativeContainer):
     math_expression_repository: Provider[BaseMathExpressionRepository] = Dependency()
     math_expression_label_repository: Provider[BaseMathExpressionLabelRepository] = Dependency()
     math_expression_sample_repository: Provider[BaseMathExpressionSampleRepository] = Dependency()
+    math_problem_repository: Provider[BaseMathProblemRepository] = Dependency()
 
     dataset_publisher_service: Provider[BaseDatasetPublisherService] = Dependency()
     math_article_parser_service: Provider[BaseMathArticleParserService] = Dependency()

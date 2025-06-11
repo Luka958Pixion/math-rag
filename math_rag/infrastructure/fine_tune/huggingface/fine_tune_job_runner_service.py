@@ -15,6 +15,7 @@ from math_rag.infrastructure.clients import (
 from math_rag.infrastructure.enums.fine_tune.huggingface import HelperJobStatus
 from math_rag.infrastructure.enums.hpc import HPCQueue
 from math_rag.infrastructure.enums.hpc.pbs import PBSProJobState
+from math_rag.infrastructure.models.clients import ChangeModePermission
 from math_rag.infrastructure.models.fine_tune.huggingface import (
     HelperJob,
     HelperJobStatusTracker,
@@ -142,6 +143,7 @@ class FineTuneJobRunnerService(BaseFineTuneJobRunnerService):
             lora_path / 'llama_3_1_8b.py',
             lora_path / 'lora.py',
             lora_path / 'lora.sh',
+            lora_path / 'cleanup.sh',
         ]
 
         # verify local paths
@@ -157,8 +159,8 @@ class FineTuneJobRunnerService(BaseFineTuneJobRunnerService):
         # create remote root directory
         await self.file_system_client.make_directory(REMOTE_ROOT_PATH)
 
-        # create remote data directory for prometheus
-        await self.file_system_client.make_directory(REMOTE_ROOT_PATH / 'data')
+        # create remote home directory for huggingface
+        await self.file_system_client.make_directory(REMOTE_ROOT_PATH / 'home')
 
         for def_local_path, additional_local_path in build_local_paths_dict.items():
             is_build_required = False
@@ -192,6 +194,9 @@ class FineTuneJobRunnerService(BaseFineTuneJobRunnerService):
         for local_path in runtime_local_paths:
             remote_path = REMOTE_ROOT_PATH / local_path.name
             await self._upload_file(local_path, remote_path)
+
+        # change mode for cleanp script
+        self.file_system_client.change_mode(ChangeModePermission.EXECUTE, lora_path / 'cleanup.sh')
 
     async def init(self, fine_tune_job: FineTuneJob) -> str:
         model = f'{fine_tune_job.provider_name}/{fine_tune_job.model_name}'

@@ -41,6 +41,7 @@ from math_rag.infrastructure.indexers.documents import (
     MathExpressionIndexer,
     MathExpressionLabelIndexer,
     MathExpressionSampleIndexer,
+    MathProblemIndexer,
     ObjectMetadataIndexer,
 )
 from math_rag.infrastructure.inference.huggingface import TEIBatchEM, TGIBatchLLM
@@ -63,6 +64,7 @@ from math_rag.infrastructure.repositories.documents import (
     MathExpressionLabelRepository,
     MathExpressionRepository,
     MathExpressionSampleRepository,
+    MathProblemRepository,
     ObjectMetadataRepository,
 )
 from math_rag.infrastructure.repositories.embeddings import MathExpressionDescriptionRepository
@@ -77,6 +79,7 @@ from math_rag.infrastructure.seeders.documents import (
     MathExpressionLabelSeeder,
     MathExpressionSampleSeeder,
     MathExpressionSeeder,
+    MathProblemSeeder,
     ObjectMetadataSeeder,
 )
 from math_rag.infrastructure.seeders.embeddings import MathExpressionDescriptionSeeder
@@ -118,6 +121,7 @@ class InfrastructureContainer(DeclarativeContainer):
     math_expression_repository = Factory(MathExpressionRepository, **mongo_kwargs)
     math_expression_label_repository = Factory(MathExpressionLabelRepository, **mongo_kwargs)
     math_expression_sample_repository = Factory(MathExpressionSampleRepository, **mongo_kwargs)
+    math_problem_repository = Factory(MathProblemRepository, **mongo_kwargs)
     object_metadata_repository = Factory(ObjectMetadataRepository, **mongo_kwargs)
 
     em_failed_request_seeder = Factory(EMFailedRequestSeeder, **mongo_kwargs)
@@ -128,6 +132,7 @@ class InfrastructureContainer(DeclarativeContainer):
     math_expression_label_seeder = Factory(MathExpressionLabelSeeder, **mongo_kwargs)
     math_expression_seeder = Factory(MathExpressionSeeder, **mongo_kwargs)
     math_expression_sample_seeder = Factory(MathExpressionSampleSeeder, **mongo_kwargs)
+    math_problem_seeder = Factory(MathProblemSeeder, **mongo_kwargs)
     object_metadata_seeder = Factory(ObjectMetadataSeeder, **mongo_kwargs)
 
     document_seeders: Provider[list[BaseDocumentSeeder]] = List(
@@ -139,6 +144,7 @@ class InfrastructureContainer(DeclarativeContainer):
         math_expression_label_seeder,
         math_expression_seeder,
         math_expression_sample_seeder,
+        math_problem_seeder,
         object_metadata_seeder,
     )
 
@@ -148,6 +154,7 @@ class InfrastructureContainer(DeclarativeContainer):
     math_expression_label_indexer = Factory(MathExpressionLabelIndexer, **mongo_kwargs)
     math_expression_indexer = Factory(MathExpressionIndexer, **mongo_kwargs)
     math_expression_sample_indexer = Factory(MathExpressionSampleIndexer, **mongo_kwargs)
+    math_problem_indexer = Factory(MathProblemIndexer, **mongo_kwargs)
     object_metadata_indexer = Factory(ObjectMetadataIndexer, **mongo_kwargs)
 
     document_indexers: Provider[list[BaseDocumentIndexer]] = List(
@@ -157,6 +164,7 @@ class InfrastructureContainer(DeclarativeContainer):
         math_expression_label_indexer,
         math_expression_indexer,
         math_expression_sample_indexer,
+        math_problem_indexer,
         object_metadata_indexer,
     )
 
@@ -387,6 +395,7 @@ class InfrastructureContainer(DeclarativeContainer):
         ApplicationContainer,
         arxiv_client=arxiv_client,
         katex_client=katex_client,
+        latex_converter_client=mathpix_client,
         managed_em=openai_managed_em,
         managed_llm=openai_managed_llm,
         managed_em_scheduler=openai_batch_em_request_managed_scheduler,
@@ -400,4 +409,5 @@ class InfrastructureContainer(DeclarativeContainer):
         math_article_repository=math_article_repository,
         math_expression_repository=math_expression_repository,
         math_expression_label_repository=math_expression_label_repository,
+        math_problem_repository=math_problem_repository,
     )

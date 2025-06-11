@@ -9,6 +9,7 @@ from .math_expression_dataset_repository import MathExpressionDatasetRepository
 from .math_expression_label_repository import MathExpressionLabelRepository
 from .math_expression_repository import MathExpressionRepository
 from .math_expression_sample_repository import MathExpressionSampleRepository
+from .math_problem_repository import MathProblemRepository
 from .object_metadata_repository import ObjectMetadataRepository
 
 
@@ -24,5 +25,6 @@ __all__ = [
     'MathExpressionLabelRepository',
     'MathExpressionRepository',
     'MathExpressionSampleRepository',
+    'MathProblemRepository',
     'ObjectMetadataRepository',
 ]

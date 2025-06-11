@@ -1,27 +1,60 @@
+from pathlib import Path
+
 from mpxpy.mathpix_client import MathpixClient as _MathpixClient
 
-from math_rag.application.base.clients import BaseMathpixClient
+from math_rag.application.base.clients import BaseLatexConverterClient
 
 
-class MathpixClient(BaseMathpixClient):
+ALLOWED_IMAGE_TYPES = {
+    'jpeg',
+    'jpg',
+    'jpe',
+    'png',
+    'bmp',
+    'dib',
+    'jp2',
+    'webp',
+    'pbm',
+    'pgm',
+    'ppm',
+    'pxm',
+    'pnm',
+    'pfm',
+    'sr',
+    'ras',
+    'tiff',
+    'tif',
+    'exr',
+    'hdr',
+    'pic',
+}
+UPLOADS_PATH = Path(__file__).parents[2] / '.tmp' / 'uploads'  # TODO??
+
+
+class MathpixClient(BaseLatexConverterClient):
     def __init__(self, client: _MathpixClient):
         self.client = client
 
-    def process_image(self):
-        image = self.client.image_new(file_path=..., url=...)
+    def convert_image(self, *, file_path: Path | None, url: str | None) -> str:
+        image_type = file_path.suffix.removeprefix('.')
 
-        # Get Mathpix Markdown (MMD)
-        mmd = image.mmd()
-        print(mmd)
+        if image_type not in ALLOWED_IMAGE_TYPES:
+            raise ValueError(f'Image type {image_type} is not allowed')
 
-        # Get line-by-line OCR data
-        lines = image.lines_json()
-        print(lines)
+        image = self.client.image_new(file_path=file_path, url=url)
+        results = image.results()
 
-    def process_pdf(self):
+        if 'text' not in results:
+            raise ValueError(f'Results {results} do not contain text')
+
+        return results['text']
+
+    def convert_pdf(self, *, file_path: Path | None, url: str | None) -> str:
         pdf = self.client.pdf_new(
-            url='http://cs229.stanford.edu/notes2020spring/cs229-notes1.pdf',
+            file_path=file_path,
+            url=url,
             convert_to_tex_zip=True,
         )
         pdf.wait_until_complete(timeout=60)
-        pdf.to_tex_zip_bytes()  # NOTE: this is latex + images
+        pdf.to_tex_zip_bytes()
+        # TODO

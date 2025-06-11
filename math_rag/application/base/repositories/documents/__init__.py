@@ -7,6 +7,7 @@ from .base_math_expression_dataset_repository import BaseMathExpressionDatasetRe
 from .base_math_expression_label_repository import BaseMathExpressionLabelRepository
 from .base_math_expression_repository import BaseMathExpressionRepository
 from .base_math_expression_sample_repository import BaseMathExpressionSampleRepository
+from .base_math_problem_repository import BaseMathProblemRepository
 
 
 __all__ = [
@@ -19,4 +20,5 @@ __all__ = [
     'BaseMathExpressionLabelRepository',
     'BaseMathExpressionRepository',
     'BaseMathExpressionSampleRepository',
+    'BaseMathProblemRepository',
 ]
