@@ -44,7 +44,15 @@ class BaseDocumentRepository(ABC, Generic[T]):
         pass
 
     @abstractmethod
-    async def clear(self):
+    async def delete_one(self, filter: dict[str, Any]) -> int:
+        pass
+
+    @abstractmethod
+    async def delete_many(self, filter: dict[str, Any]) -> int:
+        pass
+
+    @abstractmethod
+    async def clear(self) -> int:
         pass
 
     @abstractmethod

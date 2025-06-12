@@ -7,18 +7,18 @@ from math_rag.application.base.repositories.documents import BaseMathExpressionD
 from math_rag.application.containers import ApplicationContainer
 from math_rag.application.contexts import DatasetBuildContext
 from math_rag.core.models import MathExpressionDataset
-from math_rag.web.requests import DatasetCreateRequest
-from math_rag.web.responses import DatasetCreateResponse
+from math_rag.web.requests.datasets.math_expressions import MathExpressionDatasetCreateRequest
+from math_rag.web.responses.datasets.math_expressions import MathExpressionDatasetCreateResponse
 
 
 logger = getLogger(__name__)
 router = APIRouter()
 
 
-@router.post('/datasets', response_model=DatasetCreateResponse)
+@router.post('/datasets/math-expressions', response_model=MathExpressionDatasetCreateResponse)
 @inject
-async def create_dataset(
-    request: DatasetCreateRequest = Body(...),
+async def create_math_expression_dataset(
+    request: MathExpressionDatasetCreateRequest = Body(...),
     repository: BaseMathExpressionDatasetRepository = Depends(
         Provide[ApplicationContainer.math_expression_dataset_repository]
     ),
@@ -33,7 +33,7 @@ async def create_dataset(
     async with context.condition:
         context.condition.notify()
 
-    return DatasetCreateResponse(
+    return MathExpressionDatasetCreateResponse(
         id=dataset.id,
         timestamp=dataset.timestamp,
         build_stage=dataset.build_stage,

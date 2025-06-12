@@ -7,6 +7,7 @@ from uuid import UUID
 from bson.binary import UuidRepresentation
 from bson.json_util import JSONOptions, dumps, loads
 from pymongo import ASCENDING, AsyncMongoClient, InsertOne
+from pymongo.results import DeleteResult
 
 from math_rag.application.base.repositories.documents import BaseDocumentRepository
 from math_rag.infrastructure.types.repositories.documents import (
@@ -124,8 +125,26 @@ class DocumentRepository(
         if batch:
             yield batch
 
-    async def clear(self):
-        await self.collection.delete_many({})
+    async def delete_one(self, filter: dict[str, Any]) -> int:
+        if 'id' in filter:
+            filter['_id'] = filter.pop('id')
+
+        delete_result = await self.collection.delete_one(filter)
+
+        return delete_result.deleted_count
+
+    async def delete_many(self, filter: dict[str, Any]) -> int:
+        if 'id' in filter:
+            filter['_id'] = filter.pop('id')
+
+        delete_result = await self.collection.delete_many(filter)
+
+        return delete_result.deleted_count
+
+    async def clear(self) -> int:
+        delete_result = await self.collection.delete_many({})
+
+        return delete_result.deleted_count
 
     async def count(self, filter: dict[str, Any] | None = None) -> int:
         if not filter:
