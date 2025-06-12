@@ -1,7 +1,7 @@
-from enum import StrEnum
+from enum import Enum
 
 
-class ChangeModePermission(StrEnum):
+class ChangeModePermission(str, Enum):
     READ = 'a+r'
     WRITE = 'a+w'
     EXECUTE = 'a+x'

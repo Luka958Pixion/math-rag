@@ -19,7 +19,7 @@ from outlines.generate.json import json as outlines_json
 from outlines.models.transformers import Transformers
 from peft import LoraConfig, get_peft_model, prepare_model_for_kbit_training
 from pydantic import BaseModel, create_model
-from sklearn.metrics import f1_score
+from sklearn.metrics import accuracy_score, f1_score, precision_score, recall_score
 from stubs import ModelSpec
 from torch.optim import AdamW
 from transformers import (
@@ -54,9 +54,6 @@ TRAINER_MODEL_PATH = HF_HOME / 'trainer' / 'model'
 
 TRAINER_STATE_PATH.mkdir(parents=True, exist_ok=True)
 TRAINER_MODEL_PATH.mkdir(parents=True, exist_ok=True)
-
-AVAILABLE_MODEL_NAMES = {'meta-llama/Llama-3.1-8B-Instruct'}
-
 
 basicConfig(level=INFO, format='%(asctime)s [%(threadName)s] %(levelname)s: %(message)s')
 logger = getLogger(__name__)
@@ -111,14 +108,31 @@ class LoRAWandbCallback(WandbCallback):
         wandb.finish()
 
 
+class MetricName(Enum):
+    ACCURACY = 'accuracy'
+    PRECISION = 'precision'
+    RECALL = 'recall'
+    F1 = 'f1'
+
+
+MODEL_NAMES = {'meta-llama/Llama-3.1-8B-Instruct'}
+METRIC_NAMES = {name.value for name in MetricName}
+
+
 def fine_tune_and_evaluate(
     trial: Trial, settings: FineTuneSettings, fine_tune_job_id: UUID
 ) -> float:
+    # validate
     model_name = settings.model_settings.model_name
+    metric_name = settings.optuna_settings.metric_name
 
-    if model_name not in AVAILABLE_MODEL_NAMES:
+    if model_name not in MODEL_NAMES:
         raise ValueError(f'Model {model_name} is not available')
 
+    if metric_name not in METRIC_NAMES:
+        raise ValueError(f'Metric {metric_name} is not available')
+
+    # load model specification
     model_spec = import_model_spec(model_name)
 
     # login
@@ -148,6 +162,8 @@ def fine_tune_and_evaluate(
         token=HF_TOKEN,
         trust_remote_code=True,
     )
+    original_validate_dataset = dataset_dict['validate']
+
     prompt_json_path = huggingface_hub.hf_hub_download(
         repo_id=repo_id,
         filename='prompt.json',
@@ -156,8 +172,6 @@ def fine_tune_and_evaluate(
     )
     prompt_collection_json_bytes = Path(prompt_json_path).read_bytes()
     prompt_collection = json.loads(prompt_collection_json_bytes)
-
-    original_validate_dataset = dataset_dict['validate']
 
     dataset_dict = dataset_dict.map(
         lambda x: model_spec.format_prompt(x, prompt_collection),
@@ -180,7 +194,6 @@ def fine_tune_and_evaluate(
         llm_int8_threshold=6.0,
         llm_int8_enable_fp32_cpu_offload=True,
     )
-
     model = AutoModelForCausalLM.from_pretrained(
         pretrained_model_name_or_path=model_name,
         trust_remote_code=True,
@@ -191,6 +204,11 @@ def fine_tune_and_evaluate(
     model_spec.init_language_model(model)
     model.resize_token_embeddings(len(tokenizer))
     model.config.pad_token_id = tokenizer.pad_token_id
+
+    model = prepare_model_for_kbit_training(
+        model=model,
+        use_gradient_checkpointing=True,
+    )
 
     r = trial.params[settings.optuna_settings.trial_settings.r.name]
     lora_alpha = trial.params[settings.optuna_settings.trial_settings.lora_alpha.name]
@@ -203,12 +221,6 @@ def fine_tune_and_evaluate(
         target_modules=settings.model_settings.target_modules,
         use_dora=True,
     )
-
-    model = prepare_model_for_kbit_training(
-        model=model,
-        use_gradient_checkpointing=True,
-    )
-
     model = get_peft_model(
         model=model,
         peft_config=peft_config,
@@ -241,7 +253,6 @@ def fine_tune_and_evaluate(
         label_names=['labels'],
         remove_unused_columns=True,
     )
-
     graceful_stop_callback = GracefulStopCallback()
     lora_wandb_callback = LoRAWandbCallback(trial, settings, fine_tune_job_id)
     data_collator = DataCollatorForLanguageModeling(tokenizer, mlm=False)
@@ -301,4 +312,18 @@ def fine_tune_and_evaluate(
         result: Label = sequence_generator_adapter(input_token_ids, max_tokens=20, stop_at='}')
         predictions.append(result.label.value)
 
-    return f1_score(true_labels, predictions, average='macro')
+    match metric_name:
+        case MetricName.ACCURACY:
+            return accuracy_score(true_labels, predictions)
+
+        case MetricName.PRECISION:
+            return precision_score(true_labels, predictions, average='macro')
+
+        case MetricName.RECALL:
+            return recall_score(true_labels, predictions, average='macro')
+
+        case MetricName.F1:
+            return f1_score(true_labels, predictions, average='macro')
+
+        case _:
+            raise ValueError(f'Metric {metric_name} is not available')
