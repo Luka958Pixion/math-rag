@@ -48,13 +48,6 @@ HF_TOKEN = config('HF_TOKEN', default=None)
 WANDB_PROJECT = config('WANDB_PROJECT', default=None)
 WANDB_API_KEY = config('WANDB_API_KEY', default=None)
 
-# paths
-TRAINER_STATE_PATH = HF_HOME / 'trainer' / 'state'
-TRAINER_MODEL_PATH = HF_HOME / 'trainer' / 'model'
-
-TRAINER_STATE_PATH.mkdir(parents=True, exist_ok=True)
-TRAINER_MODEL_PATH.mkdir(parents=True, exist_ok=True)
-
 basicConfig(level=INFO, format='%(asctime)s [%(threadName)s] %(levelname)s: %(message)s')
 logger = getLogger(__name__)
 
@@ -229,8 +222,13 @@ def fine_tune_and_evaluate(
     )
 
     # fine-tune
+    state_path = HF_HOME / 'state' / 'job' / str(fine_tune_job_id) / 'trial' / str(trial._trial_id)
+    model_path = HF_HOME / 'model' / 'job' / str(fine_tune_job_id) / 'trial' / str(trial._trial_id)
+    state_path.mkdir(parents=True, exist_ok=True)
+    model_path.mkdir(parents=True, exist_ok=True)
+
     sft_config = SFTConfig(
-        output_dir=f'{TRAINER_STATE_PATH}/trial/{trial._trial_id}',
+        output_dir=state_path,
         do_train=True,
         do_eval=False,
         do_predict=False,
@@ -275,7 +273,7 @@ def fine_tune_and_evaluate(
         ignore_keys_for_eval=['past_key_values', 'hidden_states', 'attentions'],
     )
     trainer.model.save_pretrained(
-        save_directory=f'{TRAINER_MODEL_PATH}/trial/{trial._trial_id}',
+        save_directory=model_path,
         push_to_hub=False,
         token=None,
         save_peft_format=True,
@@ -309,7 +307,9 @@ def fine_tune_and_evaluate(
             tokenize=False,
             add_generation_prompt=False,
         )
-        result: Label = sequence_generator_adapter(input_token_ids, max_tokens=20, stop_at='}')
+        result: Label = sequence_generator_adapter(
+            input_token_ids, max_tokens=settings.model_settings.max_tokens, stop_at='}'
+        )
         predictions.append(result.label.value)
 
     match metric_name:
