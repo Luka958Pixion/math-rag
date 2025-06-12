@@ -15,7 +15,11 @@ from math_rag.application.models.inference import (
 )
 
 from .partials import PartialAssistant
-from .prompts import KATEX_CORRECTOR_PROMPT, KATEX_CORRECTOR_RETRY_PROMPT
+from .prompts import (
+    KATEX_CORRECTOR_RETRY_USER_PROMPT,
+    KATEX_CORRECTOR_SYSTEM_PROMPT,
+    KATEX_CORRECTOR_USER_PROMPT,
+)
 
 
 class KatexCorrectorRetryAssistant(
@@ -28,27 +32,30 @@ class KatexCorrectorRetryAssistant(
         self, input: KatexCorrectorRetryAssistantInput
     ) -> LLMRequest[KatexCorrectorRetryAssistantOutput]:
         initial_input = input.pairs[0][0]
-        initial_prompt = KATEX_CORRECTOR_PROMPT.format(
+        initial_prompt = KATEX_CORRECTOR_USER_PROMPT.format(
             katex=initial_input.katex, error=initial_input.error
         )
-        prompts = [
-            KATEX_CORRECTOR_RETRY_PROMPT.format(katex=input.katex, error=input.error)
+        user_prompts = [
+            KATEX_CORRECTOR_RETRY_USER_PROMPT.format(katex=input.katex, error=input.error)
             for input, _ in input.pairs[1:]
         ]
-        prompts.insert(0, initial_prompt)
+        user_prompts.insert(0, initial_prompt)
 
         outputs = [pair[1] for pair in input.pairs]
-        messages = []
 
-        for prompt, output in zip(prompts, outputs):
-            user_message = LLMMessage(role='user', content=prompt)
+        system_prompt = KATEX_CORRECTOR_SYSTEM_PROMPT.format()
+        system_message = LLMMessage(role='system', content=system_prompt)
+        messages = [system_message]
+
+        for user_prompt, output in zip(user_prompts, outputs):
+            user_message = LLMMessage(role='user', content=user_prompt)
             messages.append(user_message)
 
             if output:
                 assistant_message = LLMMessage(role='assistant', content=output.katex)
                 messages.append(assistant_message)
 
-        request = LLMRequest(
+        return LLMRequest(
             conversation=LLMConversation(messages=messages),
             params=LLMParams[KatexCorrectorRetryAssistantOutput](
                 model='gpt-4.1',
@@ -56,8 +63,6 @@ class KatexCorrectorRetryAssistant(
                 response_type=KatexCorrectorRetryAssistantOutput.bind(input.id),
             ),
         )
-
-        return request
 
     def decode_from_response_list(
         self, response_list: LLMResponseList[KatexCorrectorRetryAssistantOutput]

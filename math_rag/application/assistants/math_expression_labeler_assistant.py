@@ -15,7 +15,7 @@ from math_rag.application.models.inference import (
 )
 
 from .partials import PartialAssistant
-from .prompts import MATH_EXPRESSION_LABELER_PROMPT
+from .prompts import MATH_EXPRESSION_LABELER_SYSTEM_PROMPT, MATH_EXPRESSION_LABELER_USER_PROMPT
 
 
 class MathExpressionLabelerAssistant(
@@ -27,17 +27,22 @@ class MathExpressionLabelerAssistant(
     def encode_to_request(
         self, input: MathExpressionLabelerAssistantInput
     ) -> LLMRequest[MathExpressionLabelerAssistantOutput]:
-        prompt = MATH_EXPRESSION_LABELER_PROMPT.format(latex=input.latex)
-        request = LLMRequest(
-            conversation=LLMConversation(messages=[LLMMessage(role='user', content=prompt)]),
+        system_prompt = MATH_EXPRESSION_LABELER_SYSTEM_PROMPT.format()
+        user_prompt = MATH_EXPRESSION_LABELER_USER_PROMPT.format(latex=input.latex)
+
+        return LLMRequest(
+            conversation=LLMConversation(
+                messages=[
+                    LLMMessage(role='system', content=system_prompt),
+                    LLMMessage(role='user', content=user_prompt),
+                ]
+            ),
             params=LLMParams[MathExpressionLabelerAssistantOutput](
                 model='gpt-4.1-nano',
                 temperature=0.0,
                 response_type=MathExpressionLabelerAssistantOutput.bind(input.id),
             ),
         )
-
-        return request
 
     def decode_from_response_list(
         self, response_list: LLMResponseList[MathExpressionLabelerAssistantOutput]

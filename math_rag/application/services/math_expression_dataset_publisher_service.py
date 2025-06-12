@@ -1,7 +1,7 @@
 from logging import getLogger
 from uuid import UUID
 
-from math_rag.application.assistants.prompts import MATH_EXPRESSION_LABELER_PROMPT
+from math_rag.application.assistants.prompts import MATH_EXPRESSION_LABELER_PROMPT_COLLECTION
 from math_rag.application.base.repositories.documents import BaseMathExpressionSampleRepository
 from math_rag.application.base.services import (
     BaseDatasetPublisherService,
@@ -38,7 +38,7 @@ class MathExpressionDatasetPublisherService(BaseMathExpressionDatasetPublisherSe
             train_ratio=0.8, validate_ratio=0.1, test_ratio=0.1, seed=42
         )
 
-        json_str = MATH_EXPRESSION_LABELER_PROMPT.model_dump_json(indent=4)
+        json_str = MATH_EXPRESSION_LABELER_PROMPT_COLLECTION.model_dump_json(indent=4)
         content = json_str.encode('utf-8')
         dataset_metadata_file = DatasetMetadataFile(name='prompt.json', content=content)
 

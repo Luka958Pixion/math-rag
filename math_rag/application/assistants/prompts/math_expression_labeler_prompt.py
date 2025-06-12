@@ -1,7 +1,7 @@
-from math_rag.application.models.inference import LLMPrompt
+from math_rag.application.models.inference import LLMPrompt, LLMPromptCollection
 
 
-MATH_EXPRESSION_LABELER_PROMPT_TEMPLATE = """
+MATH_EXPRESSION_LABELER_SYSTEM_PROMPT_TEMPLATE = """
 You are an expert LaTeX expression classification assistant.
 Given a LaTeX expression, classify it into one of five classes:
 1. equality - any expression containing an equality symbol
@@ -11,14 +11,25 @@ Given a LaTeX expression, classify it into one of five classes:
 5. other
 
 Return the class only (no symbols or extra text)!
+"""
 
+MATH_EXPRESSION_LABELER_USER_PROMPT_TEMPLATE = """
 ### LaTeX:
 {latex}
 
 ### Class:
 """
 
-MATH_EXPRESSION_LABELER_PROMPT = LLMPrompt(
-    template=MATH_EXPRESSION_LABELER_PROMPT_TEMPLATE.strip(),
+MATH_EXPRESSION_LABELER_SYSTEM_PROMPT = LLMPrompt(
+    template=MATH_EXPRESSION_LABELER_SYSTEM_PROMPT_TEMPLATE.strip(),
+    input_keys=[],
+)
+
+MATH_EXPRESSION_LABELER_USER_PROMPT = LLMPrompt(
+    template=MATH_EXPRESSION_LABELER_USER_PROMPT_TEMPLATE.strip(),
     input_keys=['latex'],
+)
+
+MATH_EXPRESSION_LABELER_PROMPT_COLLECTION = LLMPromptCollection(
+    system=MATH_EXPRESSION_LABELER_SYSTEM_PROMPT, user=MATH_EXPRESSION_LABELER_USER_PROMPT
 )

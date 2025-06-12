@@ -26,6 +26,7 @@ from .llm_logprob import LLMLogprob
 from .llm_message import LLMMessage
 from .llm_params import LLMParams
 from .llm_prompt import LLMPrompt
+from .llm_prompt_collection import LLMPromptCollection
 from .llm_request import LLMRequest
 from .llm_request_tracker import LLMRequestTracker
 from .llm_response import LLMResponse

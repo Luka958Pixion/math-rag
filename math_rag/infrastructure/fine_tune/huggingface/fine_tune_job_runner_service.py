@@ -142,6 +142,7 @@ class FineTuneJobRunnerService(BaseFineTuneJobRunnerService):
             lora_path / 'fine_tune.py',
             lora_path / 'llama_3_1_8b.py',
             lora_path / 'lora.py',
+            lora_path / 'stubs.pyi',
             lora_path / 'lora.sh',
             lora_path / 'cleanup.sh',
         ]

@@ -1,7 +1,7 @@
-# https://huggingface.co/meta-llama/Llama-3.1-8B
+# https://huggingface.co/meta-llama/Llama-3.1-8B-Instruct
 import json
 
-from typing import Any
+from typing import Any, cast
 
 from transformers.models.llama.configuration_llama import LlamaConfig
 from transformers.models.llama.modeling_llama import LlamaForCausalLM
@@ -29,40 +29,43 @@ def init_language_model(model: LlamaForCausalLM):
     return model
 
 
-def format_prompt(sample: dict[str, str], prompt: dict[str, Any]) -> dict[str, Any]:
+def format_prompt(sample: dict[str, str], prompt_collection: dict[str, Any]) -> dict[str, Any]:
     """
-    1. Splits prompt['template'] at '### LaTeX:' so that
-       - everything before '### LaTeX:' becomes the system prompt
-       - '### LaTeX:\n{latex}\n\n### Class:' becomes the user prompt (with {latex} filled in)
-    2. Creates an `assistant` message whose content is exactly {'label':'<ground_truth>'}.
-
-    Returns a dict with a single key 'messages', e.g.:
-        { 'messages': [ {'role':'system', 'content':…},
-                        {'role':'user',   'content':…},
-                        {'role':'assistant','content':'{"label":"…"}'}
-                      ]
-        }
+    Returns a dict with a single key 'messages':
+    {
+        'messages': [
+            {
+                'role': 'system',
+                'content': ...
+            },
+            {
+                'role': 'user',
+                'content': ...
+            },
+            {
+                'role': 'assistant',
+                'content': '{"label": "..."}'
+            }
+        ]
+    }
     """
-    template_str: str = prompt['template']
-    latex_key = 'latex'
+    system_prompt = prompt_collection.get('system')
+    system_prompt_template = cast(str, system_prompt['template'])
+    system_message_content = system_prompt_template.format()
 
-    split_marker = '### LaTeX:'
-    if split_marker not in template_str:
-        raise ValueError(f"Cannot find '{split_marker}' in prompt['template']")
+    user_prompt = prompt_collection.get('user')
+    user_prompt_template = cast(str, user_prompt['template'])
+    user_message_content = user_prompt_template.format(
+        **{input_key: sample[input_key] for input_key in prompt_collection.get('input_keys')}
+    )
 
-    before, after = template_str.split(split_marker, maxsplit=1)
-    system_text = before.strip()
-
-    user_template = split_marker + after
-    user_text = user_template.format(latex=sample[latex_key]).strip()
-
-    assistant_json = json.dumps({'label': sample['label']})
+    assistant_message_content = json.dumps({'label': sample['label']})
 
     return {
         'messages': [
-            {'role': 'system', 'content': system_text},
-            {'role': 'user', 'content': user_text},
-            {'role': 'assistant', 'content': assistant_json},
+            {'role': 'system', 'content': system_message_content},
+            {'role': 'user', 'content': user_message_content},
+            {'role': 'assistant', 'content': assistant_message_content},
         ]
     }
 
@@ -72,24 +75,31 @@ def formatting_func(tokenizer: LlamaTokenizerFast, batch: dict[str, Any]) -> dic
     Expects batch['messages'] as a list of lists of dicts:
     [
         [
-            {'role': 'system', 'content': ...},
-            {'role':'user', 'content': ...},
-            {'role': 'assistant', 'content':...},
-        ],
+            {
+                'role': 'system',
+                'content': ...
+            },
+            {
+                'role':'user',
+                'content': ...
+            },
+            {
+                'role': 'assistant',
+                'content': ...
+            }
+        ]
     ]
     Returns a dict with 'input_ids', 'attention_mask', and 'labels'.
     """
-    input_strs: list[str] = []
-
-    for messages in batch['messages']:
-        full_prompt = tokenizer.apply_chat_template(
+    input_token_ids = [
+        tokenizer.apply_chat_template(
             messages,
             tokenize=False,
             add_generation_prompt=False,
         )
-        input_strs.append(full_prompt)
-
-    tokenized = tokenizer(input_strs, truncation=True, max_length=512, padding='max_length')
+        for messages in batch['messages']
+    ]
+    tokenized = tokenizer(input_token_ids, truncation=True, max_length=512, padding='max_length')
     tokenized['labels'] = tokenized['input_ids'].copy()
 
     return tokenized

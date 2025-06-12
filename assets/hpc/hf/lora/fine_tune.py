@@ -1,3 +1,4 @@
+import importlib
 import json
 
 from enum import Enum
@@ -19,6 +20,7 @@ from outlines.models.transformers import Transformers
 from peft import LoraConfig, get_peft_model, prepare_model_for_kbit_training
 from pydantic import BaseModel, create_model
 from sklearn.metrics import f1_score
+from stubs import ModelSpec
 from torch.optim import AdamW
 from transformers import (
     AutoModelForCausalLM,
@@ -35,13 +37,6 @@ from transformers import (
 from transformers.integrations import WandbCallback
 from transformers.trainer_utils import get_last_checkpoint
 from trl import SFTConfig, SFTTrainer
-
-from assets.hpc.hf.lora.llama_3_1_8b_instruct import (
-    format_prompt,
-    formatting_func,
-    init_language_model,
-    init_tokenizer,
-)
 
 
 # huggingface
@@ -60,11 +55,18 @@ TRAINER_MODEL_PATH = HF_HOME / 'trainer' / 'model'
 TRAINER_STATE_PATH.mkdir(parents=True, exist_ok=True)
 TRAINER_MODEL_PATH.mkdir(parents=True, exist_ok=True)
 
-SUPPORTED_MODEL_NAMES = {'meta-llama/Llama-3.1-8B-Instruct'}
+AVAILABLE_MODEL_NAMES = {'meta-llama/Llama-3.1-8B-Instruct'}
 
 
 basicConfig(level=INFO, format='%(asctime)s [%(threadName)s] %(levelname)s: %(message)s')
 logger = getLogger(__name__)
+
+
+def import_model_spec(name: str) -> ModelSpec:
+    module_name = name.split('/')[-1].lower().replace('-', '_').replace('.', '_') + '.py'
+    module = importlib.import_module(module_name)
+
+    return cast(ModelSpec, module)
 
 
 class GracefulStopCallback(TrainerCallback):
@@ -78,7 +80,7 @@ class GracefulStopCallback(TrainerCallback):
         return control
 
 
-class CustomWandbCallback(WandbCallback):
+class LoRAWandbCallback(WandbCallback):
     def __init__(self, trial: Trial, settings: FineTuneSettings, fine_tune_job_id: UUID):
         super().__init__()
         self.trial = trial
@@ -94,7 +96,7 @@ class CustomWandbCallback(WandbCallback):
 
         wandb.init(
             project=WANDB_PROJECT,
-            name=f'lora-optuna-job-{self.fine_tune_job_id}-trial-{self.trial.number}',
+            name=f'lora-optuna-job-{self.fine_tune_job_id}-trial-{self.trial.number}-run',
             config={
                 'r': self.r,
                 'lora_alpha': self.lora_alpha,
@@ -112,10 +114,12 @@ class CustomWandbCallback(WandbCallback):
 def fine_tune_and_evaluate(
     trial: Trial, settings: FineTuneSettings, fine_tune_job_id: UUID
 ) -> float:
-    if settings.model_settings.model_name not in SUPPORTED_MODEL_NAMES:
-        raise ValueError(f'Model {settings.model_settings.model_name} is not supported')
+    model_name = settings.model_settings.model_name
 
-    # TODO dynamic imports based on model name
+    if model_name not in AVAILABLE_MODEL_NAMES:
+        raise ValueError(f'Model {model_name} is not available')
+
+    model_spec = import_model_spec(model_name)
 
     # login
     huggingface_hub.login(token=HF_TOKEN)
@@ -123,12 +127,12 @@ def fine_tune_and_evaluate(
 
     # initialize tokenizer
     tokenizer = AutoTokenizer.from_pretrained(
-        pretrained_model_name_or_path=settings.model_settings.model_name,
+        pretrained_model_name_or_path=model_name,
         use_fast=True,
         trust_remote_code=True,
     )
     tokenizer = cast(PreTrainedTokenizerBase, tokenizer)
-    init_tokenizer(tokenizer)
+    model_spec.init_tokenizer(tokenizer)
 
     # load dataset
     repo_id = f'{HF_USERNAME}/{settings.dataset_settings.dataset_name}'
@@ -150,16 +154,17 @@ def fine_tune_and_evaluate(
         repo_type='dataset',
         token=HF_TOKEN,
     )
-    prompt_json_bytes = Path(prompt_json_path).read_bytes()
-    prompt = json.loads(prompt_json_bytes)
+    prompt_collection_json_bytes = Path(prompt_json_path).read_bytes()
+    prompt_collection = json.loads(prompt_collection_json_bytes)
 
-    original_train_dataset = dataset_dict['test']
+    original_validate_dataset = dataset_dict['validate']
 
     dataset_dict = dataset_dict.map(
-        lambda x: format_prompt(x, prompt), remove_columns=dataset_dict['train'].column_names
+        lambda x: model_spec.format_prompt(x, prompt_collection),
+        remove_columns=dataset_dict['train'].column_names,
     )
     dataset_dict = dataset_dict.map(
-        lambda batch: formatting_func(tokenizer, {'messages': batch['messages']}),
+        lambda batch: model_spec.formatting_func(tokenizer, {'messages': batch['messages']}),
         batched=True,
         batch_size=settings.sft_settings.per_device_train_batch_size,
         remove_columns=['messages'],
@@ -177,13 +182,13 @@ def fine_tune_and_evaluate(
     )
 
     model = AutoModelForCausalLM.from_pretrained(
-        pretrained_model_name_or_path=settings.model_settings.model_name,
+        pretrained_model_name_or_path=model_name,
         trust_remote_code=True,
         quantization_config=bits_and_bytes_config,
         device_map='auto',
     )
     model = cast(PreTrainedModel, model)
-    init_language_model(model)
+    model_spec.init_language_model(model)
     model.resize_token_embeddings(len(tokenizer))
     model.config.pad_token_id = tokenizer.pad_token_id
 
@@ -238,7 +243,7 @@ def fine_tune_and_evaluate(
     )
 
     graceful_stop_callback = GracefulStopCallback()
-    custom_wandb_callback = CustomWandbCallback(trial, settings, fine_tune_job_id)
+    lora_wandb_callback = LoRAWandbCallback(trial, settings, fine_tune_job_id)
     data_collator = DataCollatorForLanguageModeling(tokenizer, mlm=False)
 
     trainer = SFTTrainer(
@@ -248,7 +253,7 @@ def fine_tune_and_evaluate(
         train_dataset=train_dataset,
         eval_dataset=validate_dataset,
         processing_class=tokenizer,
-        callbacks=[graceful_stop_callback, custom_wandb_callback],
+        callbacks=[graceful_stop_callback, lora_wandb_callback],
         optimizer_cls_and_kwargs=(AdamW, settings.optimizer_settings.model_dump()),
     )
     last_checkpoint = get_last_checkpoint(sft_config.output_dir)
@@ -265,7 +270,8 @@ def fine_tune_and_evaluate(
         save_peft_format=True,
     )
 
-    class_label = cast(ClassLabel, original_train_dataset.features['label'])
+    # evaluate
+    class_label = cast(ClassLabel, original_validate_dataset.features['label'])
 
     if TYPE_CHECKING:
 
@@ -279,22 +285,20 @@ def fine_tune_and_evaluate(
         LabelEnum = Enum('LabelEnum', {name: name for name in class_label.names}, type=str)
         Label = create_model('Label', label=(LabelEnum, ...))
 
-    outlines_model = Transformers(model, tokenizer)
-    json_gen = outlines_json(outlines_model, Label)
-    predictions = []
-    true_labels = [class_label.names[int(x['label'])] for x in original_train_dataset]
+    true_labels = [class_label.names[int(x['label'])] for x in original_validate_dataset]
 
-    for sample in original_train_dataset:
-        messages = format_prompt(sample, prompt)['messages']
-        prompt_str = tokenizer.apply_chat_template(
-            [
-                {'role': 'system', 'content': messages[0]['content']},
-                {'role': 'user', 'content': messages[1]['content']},
-            ],
+    outlines_model = Transformers(model, tokenizer)
+    sequence_generator_adapter = outlines_json(outlines_model, Label)
+    predictions = []
+
+    for sample in original_validate_dataset:
+        messages = model_spec.format_prompt(sample, prompt_collection)['messages']
+        input_token_ids = tokenizer.apply_chat_template(
+            messages[:2],  # removes the assistant message (answer)
             tokenize=False,
             add_generation_prompt=False,
         )
-        result: Label = json_gen(prompt_str, max_tokens=20, stop_at='}')
+        result: Label = sequence_generator_adapter(input_token_ids, max_tokens=20, stop_at='}')
         predictions.append(result.label.value)
 
     return f1_score(true_labels, predictions, average='macro')
