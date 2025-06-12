@@ -1,6 +1,7 @@
 from functools import partial
 from logging import INFO, basicConfig, getLogger
 from pathlib import Path
+from uuid import UUID
 
 from decouple import Config, RepositoryEnv
 from fine_tune import fine_tune_and_evaluate
@@ -12,7 +13,7 @@ from utils import YamlReaderUtil
 
 config = Config(repository=RepositoryEnv('.env.hpc'))
 
-FINE_TUNE_JOB_ID = config('FINE_TUNE_JOB_ID', default=None)
+FINE_TUNE_JOB_ID = config('FINE_TUNE_JOB_ID', cast=UUID)
 FINE_TUNE_SETTINGS_PATH = Path(f'input_{FINE_TUNE_JOB_ID}.yaml')
 
 
@@ -27,7 +28,7 @@ def objective(trial: Trial, fine_tune_settings: FineTuneSettings) -> float:
     trial.suggest_int(**trial_settings.lora_alpha.model_dump())
     trial.suggest_float(**trial_settings.lora_dropout.model_dump())
 
-    return fine_tune_and_evaluate(trial, fine_tune_settings)
+    return fine_tune_and_evaluate(trial, fine_tune_settings, FINE_TUNE_JOB_ID)
 
 
 def log(trial: FrozenTrial):

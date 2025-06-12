@@ -38,7 +38,7 @@ optuna_settings:
     lora_alpha: 
       name: lora_alpha
       low: 4
-      high: 64
+      high: 68
       step: 8
       
     lora_dropout:

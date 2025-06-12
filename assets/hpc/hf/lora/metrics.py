@@ -4,33 +4,39 @@ import torch
 from sklearn.metrics import f1_score
 
 
-def compute_metrics(
-    eval_preds: tuple[np.ndarray | torch.Tensor, np.ndarray | torch.Tensor],
-) -> dict[str, float]:
+def make_compute_metrics(pad_id: int):
     """
-    Compute F1 for either binary or multiclass classification.
-    eval_preds is a tuple (logits, labels) coming from SFTTrainer.evaluate().
+    Returns a compute_metrics(fn) that masks out pad_id before F1.
     """
-    logits, labels = eval_preds
 
-    # ensure logits is a Tensor
-    if not isinstance(logits, torch.Tensor):
-        logits = torch.tensor(logits)
+    def compute_metrics(
+        eval_preds: tuple[np.ndarray | torch.Tensor, np.ndarray | torch.Tensor],
+    ) -> dict[str, float]:
+        logits, labels = eval_preds
 
-    preds = logits.argmax(dim=-1).cpu().numpy()
+        # ensure logits is a Tensor
+        if not isinstance(logits, torch.Tensor):
+            logits = torch.tensor(logits)
+        preds = logits.argmax(dim=-1).cpu().numpy()
 
-    # ensure labels is a Tensor
-    if not isinstance(labels, torch.Tensor):
-        labels = torch.tensor(labels)
+        # ensure labels is a Tensor
+        if not isinstance(labels, torch.Tensor):
+            labels = torch.tensor(labels)
+        labels = labels.cpu().numpy()
 
-    labels = labels.cpu().numpy()
+        # flatten and mask out Pad‐positions
+        preds = preds.flatten()
+        labels = labels.flatten()
+        mask = labels != pad_id
+        preds = preds[mask]
+        labels = labels[mask]
 
-    # determine if binary or multiclass
-    unique_labels = set(labels.flatten().tolist())
-    f1 = f1_score(
-        labels.flatten(),
-        preds.flatten(),
-        average='binary' if len(unique_labels) == 2 else 'weighted',
-    )
+        unique_labels = set(labels.tolist())
+        f1 = f1_score(
+            labels,
+            preds,
+            average='binary' if len(unique_labels) == 2 else 'weighted',
+        )
+        return {'f1': f1}
 
-    return {'f1': f1}
+    return compute_metrics

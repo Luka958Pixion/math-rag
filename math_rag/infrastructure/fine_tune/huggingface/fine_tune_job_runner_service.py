@@ -195,9 +195,6 @@ class FineTuneJobRunnerService(BaseFineTuneJobRunnerService):
             remote_path = REMOTE_ROOT_PATH / local_path.name
             await self._upload_file(local_path, remote_path)
 
-        # change mode for cleanp script
-        self.file_system_client.change_mode(ChangeModePermission.EXECUTE, lora_path / 'cleanup.sh')
-
     async def init(self, fine_tune_job: FineTuneJob) -> str:
         model = f'{fine_tune_job.provider_name}/{fine_tune_job.model_name}'
         HuggingFaceModelNameValidator.validate(model)

@@ -1,15 +1,15 @@
 import json
-import os
 
+from enum import Enum
 from logging import INFO, basicConfig, getLogger
 from pathlib import Path
-from typing import cast
+from typing import TYPE_CHECKING, cast
+from uuid import UUID
 
 import huggingface_hub
-import torch
 import wandb
 
-from datasets import DatasetDict, load_dataset
+from datasets import ClassLabel, DatasetDict, load_dataset
 from datasets.download import DownloadConfig
 from decouple import config
 from fine_tune_settings import FineTuneSettings
@@ -19,9 +19,12 @@ from llama_3_1_8b import (
     init_language_model,
     init_tokenizer,
 )
-from metrics import compute_metrics
 from optuna import Trial
+from outlines.generate.json import json as outlines_json
+from outlines.models.transformers import Transformers
 from peft import LoraConfig, get_peft_model, prepare_model_for_kbit_training
+from pydantic import BaseModel, create_model
+from sklearn.metrics import f1_score
 from torch.optim import AdamW
 from transformers import (
     AutoModelForCausalLM,
@@ -75,9 +78,11 @@ class GracefulStopCallback(TrainerCallback):
 
 
 class CustomWandbCallback(WandbCallback):
-    def __init__(self, trial: Trial, settings: FineTuneSettings):
+    def __init__(self, trial: Trial, settings: FineTuneSettings, fine_tune_job_id: UUID):
         super().__init__()
         self.trial = trial
+        self.fine_tune_job_id = fine_tune_job_id
+
         self.r = trial.params[settings.optuna_settings.trial_settings.r.name]
         self.lora_alpha = trial.params[settings.optuna_settings.trial_settings.lora_alpha.name]
         self.lora_dropout = trial.params[settings.optuna_settings.trial_settings.lora_dropout.name]
@@ -87,14 +92,14 @@ class CustomWandbCallback(WandbCallback):
             wandb.finish()
 
         wandb.init(
-            project=os.environ['WANDB_PROJECT'],
-            name=f'lora-optuna-run-{self.trial.number}',
-            tags=[
-                f'r={self.r}',
-                f'alpha={self.lora_alpha}',
-                f'dropout={self.lora_dropout}',
-            ],
-            notes=f'Optuna trial #{self.trial.number} with params {self.trial.params}',
+            project=WANDB_PROJECT,
+            name=f'lora-optuna-job-{self.fine_tune_job_id}-trial-{self.trial.number}',
+            config={
+                'r': self.r,
+                'lora_alpha': self.lora_alpha,
+                'lora_dropout': self.lora_dropout,
+            },
+            tags=['lora', 'optuna', 'pretraining'],
         )
 
         return control
@@ -103,20 +108,13 @@ class CustomWandbCallback(WandbCallback):
         wandb.finish()
 
 
-def preprocess_logits_for_metrics(logits, labels):
-    lm_logits = logits[0]
-    pred_ids = torch.argmax(lm_logits, dim=-1)
-
-    return pred_ids, labels
-
-
-def fine_tune_and_evaluate(trial: Trial, settings: FineTuneSettings) -> float:
+def fine_tune_and_evaluate(
+    trial: Trial, settings: FineTuneSettings, fine_tune_job_id: UUID
+) -> float:
     if settings.model_settings.model_name not in SUPPORTED_MODEL_NAMES:
         raise ValueError(f'Model {settings.model_settings.model_name} is not supported')
 
-    r = trial.params[settings.optuna_settings.trial_settings.r.name]
-    lora_alpha = trial.params[settings.optuna_settings.trial_settings.lora_alpha.name]
-    lora_dropout = trial.params[settings.optuna_settings.trial_settings.lora_dropout.name]
+    # TODO dynamic imports based on model name
 
     # login
     huggingface_hub.login(token=HF_TOKEN)
@@ -154,6 +152,8 @@ def fine_tune_and_evaluate(trial: Trial, settings: FineTuneSettings) -> float:
     prompt_json_bytes = Path(prompt_json_path).read_bytes()
     prompt = json.loads(prompt_json_bytes)
 
+    original_train_dataset = dataset_dict['test']
+
     dataset_dict = dataset_dict.map(
         lambda x: format_prompt(x, prompt), remove_columns=dataset_dict['train'].column_names
     )
@@ -166,7 +166,7 @@ def fine_tune_and_evaluate(trial: Trial, settings: FineTuneSettings) -> float:
 
     train_dataset = dataset_dict['train']
     validate_dataset = dataset_dict['validate']
-    test_dataset = dataset_dict['test']
+    # test_dataset = dataset_dict['test']
 
     # initialize model
     bits_and_bytes_config = BitsAndBytesConfig(
@@ -185,6 +185,10 @@ def fine_tune_and_evaluate(trial: Trial, settings: FineTuneSettings) -> float:
     init_language_model(model)
     model.resize_token_embeddings(len(tokenizer))
     model.config.pad_token_id = tokenizer.pad_token_id
+
+    r = trial.params[settings.optuna_settings.trial_settings.r.name]
+    lora_alpha = trial.params[settings.optuna_settings.trial_settings.lora_alpha.name]
+    lora_dropout = trial.params[settings.optuna_settings.trial_settings.lora_dropout.name]
 
     peft_config = LoraConfig(
         r=r,
@@ -208,12 +212,12 @@ def fine_tune_and_evaluate(trial: Trial, settings: FineTuneSettings) -> float:
 
     # fine-tune
     sft_config = SFTConfig(
-        output_dir=f'{TRAINER_STATE_PATH}/{trial._trial_id}',
+        output_dir=f'{TRAINER_STATE_PATH}/trial/{trial._trial_id}',
         do_train=True,
-        do_eval=True,
+        do_eval=False,
         do_predict=False,
-        eval_strategy='steps',
-        eval_steps=100,
+        per_device_eval_batch_size=2,
+        eval_accumulation_steps=4,
         save_strategy='steps',
         save_steps=100,
         save_total_limit=2,
@@ -230,13 +234,10 @@ def fine_tune_and_evaluate(trial: Trial, settings: FineTuneSettings) -> float:
         logging_first_step=True,
         label_names=['labels'],
         remove_unused_columns=True,
-        per_device_eval_batch_size=2,
-        eval_accumulation_steps=4,
     )
 
     graceful_stop_callback = GracefulStopCallback()
-    custom_wandb_callback = CustomWandbCallback(trial, settings)
-
+    custom_wandb_callback = CustomWandbCallback(trial, settings, fine_tune_job_id)
     data_collator = DataCollatorForLanguageModeling(tokenizer, mlm=False)
 
     trainer = SFTTrainer(
@@ -248,8 +249,6 @@ def fine_tune_and_evaluate(trial: Trial, settings: FineTuneSettings) -> float:
         processing_class=tokenizer,
         callbacks=[graceful_stop_callback, custom_wandb_callback],
         optimizer_cls_and_kwargs=(AdamW, settings.optimizer_settings.model_dump()),
-        preprocess_logits_for_metrics=preprocess_logits_for_metrics,
-        compute_metrics=compute_metrics,
     )
     last_checkpoint = get_last_checkpoint(sft_config.output_dir)
 
@@ -259,14 +258,59 @@ def fine_tune_and_evaluate(trial: Trial, settings: FineTuneSettings) -> float:
         ignore_keys_for_eval=['past_key_values', 'hidden_states', 'attentions'],
     )
     trainer.model.save_pretrained(
-        save_directory=f'{TRAINER_MODEL_PATH}/{trial._trial_id}',
+        save_directory=f'{TRAINER_MODEL_PATH}/trial/{trial._trial_id}',
         push_to_hub=False,
         token=None,
         save_peft_format=True,
     )
 
-    # evaluate
-    eval_results = trainer.evaluate(eval_dataset=test_dataset)
-    f1 = eval_results['eval_f1']
+    class_label = cast(ClassLabel, original_train_dataset.features['label'])
 
-    return f1
+    if TYPE_CHECKING:
+
+        class LabelEnum(str, Enum):
+            pass
+
+        class Label(BaseModel):
+            label: LabelEnum
+
+    else:
+        LabelEnum = Enum('LabelEnum', {name: name for name in class_label.names}, type=str)
+        Label = create_model('Label', label=(LabelEnum, ...))
+
+    outlines_model = Transformers(model, tokenizer)
+    json_gen = outlines_json(outlines_model, Label)
+    predictions = []
+    true_labels = [class_label.names[int(x['label'])] for x in original_train_dataset]
+
+    for sample in original_train_dataset:
+        messages = format_prompt(sample, prompt)['messages']
+
+        print('sample')
+        print(sample)
+        print()
+
+        print('prompt')
+        print(prompt)
+        print()
+
+        print('messages')
+        print(messages)
+        print()
+
+        prompt_str = tokenizer.apply_chat_template(
+            {
+                'system_message': messages[0]['content'],
+                'messages': [{'role': 'user', 'content': messages[1]['content']}],
+            },
+            tokenize=False,
+            add_special_tokens=True,
+        )
+
+        print('prompt_str')
+        print(prompt_str)
+        print()
+        result: Label = json_gen(prompt_str, max_tokens=20, stop_at='}')
+        predictions.append(result.label.value)
+
+    return f1_score(true_labels, predictions, average='macro')
