@@ -8,7 +8,7 @@ from transformers.models.llama.modeling_llama import LlamaForCausalLM
 from transformers.models.llama.tokenization_llama_fast import LlamaTokenizerFast
 
 
-def init_tokenizer(tokenizer: LlamaTokenizerFast):
+def init_tokenizer(tokenizer: LlamaTokenizerFast) -> LlamaTokenizerFast:
     tokenizer.add_special_tokens(
         {
             'additional_special_tokens': ['<|system|>', '<|user|>', '<|assistant|>', '<|end|>'],
@@ -20,7 +20,7 @@ def init_tokenizer(tokenizer: LlamaTokenizerFast):
     return tokenizer
 
 
-def init_language_model(model: LlamaForCausalLM):
+def init_language_model(model: LlamaForCausalLM) -> LlamaForCausalLM:
     assert isinstance(model.config, LlamaConfig)
 
     model.config.use_cache = False
