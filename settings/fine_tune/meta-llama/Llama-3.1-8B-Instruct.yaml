@@ -4,7 +4,7 @@ dataset_settings:
   config_name: 5fd00395-72b3-45bd-9326-d11f2a7a73dc
 
 model_settings:
-  model_name: meta-llama/Llama-3.1-8B
+  model_name: meta-llama/Llama-3.1-8B-Instruct
   target_modules: 
     - q_proj
     - v_proj

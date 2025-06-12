@@ -16,15 +16,6 @@ def init_tokenizer(tokenizer: LlamaTokenizerFast):
         }
     )
     tokenizer.padding_side = 'left'
-    tokenizer.chat_template = (
-        '<s><|system|>\n'
-        '{{ system_message }}\n'
-        '<|end|>\n'
-        '{% for m in messages %}'
-        '<|{{ m.role }}|> {{ m.content }} <|end|>\n'
-        '{% endfor %}'
-        '<|assistant|> '
-    )
 
     return tokenizer
 
@@ -91,16 +82,10 @@ def formatting_func(tokenizer: LlamaTokenizerFast, batch: dict[str, Any]) -> dic
     input_strs: list[str] = []
 
     for messages in batch['messages']:
-        if isinstance(messages, list):
-            conversation = {'system_message': messages[0]['content'], 'messages': messages[1:]}
-
-        else:
-            conversation = {'system_message': messages['content']}
-
         full_prompt = tokenizer.apply_chat_template(
-            conversation,
+            messages,
             tokenize=False,
-            add_special_tokens=True,
+            add_generation_prompt=False,
         )
         input_strs.append(full_prompt)
 

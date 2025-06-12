@@ -13,12 +13,6 @@ from datasets import ClassLabel, DatasetDict, load_dataset
 from datasets.download import DownloadConfig
 from decouple import config
 from fine_tune_settings import FineTuneSettings
-from llama_3_1_8b import (
-    format_prompt,
-    formatting_func,
-    init_language_model,
-    init_tokenizer,
-)
 from optuna import Trial
 from outlines.generate.json import json as outlines_json
 from outlines.models.transformers import Transformers
@@ -42,6 +36,13 @@ from transformers.integrations import WandbCallback
 from transformers.trainer_utils import get_last_checkpoint
 from trl import SFTConfig, SFTTrainer
 
+from assets.hpc.hf.lora.llama_3_1_8b_instruct import (
+    format_prompt,
+    formatting_func,
+    init_language_model,
+    init_tokenizer,
+)
+
 
 # huggingface
 HF_HOME = Path('home')
@@ -59,7 +60,7 @@ TRAINER_MODEL_PATH = HF_HOME / 'trainer' / 'model'
 TRAINER_STATE_PATH.mkdir(parents=True, exist_ok=True)
 TRAINER_MODEL_PATH.mkdir(parents=True, exist_ok=True)
 
-SUPPORTED_MODEL_NAMES = {'meta-llama/Llama-3.1-8B'}
+SUPPORTED_MODEL_NAMES = {'meta-llama/Llama-3.1-8B-Instruct'}
 
 
 basicConfig(level=INFO, format='%(asctime)s [%(threadName)s] %(levelname)s: %(message)s')
@@ -285,31 +286,14 @@ def fine_tune_and_evaluate(
 
     for sample in original_train_dataset:
         messages = format_prompt(sample, prompt)['messages']
-
-        print('sample')
-        print(sample)
-        print()
-
-        print('prompt')
-        print(prompt)
-        print()
-
-        print('messages')
-        print(messages)
-        print()
-
         prompt_str = tokenizer.apply_chat_template(
-            {
-                'system_message': messages[0]['content'],
-                'messages': [{'role': 'user', 'content': messages[1]['content']}],
-            },
+            [
+                {'role': 'system', 'content': messages[0]['content']},
+                {'role': 'user', 'content': messages[1]['content']},
+            ],
             tokenize=False,
-            add_special_tokens=True,
+            add_generation_prompt=False,
         )
-
-        print('prompt_str')
-        print(prompt_str)
-        print()
         result: Label = json_gen(prompt_str, max_tokens=20, stop_at='}')
         predictions.append(result.label.value)
 
