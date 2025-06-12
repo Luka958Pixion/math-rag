@@ -81,3 +81,21 @@ class DatasetPublisherService(BaseDatasetPublisherService):
             private=True,
             token=self.hugging_face_token,
         )
+
+    def unpublish(self, dataset_name: str):
+        repo_id = f'{self.hugging_face_username}/{dataset_name}'
+
+        try:
+            self.hugging_face_api.dataset_info(repo_id, token=self.hugging_face_token)
+
+        except RepositoryNotFoundError:
+            logger.warning(f'Dataset {repo_id} does not exist, nothing to unpublish')
+
+            return
+
+        self.hugging_face_api.delete_repo(
+            repo_id=repo_id,
+            token=self.hugging_face_token,
+            repo_type='dataset',
+        )
+        logger.info(f'Dataset {repo_id} deleted')

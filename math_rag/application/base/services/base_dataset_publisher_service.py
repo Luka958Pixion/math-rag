@@ -21,3 +21,7 @@ class BaseDatasetPublisherService(ABC):
         dataset_metadata_file: DatasetMetadataFile | None,
     ):
         pass
+
+    @abstractmethod
+    def unpublish(self, dataset_name: str):
+        pass
