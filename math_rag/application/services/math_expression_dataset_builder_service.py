@@ -9,8 +9,8 @@ from math_rag.application.base.services import (
     BaseMathExpressionLoaderService,
     BaseMathExpressionSampleLoaderService,
 )
-from math_rag.application.enums.arxiv import MathCategory
 from math_rag.core.enums import MathExpressionDatasetBuildStage
+from math_rag.core.enums.arxiv import MathCategory
 from math_rag.core.models import MathExpressionDataset
 
 

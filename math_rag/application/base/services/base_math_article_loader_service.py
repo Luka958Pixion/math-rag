@@ -1,7 +1,7 @@
 from abc import ABC, abstractmethod
 
-from math_rag.application.types.arxiv import ArxivCategoryType
 from math_rag.core.models import MathExpressionDataset
+from math_rag.core.types.arxiv import ArxivCategoryType
 
 
 class BaseMathArticleLoaderService(ABC):

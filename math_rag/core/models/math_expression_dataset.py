@@ -6,6 +6,7 @@ from math_rag.core.enums import (
     MathExpressionDatasetBuildStage,
     MathExpressionDatasetBuildStatus,
 )
+from math_rag.core.models import MathExpressionDatasetBuildDetails
 
 
 class MathExpressionDataset(BaseDataset):
@@ -17,6 +18,7 @@ class MathExpressionDataset(BaseDataset):
     )
     build_from_stage: MathExpressionDatasetBuildStage | None = None
     build_priority: MathExpressionDatasetBuildPriority
+    build_details: MathExpressionDatasetBuildDetails
 
     @model_validator(mode='after')
     def check_build_from(self):

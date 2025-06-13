@@ -7,8 +7,8 @@ from arxiv import Result
 from math_rag.application.base.clients import BaseArxivClient
 from math_rag.application.base.repositories.objects import BaseMathArticleRepository
 from math_rag.application.base.services import BaseMathArticleLoaderService
-from math_rag.application.types.arxiv import ArxivCategoryType
 from math_rag.core.models import MathArticle, MathExpressionDataset
+from math_rag.core.types.arxiv import ArxivCategoryType
 from math_rag.shared.utils import GzipExtractorUtil
 
 

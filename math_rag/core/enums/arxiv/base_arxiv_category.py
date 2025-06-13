@@ -8,4 +8,4 @@ class BaseArxivCategory(str, Enum):
             return cls[category_str.upper()]
 
         except KeyError:
-            raise ValueError(f'Category "{category_str}" not found in {cls.__name__}')
+            raise ValueError(f'Category {category_str} not found in {cls.__name__}')

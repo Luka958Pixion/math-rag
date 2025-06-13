@@ -1,6 +1,6 @@
 from enum import Enum
 
-from math_rag.application.enums.arxiv import (
+from math_rag.core.enums.arxiv import (
     CompSciCategory,
     EconCategory,
     EESSCategory,
@@ -10,7 +10,7 @@ from math_rag.application.enums.arxiv import (
     QuantFinCategory,
     StatsCategory,
 )
-from math_rag.application.enums.arxiv.physics import (
+from math_rag.core.enums.arxiv.physics import (
     AstroPhCategory,
     CondMatCategory,
     NlinCategory,
@@ -18,7 +18,7 @@ from math_rag.application.enums.arxiv.physics import (
 )
 
 
-class ArxivCategoryTypeEnum(Enum):
+class ArxivCategoryEnum(Enum):
     CompSciCategory = CompSciCategory.__name__
     EconCategory = EconCategory.__name__
     EESSCategory = EESSCategory.__name__
@@ -33,7 +33,7 @@ class ArxivCategoryTypeEnum(Enum):
     PhysicsCategory = PhysicsCategory.__name__
 
 
-ArxivCategoryUnionType = (
+ArxivCategoryUnion = (
     CompSciCategory
     | EconCategory
     | EESSCategory
