@@ -17,4 +17,5 @@ class MathExpressionDatasetDocument(BaseDocument):
     # NOTE: build_details are flattened
     arxiv_category_type: str | None
     arxiv_category: tuple[str, str] | None
+    limit: int
     splits: list[tuple[str, float]]

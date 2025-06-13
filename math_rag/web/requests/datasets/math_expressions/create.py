@@ -3,14 +3,7 @@ from uuid import UUID
 from pydantic import BaseModel
 
 from math_rag.core.enums import MathExpressionDatasetBuildPriority, MathExpressionDatasetBuildStage
-from math_rag.core.models import DatasetSplits
-from math_rag.core.types.arxiv import ArxivCategoryEnum, ArxivCategoryUnion
-
-
-class MathExpressionDatasetBuildDetails(BaseModel):
-    arxiv_category_type: ArxivCategoryEnum | None
-    arxiv_category: ArxivCategoryUnion | None
-    splits: DatasetSplits
+from math_rag.core.models import MathExpressionDatasetBuildDetails
 
 
 class MathExpressionDatasetCreateRequest(BaseModel):

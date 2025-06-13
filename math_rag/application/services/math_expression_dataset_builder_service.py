@@ -10,7 +10,6 @@ from math_rag.application.base.services import (
     BaseMathExpressionSampleLoaderService,
 )
 from math_rag.core.enums import MathExpressionDatasetBuildStage
-from math_rag.core.enums.arxiv import MathCategory
 from math_rag.core.models import MathExpressionDataset
 
 
@@ -44,10 +43,11 @@ class MathExpressionDatasetBuilderService(BaseMathExpressionDatasetBuilderServic
         )
         logger.info(f'Dataset {dataset.id} build stage updated to {build_stage}')
 
-        # load
-        # TODO
         await self.math_article_loader_service.load(
-            dataset, arxiv_category_type=None, arxiv_category=MathCategory.GM, limit=1
+            dataset,
+            arxiv_category_type=dataset.build_details.arxiv_category_type,
+            arxiv_category=dataset.build_details.arxiv_category,
+            limit=dataset.build_details.limit,
         )
         logger.info(f'Dataset {dataset.id} build loaded math articles')
 

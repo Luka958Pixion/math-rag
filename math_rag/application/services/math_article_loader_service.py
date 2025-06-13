@@ -8,7 +8,7 @@ from math_rag.application.base.clients import BaseArxivClient
 from math_rag.application.base.repositories.objects import BaseMathArticleRepository
 from math_rag.application.base.services import BaseMathArticleLoaderService
 from math_rag.core.models import MathArticle, MathExpressionDataset
-from math_rag.core.types.arxiv import ArxivCategoryType
+from math_rag.core.types.arxiv import ArxivCategory, ArxivCategoryType
 from math_rag.shared.utils import GzipExtractorUtil
 
 
@@ -29,8 +29,8 @@ class MathArticleDatasetLoaderService(BaseMathArticleLoaderService):
         self,
         dataset: MathExpressionDataset,
         *,
-        arxiv_category_type: type[ArxivCategoryType] | None = None,
-        arxiv_category: ArxivCategoryType | None = None,
+        arxiv_category_type: ArxivCategoryType | None = None,
+        arxiv_category: ArxivCategory | None = None,
         limit: int,
     ):
         if arxiv_category_type:

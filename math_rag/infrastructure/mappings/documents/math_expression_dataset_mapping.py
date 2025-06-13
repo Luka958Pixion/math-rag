@@ -38,6 +38,7 @@ class MathExpressionDatasetMapping(
                 )
                 if target.arxiv_category
                 else None,
+                limit=target.limit,
                 splits=[DatasetSplit(name=name, ratio=ratio) for name, ratio in target.splits],
             ),
         )
@@ -57,5 +58,6 @@ class MathExpressionDatasetMapping(
                 TypeUtil.to_fqn(source.build_details.arxiv_category.__class__),
                 source.build_details.arxiv_category.value,
             ),
+            limit=source.build_details.limit,
             splits=[(split.name, split.ratio) for split in source.build_details.splits],
         )

@@ -1,12 +1,13 @@
 from pydantic import BaseModel, model_validator
 
 from math_rag.core.models import DatasetSplit
-from math_rag.core.types.arxiv import ArxivCategoryType
+from math_rag.core.types.arxiv import ArxivCategory, ArxivCategoryType
 
 
 class MathExpressionDatasetBuildDetails(BaseModel):
-    arxiv_category_type: type[ArxivCategoryType] | None
-    arxiv_category: ArxivCategoryType | None
+    arxiv_category_type: ArxivCategoryType | None
+    arxiv_category: ArxivCategory | None
+    limit: int
     splits: list[DatasetSplit]
 
     @model_validator(mode='after')

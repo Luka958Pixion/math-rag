@@ -7,7 +7,7 @@ from huggingface_hub.errors import RepositoryNotFoundError
 
 from math_rag.application.base.services import BaseDatasetPublisherService
 from math_rag.application.models.datasets import DatasetMetadataFile
-from math_rag.core.models import DatasetSplits
+from math_rag.core.models import DatasetSplit
 from math_rag.core.types import SampleType
 from math_rag.infrastructure.utils import DatasetFeatureExtractorUtil, DatasetSplitterUtil
 
@@ -34,7 +34,7 @@ class DatasetPublisherService(BaseDatasetPublisherService):
         samples: list[SampleType],
         sample_type: type[SampleType],
         fields: list[str],
-        dataset_splits: DatasetSplits,
+        dataset_splits: list[DatasetSplit],
         dataset_metadata_file: DatasetMetadataFile | None = None,
     ):
         repo_id = f'{self.hugging_face_username}/{dataset_name}'

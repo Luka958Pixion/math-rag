@@ -1,7 +1,7 @@
 from abc import ABC, abstractmethod
 
 from math_rag.core.models import MathExpressionDataset
-from math_rag.core.types.arxiv import ArxivCategoryType
+from math_rag.core.types.arxiv import ArxivCategory, ArxivCategoryType
 
 
 class BaseMathArticleLoaderService(ABC):
@@ -10,8 +10,8 @@ class BaseMathArticleLoaderService(ABC):
         self,
         dataset: MathExpressionDataset,
         *,
-        arxiv_category_type: type[ArxivCategoryType] | None,
-        arxiv_category: ArxivCategoryType | None,
+        arxiv_category_type: ArxivCategoryType | None,
+        arxiv_category: ArxivCategory | None,
         limit: int,
     ):
         pass
