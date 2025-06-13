@@ -7,8 +7,8 @@ from math_rag.application.base.repositories.documents import BaseIndexRepository
 from math_rag.application.containers import ApplicationContainer
 from math_rag.application.contexts import IndexBuildContext
 from math_rag.core.models import Index
-from math_rag.web.requests import IndexCreateRequest
-from math_rag.web.responses import IndexCreateResponse
+from math_rag.web.requests.indexes import IndexCreateRequest
+from math_rag.web.responses.indexes import IndexCreateResponse
 
 
 logger = getLogger(__name__)

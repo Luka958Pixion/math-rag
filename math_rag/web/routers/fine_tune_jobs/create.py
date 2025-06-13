@@ -7,8 +7,8 @@ from math_rag.application.base.repositories.documents import BaseFineTuneJobRepo
 from math_rag.application.containers import ApplicationContainer
 from math_rag.application.contexts import FineTuneJobRunContext
 from math_rag.core.models import FineTuneJob
-from math_rag.web.requests import FineTuneJobCreateRequest
-from math_rag.web.responses import FineTuneJobCreateResponse
+from math_rag.web.requests.fine_tune_jobs import FineTuneJobCreateRequest
+from math_rag.web.responses.fine_tune_jobs import FineTuneJobCreateResponse
 
 
 logger = getLogger(__name__)

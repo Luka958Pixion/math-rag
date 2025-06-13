@@ -8,8 +8,8 @@ from math_rag.application.base.clients import BaseLatexConverterClient
 from math_rag.application.base.repositories.documents import BaseMathProblemRepository
 from math_rag.application.containers import ApplicationContainer
 from math_rag.core.models import MathProblem
-from math_rag.web.requests import ProblemCreateRequest
-from math_rag.web.responses import ProblemCreateResponse
+from math_rag.web.requests.problems import ProblemCreateRequest
+from math_rag.web.responses.problems import ProblemCreateResponse
 
 
 UPLOADS_PATH = Path(__file__).parents[3] / '.tmp' / 'uploads'
