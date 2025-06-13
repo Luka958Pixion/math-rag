@@ -1,4 +1,4 @@
-from math_rag.application.enums.arxiv import BaseArxivCategory
+from math_rag.core.enums.arxiv import BaseArxivCategory
 
 
 class NlinCategory(BaseArxivCategory):

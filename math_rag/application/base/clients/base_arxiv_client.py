@@ -2,7 +2,7 @@ from abc import ABC, abstractmethod
 
 from arxiv import Result
 
-from math_rag.application.enums.arxiv import BaseArxivCategory
+from math_rag.core.enums.arxiv import BaseArxivCategory
 
 
 class BaseArxivClient(ABC):

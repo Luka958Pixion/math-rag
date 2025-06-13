@@ -6,7 +6,8 @@ from math_rag.core.enums import (
     MathExpressionDatasetBuildStage,
     MathExpressionDatasetBuildStatus,
 )
-from math_rag.core.models import MathExpressionDatasetBuildDetails
+
+from .math_expression_dataset_build_details import MathExpressionDatasetBuildDetails
 
 
 class MathExpressionDataset(BaseDataset):

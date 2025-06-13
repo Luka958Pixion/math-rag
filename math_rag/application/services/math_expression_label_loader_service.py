@@ -53,7 +53,7 @@ class MathExpressionLabelLoaderService(BaseMathExpressionLabelLoaderService):
                 outputs = await self.math_expression_labeler_assistant.concurrent_assist(inputs)
 
             case _:
-                raise ValueError(f'Build priority {build_priority} is not available')
+                raise ValueError(f'Build priority {dataset.build_priority} is not available')
 
         math_expression_labels = [
             MathExpressionLabel(

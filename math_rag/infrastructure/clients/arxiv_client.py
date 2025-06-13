@@ -2,7 +2,7 @@ from arxiv import Client, Result, Search, SortCriterion, SortOrder
 from httpx import AsyncClient, HTTPStatusError, RequestError
 
 from math_rag.application.base.clients import BaseArxivClient
-from math_rag.application.enums.arxiv import (
+from math_rag.core.enums.arxiv import (
     BaseArxivCategory,
     CompSciCategory,
     EconCategory,

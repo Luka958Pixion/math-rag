@@ -45,9 +45,8 @@ class MathExpressionDatasetBuilderService(BaseMathExpressionDatasetBuilderServic
 
         await self.math_article_loader_service.load(
             dataset,
-            arxiv_category_type=dataset.build_details.arxiv_category_type,
-            arxiv_category=dataset.build_details.arxiv_category,
-            limit=dataset.build_details.limit,
+            categories=dataset.build_details.categories,
+            category_limit=dataset.build_details.category_limit,
         )
         logger.info(f'Dataset {dataset.id} build loaded math articles')
 

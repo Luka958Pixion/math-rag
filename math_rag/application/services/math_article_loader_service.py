@@ -8,7 +8,7 @@ from math_rag.application.base.clients import BaseArxivClient
 from math_rag.application.base.repositories.objects import BaseMathArticleRepository
 from math_rag.application.base.services import BaseMathArticleLoaderService
 from math_rag.core.models import MathArticle, MathExpressionDataset
-from math_rag.core.types.arxiv import ArxivCategory, ArxivCategoryType
+from math_rag.core.types import ArxivCategoryType
 from math_rag.shared.utils import GzipExtractorUtil
 
 
@@ -29,31 +29,23 @@ class MathArticleDatasetLoaderService(BaseMathArticleLoaderService):
         self,
         dataset: MathExpressionDataset,
         *,
-        arxiv_category_type: ArxivCategoryType | None = None,
-        arxiv_category: ArxivCategory | None = None,
-        limit: int,
+        categories: list[ArxivCategoryType],
+        category_limit: int,
     ):
-        if arxiv_category_type:
-            arxiv_categories = list(arxiv_category_type)
-
-        elif arxiv_category:
-            arxiv_categories = [arxiv_category]
-
-        else:
-            raise ValueError()
-
         num_math_articles = 0
 
-        for category in arxiv_categories:
-            num_math_articles += await self._process_arxiv_category(dataset.id, category, limit)
+        for category in categories:
+            num_math_articles += await self._process_arxiv_category(
+                dataset.id, category, category_limit
+            )
 
         self.math_article_repository.backup()
         logger.info(f'{self.__class__.__name__} {num_math_articles} math articles in total')
 
     async def _process_arxiv_category(
-        self, dataset_id: UUID, arxiv_category: ArxivCategoryType, limit: int
+        self, dataset_id: UUID, category: ArxivCategoryType, category_limit: int
     ) -> int:
-        results = self.arxiv_client.search(arxiv_category, limit)
+        results = self.arxiv_client.search(category, category_limit)
         process_tasks = [self._process_result(result) for result in results]
         processed_files = await gather(*process_tasks)
         math_articles = [
