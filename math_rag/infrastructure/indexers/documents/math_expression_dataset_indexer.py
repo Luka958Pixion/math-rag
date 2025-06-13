@@ -5,7 +5,7 @@ from math_rag.infrastructure.models.documents import MathExpressionDatasetDocume
 from .document_indexer import DocumentIndexer
 
 
-FIELDS = ['build_stage', 'build_status', 'build_from_dataset_id', 'build_from_stage']
+FIELDS = ['build_stage', 'build_status', 'build_from_id', 'build_from_stage']
 
 
 class MathExpressionDatasetIndexer(DocumentIndexer[MathExpressionDatasetDocument]):

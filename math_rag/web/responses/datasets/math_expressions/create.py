@@ -11,5 +11,5 @@ class MathExpressionDatasetCreateResponse(BaseModel):
     timestamp: datetime
     build_stage: MathExpressionDatasetBuildStage
     build_status: MathExpressionDatasetBuildStatus
-    build_from_dataset_id: UUID | None
+    build_from_id: UUID | None
     build_from_stage: MathExpressionDatasetBuildStage | None

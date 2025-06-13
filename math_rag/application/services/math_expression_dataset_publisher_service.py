@@ -8,7 +8,6 @@ from math_rag.application.base.services import (
 )
 from math_rag.application.models.datasets import DatasetMetadataFile
 from math_rag.core.models import (
-    DatasetMetadataFile,
     DatasetSplits,
     MathExpressionDataset,
     MathExpressionSample,
