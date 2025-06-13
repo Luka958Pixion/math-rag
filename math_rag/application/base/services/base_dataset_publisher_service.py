@@ -1,10 +1,8 @@
 from abc import ABC, abstractmethod
 from uuid import UUID
 
-from math_rag.application.models.datasets import (
-    DatasetMetadataFile,
-    DatasetSplitSettings,
-)
+from math_rag.application.models.datasets import DatasetMetadataFile
+from math_rag.core.models import DatasetSplits
 from math_rag.core.types import SampleType
 
 
@@ -17,7 +15,7 @@ class BaseDatasetPublisherService(ABC):
         samples: list[SampleType],
         sample_type: type[SampleType],
         fields: list[str],
-        dataset_split_settings: DatasetSplitSettings,
+        dataset_splits: DatasetSplits,
         dataset_metadata_file: DatasetMetadataFile | None,
     ):
         pass

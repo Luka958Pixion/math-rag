@@ -6,10 +6,8 @@ from huggingface_hub import HfApi
 from huggingface_hub.errors import RepositoryNotFoundError
 
 from math_rag.application.base.services import BaseDatasetPublisherService
-from math_rag.application.models.datasets import (
-    DatasetMetadataFile,
-    DatasetSplitSettings,
-)
+from math_rag.application.models.datasets import DatasetMetadataFile
+from math_rag.core.models import DatasetSplits
 from math_rag.core.types import SampleType
 from math_rag.infrastructure.utils import DatasetFeatureExtractorUtil, DatasetSplitterUtil
 
@@ -36,7 +34,7 @@ class DatasetPublisherService(BaseDatasetPublisherService):
         samples: list[SampleType],
         sample_type: type[SampleType],
         fields: list[str],
-        dataset_split_settings: DatasetSplitSettings,
+        dataset_splits: DatasetSplits,
         dataset_metadata_file: DatasetMetadataFile | None = None,
     ):
         repo_id = f'{self.hugging_face_username}/{dataset_name}'
@@ -70,9 +68,10 @@ class DatasetPublisherService(BaseDatasetPublisherService):
             info=info,
             split=None,
         )
+        hf_dataset = hf_dataset.shuffle(seed=42)
 
         # split
-        dataset_dict = DatasetSplitterUtil.split(hf_dataset, dataset_split_settings)
+        dataset_dict = DatasetSplitterUtil.split(hf_dataset, dataset_splits)
 
         # push the datasets
         dataset_dict.push_to_hub(

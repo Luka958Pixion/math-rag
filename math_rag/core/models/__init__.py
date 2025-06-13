@@ -1,3 +1,5 @@
+from .dataset_split import DatasetSplit
+from .dataset_splits import DatasetSplits
 from .fine_tune_job import FineTuneJob
 from .index import Index
 from .latex_math_node import LatexMathNode
@@ -11,6 +13,8 @@ from .math_problem import MathProblem
 
 
 __all__ = [
+    'DatasetSplit',
+    'DatasetSplits',
     'FineTuneJob',
     'Index',
     'LatexMathNode',

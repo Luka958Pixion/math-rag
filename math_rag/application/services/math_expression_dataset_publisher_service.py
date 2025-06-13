@@ -6,8 +6,13 @@ from math_rag.application.base.services import (
     BaseDatasetPublisherService,
     BaseMathExpressionDatasetPublisherService,
 )
-from math_rag.application.models.datasets import DatasetMetadataFile, DatasetSplitSettings
-from math_rag.core.models import MathExpressionDataset, MathExpressionSample
+from math_rag.application.models.datasets import DatasetMetadataFile
+from math_rag.core.models import (
+    DatasetMetadataFile,
+    DatasetSplits,
+    MathExpressionDataset,
+    MathExpressionSample,
+)
 
 
 logger = getLogger(__name__)
@@ -33,9 +38,7 @@ class MathExpressionDatasetPublisherService(BaseMathExpressionDatasetPublisherSe
             for math_expression_sample in batch
         ]
 
-        dataset_split_settings = DatasetSplitSettings(
-            train_ratio=0.8, validate_ratio=0.1, test_ratio=0.1, seed=42
-        )
+        dataset_split = DatasetSplits(train_ratio=0.8, validate_ratio=0.1, test_ratio=0.1, seed=42)
 
         json_str = MATH_EXPRESSION_LABELER_PROMPT_COLLECTION.model_dump_json(indent=4)
         content = json_str.encode('utf-8')
@@ -47,7 +50,7 @@ class MathExpressionDatasetPublisherService(BaseMathExpressionDatasetPublisherSe
             samples=math_expression_samples,
             sample_type=MathExpressionSample,
             fields=FIELDS,
-            dataset_split_settings=dataset_split_settings,
+            dataset_splits=dataset_split,
             dataset_metadata_file=dataset_metadata_file,
         )
 

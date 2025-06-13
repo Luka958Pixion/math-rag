@@ -1,38 +1,26 @@
-import numpy as np
-
 from datasets import Dataset, DatasetDict
 
-from math_rag.application.models.datasets import DatasetSplitSettings
+from math_rag.core.models import DatasetSplits
 
 
 class DatasetSplitterUtil:
     @staticmethod
-    def split(dataset: Dataset, settings: DatasetSplitSettings) -> DatasetDict:
-        train_ratio, validate_ratio, test_ratio, seed = (
-            settings.train_ratio,
-            settings.validate_ratio,
-            settings.test_ratio,
-            settings.seed,
-        )
-        total = train_ratio + validate_ratio + test_ratio
+    def split(dataset: Dataset, splits: DatasetSplits) -> DatasetDict:
+        n = len(dataset)
 
-        if not np.isclose(total, 1.0):
-            raise ValueError(f'Ratios must sum to 1.0, but got {total:.3f}')
+        # extract ratios and compute base counts
+        counts = [int(s.ratio * n) for s in splits.root]
 
-        split_test = dataset.train_test_split(test_size=test_ratio, seed=seed)
-        train_validate_dataset = split_test['train']
-        test_dataset = split_test['test']
+        # adjust last count to pick up any rounding remainder
+        counts[-1] = n - sum(counts[:-1])
 
-        split_validate = train_validate_dataset.train_test_split(
-            test_size=(validate_ratio / (train_ratio + test_ratio)), seed=seed
-        )
-        train_dataset = split_validate['train']
-        validate_dataset = split_validate['test']
+        # slice the dataset into named splits
+        result = {}
+        start = 0
 
-        return DatasetDict(
-            {
-                'train': train_dataset,
-                'validate': validate_dataset,
-                'test': test_dataset,
-            }
-        )
+        for split, count in zip(splits.root, counts):
+            end = start + count
+            result[split.name] = dataset.select(range(start, end))
+            start = end
+
+        return DatasetDict(result)
