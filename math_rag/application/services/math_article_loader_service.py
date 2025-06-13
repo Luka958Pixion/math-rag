@@ -8,7 +8,7 @@ from math_rag.application.base.clients import BaseArxivClient
 from math_rag.application.base.repositories.objects import BaseMathArticleRepository
 from math_rag.application.base.services import BaseMathArticleLoaderService
 from math_rag.application.types.arxiv import ArxivCategoryType
-from math_rag.core.models import MathArticle
+from math_rag.core.models import MathArticle, MathExpressionDataset
 from math_rag.shared.utils import GzipExtractorUtil
 
 
@@ -27,7 +27,7 @@ class MathArticleDatasetLoaderService(BaseMathArticleLoaderService):
 
     async def load(
         self,
-        dataset_id: UUID,
+        dataset: MathExpressionDataset,
         *,
         arxiv_category_type: type[ArxivCategoryType] | None = None,
         arxiv_category: ArxivCategoryType | None = None,
@@ -45,7 +45,7 @@ class MathArticleDatasetLoaderService(BaseMathArticleLoaderService):
         num_math_articles = 0
 
         for category in arxiv_categories:
-            num_math_articles += await self._process_arxiv_category(dataset_id, category, limit)
+            num_math_articles += await self._process_arxiv_category(dataset.id, category, limit)
 
         self.math_article_repository.backup()
         logger.info(f'{self.__class__.__name__} {num_math_articles} math articles in total')

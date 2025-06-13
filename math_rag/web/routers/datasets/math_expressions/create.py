@@ -25,7 +25,7 @@ async def create_math_expression_dataset(
     context: DatasetBuildContext = Depends(Provide[ApplicationContainer.dataset_build_context]),
 ):
     dataset = MathExpressionDataset(
-        build_from_dataset_id=request.build_from_dataset_id,
+        build_from_id=request.build_from_dataset_id,
         build_from_stage=request.build_from_stage,
     )
     await repository.insert_one(dataset)
@@ -38,6 +38,6 @@ async def create_math_expression_dataset(
         timestamp=dataset.timestamp,
         build_stage=dataset.build_stage,
         build_status=dataset.build_status,
-        build_from_dataset_id=dataset.build_from_dataset_id,
+        build_from_dataset_id=dataset.build_from_id,
         build_from_stage=dataset.build_from_stage,
     )

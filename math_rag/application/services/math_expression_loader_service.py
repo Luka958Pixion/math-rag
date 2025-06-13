@@ -4,9 +4,7 @@ from uuid import UUID
 
 from math_rag.application.assistants import KatexCorrectorAssistant
 from math_rag.application.base.clients import BaseKatexClient
-from math_rag.application.base.repositories.documents import (
-    BaseMathExpressionRepository,
-)
+from math_rag.application.base.repositories.documents import BaseMathExpressionRepository
 from math_rag.application.base.repositories.objects import BaseMathArticleRepository
 from math_rag.application.base.services import (
     BaseMathArticleParserService,
@@ -16,7 +14,8 @@ from math_rag.application.models import KatexValidationResult
 from math_rag.application.models.assistants import (
     KatexCorrectorAssistantInput,
 )
-from math_rag.core.models import LatexMathNode, MathExpression
+from math_rag.core.enums import MathExpressionDatasetBuildPriority
+from math_rag.core.models import Index, LatexMathNode, MathExpression, MathExpressionDataset
 
 
 logger = getLogger(__name__)
@@ -53,15 +52,15 @@ class MathExpressionLoaderService(BaseMathExpressionLoaderService):
 
         return valid, invalid
 
-    async def load_for_dataset(self, dataset_id: UUID, build_from_dataset_id: UUID | None):
+    async def load_for_dataset(self, dataset: MathExpressionDataset):
         # load and parse math articles
-        dataset_id_ = build_from_dataset_id if build_from_dataset_id else dataset_id
+        dataset_id = dataset.build_from_id if dataset.build_from_id else dataset.id
         math_articles = self.math_article_repository.find_many_by_math_expression_dataset_id(
-            dataset_id_
+            dataset_id
         )
 
         if not math_articles:
-            raise ValueError(f'Math articles with dataset id {dataset_id_} not found')
+            raise ValueError(f'Math articles with dataset id {dataset_id} not found')
 
         math_nodes: list[LatexMathNode] = []
 
@@ -97,10 +96,17 @@ class MathExpressionLoaderService(BaseMathExpressionLoaderService):
                 inputs.append(input)
                 input_id_to_node[input.id] = node
 
-            # call assistant (may return fewer outputs)
-            # outputs = await self.katex_corrector_assistant.batch_assist(inputs, use_scheduler=True)
-            # TODO bring back
-            outputs = await self.katex_corrector_assistant.concurrent_assist(inputs)
+            match dataset.build_priority:
+                case MathExpressionDatasetBuildPriority.COST:
+                    outputs = await self.katex_corrector_assistant.batch_assist(
+                        inputs, use_scheduler=True
+                    )
+
+                case MathExpressionDatasetBuildPriority.TIME:
+                    outputs = await self.katex_corrector_assistant.concurrent_assist(inputs)
+
+                case _:
+                    raise ValueError(f'Build priority {dataset.build_priority} is not available')
 
             corrected_katexes = [output.katex for output in outputs]
             corrected_nodes = [input_id_to_node[output.input_id] for output in outputs]
@@ -144,12 +150,12 @@ class MathExpressionLoaderService(BaseMathExpressionLoaderService):
         await self.math_expression_repository.backup()
         logger.info(f'{self.__class__.__name__} loaded {len(math_expressions)} math expressions')
 
-    async def load_for_index(self, index_id: UUID):
+    async def load_for_index(self, index: Index):
         # load and parse math articles
-        math_articles = self.math_article_repository.find_many_by_index_id(index_id)
+        math_articles = self.math_article_repository.find_many_by_index_id(index.id)
 
         if not math_articles:
-            raise ValueError(f'Math articles with index id {index_id} not found')
+            raise ValueError(f'Math articles with index id {index.id} not found')
 
         math_nodes: list[LatexMathNode] = []
 
@@ -219,7 +225,7 @@ class MathExpressionLoaderService(BaseMathExpressionLoaderService):
                 MathExpression(
                     math_article_id=math_article.id,
                     math_expression_dataset_id=None,
-                    index_id=index_id,
+                    index_id=index.id,
                     latex=node.latex,
                     katex=katex,
                     position=node.position,

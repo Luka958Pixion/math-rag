@@ -1,8 +1,9 @@
 from abc import ABC, abstractmethod
-from uuid import UUID
+
+from math_rag.core.models import MathExpressionDataset
 
 
 class BaseMathExpressionDatasetPublisherService(ABC):
     @abstractmethod
-    async def publish(self, dataset_id: UUID, build_from_dataset_id: UUID | None):
+    async def publish(self, dataset: MathExpressionDataset):
         pass

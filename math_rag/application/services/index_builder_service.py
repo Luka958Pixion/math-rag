@@ -1,5 +1,4 @@
 from logging import getLogger
-from uuid import UUID
 
 from math_rag.application.base.repositories.documents import BaseIndexRepository
 from math_rag.application.base.services import (
@@ -28,34 +27,34 @@ class IndexBuilderService(BaseIndexBuilderService):
         self.math_expression_label_loader_service = math_expression_label_loader_service
         self.index_repository = index_repository
 
-    async def _stage_0(self, index_id: UUID):
-        logger.info(f'Index {index_id} build loading math expressions...')
+    async def _stage_0(self, index: Index):
+        logger.info(f'Index {index.id} build loading math expressions...')
 
         # update build stage
         build_stage = IndexBuildStage.LOAD_MATH_EXPRESSIONS
-        await self.index_repository.update_build_stage(index_id, build_stage)
-        logger.info(f'Index {index_id} build stage updated to {build_stage}')
+        await self.index_repository.update_build_stage(index.id, build_stage)
+        logger.info(f'Index {index.id} build stage updated to {build_stage}')
 
         # load
-        await self.math_expression_loader_service.load_for_index(index_id)
-        logger.info(f'Index {index_id} build loaded math expressions')
+        await self.math_expression_loader_service.load_for_index(index.id)
+        logger.info(f'Index {index.id} build loaded math expressions')
 
-    async def _stage_1(self, index_id: UUID):
-        logger.info(f'Index {index_id} build loading math expression labels...')
+    async def _stage_1(self, index: Index):
+        logger.info(f'Index {index.id} build loading math expression labels...')
 
         # update build stage
         build_stage = IndexBuildStage.LOAD_MATH_EXPRESSION_LABELS
-        await self.index_repository.update_build_stage(index_id, build_stage)
-        logger.info(f'Index {index_id} build stage updated to {build_stage}')
+        await self.index_repository.update_build_stage(index.id, build_stage)
+        logger.info(f'Index {index.id} build stage updated to {build_stage}')
 
         # load
-        await self.math_expression_label_loader_service.load(index_id)
-        logger.info(f'Index {index_id} build loaded math expression labels')
+        await self.math_expression_label_loader_service.load_for_index(index.id)
+        logger.info(f'Index {index.id} build loaded math expression labels')
 
     async def build(self, index: Index):
         logger.info(f'Index {index.id} build started')
 
-        await self._stage_0(index.id)
-        await self._stage_1(index.id)
+        await self._stage_0(index)
+        await self._stage_1(index)
 
         logger.info(f'Index {index.id} build finished')

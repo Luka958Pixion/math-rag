@@ -1,5 +1,4 @@
 from logging import getLogger
-from uuid import UUID
 
 from math_rag.application.assistants.prompts import MATH_EXPRESSION_LABELER_PROMPT_COLLECTION
 from math_rag.application.base.repositories.documents import BaseMathExpressionSampleRepository
@@ -25,11 +24,11 @@ class MathExpressionDatasetPublisherService(BaseMathExpressionDatasetPublisherSe
         self.math_expression_sample_repository = math_expression_sample_repository
         self.dataset_publisher_service = dataset_publisher_service
 
-    async def publish(self, dataset_id: UUID, build_from_dataset_id: UUID | None):
+    async def publish(self, dataset: MathExpressionDataset):
         math_expression_samples = [
             math_expression_sample
             async for batch in self.math_expression_sample_repository.batch_find_many(
-                build_from_dataset_id if build_from_dataset_id else dataset_id, batch_size=1000
+                dataset.build_from_id if dataset.build_from_id else dataset.id, batch_size=1000
             )
             for math_expression_sample in batch
         ]
@@ -43,8 +42,8 @@ class MathExpressionDatasetPublisherService(BaseMathExpressionDatasetPublisherSe
         dataset_metadata_file = DatasetMetadataFile(name='prompt.json', content=content)
 
         self.dataset_publisher_service.publish(
-            dataset_id=dataset_id,
-            dataset_name=MathExpressionDataset.__name__.lower(),
+            dataset_id=dataset.id,
+            dataset_name=dataset.__class__.__name__.lower(),
             samples=math_expression_samples,
             sample_type=MathExpressionSample,
             fields=FIELDS,

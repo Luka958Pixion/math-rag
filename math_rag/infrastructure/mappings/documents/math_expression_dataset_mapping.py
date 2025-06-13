@@ -1,4 +1,8 @@
-from math_rag.core.enums import MathExpressionDatasetBuildStage, MathExpressionDatasetBuildStatus
+from math_rag.core.enums import (
+    MathExpressionDatasetBuildPriority,
+    MathExpressionDatasetBuildStage,
+    MathExpressionDatasetBuildStatus,
+)
 from math_rag.core.models import MathExpressionDataset
 from math_rag.infrastructure.base import BaseMapping
 from math_rag.infrastructure.models.documents import MathExpressionDatasetDocument
@@ -14,10 +18,11 @@ class MathExpressionDatasetMapping(
             timestamp=target.timestamp,
             build_stage=MathExpressionDatasetBuildStage(target.build_stage),
             build_status=MathExpressionDatasetBuildStatus(target.build_status),
-            build_from_dataset_id=target.build_from_dataset_id,
+            build_from_id=target.build_from_id,
             build_from_stage=MathExpressionDatasetBuildStage(target.build_from_stage)
             if target.build_from_stage
             else None,
+            build_priority=MathExpressionDatasetBuildPriority(target.build_priority),
         )
 
     @staticmethod
@@ -27,6 +32,7 @@ class MathExpressionDatasetMapping(
             timestamp=source.timestamp,
             build_stage=source.build_stage.value,
             build_status=source.build_status.value,
-            build_from_dataset_id=source.build_from_dataset_id,
+            build_from_id=source.build_from_id,
             build_from_stage=source.build_from_stage.value if source.build_from_stage else None,
+            build_priority=source.build_priority.value,
         )
