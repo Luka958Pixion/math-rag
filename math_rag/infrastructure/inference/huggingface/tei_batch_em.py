@@ -19,6 +19,7 @@ from math_rag.infrastructure.clients import (
     PBSProClient,
     SFTPClient,
 )
+from math_rag.infrastructure.enums.hpc import HPCQueue
 from math_rag.infrastructure.enums.hpc.pbs import PBSProJobState
 from math_rag.infrastructure.enums.inference.huggingface import BatchJobStatus
 from math_rag.infrastructure.inference.partials import PartialBatchEM
@@ -38,9 +39,7 @@ from math_rag.infrastructure.utils import (
     FileStreamWriterUtil,
     FileWriterUtil,
 )
-from math_rag.infrastructure.validators.inference.huggingface import (
-    HuggingFaceModelNameValidator,
-)
+from math_rag.infrastructure.validators.inference.huggingface import HuggingFaceModelNameValidator
 
 
 PBS_JOB_NAME = 'tei'
@@ -54,7 +53,7 @@ STATUS_TRACKER_DELAY = 30
 logger = getLogger(__name__)
 
 
-class TEIBatchEM(PartialBatchEM):  # TODO update
+class TEIBatchEM(PartialBatchEM):
     def __init__(
         self,
         file_system_client: FileSystemClient,
@@ -250,10 +249,8 @@ class TEIBatchEM(PartialBatchEM):  # TODO update
 
         if job_id:
             try:
-                (
-                    wall_time,
-                    wall_time_used,
-                ) = await self.pbs_pro_client.queue_status_wall_times(job_id)
+                wall_times = await self.pbs_pro_client.queue_status_wall_times(job_id)
+                wall_time, wall_time_used = wall_times
 
                 if wall_time_used is None:
                     raise ValueError('Wall time used can not be None because job is running')
@@ -275,6 +272,7 @@ class TEIBatchEM(PartialBatchEM):  # TODO update
                     mem=resources.mem,
                     wall_time=resources.wall_time,
                     depend_job_id=job_id,
+                    queue=HPCQueue.GPU,
                 )
 
         else:
@@ -387,7 +385,6 @@ class TEIBatchEM(PartialBatchEM):  # TODO update
                 data['request'],
                 request_id=request_id,
             )
-
             requests_dict[request_id] = request
 
         failed_requests: list[EMFailedRequest] = []

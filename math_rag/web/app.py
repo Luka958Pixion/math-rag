@@ -73,7 +73,6 @@ def create_api(application_container: ApplicationContainer) -> FastAPI:
         title=TITLE,
         openapi_url=OPENAPI_URL,
         lifespan=lifespan,
-        # dependency_overrides_provider=application_container,
     )
     api.state.application_container = application_container
 

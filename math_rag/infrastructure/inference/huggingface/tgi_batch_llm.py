@@ -42,9 +42,7 @@ from math_rag.infrastructure.utils import (
     FileStreamWriterUtil,
     FileWriterUtil,
 )
-from math_rag.infrastructure.validators.inference.huggingface import (
-    HuggingFaceModelNameValidator,
-)
+from math_rag.infrastructure.validators.inference.huggingface import HuggingFaceModelNameValidator
 from math_rag.shared.utils import DataclassMapperUtil
 
 
@@ -255,10 +253,8 @@ class TGIBatchLLM(PartialBatchLLM):
 
         if job_id:
             try:
-                (
-                    wall_time,
-                    wall_time_used,
-                ) = await self.pbs_pro_client.queue_status_wall_times(job_id)
+                wall_times = await self.pbs_pro_client.queue_status_wall_times(job_id)
+                wall_time, wall_time_used = wall_times
 
                 if wall_time_used is None:
                     raise ValueError('Wall time used can not be None because job is running')
@@ -396,7 +392,6 @@ class TGIBatchLLM(PartialBatchLLM):
                 request_id=request_id,
                 response_type=response_type,
             )
-
             requests_dict[request_id] = request
 
         failed_requests: list[LLMFailedRequest[LLMResponseType]] = []

@@ -25,7 +25,7 @@ async def delete_math_expression_datasets(
 ):
     dataset_name = MathExpressionDataset.__name__.lower()
     service.unpublish(dataset_name)
-    logger.log(f'Unpublished dataset {dataset_name}')
+    logger.info(f'Unpublished dataset {dataset_name}')
 
     deleted_count = await repository.clear()
-    logger.log(f'Deleted {deleted_count} {dataset_name}(s)')
+    logger.info(f'Deleted {deleted_count} {dataset_name}(s)')

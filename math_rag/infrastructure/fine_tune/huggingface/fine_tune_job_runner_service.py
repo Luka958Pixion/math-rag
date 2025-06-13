@@ -219,10 +219,8 @@ class FineTuneJobRunnerService(BaseFineTuneJobRunnerService):
 
         if job_id:
             try:
-                (
-                    wall_time,
-                    wall_time_used,
-                ) = await self.pbs_pro_client.queue_status_wall_times(job_id)
+                wall_times = await self.pbs_pro_client.queue_status_wall_times(job_id)
+                wall_time, wall_time_used = wall_times
 
                 if wall_time_used is None:
                     raise ValueError('Wall time used can not be None because job is running')
