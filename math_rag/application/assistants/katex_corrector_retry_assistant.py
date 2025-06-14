@@ -32,7 +32,7 @@ class KatexCorrectorRetryAssistant(
         self.model = 'gpt-4.1-nano'
         self.temperature = 0.0
         self.store = True
-        self.max_completion_tokens = 50
+        self.max_completion_tokens = 1024
         self.inference_provider = LLMInferenceProvider.OPEN_AI
         self.model_provider = LLMProvider.OPEN_AI
 
