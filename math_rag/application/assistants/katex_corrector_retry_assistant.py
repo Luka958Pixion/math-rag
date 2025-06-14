@@ -2,6 +2,7 @@ from math_rag.application.base.inference import (
     BaseBatchLLMRequestManagedScheduler,
     BaseManagedLLM,
 )
+from math_rag.application.enums.inference import LLMInferenceProvider, LLMProvider
 from math_rag.application.models.assistants import (
     KatexCorrectorRetryAssistantInput,
     KatexCorrectorRetryAssistantOutput,
@@ -61,6 +62,8 @@ class KatexCorrectorRetryAssistant(
                 model='gpt-4.1',
                 temperature=0.0,
                 response_type=KatexCorrectorRetryAssistantOutput.bind(input.id),
+                inference_provider=LLMInferenceProvider.OPEN_AI,
+                model_provider=LLMProvider.OPEN_AI,
             ),
         )
 

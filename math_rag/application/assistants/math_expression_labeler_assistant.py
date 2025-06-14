@@ -2,6 +2,7 @@ from math_rag.application.base.inference import (
     BaseBatchLLMRequestManagedScheduler,
     BaseManagedLLM,
 )
+from math_rag.application.enums.inference import LLMInferenceProvider, LLMProvider
 from math_rag.application.models.assistants import (
     MathExpressionLabelerAssistantInput,
     MathExpressionLabelerAssistantOutput,
@@ -41,6 +42,8 @@ class MathExpressionLabelerAssistant(
                 model='gpt-4.1-nano',
                 temperature=0.0,
                 response_type=MathExpressionLabelerAssistantOutput.bind(input.id),
+                inference_provider=LLMInferenceProvider.OPEN_AI,
+                model_provider=LLMProvider.OPEN_AI,
             ),
         )
 

@@ -1,6 +1,7 @@
 from uuid import UUID
 
 from math_rag.application.base.inference import BaseBatchEMRequestManagedScheduler, BaseManagedEM
+from math_rag.application.enums.inference import EMInferenceProvider, EMProvider
 from math_rag.application.models.embedants import EmbedantInput, EmbedantOutput
 from math_rag.application.models.inference import (
     EMParams,
@@ -20,7 +21,12 @@ class MathExpressionDescriptionEmbedant(PartialEmbedant[EmbedantInput, EmbedantO
     def encode_to_request(self, input: EmbedantInput) -> EMRequest:
         request = EMRequest(
             text=input.text,
-            params=EMParams(model='text-embedding-3-small', dimensions=1536),
+            params=EMParams(
+                model='text-embedding-3-small',
+                dimensions=1536,
+                inference_provider=EMInferenceProvider.OPEN_AI,
+                model_provider=EMProvider.OPEN_AI,
+            ),
         )
         self._request_id_to_input_id[request.id] = input.id
 

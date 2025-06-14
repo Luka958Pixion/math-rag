@@ -2,6 +2,7 @@ from math_rag.application.base.inference import (
     BaseBatchLLMRequestManagedScheduler,
     BaseManagedLLM,
 )
+from math_rag.application.enums.inference import LLMInferenceProvider, LLMProvider
 from math_rag.application.models.assistants import (
     KatexCorrectorAssistantInput,
     KatexCorrectorAssistantOutput,
@@ -44,6 +45,8 @@ class KatexCorrectorAssistant(
                 metadata={'input_id': str(input.id)},
                 store=True,
                 max_completion_tokens=1024,
+                inference_provider=LLMInferenceProvider.OPEN_AI,
+                model_provider=LLMProvider.OPEN_AI,
             ),
         )
 
