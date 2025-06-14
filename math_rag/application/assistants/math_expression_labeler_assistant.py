@@ -25,25 +25,37 @@ class MathExpressionLabelerAssistant(
     def __init__(self, llm: BaseManagedLLM, scheduler: BaseBatchLLMRequestManagedScheduler | None):
         super().__init__(llm, scheduler)
 
+        self.system_prompt = MATH_EXPRESSION_LABELER_SYSTEM_PROMPT
+        self.user_prompt = MATH_EXPRESSION_LABELER_USER_PROMPT
+        self.model = 'gpt-4.1-nano'
+        self.temperature = 0.0
+        self.store = True
+        self.max_completion_tokens = 50
+        self.inference_provider = LLMInferenceProvider.OPEN_AI
+        self.model_provider = LLMProvider.OPEN_AI
+
     def encode_to_request(
         self, input: MathExpressionLabelerAssistantInput
     ) -> LLMRequest[MathExpressionLabelerAssistantOutput]:
-        system_prompt = MATH_EXPRESSION_LABELER_SYSTEM_PROMPT.format()
-        user_prompt = MATH_EXPRESSION_LABELER_USER_PROMPT.format(latex=input.latex)
+        system_message_content = self.system_prompt.format()
+        user_message_content = self.user_prompt.format(latex=input.latex)
 
         return LLMRequest(
             conversation=LLMConversation(
                 messages=[
-                    LLMMessage(role='system', content=system_prompt),
-                    LLMMessage(role='user', content=user_prompt),
+                    LLMMessage(role='system', content=system_message_content),
+                    LLMMessage(role='user', content=user_message_content),
                 ]
             ),
             params=LLMParams[MathExpressionLabelerAssistantOutput](
-                model='gpt-4.1-nano',
-                temperature=0.0,
+                model=self.model,
+                temperature=self.temperature,
                 response_type=MathExpressionLabelerAssistantOutput.bind(input.id),
-                inference_provider=LLMInferenceProvider.OPEN_AI,
-                model_provider=LLMProvider.OPEN_AI,
+                metadata=dict(input_id=str(input.id)),
+                store=self.store,
+                max_completion_tokens=self.max_completion_tokens,
+                inference_provider=self.inference_provider,
+                model_provider=self.model_provider,
             ),
         )
 

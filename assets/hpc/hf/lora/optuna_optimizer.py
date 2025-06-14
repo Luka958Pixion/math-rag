@@ -4,12 +4,11 @@ from pathlib import Path
 from uuid import UUID
 
 from decouple import Config, RepositoryEnv
+from fine_tune import fine_tune_and_evaluate
+from fine_tune_settings import FineTuneSettings
 from optuna import Trial, create_study
 from optuna.trial import FrozenTrial
-
-from .fine_tune import fine_tune_and_evaluate
-from .fine_tune_settings import FineTuneSettings
-from .utils import YamlReaderUtil
+from utils import YamlReaderUtil
 
 
 config = Config(repository=RepositoryEnv('.env.hpc'))

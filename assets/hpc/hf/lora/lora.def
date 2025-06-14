@@ -15,7 +15,7 @@ From: python:3.12
     pip install bitsandbytes==0.45.5 triton==3.1.0
 
 %runscript
-    python -m optuna_optimizer
+    python optuna_optimizer.py
 
 %labels
     Author luka.panic@pixion.co
@@ -32,4 +32,11 @@ From: python:3.12
         - .env.hpc
 
     Usage:
-        apptainer run --env-file .env.hpc lora.sif
+        apptainer run \
+            --nv \
+            --bind ...
+            --env-file .env.hpc \
+            --env http_proxy=...
+            --env https_proxy=...
+            --env FINE_TUNE_JOB_ID=...
+            lora.sif

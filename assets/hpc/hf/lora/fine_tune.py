@@ -13,12 +13,14 @@ import wandb
 from datasets import ClassLabel, DatasetDict, load_dataset
 from datasets.download import DownloadConfig
 from decouple import config
+from fine_tune_settings import FineTuneSettings
 from optuna import Trial
 from outlines.generate.json import json as outlines_json
 from outlines.models.transformers import Transformers
 from peft import LoraConfig, get_peft_model, prepare_model_for_kbit_training
 from pydantic import BaseModel, create_model
 from sklearn.metrics import accuracy_score, f1_score, precision_score, recall_score
+from stubs import ModelSpec
 from torch.optim import AdamW
 from transformers import (
     AutoModelForCausalLM,
@@ -35,9 +37,6 @@ from transformers import (
 from transformers.integrations import WandbCallback
 from transformers.trainer_utils import get_last_checkpoint
 from trl import SFTConfig, SFTTrainer
-
-from .fine_tune_settings import FineTuneSettings
-from .stubs import ModelSpec
 
 
 # huggingface
@@ -102,7 +101,7 @@ class LoRAWandbCallback(WandbCallback):
         wandb.finish()
 
 
-class MetricName(Enum):
+class Metric(Enum):
     ACCURACY = 'accuracy'
     PRECISION = 'precision'
     RECALL = 'recall'
@@ -110,7 +109,7 @@ class MetricName(Enum):
 
 
 MODEL_NAMES = {'meta-llama/Llama-3.1-8B-Instruct'}
-METRIC_NAMES = {name.value for name in MetricName}
+METRIC_NAMES = {name.value for name in Metric}
 
 
 def fine_tune_and_evaluate(
@@ -125,6 +124,8 @@ def fine_tune_and_evaluate(
 
     if metric_name not in METRIC_NAMES:
         raise ValueError(f'Metric {metric_name} is not available')
+
+    metric = Metric(metric_name)
 
     # load model specification
     model_spec = import_model_spec(model_name)
@@ -313,18 +314,15 @@ def fine_tune_and_evaluate(
         )
         predictions.append(result.label.value)
 
-    match metric_name:
-        case MetricName.ACCURACY:
+    match metric:
+        case Metric.ACCURACY:
             return accuracy_score(true_labels, predictions)
 
-        case MetricName.PRECISION:
+        case Metric.PRECISION:
             return precision_score(true_labels, predictions, average='macro')
 
-        case MetricName.RECALL:
+        case Metric.RECALL:
             return recall_score(true_labels, predictions, average='macro')
 
-        case MetricName.F1:
+        case Metric.F1:
             return f1_score(true_labels, predictions, average='macro')
-
-        case _:
-            raise ValueError(f'Metric {metric_name} is not available')

@@ -29,6 +29,13 @@ class KatexCorrectorRetryAssistant(
     def __init__(self, llm: BaseManagedLLM, scheduler: BaseBatchLLMRequestManagedScheduler | None):
         super().__init__(llm, scheduler)
 
+        self.model = 'gpt-4.1-nano'
+        self.temperature = 0.0
+        self.store = True
+        self.max_completion_tokens = 50
+        self.inference_provider = LLMInferenceProvider.OPEN_AI
+        self.model_provider = LLMProvider.OPEN_AI
+
     def encode_to_request(
         self, input: KatexCorrectorRetryAssistantInput
     ) -> LLMRequest[KatexCorrectorRetryAssistantOutput]:
@@ -36,20 +43,20 @@ class KatexCorrectorRetryAssistant(
         initial_prompt = KATEX_CORRECTOR_USER_PROMPT.format(
             katex=initial_input.katex, error=initial_input.error
         )
-        user_prompts = [
+        user_message_contents = [
             KATEX_CORRECTOR_RETRY_USER_PROMPT.format(katex=input.katex, error=input.error)
             for input, _ in input.pairs[1:]
         ]
-        user_prompts.insert(0, initial_prompt)
+        user_message_contents.insert(0, initial_prompt)
 
         outputs = [pair[1] for pair in input.pairs]
 
-        system_prompt = KATEX_CORRECTOR_SYSTEM_PROMPT.format()
-        system_message = LLMMessage(role='system', content=system_prompt)
+        system_message_content = KATEX_CORRECTOR_SYSTEM_PROMPT.format()
+        system_message = LLMMessage(role='system', content=system_message_content)
         messages = [system_message]
 
-        for user_prompt, output in zip(user_prompts, outputs):
-            user_message = LLMMessage(role='user', content=user_prompt)
+        for user_message_content, output in zip(user_message_contents, outputs):
+            user_message = LLMMessage(role='user', content=user_message_content)
             messages.append(user_message)
 
             if output:
@@ -59,11 +66,14 @@ class KatexCorrectorRetryAssistant(
         return LLMRequest(
             conversation=LLMConversation(messages=messages),
             params=LLMParams[KatexCorrectorRetryAssistantOutput](
-                model='gpt-4.1',
-                temperature=0.0,
+                model=self.model,
+                temperature=self.temperature,
                 response_type=KatexCorrectorRetryAssistantOutput.bind(input.id),
-                inference_provider=LLMInferenceProvider.OPEN_AI,
-                model_provider=LLMProvider.OPEN_AI,
+                metadata=dict(input_id=str(input.id)),
+                store=self.store,
+                max_completion_tokens=self.max_completion_tokens,
+                inference_provider=self.inference_provider,
+                model_provider=self.model_provider,
             ),
         )
 

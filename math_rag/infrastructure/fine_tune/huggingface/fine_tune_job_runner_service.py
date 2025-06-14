@@ -135,7 +135,6 @@ class FineTuneJobRunnerService(BaseFineTuneJobRunnerService):
         # runtime paths
         runtime_local_paths = [
             LOCAL_ROOT_PATH / '.env.hpc',
-            lora_path / '__init__.py',
             lora_path / 'optuna_optimizer.py',
             lora_path / 'utils.py',
             lora_path / 'fine_tune_settings.py',

@@ -49,14 +49,14 @@ def format_prompt(sample: dict[str, str], prompt_collection: dict[str, Any]) -> 
         ]
     }
     """
-    system_prompt = prompt_collection.get('system')
-    system_prompt_template = cast(str, system_prompt['template'])
+    system_prompt = cast(dict, prompt_collection.get('system'))
+    system_prompt_template = cast(str, system_prompt.get('template'))
     system_message_content = system_prompt_template.format()
 
-    user_prompt = prompt_collection.get('user')
-    user_prompt_template = cast(str, user_prompt['template'])
+    user_prompt = cast(dict, prompt_collection.get('user'))
+    user_prompt_template = cast(str, user_prompt.get('template'))
     user_message_content = user_prompt_template.format(
-        **{input_key: sample[input_key] for input_key in prompt_collection.get('input_keys')}
+        **{input_key: sample[input_key] for input_key in user_prompt.get('input_keys')}
     )
 
     assistant_message_content = json.dumps({'label': sample['label']})
