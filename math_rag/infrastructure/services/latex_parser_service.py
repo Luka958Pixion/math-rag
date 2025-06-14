@@ -10,26 +10,40 @@ class LatexParserService:
 
         return nodes
 
+    def _parse_segment(
+        self,
+        latex: str,
+        start: int,
+        end: int,
+        strict: bool,
+    ) -> list[LatexNode]:
+        segment = latex[start:end]
+        walker = LatexWalker(segment, tolerant_parsing=not strict)
+
+        try:
+            nodes, _, _ = walker.get_latex_nodes()
+
+            return nodes
+
+        except LatexWalkerParseError:
+            # if only one char remains, drop it
+            if end - start <= 1:
+                return []
+
+            mid = start + (end - start) // 2
+
+            # recurse on halves
+            left = self._parse_segment(latex, start, mid, strict)
+            right = self._parse_segment(latex, mid, end, strict)
+
+            return left + right
+
     def parse(self, latex: str) -> list[LatexNode]:
-        walker = LatexWalker(latex, tolerant_parsing=False)
-        nodes: list[LatexNode] = []
-        position = 0
-        length = len(latex)
+        """
+        Robust parsing: try strict on whole string, else divide-and-conquer.
+        """
+        try:
+            return self._parse_segment(latex, 0, len(latex), strict=True)
 
-        while position < length:
-            try:
-                # read exactly one top-level node at a time
-                new_nodes, new_position, _ = walker.get_latex_nodes(pos=position, read_max_nodes=1)
-
-                # guard against no forward progress
-                if new_position <= position:
-                    new_position = position + 1
-
-                nodes.extend(new_nodes)
-                position = new_position
-
-            except LatexWalkerParseError:
-                # skip the problematic character and continue
-                position += 1
-
-        return nodes
+        except Exception:
+            return []

@@ -9,8 +9,6 @@ from pylatexenc.latexwalker import (
     LatexSpecialsNode,
 )
 
-from math_rag.infrastructure.types.services import LatexNodeVisitor
-
 from .base_latex_node_visitor import BaseLatexNodeVisitor
 
 
@@ -21,15 +19,9 @@ MATH_PLACEHOLDER_PATTERN = r'\[math_placeholder\]'
 
 class TemplateHelper(BaseLatexNodeVisitor):
     def __init__(self):
+        super().__init__()
+
         self._strings: list[str] = []
-        self._visitor = {
-            LatexCharsNode: self.visit_latex_chars_node,
-            LatexCommentNode: self.visit_latex_comment_node,
-            LatexEnvironmentNode: self.visit_latex_environment_node,
-            LatexMacroNode: self.visit_latex_macro_node,
-            LatexMathNode: self.visit_latex_math_node,
-            LatexSpecialsNode: self.visit_latex_specials_node,
-        }
 
     @property
     def template(self) -> str:
@@ -38,10 +30,6 @@ class TemplateHelper(BaseLatexNodeVisitor):
     @property
     def positions(self) -> str:
         return [match.start() for match in re.finditer(MATH_PLACEHOLDER_PATTERN, self.template)]
-
-    @property
-    def visitor(self) -> LatexNodeVisitor:
-        return self._visitor
 
     def visit_latex_chars_node(self, node: LatexCharsNode):
         self._strings.append(node.chars)

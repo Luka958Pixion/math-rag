@@ -41,8 +41,6 @@ class MathExpressionDatasetMapping(
 
     @staticmethod
     def to_target(source: MathExpressionDataset) -> MathExpressionDatasetDocument:
-        print('source.build_details.categories')
-        print(source.build_details.categories)
         return MathExpressionDatasetDocument(
             id=source.id,
             timestamp=source.timestamp,

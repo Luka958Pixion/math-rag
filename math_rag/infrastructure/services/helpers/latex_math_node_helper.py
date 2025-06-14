@@ -7,30 +7,18 @@ from pylatexenc.latexwalker import (
     LatexSpecialsNode,
 )
 
-from math_rag.infrastructure.types.services import LatexNodeVisitor
-
 from .base_latex_node_visitor import BaseLatexNodeVisitor
 
 
 class LatexMathNodeHelper(BaseLatexNodeVisitor):
     def __init__(self):
+        super().__init__()
+
         self._math_nodes: list[LatexMathNode] = []
-        self._visitor = {
-            LatexCharsNode: self.visit_latex_chars_node,
-            LatexCommentNode: self.visit_latex_comment_node,
-            LatexEnvironmentNode: self.visit_latex_environment_node,
-            LatexMacroNode: self.visit_latex_macro_node,
-            LatexMathNode: self.visit_latex_math_node,
-            LatexSpecialsNode: self.visit_latex_specials_node,
-        }
 
     @property
     def math_nodes(self) -> list[LatexMathNode]:
         return self._math_nodes
-
-    @property
-    def visitor(self) -> LatexNodeVisitor:
-        return self._visitor
 
     def visit_latex_chars_node(self, node: LatexCharsNode):
         pass

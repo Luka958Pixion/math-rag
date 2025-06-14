@@ -24,7 +24,11 @@ class MathArticleParserService(BaseMathArticleParserService):
         self.latex_node_walker_service.walk(nodes, [helper.visitor])
 
         return [
-            LatexMathNode(latex=latex, position=node.pos, is_inline=node.displaytype == 'inline')
+            LatexMathNode(
+                latex=str(node.latex_verbatim()),
+                position=node.pos,
+                is_inline=node.displaytype == 'inline',
+            )
             for node in helper.math_nodes
         ]
 
@@ -50,7 +54,11 @@ class MathArticleParserService(BaseMathArticleParserService):
             nodes, [latex_math_node_helper.visitor, template_helper.visitor]
         )
         latex_math_nodes = [
-            LatexMathNode(latex=latex, position=node.pos, is_inline=node.displaytype == 'inline')
+            LatexMathNode(
+                latex=str(node.latex_verbatim()),
+                position=node.pos,
+                is_inline=node.displaytype == 'inline',
+            )
             for node in latex_math_node_helper.math_nodes
         ]
 

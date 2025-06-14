@@ -73,7 +73,7 @@ class MathExpressionDatasetBuilderService(BaseMathExpressionDatasetBuilderServic
         logger.info(f'Dataset {dataset.id} build stage updated to {build_stage}')
 
         # load
-        await self.math_expression_label_loader_service.load(dataset)
+        await self.math_expression_label_loader_service.load_for_dataset(dataset)
         logger.info(f'Dataset {dataset.id} build loaded math expression labels')
 
     async def _stage_3(self, dataset: MathExpressionDataset):
