@@ -420,7 +420,7 @@ class InfrastructureContainer(DeclarativeContainer):
         arxiv_client=arxiv_client,
         katex_client=katex_client,
         latex_converter_client=mathpix_client,
-        managed_em=openai_managed_em,
+        managed_em=managed_em_router,
         managed_llm=managed_llm_router,
         managed_em_scheduler=openai_batch_em_request_managed_scheduler,
         managed_llm_scheduler=openai_batch_llm_request_managed_scheduler,
