@@ -15,7 +15,7 @@ From: python:3.12
     pip install bitsandbytes==0.45.5 triton==3.1.0
 
 %runscript
-    python optuna_optimizer.py
+    python -m optuna_optimizer
 
 %labels
     Author luka.panic@pixion.co

@@ -20,7 +20,7 @@ optuna_settings:
 
   study_settings:
     storage: sqlite:///optuna_lora_study.db
-    study_name: optuna_lora_study
+    study_name: optuna-lora-study
     direction: maximize
     load_if_exists: true
 

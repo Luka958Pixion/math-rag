@@ -13,10 +13,7 @@ class BaseBatchManagedEM(ABC):
         pass
 
     @abstractmethod
-    async def batch_embed_init(
-        self,
-        batch_request: EMBatchRequest,
-    ) -> str:
+    async def batch_embed_init(self, batch_request: EMBatchRequest) -> str:
         pass
 
     @abstractmethod

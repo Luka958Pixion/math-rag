@@ -4,11 +4,12 @@ from pathlib import Path
 from uuid import UUID
 
 from decouple import Config, RepositoryEnv
-from fine_tune import fine_tune_and_evaluate
-from fine_tune_settings import FineTuneSettings
 from optuna import Trial, create_study
 from optuna.trial import FrozenTrial
-from utils import YamlReaderUtil
+
+from .fine_tune import fine_tune_and_evaluate
+from .fine_tune_settings import FineTuneSettings
+from .utils import YamlReaderUtil
 
 
 config = Config(repository=RepositoryEnv('.env.hpc'))
@@ -43,12 +44,13 @@ def log(trial: FrozenTrial):
 def main():
     fine_tune_settings = YamlReaderUtil.read(FINE_TUNE_SETTINGS_PATH, model=FineTuneSettings)
     optuna_settings = fine_tune_settings.optuna_settings
+    optuna_settings.study_settings.study_name += f'-fine-tune-job-{FINE_TUNE_JOB_ID}'
 
     study = create_study(**optuna_settings.study_settings.model_dump())
+    objective_function = partial(objective, fine_tune_settings=fine_tune_settings)
+
     study.enqueue_trial(optuna_settings.trial_start_settings.model_dump())
-    study.optimize(
-        partial(objective, fine_tune_settings=fine_tune_settings), n_trials=optuna_settings.n_trials
-    )
+    study.optimize(objective_function, n_trials=optuna_settings.n_trials)
     log(study.best_trial)
 
 

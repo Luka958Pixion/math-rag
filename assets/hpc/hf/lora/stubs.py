@@ -3,6 +3,7 @@ from typing import Any, Protocol
 from transformers.modeling_utils import PreTrainedModel
 from transformers.tokenization_utils_fast import PreTrainedTokenizerFast
 
+
 class ModelSpec(Protocol):
     def init_tokenizer(self, tokenizer: PreTrainedTokenizerFast) -> PreTrainedTokenizerFast: ...
     def init_language_model(self, model: PreTrainedModel) -> PreTrainedModel: ...

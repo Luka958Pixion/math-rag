@@ -6,6 +6,7 @@ from dependency_injector.providers import (
     Callable,
     Configuration,
     Container,
+    Dict,
     Factory,
     List,
     Provider,
@@ -22,6 +23,7 @@ from math_rag.application.base.seeders.documents import BaseDocumentSeeder
 from math_rag.application.base.seeders.embeddings import BaseEmbeddingSeeder
 from math_rag.application.base.seeders.objects import BaseObjectSeeder
 from math_rag.application.containers import ApplicationContainer
+from math_rag.application.enums.inference import EMInferenceProvider, LLMInferenceProvider
 from math_rag.infrastructure.clients import (
     ApptainerClient,
     ArxivClient,
@@ -55,6 +57,7 @@ from math_rag.infrastructure.inference.openai import (
     OpenAIManagedEM,
     OpenAIManagedLLM,
 )
+from math_rag.infrastructure.inference.routers import ManagedEMRouter, ManagedLLMRouter
 from math_rag.infrastructure.repositories.documents import (
     EMFailedRequestRepository,
     FineTuneJobRepository,
@@ -390,6 +393,27 @@ class InfrastructureContainer(DeclarativeContainer):
         hugging_face_token=config.hugging_face.token,
     )
 
+    # routers
+    inference_provider_to_managed_em = Dict(
+        {
+            EMInferenceProvider.OPEN_AI: openai_managed_em,
+            EMInferenceProvider.HUGGING_FACE: tei_batch_em,
+        }
+    )
+    inference_provider_to_managed_llm = Dict(
+        {
+            LLMInferenceProvider.OPEN_AI: openai_managed_llm,
+            LLMInferenceProvider.HUGGING_FACE: tgi_batch_llm,
+        }
+    )
+
+    managed_em_router = Factory(
+        ManagedEMRouter, inference_provider_to_managed_em=inference_provider_to_managed_em
+    )
+    managed_llm_router = Factory(
+        ManagedLLMRouter, inference_provider_to_managed_llm=inference_provider_to_managed_llm
+    )
+
     # ApplicationContainer
     application_container = Container(
         ApplicationContainer,
@@ -397,7 +421,7 @@ class InfrastructureContainer(DeclarativeContainer):
         katex_client=katex_client,
         latex_converter_client=mathpix_client,
         managed_em=openai_managed_em,
-        managed_llm=openai_managed_llm,
+        managed_llm=managed_llm_router,
         managed_em_scheduler=openai_batch_em_request_managed_scheduler,
         managed_llm_scheduler=openai_batch_llm_request_managed_scheduler,
         dataset_publisher_service=dataset_publisher_service,

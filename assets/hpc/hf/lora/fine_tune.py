@@ -13,14 +13,12 @@ import wandb
 from datasets import ClassLabel, DatasetDict, load_dataset
 from datasets.download import DownloadConfig
 from decouple import config
-from fine_tune_settings import FineTuneSettings
 from optuna import Trial
 from outlines.generate.json import json as outlines_json
 from outlines.models.transformers import Transformers
 from peft import LoraConfig, get_peft_model, prepare_model_for_kbit_training
 from pydantic import BaseModel, create_model
 from sklearn.metrics import accuracy_score, f1_score, precision_score, recall_score
-from stubs import ModelSpec
 from torch.optim import AdamW
 from transformers import (
     AutoModelForCausalLM,
@@ -38,6 +36,9 @@ from transformers.integrations import WandbCallback
 from transformers.trainer_utils import get_last_checkpoint
 from trl import SFTConfig, SFTTrainer
 
+from .fine_tune_settings import FineTuneSettings
+from .stubs import ModelSpec
+
 
 # huggingface
 HF_HOME = Path('home')
@@ -53,7 +54,7 @@ logger = getLogger(__name__)
 
 
 def import_model_spec(name: str) -> ModelSpec:
-    module_name = name.split('/')[-1].lower().replace('-', '_').replace('.', '_') + '.py'
+    module_name = name.split('/')[-1].lower().replace('-', '_').replace('.', '_')
     module = importlib.import_module(module_name)
 
     return cast(ModelSpec, module)
@@ -86,13 +87,13 @@ class LoRAWandbCallback(WandbCallback):
 
         wandb.init(
             project=WANDB_PROJECT,
-            name=f'lora-optuna-job-{self.fine_tune_job_id}-trial-{self.trial.number}-run',
+            name=f'fine-tune-job-{self.fine_tune_job_id}-trial-{self.trial.number}-run',
             config={
                 'r': self.r,
                 'lora_alpha': self.lora_alpha,
                 'lora_dropout': self.lora_dropout,
             },
-            tags=['lora', 'optuna', 'pretraining'],
+            tags=['lora', 'optuna'],
         )
 
         return control
@@ -222,8 +223,8 @@ def fine_tune_and_evaluate(
     )
 
     # fine-tune
-    state_path = HF_HOME / 'state' / 'job' / str(fine_tune_job_id) / 'trial' / str(trial._trial_id)
-    model_path = HF_HOME / 'model' / 'job' / str(fine_tune_job_id) / 'trial' / str(trial._trial_id)
+    state_path = HF_HOME / f'fine-tune-job-{fine_tune_job_id}' / f'trial-{trial.number}' / 'state'
+    model_path = HF_HOME / f'fine-tune-job-{fine_tune_job_id}' / f'trial-{trial.number}' / 'model'
     state_path.mkdir(parents=True, exist_ok=True)
     model_path.mkdir(parents=True, exist_ok=True)
 
