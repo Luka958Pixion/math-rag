@@ -55,7 +55,7 @@ class MathExpressionLoaderService(BaseMathExpressionLoaderService):
     async def load_for_dataset(self, dataset: MathExpressionDataset):
         # load and parse math articles
         dataset_id = dataset.build_from_id if dataset.build_from_id else dataset.id
-        math_articles = self.math_article_repository.find_many_by_math_expression_dataset_id(
+        math_articles = await self.math_article_repository.find_many_by_math_expression_dataset_id(
             dataset_id
         )
 
@@ -152,7 +152,7 @@ class MathExpressionLoaderService(BaseMathExpressionLoaderService):
 
     async def load_for_index(self, index: Index):
         # load and parse math articles
-        math_articles = self.math_article_repository.find_many_by_index_id(index.id)
+        math_articles = await self.math_article_repository.find_many_by_index_id(index.id)
 
         if not math_articles:
             raise ValueError(f'Math articles with index id {index.id} not found')

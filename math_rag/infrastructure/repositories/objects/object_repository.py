@@ -40,7 +40,7 @@ class ObjectRepository(
         self.metadata_keys = metadata_keys
         self.object_metadata_repository = object_metadata_repository
 
-    def insert_one(self, item: SourceType):
+    async def insert_one(self, item: SourceType):
         object = self.mapping_cls.to_target(item)
         # NOTE: can't use unpacking because data is not serializable
         self.client.put_object(
@@ -64,10 +64,10 @@ class ObjectRepository(
                 key.removeprefix('X-Amz-Meta-'): value for key, value in object.metadata.items()
             },
         )
-        coro = self.object_metadata_repository.insert_one(metadata)
-        asyncio.run(coro)
 
-    def insert_many(self, items: list[SourceType]):
+        await self.object_metadata_repository.insert_one(metadata)
+
+    async def insert_many(self, items: list[SourceType]):
         objects = [self.mapping_cls.to_target(item) for item in items]
 
         for object in objects:
@@ -97,8 +97,8 @@ class ObjectRepository(
             )
             for object in objects
         ]
-        coro = self.object_metadata_repository.insert_many(metadatas)
-        asyncio.run(coro)
+
+        await self.object_metadata_repository.insert_many(metadatas)
 
     def find_by_name(self, name: str) -> SourceType:
         object_response = self.client.get_object(self.bucket_name, name)

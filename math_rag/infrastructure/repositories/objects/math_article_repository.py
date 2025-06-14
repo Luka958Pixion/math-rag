@@ -31,29 +31,28 @@ class MathArticleRepository(
 
         super().__init__(client, metadata_keys, object_metadata_repository)
 
-    def find_by_id(self, id: UUID) -> MathArticle | None:
-        coro = self.object_metadata_repository.find_one(filter={'metadata.id': str(id)})
-        doc: ObjectMetadataDocument | None = asyncio.run(coro)
+    async def find_by_id(self, id: UUID) -> MathArticle | None:
+        doc = await self.object_metadata_repository.find_one(filter={'metadata.id': str(id)})
 
         if not doc:
             return None
 
         return self.find_by_name(doc.object_name)
 
-    def find_many_by_index_id(self, id: UUID) -> list[MathArticle]:
-        coro = self.object_metadata_repository.find_many(filter={'metadata.index_id': str(id)})
-        docs: list[ObjectMetadataDocument] = asyncio.run(coro)
+    async def find_many_by_index_id(self, id: UUID) -> list[MathArticle]:
+        docs = await self.object_metadata_repository.find_many(
+            filter={'metadata.index_id': str(id)}
+        )
 
         if not docs:
             return []
 
         return [self.find_by_name(doc.object_name) for doc in docs]
 
-    def find_many_by_math_expression_dataset_id(self, id: UUID) -> list[MathArticle]:
-        coro = self.object_metadata_repository.find_many(
+    async def find_many_by_math_expression_dataset_id(self, id: UUID) -> list[MathArticle]:
+        docs = await self.object_metadata_repository.find_many(
             filter={'metadata.math_expression_dataset_id': str(id)}
         )
-        docs: list[ObjectMetadataDocument] = asyncio.run(coro)
 
         if not docs:
             return []

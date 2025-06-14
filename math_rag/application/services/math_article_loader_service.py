@@ -56,7 +56,7 @@ class MathArticleDatasetLoaderService(BaseMathArticleLoaderService):
             if file
             for name, bytes in file.items()
         ]
-        self.math_article_repository.insert_many(math_articles)
+        await self.math_article_repository.insert_many(math_articles)
         logger.info(f'{self.__class__.__name__} loaded {len(math_articles)} math articles')
 
         return len(math_articles)

@@ -8,13 +8,13 @@ from .base_object_repository import BaseObjectRepository
 
 class BaseMathArticleRepository(BaseObjectRepository[MathArticle]):
     @abstractmethod
-    def find_by_id(self, id: UUID) -> MathArticle | None:
+    async def find_by_id(self, id: UUID) -> MathArticle | None:
         pass
 
     @abstractmethod
-    def find_many_by_index_id(self, id: UUID) -> list[MathArticle]:
+    async def find_many_by_index_id(self, id: UUID) -> list[MathArticle]:
         pass
 
     @abstractmethod
-    def find_many_by_math_expression_dataset_id(self, id: UUID) -> list[MathArticle]:
+    async def find_many_by_math_expression_dataset_id(self, id: UUID) -> list[MathArticle]:
         pass
