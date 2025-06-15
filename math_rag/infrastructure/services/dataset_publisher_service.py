@@ -1,3 +1,4 @@
+from enum import Enum
 from logging import getLogger
 from uuid import UUID
 
@@ -56,7 +57,13 @@ class DatasetPublisherService(BaseDatasetPublisherService):
         )
 
         # map to huggingface
-        mapping = [sample.model_dump(mode='json', include=fields) for sample in samples]
+        mapping = [
+            {
+                name: (value.value if isinstance(value, Enum) else value)
+                for name, value in sample.model_dump(mode='python', include=fields).items()
+            }
+            for sample in samples
+        ]
         features = DatasetFeatureExtractorUtil.extract(sample_type, fields)
         info = DatasetInfo(license='mit', features=features)
         dataset = Dataset.from_list(

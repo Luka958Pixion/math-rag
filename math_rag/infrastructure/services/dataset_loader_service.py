@@ -51,7 +51,7 @@ class DatasetLoaderService(BaseDatasetLoaderService):
         )
         dataset_dict = load_dataset(
             path=repo_id,
-            name=dataset_id,
+            name=str(dataset_id),
             split=None,
             download_config=download_config,
             token=self.hugging_face_token,
@@ -76,7 +76,6 @@ class DatasetLoaderService(BaseDatasetLoaderService):
         # map from huggingface
         split_name_to_samples = {}
 
-        # TODO datetime can fail
         for split_name in dataset_dict:
             dataset = dataset_dict[split_name]
             samples = [sample_type.model_validate(row) for row in dataset]

@@ -15,7 +15,7 @@ TYPE_DICT: dict[type[Any], str] = {
     float: 'float64',
     bool: 'bool',
     UUID: 'string',
-    datetime: 'timestamp[ms]',
+    datetime: 'timestamp[us]',
 }
 
 
