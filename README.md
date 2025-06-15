@@ -34,7 +34,7 @@ Create `.env` file with the following variables:
 - `MATHPIX_APP_ID`
 - `MATHPIX_APP_KEY`
 - `MATHPIX_URL=https://api.mathpix.com`
-- `LABEL_STUDIO_BASE_URL=http://localhost:8080/`
+- `LABEL_STUDIO_BASE_URL=http://host.docker.internal:8080/`
 - `LABEL_STUDIO_API_KEY`
 
 Create `.env.hpc` file with the following variables:

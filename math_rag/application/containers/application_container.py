@@ -46,6 +46,7 @@ from math_rag.application.services import (
     MathArticleDatasetLoaderService,
     MathExpressionDatasetBuilderService,
     MathExpressionDatasetPublisherService,
+    MathExpressionDatasetTesterService,
     MathExpressionLabelLoaderService,
     MathExpressionLoaderService,
     MathExpressionSampleLoaderService,
@@ -111,6 +112,11 @@ class ApplicationContainer(DeclarativeContainer):
         math_article_parser_service=math_article_parser_service,
         math_article_repository=math_article_repository,
         math_expression_repository=math_expression_repository,
+    )
+    math_expression_dataset_tester_service = Factory(
+        MathExpressionDatasetTesterService,
+        dataset_loader_service=dataset_loader_service,
+        math_expression_labeler_assistant=math_expression_labeler_assistant,
     )
     math_expression_label_loader_service = Factory(
         MathExpressionLabelLoaderService,
