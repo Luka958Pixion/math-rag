@@ -7,3 +7,7 @@ class MathExpressionLabelEnum(str, Enum):
     CONSTANT = 'constant'
     VARIABLE = 'variable'
     OTHER = 'other'
+
+    @classmethod
+    def from_index(cls, index):
+        return list(cls)[index]

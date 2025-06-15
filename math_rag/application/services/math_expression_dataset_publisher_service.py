@@ -36,6 +36,7 @@ class MathExpressionDatasetPublisherService(BaseMathExpressionDatasetPublisherSe
             for math_expression_sample in batch
         ]
 
+        fields = [field for field in MathExpressionSample.model_fields]
         json_str = MATH_EXPRESSION_LABELER_PROMPT_COLLECTION.model_dump_json(indent=4)
         content = json_str.encode('utf-8')
         dataset_metadata_file = DatasetMetadataFile(name='prompt.json', content=content)
@@ -45,7 +46,7 @@ class MathExpressionDatasetPublisherService(BaseMathExpressionDatasetPublisherSe
             dataset_name=dataset.__class__.__name__.lower(),
             samples=math_expression_samples,
             sample_type=MathExpressionSample,
-            fields=FIELDS,
+            fields=fields,
             dataset_splits=dataset.build_details.splits,
             dataset_metadata_file=dataset_metadata_file,
         )

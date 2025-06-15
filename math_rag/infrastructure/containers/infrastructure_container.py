@@ -12,6 +12,8 @@ from dependency_injector.providers import (
     Provider,
     Singleton,
 )
+from huggingface_hub import HfApi
+from label_studio_sdk.client import AsyncLabelStudio
 from minio import Minio
 from mpxpy.mathpix_client import MathpixClient as _MathpixClient
 from openai import AsyncOpenAI
@@ -88,6 +90,7 @@ from math_rag.infrastructure.seeders.documents import (
 from math_rag.infrastructure.seeders.embeddings import MathExpressionDescriptionSeeder
 from math_rag.infrastructure.seeders.objects import MathArticleSeeder
 from math_rag.infrastructure.services import (
+    DatasetLoaderService,
     DatasetPublisherService,
     FineTuneSettingsLoaderService,
     LatexNodeWalkerService,
@@ -386,11 +389,30 @@ class InfrastructureContainer(DeclarativeContainer):
     config.hugging_face.username.from_env('HF_USERNAME')
     config.hugging_face.token.from_env('HF_TOKEN')
 
-    dataset_publisher_service = Factory(
-        DatasetPublisherService,
-        hugging_face_base_url=config.hugging_face.base_url,
+    hugging_face_api = Singleton(
+        HfApi, endpoint=config.hugging_face.base_url, token=config.hugging_face.token
+    )
+
+    dataset_loader_service = Factory(
+        DatasetLoaderService,
+        hugging_face_api=hugging_face_api,
         hugging_face_username=config.hugging_face.username,
         hugging_face_token=config.hugging_face.token,
+    )
+
+    dataset_publisher_service = Factory(
+        DatasetPublisherService,
+        hugging_face_api=hugging_face_api,
+        hugging_face_username=config.hugging_face.username,
+        hugging_face_token=config.hugging_face.token,
+    )
+
+    # Label Studio
+    config.label_studio.base_url.from_env('LABEL_STUDIO_BASE_URL')
+    config.label_studio.api_key.from_env('LABEL_STUDIO_API_KEY')
+
+    async_label_studio = Singleton(
+        AsyncLabelStudio, base_url=config.label_studio.base_url, api_key=config.label_studio.api_key
     )
 
     # routers
@@ -424,6 +446,7 @@ class InfrastructureContainer(DeclarativeContainer):
         managed_llm=managed_llm_router,
         managed_em_scheduler=openai_batch_em_request_managed_scheduler,
         managed_llm_scheduler=openai_batch_llm_request_managed_scheduler,
+        dataset_loader_service=dataset_loader_service,
         dataset_publisher_service=dataset_publisher_service,
         math_article_parser_service=math_article_parser_service,
         fine_tune_job_repository=fine_tune_job_repository,

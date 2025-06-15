@@ -119,6 +119,14 @@ services:
       - 6277:6277
     restart: unless-stopped
 
+  label-studio:
+    image: heartexlabs/label-studio:latest
+    container_name: label-studio
+    ports:
+      - 8080:8080
+    volumes:
+      - label-studio-data:/label-studio/data
+
   math-rag-jupyter:
     image: ghcr.io/luka958pixion/math_rag_jupyter:latest
     platform: linux/amd64
@@ -157,8 +165,8 @@ volumes:
   neo4j_import:
   neo4j_plugins:
   qdrant_storage:
-  prometheus_data:
   grafana-data:
+  label-studio-data:
   jupyter_sessions:
   apptainer_data:
 

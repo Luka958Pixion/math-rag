@@ -1,3 +1,4 @@
+from .dataset_loader_service import DatasetLoaderService
 from .dataset_publisher_service import DatasetPublisherService
 from .fine_tune_settings_loader_service import FineTuneSettingsLoaderService
 from .latex_node_walker_service import LatexNodeWalkerService
@@ -8,6 +9,7 @@ from .prometheus_snapshot_loader_service import PrometheusSnapshotLoaderService
 
 
 __all__ = [
+    'DatasetLoaderService',
     'DatasetPublisherService',
     'FineTuneSettingsLoaderService',
     'LatexParserService',

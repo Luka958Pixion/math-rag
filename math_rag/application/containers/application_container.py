@@ -33,6 +33,7 @@ from math_rag.application.base.repositories.documents import (
 )
 from math_rag.application.base.repositories.objects import BaseMathArticleRepository
 from math_rag.application.base.services import (
+    BaseDatasetLoaderService,
     BaseDatasetPublisherService,
     BaseMathArticleParserService,
 )
@@ -78,6 +79,7 @@ class ApplicationContainer(DeclarativeContainer):
     math_expression_sample_repository: Provider[BaseMathExpressionSampleRepository] = Dependency()
     math_problem_repository: Provider[BaseMathProblemRepository] = Dependency()
 
+    dataset_loader_service: Provider[BaseDatasetLoaderService] = Dependency()
     dataset_publisher_service: Provider[BaseDatasetPublisherService] = Dependency()
     math_article_parser_service: Provider[BaseMathArticleParserService] = Dependency()
 

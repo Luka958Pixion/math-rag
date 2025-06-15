@@ -1,3 +1,4 @@
+from datetime import datetime
 from enum import Enum
 from typing import Any
 from uuid import UUID
@@ -14,6 +15,7 @@ TYPE_DICT: dict[type[Any], str] = {
     float: 'float64',
     bool: 'bool',
     UUID: 'string',
+    datetime: 'timestamp[ms]',
 }
 
 
