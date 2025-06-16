@@ -10,7 +10,7 @@ from math_rag.application.base.services import (
     BaseMathArticleParserService,
     BaseMathExpressionLoaderService,
 )
-from math_rag.application.models import KatexValidationResult
+from math_rag.application.models import KatexValidateResult
 from math_rag.application.models.assistants import (
     KatexCorrectorAssistantInput,
 )
@@ -20,7 +20,7 @@ from math_rag.core.models import Index, LatexMathNode, MathExpression, MathExpre
 
 logger = getLogger(__name__)
 
-MathNodeResultPair: TypeAlias = tuple[LatexMathNode, KatexValidationResult]
+MathNodeResultPair: TypeAlias = tuple[LatexMathNode, KatexValidateResult]
 SplitValidationResult: TypeAlias = tuple[list[MathNodeResultPair], list[MathNodeResultPair]]
 
 
@@ -42,7 +42,7 @@ class MathExpressionLoaderService(BaseMathExpressionLoaderService):
     def _split_by_validity(
         self,
         nodes: list[LatexMathNode],
-        results: list[KatexValidationResult],
+        results: list[KatexValidateResult],
     ) -> SplitValidationResult:
         valid: list[MathNodeResultPair] = []
         invalid: list[MathNodeResultPair] = []
