@@ -1,9 +1,11 @@
 from typing import Literal
 
-from pydantic import BaseModel, Field
+from pydantic import Field
+
+from math_rag.infrastructure.base import BaseTag
 
 
-class Choices(BaseModel):
+class Choices(BaseTag):
     """
     Label Studio <Choices> tag parameters
 
