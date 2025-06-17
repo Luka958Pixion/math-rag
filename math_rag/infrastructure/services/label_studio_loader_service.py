@@ -4,7 +4,7 @@ from io import BytesIO
 from label_studio_sdk.client import AsyncLabelStudio
 from pydantic import TypeAdapter
 
-from math_rag.infrastructure.models.annotations import Task
+from math_rag.infrastructure.models.labels import Task
 
 
 class LabelStudioLoaderService:

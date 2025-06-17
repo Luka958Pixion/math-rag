@@ -11,7 +11,7 @@ from label_studio_sdk.label_interface.create import choices
 
 from math_rag.application.base.clients import BaseKatexClient
 from math_rag.application.base.services import BaseDatasetLoaderService
-from math_rag.core.types import LabelType, SampleType
+from math_rag.core.types import SampleType
 
 
 logger = getLogger(__name__)
@@ -62,7 +62,6 @@ class LabelStudioPublisherService:
         dataset_id: UUID,
         dataset_name: str,
         split_name: str,
-        label_type: type[LabelType],
         sample_type: type[SampleType],
     ) -> int:
         split_name_to_samples, _ = self.dataset_loader_service.load(
@@ -85,7 +84,7 @@ class LabelStudioPublisherService:
             if item.title == project_title:
                 project = item
 
-        labels = [label.value for label in label_type]
+        labels = [label.value for label in x]
 
         label_config = LabelInterface.create(
             {  # TODO
