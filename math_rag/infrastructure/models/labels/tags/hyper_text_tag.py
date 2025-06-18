@@ -1,6 +1,5 @@
 from typing import Literal
 
-from label_studio_sdk.label_interface.base import LabelStudioTag
 from pydantic import Field
 
 from math_rag.infrastructure.base import BaseTag
@@ -27,9 +26,3 @@ class HyperTextTag(BaseTag):
     granularity: Literal['symbol', 'word', 'sentence', 'paragraph'] | None = None
 
     model_config = {'populate_by_name': True, 'populate_by_alias': True}
-
-    def to_label_studio_tag(self) -> LabelStudioTag:
-        return LabelStudioTag(
-            tag='HyperText',
-            attr=self.model_dump(by_alias=True),
-        )
