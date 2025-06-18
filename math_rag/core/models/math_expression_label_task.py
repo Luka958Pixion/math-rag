@@ -6,7 +6,7 @@ from pydantic import Field
 from math_rag.core.base import BaseLabelTask
 
 
-class MathExpressionLabelTask(BaseLabelTask):
+class MathExpressionLabelTask(BaseLabelTask, frozen=True):
     id: UUID = Field(default_factory=uuid4)
     math_expression_id: UUID
     math_expression_dataset_id: UUID

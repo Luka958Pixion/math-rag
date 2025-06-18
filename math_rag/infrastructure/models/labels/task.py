@@ -27,5 +27,5 @@ class Task(BaseModel, Generic[T]):
     unresolved_comment_count: int
     last_comment_updated_at: datetime | None
     project: int
-    updated_by: int
+    updated_by: int | None
     comment_authors: list[int]

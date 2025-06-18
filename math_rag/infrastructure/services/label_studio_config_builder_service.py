@@ -47,8 +47,7 @@ class LabelStudioConfigBuilderService(BaseLabelConfigBuilderService):
             tag_type = TAG_NAME_TO_TYPE[tag_name]
 
             if tag_type is ChoicesTag:
-                other_field_names = [name for name in field_names if name != field_name]
-                to_name = ','.join(other_field_names)
+                to_name = next(name for name in field_names if name != field_name)
                 choices_tag = ChoicesTag(name=field_name, to_name=to_name, choice='single')
                 choices_tag_attrs = choices_tag.model_dump(by_alias=True)
                 choices_tag_attrs_serial = _serialize_attrs(choices_tag_attrs)

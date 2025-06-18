@@ -7,7 +7,7 @@ from math_rag.core.base import BaseLabel
 from math_rag.core.enums import MathExpressionLabelEnum
 
 
-class MathExpressionLabel(BaseLabel, frozen=True):
+class MathExpressionLabel(BaseLabel):
     id: UUID = Field(default_factory=uuid4)
     math_expression_id: UUID
     math_expression_dataset_id: UUID | None

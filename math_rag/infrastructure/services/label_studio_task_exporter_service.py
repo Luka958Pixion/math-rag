@@ -53,7 +53,7 @@ class LabelStudioTaskExporterService(BaseLabelTaskExporterService):
             ]
 
             if not label_values:
-                raise ValueError()
+                raise ValueError(f'Task {task.id} is missing annotations')
 
             # majority voting
             label_value = max(set(label_values), key=label_values.count)
