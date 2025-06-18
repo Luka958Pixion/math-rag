@@ -1,9 +1,10 @@
+from label_studio_sdk.label_interface.base import LabelStudioTag
 from pydantic import Field
 
 from math_rag.infrastructure.base import BaseTag
 
 
-class Choice(BaseTag):
+class ChoiceTag(BaseTag):
     """
     Label Studio <Choice> tag parameters
 
@@ -21,3 +22,9 @@ class Choice(BaseTag):
     color: str | None = None
 
     model_config = {'populate_by_name': True, 'populate_by_alias': True}
+
+    def to_label_studio_tag(self) -> LabelStudioTag:
+        return LabelStudioTag(
+            tag='Choice',
+            attr=self.model_dump(by_alias=True),
+        )

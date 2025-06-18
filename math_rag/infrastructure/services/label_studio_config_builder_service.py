@@ -1,34 +1,72 @@
 from label_studio_sdk.label_interface import LabelInterface
 
 from math_rag.application.base.services import BaseLabelConfigBuilderService
-from math_rag.infrastructure.models.labels.tags import Choice, Choices, HyperText, Text
+from math_rag.infrastructure.models.labels.tags import ChoicesTag, ChoiceTag, HyperTextTag, TextTag
 
 
-TAG_NAME_TO_TYPE = {
-    'choices': Choices,
-    'hyper_text': HyperText,
-    'text': Text,
+TAG_NAME_TO_TYPE: dict[str, type] = {
+    'choices': ChoicesTag,
+    'hyper_text': HyperTextTag,
+    'text': TextTag,
 }
+
+
+def _serialize_attrs(attrs: dict) -> dict[str, str]:
+    """
+    Convert attribute values to strings for XML serialization.
+    Booleans become lowercase 'true' or 'false', others are str().
+    None values are dropped.
+    """
+    serialized: dict[str, str] = {}
+    for k, v in attrs.items():
+        if v is None:
+            continue
+        if isinstance(v, bool):
+            serialized[k] = 'true' if v else 'false'
+        else:
+            serialized[k] = str(v)
+    return serialized
 
 
 class LabelStudioConfigBuilderService(BaseLabelConfigBuilderService):
     def build(self, field_name_to_tag_name: dict[str, str], label_names: list[str]) -> str:
-        tags = {}
+        tags: dict[str, tuple] = {}
+        field_names = list(field_name_to_tag_name.keys())
 
         for field_name, tag_name in field_name_to_tag_name.items():
             tag_type = TAG_NAME_TO_TYPE[tag_name]
 
-            if type(tag_type) is Choices:
-                choices = [Choice(value=label_name) for label_name in label_names]
-                tags[field_name] = Choices(name=field_name, choice='single', choices=choices)
+            if tag_type is ChoicesTag:
+                other_field_names = [name for name in field_names if name != field_name]
+                choices_tag = ChoicesTag(
+                    name=field_name, to_name=','.join(other_field_names), choice='single'
+                )
+                choices_tag_attrs = choices_tag.model_dump(by_alias=True)
+                choices_tag_attrs_serial = _serialize_attrs(choices_tag_attrs)
 
-            elif type(tag_type) is HyperText:
-                tags[field_name] = HyperText(name=field_name, selection_enabled=False)
+                choice_tuples = []
 
-            elif type(tag_type) is Text:
-                tags[field_name] = Text(name=field_name, selection_enabled=False)
+                for name in label_names:
+                    choice_tag = ChoiceTag(value=name)
+                    choice_tag_attrs = choice_tag.model_dump(by_alias=True)
+                    choice_tag_attrs_serial = _serialize_attrs(choice_tag_attrs)
+                    choice_tuples.append(('Choice', choice_tag_attrs_serial, ()))
+
+                tags[field_name] = ('Choices', choices_tag_attrs_serial, tuple(choice_tuples))
+
+            elif tag_type is HyperTextTag:
+                hyper_text_tag = HyperTextTag(name=field_name, selection_enabled=False)
+                hyper_text_tag_attrs = hyper_text_tag.model_dump(by_alias=True)
+                hyper_text_tag_attrs_serial = _serialize_attrs(hyper_text_tag_attrs)
+                tags[field_name] = ('HyperText', hyper_text_tag_attrs_serial, ())
+
+            elif tag_type is TextTag:
+                text_tag = TextTag(name=field_name, selection_enabled=False)
+                text_tag_attrs = text_tag.model_dump(by_alias=True)
+                text_tag_attrs_serial = _serialize_attrs(text_tag_attrs)
+                tags[field_name] = ('Text', text_tag_attrs_serial, ())
 
             else:
-                raise ValueError()
+                raise ValueError(f'Unknown tag type: {tag_name}')
 
         return LabelInterface.create(tags)

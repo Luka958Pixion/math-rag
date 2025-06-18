@@ -1,7 +1,7 @@
-from .choice import Choice
-from .choices import Choices
-from .hyper_text import HyperText
-from .text import Text
+from .choice_tag import ChoiceTag
+from .choices_tag import ChoicesTag
+from .hyper_text_tag import HyperTextTag
+from .text_tag import TextTag
 
 
-__all__ = ['Choice', 'Choices', 'HyperText', 'Text']
+__all__ = ['ChoiceTag', 'ChoicesTag', 'HyperTextTag', 'TextTag']

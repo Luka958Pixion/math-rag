@@ -63,9 +63,9 @@ class MathExpressionLabelTaskImporterService(BaseMathExpressionLabelTaskImporter
         ]
 
         field_name_to_tag_type = {
-            'label': 'choices',
             'html': 'hyper_text',
             'katex': 'text',
+            'label': 'choices',
         }
 
         label_config = self.label_config_builder_service.build(field_name_to_tag_type, label_names)
