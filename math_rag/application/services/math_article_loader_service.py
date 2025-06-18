@@ -45,21 +45,45 @@ class MathArticleLoaderService(BaseMathArticleLoaderService):
     async def _process_arxiv_category(
         self, dataset_id: UUID, category: ArxivCategoryType, category_limit: int
     ) -> int:
-        results = self.arxiv_client.search(category, category_limit)
-        process_tasks = [self._process_result(result) for result in results]
-        processed_files = await gather(*process_tasks)
+        files = await self._search(category, category_limit, max_num_retries=10)
         math_articles = [
             MathArticle(
                 math_expression_dataset_id=dataset_id, index_id=None, name=name, bytes=bytes
             )
-            for file in processed_files
-            if file
+            for file in files
             for name, bytes in file.items()
         ]
         await self.math_article_repository.insert_many(math_articles)
         logger.info(f'{self.__class__.__name__} loaded {len(math_articles)} math articles')
 
         return len(math_articles)
+
+    async def _search(
+        self, category: str, category_limit: int, *, max_num_retries: int
+    ) -> list[dict[str, bytes]]:
+        new_category_limit = category_limit
+        num_retries = 0
+
+        while num_retries < max_num_retries:
+            results = self.arxiv_client.search(category, new_category_limit)
+            process_tasks = [self._process_result(result) for result in results]
+            processed_files = await gather(*process_tasks)
+
+            # filter out None and count how many were None
+            files = [file for file in processed_files if file is not None]
+            num_files = len(files)
+            num_nones = category_limit - num_files
+
+            if num_files >= category_limit:
+                return files[:category_limit]
+
+            new_category_limit += num_nones
+            num_retries += 1
+
+        raise RuntimeError(
+            f'Could not retrieve {category_limit} processed files for '
+            f'category {category} after {max_num_retries} retries'
+        )
 
     async def _process_result(self, result: Result) -> dict[str, bytes] | None:
         arxiv_id = result.entry_id.split('/')[-1]
