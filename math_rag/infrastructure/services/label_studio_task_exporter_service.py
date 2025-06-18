@@ -4,10 +4,11 @@ from io import BytesIO
 from label_studio_sdk.client import AsyncLabelStudio
 from pydantic import TypeAdapter
 
+from math_rag.application.base.services import BaseLabelTaskExporterService
 from math_rag.infrastructure.models.labels import Task
 
 
-class LabelStudioTaskExporterService:
+class LabelStudioTaskExporterService(BaseLabelTaskExporterService):
     def __init__(self, async_label_studio: AsyncLabelStudio):
         self.async_label_studio = async_label_studio
 

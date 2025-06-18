@@ -11,9 +11,8 @@ LabelType = TypeVar('LabelType', bound=Enum)
 
 
 class LabelConfigBuilderUtil:
-    def build(
-        self, field_name_to_tag_type: dict[str, type[TagType]], label_names: list[str]
-    ) -> str:
+    @staticmethod
+    def build(field_name_to_tag_type: dict[str, type[TagType]], label_names: list[str]) -> str:
         tags = {}
 
         for field_name, tag_type in field_name_to_tag_type.items():

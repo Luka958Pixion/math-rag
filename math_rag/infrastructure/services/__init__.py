@@ -6,6 +6,7 @@ from .label_studio_task_importer_service import LabelStudioTaskImporterService
 from .latex_node_walker_service import LatexNodeWalkerService
 from .latex_parser_service import LatexParserService
 from .math_article_parser_service import MathArticleParserService
+from .math_expression_sample_task_importer_service import MathExpressionSampleTaskImporterService
 from .pbs_pro_resource_list_loader_service import PBSProResourceListLoaderService
 from .prometheus_snapshot_loader_service import PrometheusSnapshotLoaderService
 
@@ -19,6 +20,7 @@ __all__ = [
     'LatexParserService',
     'LatexNodeWalkerService',
     'MathArticleParserService',
+    'MathExpressionSampleTaskImporterService',
     'PBSProResourceListLoaderService',
     'PrometheusSnapshotLoaderService',
 ]

@@ -1,0 +1,14 @@
+from abc import ABC, abstractmethod
+
+from math_rag.core.types import LabelTaskType
+
+
+class BaseLabelTaskImporterService(ABC):
+    @abstractmethod
+    async def import_tasks(
+        self,
+        project_name: str,
+        label_config: str,
+        tasks: list[LabelTaskType],
+    ) -> int:
+        pass
