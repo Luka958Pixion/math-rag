@@ -7,6 +7,8 @@ class BaseLabelTaskImporterService(ABC):
     @abstractmethod
     async def import_tasks(
         self,
+        project_id: int | None,
+        *,
         project_name: str,
         label_config: str,
         tasks: list[LabelTaskType],

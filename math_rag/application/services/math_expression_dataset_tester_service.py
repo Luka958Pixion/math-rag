@@ -57,7 +57,7 @@ class MathExpressionDatasetTesterService(BaseMathExpressionDatasetTesterService)
 
         # test
         samples = split_name_to_samples[SPLIT_NAME]
-        inputs = [MathExpressionLabelerAssistantInput(latex=sample.latex) for sample in samples]
+        inputs = [MathExpressionLabelerAssistantInput(latex=sample.katex) for sample in samples]
         outputs = await self.math_expression_labeler_assistant.batch_assist(
             inputs, use_scheduler=True
         )

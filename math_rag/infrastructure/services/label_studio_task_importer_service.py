@@ -15,39 +15,33 @@ class LabelStudioTaskImporterService(BaseLabelTaskImporterService):
     def __init__(self, async_label_studio: AsyncLabelStudio):
         self.async_label_studio = async_label_studio
 
-    async def _create_or_update_project(self, title: str, label_config: str) -> Project:
-        async_pager = await self.async_label_studio.projects.list()
-        project = None
+    async def _create_project(self, title: str, label_config: str) -> Project:
+        response = await self.async_label_studio.projects.create(
+            title=title, label_config=label_config
+        )
+        logger.info(f'Project {response.title} created')
 
-        async for item in async_pager:
-            item = cast(Project, item)
+        return await self.async_label_studio.projects.get(response.id)
 
-            if item.title == title:
-                project = item
+    async def _update_project(self, project_id: int, label_config: str) -> Project:
+        response = await self.async_label_studio.projects.update(
+            project_id, label_config=label_config
+        )
+        logger.info(f'Existing project {response.title} updated')
 
-        if not project:
-            create_response = await self.async_label_studio.projects.create(
-                title=title, label_config=label_config
-            )
-            project = await self.async_label_studio.projects.get(create_response.id)
-            logger.info(f'Project {create_response.title} created')
-
-        else:
-            update_response = await self.async_label_studio.projects.update(
-                project.id, label_config=label_config
-            )
-            logger.info(f'Existing project {update_response.title} updated')
-
-        return project
+        return await self.async_label_studio.projects.get(response.id)
 
     async def import_tasks(
         self,
+        project_id: int | None,
+        *,
         project_name: str,
         label_config: str,
         tasks: list[LabelTaskType],
     ) -> int:
         request = [task.model_dump() for task in tasks]
-        project = await self._create_or_update_project(project_name, label_config)
+        project_callback = self._create_project if project_id is None else self._update_project
+        project = await project_callback(project_name, label_config)
         response = await self.async_label_studio.projects.import_tasks(project.id, request=request)
         logger.info(f'Imported {response.task_count} tasks into {project.title}')
 

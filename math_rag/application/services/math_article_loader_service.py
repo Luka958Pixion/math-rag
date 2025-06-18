@@ -16,7 +16,7 @@ logger = getLogger(__name__)
 BATCH_SIZE = 5
 
 
-class MathArticleDatasetLoaderService(BaseMathArticleLoaderService):
+class MathArticleLoaderService(BaseMathArticleLoaderService):
     def __init__(
         self,
         arxiv_client: BaseArxivClient,

@@ -1,21 +1,24 @@
-from enum import Enum
-from typing import TypeVar
-
 from label_studio_sdk.label_interface import LabelInterface
 
+from math_rag.application.base.services import BaseLabelConfigBuilderService
 from math_rag.infrastructure.models.labels.tags import Choice, Choices, HyperText, Text
-from math_rag.infrastructure.types.labels.tags import TagType
 
 
-LabelType = TypeVar('LabelType', bound=Enum)
+TAG_NAME_TO_TYPE = {
+    'choices': Choices,
+    'hyper_text': HyperText,
+    'text': Text,
+}
 
 
-class LabelConfigBuilderUtil:
+class LabelStudioConfigBuilderUtil(BaseLabelConfigBuilderService):
     @staticmethod
-    def build(field_name_to_tag_type: dict[str, type[TagType]], label_names: list[str]) -> str:
+    def build(field_name_to_tag_name: dict[str, str], label_names: list[str]) -> str:
         tags = {}
 
-        for field_name, tag_type in field_name_to_tag_type.items():
+        for field_name, tag_name in field_name_to_tag_name.items():
+            tag_type = TAG_NAME_TO_TYPE[tag_name]
+
             if type(tag_type) is Choices:
                 choices = [Choice(value=label_name) for label_name in label_names]
                 tags[field_name] = Choices(name=field_name, choice='single', choices=choices)

@@ -43,7 +43,7 @@ from math_rag.application.services import (
     EMSettingsLoaderService,
     IndexBuilderService,
     LLMSettingsLoaderService,
-    MathArticleDatasetLoaderService,
+    MathArticleLoaderService,
     MathExpressionDatasetBuilderService,
     MathExpressionDatasetPublisherService,
     MathExpressionDatasetTesterService,
@@ -101,7 +101,7 @@ class ApplicationContainer(DeclarativeContainer):
     em_settings_loader_service = Factory(EMSettingsLoaderService)
     llm_settings_loader_service = Factory(LLMSettingsLoaderService)
     math_article_loader_service = Factory(
-        MathArticleDatasetLoaderService,
+        MathArticleLoaderService,
         arxiv_client=arxiv_client,
         math_article_repository=math_article_repository,
     )

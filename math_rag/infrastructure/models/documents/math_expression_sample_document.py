@@ -6,7 +6,8 @@ from math_rag.infrastructure.base import BaseDocument
 
 class MathExpressionSampleDocument(BaseDocument):
     id: UUID
+    math_expression_id: UUID
     math_expression_dataset_id: UUID
     timestamp: datetime
-    latex: str
+    katex: str
     label: str

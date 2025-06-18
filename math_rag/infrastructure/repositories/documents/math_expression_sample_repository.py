@@ -34,7 +34,12 @@ class MathExpressionSampleRepository(
     async def _aggregate(
         self, math_expression_dataset_id: UUID
     ) -> AsyncGenerator[MathExpressionSampleProjection, None]:
-        match_stage = {'$match': {'math_expression_dataset_id': math_expression_dataset_id}}
+        match_stage = {
+            '$match': {
+                'math_expression_dataset_id': math_expression_dataset_id,
+                'katex': {'$ne': None},
+            }
+        }
         lookup_stage = {
             '$lookup': {
                 'from': self.math_expression_label_collection_name,
@@ -44,7 +49,14 @@ class MathExpressionSampleRepository(
             }
         }
         unwind_stage = {'$unwind': {'path': '$label_doc', 'preserveNullAndEmptyArrays': False}}
-        project_stage = {'$project': {'_id': 0, 'latex': 1, 'label': '$label_doc.value'}}
+        project_stage = {
+            '$project': {
+                '_id': 0,
+                'katex': 1,
+                'math_expression_id': '$_id',
+                'label': '$label_doc.value',
+            }
+        }
         pipeline = [match_stage, lookup_stage, unwind_stage, project_stage]
 
         cursor = await self.math_expression_collection.aggregate(pipeline)
@@ -60,9 +72,10 @@ class MathExpressionSampleRepository(
         async for projection in self._aggregate(math_expression_dataset_id):
             doc = MathExpressionSampleDocument(
                 id=uuid4(),
+                math_expression_id=projection.math_expression_id,
                 math_expression_dataset_id=math_expression_dataset_id,
                 timestamp=datetime.now(),
-                latex=projection.latex,
+                katex=projection.katex,
                 label=projection.label,
             )
             bson_doc = doc.model_dump()

@@ -9,9 +9,10 @@ class MathExpressionSampleMapping(BaseMapping[MathExpressionSample, MathExpressi
     def to_source(target: MathExpressionSampleDocument) -> MathExpressionSample:
         return MathExpressionSample(
             id=target.id,
+            math_expression_id=target.math_expression_id,
             math_expression_dataset_id=target.math_expression_dataset_id,
             timestamp=target.timestamp,
-            latex=target.latex,
+            katex=target.katex,
             label=MathExpressionLabelEnum(target.label),
         )
 
@@ -19,8 +20,9 @@ class MathExpressionSampleMapping(BaseMapping[MathExpressionSample, MathExpressi
     def to_target(source: MathExpressionSample) -> MathExpressionSampleDocument:
         return MathExpressionSampleDocument(
             id=source.id,
+            math_expression_id=source.math_expression_id,
             math_expression_dataset_id=source.math_expression_dataset_id,
             timestamp=source.timestamp,
-            latex=source.latex,
+            katex=source.katex,
             label=source.label.value,
         )
