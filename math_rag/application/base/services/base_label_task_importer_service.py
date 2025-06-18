@@ -11,6 +11,7 @@ class BaseLabelTaskImporterService(ABC):
         *,
         project_name: str,
         label_config: str,
+        label_instruction: str | None,
         tasks: list[LabelTaskType],
     ) -> int:
         pass

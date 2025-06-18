@@ -1,7 +1,8 @@
 from re import match
 
 
-class ExpertInstructionBuilderUtil:
+class LabelInstructionBuilderUtil:
+    @staticmethod
     def build(text: str) -> str:
         """
         Convert any multiline string into HTML by:

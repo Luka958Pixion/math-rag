@@ -18,13 +18,16 @@ def _serialize_attrs(attrs: dict) -> dict[str, str]:
     None values are dropped.
     """
     serialized: dict[str, str] = {}
-    for k, v in attrs.items():
-        if v is None:
+
+    for key, value in attrs.items():
+        if value is None:
             continue
-        if isinstance(v, bool):
-            serialized[k] = 'true' if v else 'false'
+
+        if isinstance(value, bool):
+            serialized[key] = 'true' if value else 'false'
         else:
-            serialized[k] = str(v)
+            serialized[key] = str(value)
+
     return serialized
 
 
@@ -41,32 +44,36 @@ class LabelStudioConfigBuilderService(BaseLabelConfigBuilderService):
                 choices_tag = ChoicesTag(
                     name=field_name, to_name=','.join(other_field_names), choice='single'
                 )
-                choices_tag_attrs = choices_tag.model_dump(by_alias=True)
-                choices_tag_attrs_serial = _serialize_attrs(choices_tag_attrs)
+                choices_tag_attrs_serial = _serialize_attrs(choices_tag.model_dump(by_alias=True))
 
                 choice_tuples = []
-
                 for name in label_names:
                     choice_tag = ChoiceTag(value=name)
-                    choice_tag_attrs = choice_tag.model_dump(by_alias=True)
-                    choice_tag_attrs_serial = _serialize_attrs(choice_tag_attrs)
+                    choice_tag_attrs_serial = _serialize_attrs(choice_tag.model_dump(by_alias=True))
                     choice_tuples.append(('Choice', choice_tag_attrs_serial, ()))
 
                 tags[field_name] = ('Choices', choices_tag_attrs_serial, tuple(choice_tuples))
 
             elif tag_type is HyperTextTag:
                 hyper_text_tag = HyperTextTag(name=field_name, selection_enabled=False)
-                hyper_text_tag_attrs = hyper_text_tag.model_dump(by_alias=True)
-                hyper_text_tag_attrs_serial = _serialize_attrs(hyper_text_tag_attrs)
+                hyper_text_tag_attrs_serial = _serialize_attrs(
+                    hyper_text_tag.model_dump(by_alias=True)
+                )
                 tags[field_name] = ('HyperText', hyper_text_tag_attrs_serial, ())
 
             elif tag_type is TextTag:
                 text_tag = TextTag(name=field_name, selection_enabled=False)
-                text_tag_attrs = text_tag.model_dump(by_alias=True)
-                text_tag_attrs_serial = _serialize_attrs(text_tag_attrs)
+                text_tag_attrs_serial = _serialize_attrs(text_tag.model_dump(by_alias=True))
                 tags[field_name] = ('Text', text_tag_attrs_serial, ())
 
             else:
                 raise ValueError(f'Unknown tag type: {tag_name}')
 
-        return LabelInterface.create(tags)
+        # insert headers before each element
+        tags_updated: dict[str, tuple] = {}
+
+        for field_name in field_names:
+            tags_updated[f'header_{field_name}'] = ('Header', {'value': field_name.title()}, ())
+            tags_updated[field_name] = tags[field_name]
+
+        return LabelInterface.create(tags_updated)
