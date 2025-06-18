@@ -10,10 +10,10 @@ from math_rag.infrastructure.types.labels.tags import TagType
 LabelType = TypeVar('LabelType', bound=Enum)
 
 
-class LabelInterfaceBuilderUtil:
+class LabelConfigBuilderUtil:
     def build(
         self, field_name_to_tag_type: dict[str, type[TagType]], label_names: list[str]
-    ) -> int:
+    ) -> str:
         tags = {}
 
         for field_name, tag_type in field_name_to_tag_type.items():

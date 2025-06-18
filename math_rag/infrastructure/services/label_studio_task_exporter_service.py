@@ -7,11 +7,11 @@ from pydantic import TypeAdapter
 from math_rag.infrastructure.models.labels import Task
 
 
-class LabelStudioLoaderService:
+class LabelStudioTaskExporterService:
     def __init__(self, async_label_studio: AsyncLabelStudio):
         self.async_label_studio = async_label_studio
 
-    async def load(self, project_id: int) -> list[Task]:
+    async def export_tasks(self, project_id: int) -> list[Task]:
         export_snapshot = await self.async_label_studio.projects.exports.create(project_id)
         export = await self.async_label_studio.projects.exports.get(project_id, export_snapshot.id)
 

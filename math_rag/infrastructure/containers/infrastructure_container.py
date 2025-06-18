@@ -93,6 +93,8 @@ from math_rag.infrastructure.services import (
     DatasetLoaderService,
     DatasetPublisherService,
     FineTuneSettingsLoaderService,
+    LabelStudioTaskExporterService,
+    LabelStudioTaskImporterService,
     LatexNodeWalkerService,
     LatexParserService,
     MathArticleParserService,
@@ -399,7 +401,6 @@ class InfrastructureContainer(DeclarativeContainer):
         hugging_face_username=config.hugging_face.username,
         hugging_face_token=config.hugging_face.token,
     )
-
     dataset_publisher_service = Factory(
         DatasetPublisherService,
         hugging_face_api=hugging_face_api,
@@ -413,6 +414,13 @@ class InfrastructureContainer(DeclarativeContainer):
 
     async_label_studio = Singleton(
         AsyncLabelStudio, base_url=config.label_studio.base_url, api_key=config.label_studio.api_key
+    )
+
+    label_studio_task_exporter_service = Factory(
+        LabelStudioTaskExporterService, async_label_studio=async_label_studio
+    )
+    label_studio_task_importer_service = Factory(
+        LabelStudioTaskImporterService, async_label_studio=async_label_studio
     )
 
     # routers

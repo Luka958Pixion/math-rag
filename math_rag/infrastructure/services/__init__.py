@@ -1,8 +1,8 @@
 from .dataset_loader_service import DatasetLoaderService
 from .dataset_publisher_service import DatasetPublisherService
 from .fine_tune_settings_loader_service import FineTuneSettingsLoaderService
-from .label_studio_loader_service import LabelStudioLoaderService
-from .label_studio_publisher_service import LabelStudioPublisherService
+from .label_studio_task_exporter_service import LabelStudioTaskExporterService
+from .label_studio_task_importer_service import LabelStudioTaskImporterService
 from .latex_node_walker_service import LatexNodeWalkerService
 from .latex_parser_service import LatexParserService
 from .math_article_parser_service import MathArticleParserService
@@ -14,8 +14,8 @@ __all__ = [
     'DatasetLoaderService',
     'DatasetPublisherService',
     'FineTuneSettingsLoaderService',
-    'LabelStudioLoaderService',
-    'LabelStudioPublisherService',
+    'LabelStudioTaskExporterService',
+    'LabelStudioTaskImporterService',
     'LatexParserService',
     'LatexNodeWalkerService',
     'MathArticleParserService',

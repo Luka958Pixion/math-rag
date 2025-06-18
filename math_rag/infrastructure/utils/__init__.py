@@ -11,7 +11,7 @@ from .file_stream_writer_util import FileStreamWriterUtil
 from .file_streamer_util import FileStreamerUtil
 from .file_writer_util import FileWriterUtil
 from .format_parser_util import FormatParserUtil
-from .label_interface_builder_util import LabelInterfaceBuilderUtil
+from .label_config_builder_util import LabelConfigBuilderUtil
 from .llm_token_counter_util import LLMTokenCounterUtil
 from .tar_file_extractor_util import TarFileExtractorUtil
 from .uuid_encoder_util import UUIDEncoderUtil
@@ -29,7 +29,7 @@ __all__ = [
     'FileWriterUtil',
     'TarFileExtractorUtil',
     'UUIDEncoderUtil',
-    'LabelInterfaceBuilderUtil',
+    'LabelConfigBuilderUtil',
     'LLMTokenCounterUtil',
     'FormatParserUtil',
     'FileStreamReaderUtil',
