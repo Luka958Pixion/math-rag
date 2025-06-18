@@ -1,7 +1,7 @@
 from uuid import UUID
 
 from math_rag.application.base.inference import BaseBatchEMRequestManagedScheduler, BaseManagedEM
-from math_rag.application.enums.inference import EMInferenceProvider, EMProvider
+from math_rag.application.enums.inference import EMInferenceProvider, EMModelProvider
 from math_rag.application.models.embedants import EmbedantInput, EmbedantOutput
 from math_rag.application.models.inference import (
     EMParams,
@@ -25,7 +25,7 @@ class MathExpressionDescriptionEmbedant(PartialEmbedant[EmbedantInput, EmbedantO
                 model='text-embedding-3-small',
                 dimensions=1536,
                 inference_provider=EMInferenceProvider.OPEN_AI,
-                model_provider=EMProvider.OPEN_AI,
+                model_provider=EMModelProvider.OPEN_AI,
             ),
         )
         self._request_id_to_input_id[request.id] = input.id

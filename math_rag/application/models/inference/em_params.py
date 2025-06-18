@@ -2,7 +2,7 @@ from uuid import UUID, uuid4
 
 from pydantic import BaseModel, Field
 
-from math_rag.application.enums.inference import EMInferenceProvider, EMProvider
+from math_rag.application.enums.inference import EMInferenceProvider, EMModelProvider
 
 
 class EMParams(BaseModel):
@@ -12,4 +12,4 @@ class EMParams(BaseModel):
 
     # NOTE: additional parameters that are not used during inference
     inference_provider: EMInferenceProvider
-    model_provider: EMProvider
+    model_provider: EMModelProvider

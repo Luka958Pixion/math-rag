@@ -1,6 +1,10 @@
 from abc import ABC, abstractmethod
 
-from math_rag.application.models import KatexRenderResult, KatexRenderSvgResult, KatexValidateResult
+from math_rag.application.models.clients import (
+    KatexRenderResult,
+    KatexRenderSvgResult,
+    KatexValidateResult,
+)
 
 
 class BaseKatexClient(ABC):

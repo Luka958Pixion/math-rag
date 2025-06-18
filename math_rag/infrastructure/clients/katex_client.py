@@ -5,7 +5,11 @@ from backoff import expo, full_jitter, on_exception
 from httpx import AsyncClient, HTTPError, ReadTimeout, Timeout
 
 from math_rag.application.base.clients import BaseKatexClient
-from math_rag.application.models import KatexRenderResult, KatexRenderSvgResult, KatexValidateResult
+from math_rag.application.models.clients import (
+    KatexRenderResult,
+    KatexRenderSvgResult,
+    KatexValidateResult,
+)
 
 
 logger = getLogger(__name__)

@@ -2,7 +2,7 @@ from math_rag.application.base.inference import (
     BaseBatchLLMRequestManagedScheduler,
     BaseManagedLLM,
 )
-from math_rag.application.enums.inference import LLMInferenceProvider, LLMProvider
+from math_rag.application.enums.inference import LLMInferenceProvider, LLMModelProvider
 from math_rag.application.models.assistants import (
     KatexCorrectorAssistantInput,
     KatexCorrectorAssistantOutput,
@@ -32,7 +32,7 @@ class KatexCorrectorAssistant(
         self.store = True
         self.max_completion_tokens = 1024
         self.inference_provider = LLMInferenceProvider.OPEN_AI
-        self.model_provider = LLMProvider.OPEN_AI
+        self.model_provider = LLMModelProvider.OPEN_AI
 
     def encode_to_request(
         self, input: KatexCorrectorAssistantInput

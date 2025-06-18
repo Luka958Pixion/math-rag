@@ -1,4 +1,4 @@
-from math_rag.application.enums.inference import EMInferenceProvider, EMProvider
+from math_rag.application.enums.inference import EMInferenceProvider, EMModelProvider
 from math_rag.application.models.inference import EMParams
 from math_rag.infrastructure.base import BaseMapping
 from math_rag.infrastructure.models.documents import EMParamsDocument
@@ -12,7 +12,7 @@ class EMParamsMapping(BaseMapping[EMParams, EMParamsDocument]):
             model=target.model,
             dimensions=target.dimensions,
             inference_provider=EMInferenceProvider(target.inference_provider),
-            model_provider=EMProvider(target.model_provider),
+            model_provider=EMModelProvider(target.model_provider),
         )
 
     @staticmethod

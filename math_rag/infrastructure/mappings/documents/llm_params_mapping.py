@@ -1,6 +1,6 @@
 from typing import Generic
 
-from math_rag.application.enums.inference import LLMInferenceProvider, LLMProvider
+from math_rag.application.enums.inference import LLMInferenceProvider, LLMModelProvider
 from math_rag.application.models.inference import LLMParams
 from math_rag.application.types.inference import LLMResponseType
 from math_rag.infrastructure.base import BaseMapping
@@ -27,7 +27,7 @@ class LLMParamsMapping(
             store=target.store,
             n=target.n,
             inference_provider=LLMInferenceProvider(target.inference_provider),
-            model_provider=LLMProvider(target.model_provider),
+            model_provider=LLMModelProvider(target.model_provider),
         )
 
     @staticmethod

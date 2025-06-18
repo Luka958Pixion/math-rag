@@ -10,10 +10,10 @@ from math_rag.application.base.services import (
     BaseMathArticleParserService,
     BaseMathExpressionLoaderService,
 )
-from math_rag.application.models import KatexValidateResult
 from math_rag.application.models.assistants import (
     KatexCorrectorAssistantInput,
 )
+from math_rag.application.models.clients import KatexValidateResult
 from math_rag.core.enums import MathExpressionDatasetBuildPriority
 from math_rag.core.models import Index, LatexMathNode, MathExpression, MathExpressionDataset
 
