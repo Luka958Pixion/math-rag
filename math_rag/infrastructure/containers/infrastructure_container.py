@@ -93,6 +93,7 @@ from math_rag.infrastructure.services import (
     DatasetLoaderService,
     DatasetPublisherService,
     FineTuneSettingsLoaderService,
+    LabelStudioConfigBuilderService,
     LabelStudioTaskExporterService,
     LabelStudioTaskImporterService,
     LatexNodeWalkerService,
@@ -416,6 +417,7 @@ class InfrastructureContainer(DeclarativeContainer):
         AsyncLabelStudio, base_url=config.label_studio.base_url, api_key=config.label_studio.api_key
     )
 
+    label_studio_config_builder_service = Factory(LabelStudioConfigBuilderService)
     label_studio_task_exporter_service = Factory(
         LabelStudioTaskExporterService, async_label_studio=async_label_studio
     )
@@ -457,6 +459,9 @@ class InfrastructureContainer(DeclarativeContainer):
         dataset_loader_service=dataset_loader_service,
         dataset_publisher_service=dataset_publisher_service,
         math_article_parser_service=math_article_parser_service,
+        label_config_builder_service=label_studio_config_builder_service,
+        label_task_exporter_service=label_studio_task_exporter_service,
+        label_task_importer_service=label_studio_task_importer_service,
         fine_tune_job_repository=fine_tune_job_repository,
         index_repository=index_repository,
         math_expression_dataset_repository=math_expression_dataset_repository,

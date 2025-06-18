@@ -5,6 +5,7 @@ from .math_article_loader_service import MathArticleLoaderService
 from .math_expression_dataset_builder_service import MathExpressionDatasetBuilderService
 from .math_expression_dataset_publisher_service import MathExpressionDatasetPublisherService
 from .math_expression_dataset_tester_service import MathExpressionDatasetTesterService
+from .math_expression_label_exporter_service import MathExpressionLabelExporterService
 from .math_expression_label_loader_service import MathExpressionLabelLoaderService
 from .math_expression_label_task_importer_service import MathExpressionLabelTaskImporterService
 from .math_expression_loader_service import MathExpressionLoaderService
@@ -19,6 +20,7 @@ __all__ = [
     'MathArticleLoaderService',
     'MathExpressionDatasetPublisherService',
     'MathExpressionDatasetTesterService',
+    'MathExpressionLabelExporterService',
     'MathExpressionLabelLoaderService',
     'MathExpressionLabelTaskImporterService',
     'MathExpressionLoaderService',

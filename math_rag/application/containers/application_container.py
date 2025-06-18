@@ -35,6 +35,9 @@ from math_rag.application.base.repositories.objects import BaseMathArticleReposi
 from math_rag.application.base.services import (
     BaseDatasetLoaderService,
     BaseDatasetPublisherService,
+    BaseLabelConfigBuilderService,
+    BaseLabelTaskExporterService,
+    BaseLabelTaskImporterService,
     BaseMathArticleParserService,
 )
 from math_rag.application.contexts import DatasetBuildContext, IndexBuildContext
@@ -47,7 +50,9 @@ from math_rag.application.services import (
     MathExpressionDatasetBuilderService,
     MathExpressionDatasetPublisherService,
     MathExpressionDatasetTesterService,
+    MathExpressionLabelExporterService,
     MathExpressionLabelLoaderService,
+    MathExpressionLabelTaskImporterService,
     MathExpressionLoaderService,
     MathExpressionSampleLoaderService,
 )
@@ -83,6 +88,9 @@ class ApplicationContainer(DeclarativeContainer):
     dataset_loader_service: Provider[BaseDatasetLoaderService] = Dependency()
     dataset_publisher_service: Provider[BaseDatasetPublisherService] = Dependency()
     math_article_parser_service: Provider[BaseMathArticleParserService] = Dependency()
+    label_config_builder_service: Provider[BaseLabelConfigBuilderService] = Dependency()
+    label_task_exporter_service: Provider[BaseLabelTaskExporterService] = Dependency()
+    label_task_importer_service: Provider[BaseLabelTaskImporterService] = Dependency()
 
     # non-dependencies
     katex_corrector_assistant = Factory(
@@ -164,4 +172,15 @@ class ApplicationContainer(DeclarativeContainer):
         index_repository=index_repository,
         index_builder_service=index_builder_service,
         index_build_context=index_build_context,
+    )
+
+    math_expression_label_exporter_service = Factory(
+        MathExpressionLabelExporterService, label_exporter_service=label_task_exporter_service
+    )
+    math_expression_label_task_importer_service = Factory(
+        MathExpressionLabelTaskImporterService,
+        dataset_loader_service=dataset_loader_service,
+        katex_client=katex_client,
+        label_config_builder_service=label_config_builder_service,
+        label_task_importer_service=label_task_importer_service,
     )

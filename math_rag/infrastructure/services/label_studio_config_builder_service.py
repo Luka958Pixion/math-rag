@@ -11,9 +11,8 @@ TAG_NAME_TO_TYPE = {
 }
 
 
-class LabelStudioConfigBuilderUtil(BaseLabelConfigBuilderService):
-    @staticmethod
-    def build(field_name_to_tag_name: dict[str, str], label_names: list[str]) -> str:
+class LabelStudioConfigBuilderService(BaseLabelConfigBuilderService):
+    def build(self, field_name_to_tag_name: dict[str, str], label_names: list[str]) -> str:
         tags = {}
 
         for field_name, tag_name in field_name_to_tag_name.items():
