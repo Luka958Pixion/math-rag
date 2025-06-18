@@ -50,7 +50,7 @@ class MathExpressionLabelTaskImporterService(BaseMathExpressionLabelTaskImporter
 
         samples = split_name_to_samples[split_name]
         katexes = [sample.katex.strip('$') for sample in samples]
-        katex_render_results = await self.katex_client.batch_render_many(katexes, batch_size=50)
+        katex_render_results = await self.katex_client.batch_render_svg_many(katexes, batch_size=50)
 
         for katex_render_result in katex_render_results:
             if katex_render_result.error:
@@ -62,12 +62,12 @@ class MathExpressionLabelTaskImporterService(BaseMathExpressionLabelTaskImporter
                 math_expression_dataset_id=sample.math_expression_dataset_id,
                 timestamp=sample.timestamp,
                 katex=sample.katex,
-                html=katex_render_result.html,
+                html=katex_render_result.svg,
             )
             for sample, katex_render_result in zip(samples, katex_render_results)
         ]
         field_name_to_tag_type = {
-            'html': 'hyper_text',
+            'html': 'image',
             'katex': 'text',
             'label': 'choices',
         }

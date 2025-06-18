@@ -13,6 +13,7 @@ from math_rag.infrastructure.models.labels.tags import (
 TAG_NAME_TO_TYPE: dict[str, type] = {
     'choices': ChoicesTag,
     'hyper_text': HyperTextTag,
+    'image': ImageTag,
     'text': TextTag,
 }
 
@@ -63,12 +64,16 @@ class LabelStudioConfigBuilderService(BaseLabelConfigBuilderService):
                 tags[field_name] = ('Choices', choices_tag_attrs_serial, tuple(choice_tuples))
 
             elif tag_type is HyperTextTag:
-                hyper_text_tag = HyperTextTag(
-                    name=field_name, selection_enabled=False, inline=False
-                )
+                hyper_text_tag = HyperTextTag(name=field_name, selection_enabled=False)
                 hyper_text_tag_attrs = hyper_text_tag.model_dump(by_alias=True)
                 hyper_text_tag_attrs_serial = _serialize_attrs(hyper_text_tag_attrs)
                 tags[field_name] = ('HyperText', hyper_text_tag_attrs_serial, ())
+
+            elif tag_type is ImageTag:
+                image_tag = ImageTag(name=field_name, value=str(), max_width='1512px')
+                image_tag_attrs = image_tag.model_dump(by_alias=True)
+                image_tag_attrs_serial = _serialize_attrs(image_tag_attrs)
+                tags[field_name] = ('HyperText', image_tag_attrs_serial, ())
 
             elif tag_type is TextTag:
                 text_tag = TextTag(name=field_name, selection_enabled=False)
