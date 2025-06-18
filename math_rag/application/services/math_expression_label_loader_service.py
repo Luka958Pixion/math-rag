@@ -40,8 +40,8 @@ class MathExpressionLabelLoaderService(BaseMathExpressionLabelLoaderService):
         ):
             for math_expression in math_expressions:
                 input = MathExpressionLabelerAssistantInput(latex=math_expression.latex)
-                inputs.append(input)
                 input_id_to_math_expression_id[input.id] = math_expression.id
+                inputs.append(input)
 
         match dataset.build_priority:
             case MathExpressionDatasetBuildPriority.COST:
@@ -82,8 +82,8 @@ class MathExpressionLabelLoaderService(BaseMathExpressionLabelLoaderService):
         ):
             for math_expression in math_expressions:
                 input = MathExpressionLabelerAssistantInput(latex=math_expression.latex)
-                inputs.append(input)
                 input_id_to_math_expression_id[input.id] = math_expression.id
+                inputs.append(input)
 
         outputs = await self.math_expression_labeler_assistant.concurrent_assist(inputs)
         math_expression_labels = [

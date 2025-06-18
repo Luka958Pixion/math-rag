@@ -93,8 +93,8 @@ class MathExpressionLoaderService(BaseMathExpressionLoaderService):
                     katex=node.latex.strip('$'),
                     error=result.error,
                 )
-                inputs.append(input)
                 input_id_to_node[input.id] = node
+                inputs.append(input)
 
             match dataset.build_priority:
                 case MathExpressionDatasetBuildPriority.COST:
@@ -191,8 +191,8 @@ class MathExpressionLoaderService(BaseMathExpressionLoaderService):
                     katex=node.latex.strip('$'),
                     error=result.error,
                 )
-                inputs.append(input)
                 input_id_to_node[input.id] = node
+                inputs.append(input)
 
             outputs = await self.katex_corrector_assistant.concurrent_assist(inputs)
             corrected_katexes = [output.katex for output in outputs]

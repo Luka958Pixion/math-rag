@@ -59,8 +59,8 @@ class MathExpressionDatasetTesterService(BaseMathExpressionDatasetTesterService)
 
         for sample in samples:
             input = MathExpressionLabelerAssistantInput(latex=sample.katex)
-            inputs.append(input)
             input_id_to_math_expression_id[input.id] = sample.math_expression_id
+            inputs.append(input)
 
         outputs = await self.math_expression_labeler_assistant.concurrent_assist(inputs)
 
