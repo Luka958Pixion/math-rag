@@ -1,6 +1,6 @@
 from asyncio import Condition, Lock
 
 
-class DatasetTestContext:
+class TaskContext:
     condition = Condition()
     lock = Lock()

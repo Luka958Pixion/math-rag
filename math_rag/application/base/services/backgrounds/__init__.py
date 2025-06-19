@@ -5,10 +5,12 @@ from .base_index_build_tracker_background_service import BaseIndexBuildTrackerBa
 from .base_math_expression_dataset_build_tracker_background_service import (
     BaseMathExpressionDatasetBuildTrackerBackgroundService,
 )
+from .base_task_tracker_background_service import BaseTaskTrackerBackgroundService
 
 
 __all__ = [
     'BaseFineTuneJobRunTrackerBackgroundService',
     'BaseMathExpressionDatasetBuildTrackerBackgroundService',
     'BaseIndexBuildTrackerBackgroundService',
+    'BaseTaskTrackerBackgroundService',
 ]

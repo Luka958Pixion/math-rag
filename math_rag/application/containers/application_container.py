@@ -41,11 +41,7 @@ from math_rag.application.base.services import (
     BaseLabelTaskImporterService,
     BaseMathArticleParserService,
 )
-from math_rag.application.contexts import (
-    DatasetBuildContext,
-    FineTuneJobRunContext,
-    IndexBuildContext,
-)
+from math_rag.application.contexts import TaskContext
 from math_rag.application.embedants import MathExpressionDescriptionEmbedant
 from math_rag.application.services import (
     EMSettingsLoaderService,
@@ -61,11 +57,7 @@ from math_rag.application.services import (
     MathExpressionLoaderService,
     MathExpressionSampleLoaderService,
 )
-from math_rag.application.services.background import (
-    FineTuneJobRunTrackerBackgroundService,
-    IndexBuildTrackerBackgroundService,
-    MathExpressionDatasetBuildTrackerBackgroundService,
-)
+from math_rag.application.services.background import TaskTrackerBackgroundService
 
 
 class ApplicationContainer(DeclarativeContainer):
@@ -159,35 +151,12 @@ class ApplicationContainer(DeclarativeContainer):
         math_expression_dataset_publisher_service=math_expression_dataset_publisher_service,
         math_expression_dataset_repository=math_expression_dataset_repository,
     )
-    dataset_build_context = Singleton(DatasetBuildContext)
-    dataset_build_tracker_background_service = Singleton(
-        MathExpressionDatasetBuildTrackerBackgroundService,
-        math_expression_dataset_repository=math_expression_dataset_repository,
-        math_expression_dataset_builder_service=math_expression_dataset_builder_service,
-        dataset_build_context=dataset_build_context,
-    )
-
     index_builder_service = Factory(
         IndexBuilderService,
         math_article_loader_service=math_article_loader_service,
         math_expression_loader_service=math_expression_loader_service,
         math_expression_label_loader_service=math_expression_label_loader_service,
         index_repository=index_repository,
-    )
-    index_build_context = Singleton(IndexBuildContext)
-    index_build_tracker_background_service = Singleton(
-        IndexBuildTrackerBackgroundService,
-        index_repository=index_repository,
-        index_builder_service=index_builder_service,
-        index_build_context=index_build_context,
-    )
-
-    fine_tune_job_run_context = Singleton(FineTuneJobRunContext)
-    fine_tune_job_run_tracker_background_service = Singleton(
-        FineTuneJobRunTrackerBackgroundService,
-        fine_tune_job_repository=fine_tune_job_repository,
-        fine_tune_job_runner_service=fine_tune_job_runner_service,
-        fine_tune_job_run_context=fine_tune_job_run_context,
     )
 
     math_expression_label_exporter_service = Factory(
@@ -199,4 +168,15 @@ class ApplicationContainer(DeclarativeContainer):
         katex_client=katex_client,
         label_config_builder_service=label_config_builder_service,
         label_task_importer_service=label_task_importer_service,
+    )
+
+    data = {fine_tune_job_repository.provided}
+
+    task_context = Singleton(
+        TaskContext
+    )  # TODO we need multiple for multiple services, not singleton
+    task_tracker_background_service = Singleton(
+        TaskTrackerBackgroundService,
+        task_tracker_repository=...,  # TODO there are multiple repositories
+        task_context=task_context,
     )

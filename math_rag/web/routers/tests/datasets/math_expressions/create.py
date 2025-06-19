@@ -6,7 +6,7 @@ from fastapi import APIRouter, Body, Depends
 from math_rag.application.base.repositories.documents import BaseMathExpressionDatasetRepository
 from math_rag.application.containers import ApplicationContainer
 from math_rag.application.contexts import DatasetTestContext
-from math_rag.core.models import MathExpressionDataset
+from math_rag.core.models import MathExpressionDatasetTest
 from math_rag.web.requests.tests.datasets.math_expressions import (
     MathExpressionDatasetTestCreateRequest,
 )
@@ -32,13 +32,14 @@ async def create_math_expression_dataset(
     ),
     context: DatasetTestContext = Depends(Provide[ApplicationContainer.dataset_test_context]),
 ):
-    dataset = MathExpressionDataset(
-        build_from_id=request.build_from_id,
-        build_from_stage=request.build_from_stage,
-        build_priority=request.build_priority,
-        build_details=request.build_details,
+    test = MathExpressionDatasetTest(
+        math_expression_dataset_id=...,
+        math_expression_dataset_split_name=...,
+        inference_provider=...,
+        model_provider=...,
+        model=...,
     )
-    await repository.insert_one(dataset)
+    await repository.insert_one(test)
 
     async with context.condition:
         context.condition.notify()
