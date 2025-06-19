@@ -20,7 +20,7 @@ class TaskRepository(
 
     async def find_first_pending(self, task_model_name: str) -> Task | None:
         bson_doc = await self.collection.find_one(
-            filter=dict(model_type=task_model_name, task_status=TaskStatus.PENDING.value),
+            filter=dict(model_name=task_model_name, task_status=TaskStatus.PENDING.value),
             sort=[('created_at', 1)],
         )
 
