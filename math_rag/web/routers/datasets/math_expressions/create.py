@@ -3,10 +3,12 @@ from logging import getLogger
 from dependency_injector.wiring import Provide, inject
 from fastapi import APIRouter, Body, Depends
 
-from math_rag.application.base.repositories.documents import BaseMathExpressionDatasetRepository
+from math_rag.application.base.repositories.documents import (
+    BaseMathExpressionDatasetRepository,
+    BaseTaskRepository,
+)
 from math_rag.application.containers import ApplicationContainer
-from math_rag.application.contexts import DatasetBuildContext
-from math_rag.core.models import MathExpressionDataset
+from math_rag.core.models import MathExpressionDataset, Task
 from math_rag.web.requests.datasets.math_expressions import MathExpressionDatasetCreateRequest
 from math_rag.web.responses.datasets.math_expressions import MathExpressionDatasetCreateResponse
 
@@ -19,10 +21,10 @@ router = APIRouter()
 @inject
 async def create_math_expression_dataset(
     request: MathExpressionDatasetCreateRequest = Body(...),
-    repository: BaseMathExpressionDatasetRepository = Depends(
+    dataset_repository: BaseMathExpressionDatasetRepository = Depends(
         Provide[ApplicationContainer.math_expression_dataset_repository]
     ),
-    context: DatasetBuildContext = Depends(Provide[ApplicationContainer.dataset_build_context]),
+    task_repository: BaseTaskRepository = Depends(Provide[ApplicationContainer.task_repository]),
 ):
     dataset = MathExpressionDataset(
         build_from_id=request.build_from_id,
@@ -30,18 +32,9 @@ async def create_math_expression_dataset(
         build_priority=request.build_priority,
         build_details=request.build_details,
     )
-    await repository.insert_one(dataset)
+    task = Task(model_id=dataset.id)
 
-    async with context.condition:
-        context.condition.notify()
+    await dataset_repository.insert_one(dataset)
+    await task_repository.insert_one(dataset)
 
-    return MathExpressionDatasetCreateResponse(
-        id=dataset.id,
-        timestamp=dataset.timestamp,
-        build_stage=dataset.build_stage,
-        task_status=dataset.task_status,
-        build_from_id=dataset.build_from_id,
-        build_from_stage=dataset.build_from_stage,
-        build_priority=dataset.build_priority,
-        build_details=dataset.build_details,
-    )
+    return MathExpressionDatasetCreateResponse(math_expression_dataset=dataset, task=task)

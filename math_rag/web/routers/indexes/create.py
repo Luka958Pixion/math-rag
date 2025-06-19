@@ -1,12 +1,11 @@
 from logging import getLogger
 
 from dependency_injector.wiring import Provide, inject
-from fastapi import APIRouter, Body, Depends
+from fastapi import APIRouter, Depends
 
-from math_rag.application.base.repositories.documents import BaseIndexRepository
+from math_rag.application.base.repositories.documents import BaseIndexRepository, BaseTaskRepository
 from math_rag.application.containers import ApplicationContainer
-from math_rag.core.models import Index
-from math_rag.web.requests.indexes import IndexCreateRequest
+from math_rag.core.models import Index, Task
 from math_rag.web.responses.indexes import IndexCreateResponse
 
 
@@ -17,18 +16,13 @@ router = APIRouter()
 @router.post('/indexes', response_model=IndexCreateResponse)
 @inject
 async def create_index(
-    request: IndexCreateRequest = Body(...),
-    repository: BaseIndexRepository = Depends(Provide[ApplicationContainer.index_repository]),
+    index_repository: BaseIndexRepository = Depends(Provide[ApplicationContainer.index_repository]),
+    task_repository: BaseTaskRepository = Depends(Provide[ApplicationContainer.task_repository]),
 ):
     index = Index()
-    await repository.insert_one(index)
+    task = Task(model_id=index.id)
 
-    async with context.condition:
-        context.condition.notify()
+    await index_repository.insert_one(index)
+    await task_repository.insert_one(task)
 
-    return IndexCreateResponse(
-        id=index.id,
-        timestamp=index.timestamp,
-        build_stage=index.build_stage,
-        task_status=index.task_status,
-    )
+    return IndexCreateResponse(index=index, task=task)
