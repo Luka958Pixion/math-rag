@@ -11,9 +11,9 @@ Create `.env` file with the following variables:
 - `HOST=0.0.0.0`
 - `API_PORT=7100`
 - `MCP_PORT=7200`
-- `JUPYTER_PORT=7035`
-- `KATEX_PORT=7025`
-- `APPTAINER_PORT=7015`
+- `JUPYTER_BASE_URL=http://host.docker.internal:7030`
+- `KATEX_BASE_URL=http://host.docker.internal:7020`
+- `APPTAINER_BASE_URL=http://host.docker.internal:7010`
 - `MINIO_ENDPOINT=minio:9000`
 - `MINIO_ACCESS_KEY=admin`
 - `MINIO_SECRET_KEY=password`

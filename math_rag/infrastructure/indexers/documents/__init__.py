@@ -7,6 +7,7 @@ from .math_expression_label_indexer import MathExpressionLabelIndexer
 from .math_expression_sample_indexer import MathExpressionSampleIndexer
 from .math_problem_indexer import MathProblemIndexer
 from .object_metadata_indexer import ObjectMetadataIndexer
+from .task_indexer import TaskIndexer
 
 
 __all__ = [
@@ -19,4 +20,5 @@ __all__ = [
     'MathExpressionSampleIndexer',
     'MathProblemIndexer',
     'ObjectMetadataIndexer',
+    'TaskIndexer',
 ]

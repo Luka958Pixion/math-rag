@@ -133,7 +133,7 @@ services:
     environment:
       - PORT=7030
     ports:
-      - ${JUPYTER_PORT}:7030
+      - 7030:7030
     restart: unless-stopped
 
   math-rag-katex:
@@ -142,7 +142,7 @@ services:
     environment:
       - PORT=7020
     ports:
-      - ${KATEX_PORT}:7020
+      - 7020:7020
     restart: unless-stopped
 
   math-rag-apptainer:
@@ -153,7 +153,7 @@ services:
     environment:
       - PORT=7010
     ports:
-      - ${APPTAINER_PORT}:7010
+      - 7010:7010
     restart: unless-stopped
 
 volumes:

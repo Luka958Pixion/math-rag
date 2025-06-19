@@ -1,14 +1,8 @@
-from datetime import datetime
-from uuid import UUID
-
 from pydantic import BaseModel
 
-from math_rag.core.enums import TaskStatus
+from math_rag.core.models import FineTuneJob, Task
 
 
 class FineTuneJobCreateResponse(BaseModel):
-    id: UUID
-    timestamp: datetime
-    task_status: TaskStatus
-    provider_name: str
-    model_name: str
+    fine_tune_job: FineTuneJob
+    task: Task

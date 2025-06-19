@@ -3,7 +3,6 @@ from pathlib import Path
 from arxiv import Client as _ArxivClient
 from dependency_injector.containers import DeclarativeContainer
 from dependency_injector.providers import (
-    Callable,
     Configuration,
     Container,
     Dict,
@@ -47,6 +46,7 @@ from math_rag.infrastructure.indexers.documents import (
     MathExpressionSampleIndexer,
     MathProblemIndexer,
     ObjectMetadataIndexer,
+    TaskIndexer,
 )
 from math_rag.infrastructure.inference.huggingface import TEIBatchEM, TGIBatchLLM
 from math_rag.infrastructure.inference.openai import (
@@ -72,6 +72,7 @@ from math_rag.infrastructure.repositories.documents import (
     MathExpressionSampleRepository,
     MathProblemRepository,
     ObjectMetadataRepository,
+    TaskRepository,
 )
 from math_rag.infrastructure.repositories.embeddings import MathExpressionDescriptionRepository
 from math_rag.infrastructure.repositories.files import GoogleDriveRepository
@@ -87,6 +88,7 @@ from math_rag.infrastructure.seeders.documents import (
     MathExpressionSeeder,
     MathProblemSeeder,
     ObjectMetadataSeeder,
+    TaskSeeder,
 )
 from math_rag.infrastructure.seeders.embeddings import MathExpressionDescriptionSeeder
 from math_rag.infrastructure.seeders.objects import MathArticleSeeder
@@ -136,6 +138,7 @@ class InfrastructureContainer(DeclarativeContainer):
     math_expression_sample_repository = Factory(MathExpressionSampleRepository, **mongo_kwargs)
     math_problem_repository = Factory(MathProblemRepository, **mongo_kwargs)
     object_metadata_repository = Factory(ObjectMetadataRepository, **mongo_kwargs)
+    task_repository = Factory(TaskRepository, **mongo_kwargs)
 
     em_failed_request_seeder = Factory(EMFailedRequestSeeder, **mongo_kwargs)
     fine_tune_job_seeder = Factory(FineTuneJobSeeder, **mongo_kwargs)
@@ -147,6 +150,7 @@ class InfrastructureContainer(DeclarativeContainer):
     math_expression_sample_seeder = Factory(MathExpressionSampleSeeder, **mongo_kwargs)
     math_problem_seeder = Factory(MathProblemSeeder, **mongo_kwargs)
     object_metadata_seeder = Factory(ObjectMetadataSeeder, **mongo_kwargs)
+    task_seeder = Factory(TaskSeeder, **mongo_kwargs)
 
     document_seeders: Provider[list[BaseDocumentSeeder]] = List(
         em_failed_request_seeder,
@@ -159,6 +163,7 @@ class InfrastructureContainer(DeclarativeContainer):
         math_expression_sample_seeder,
         math_problem_seeder,
         object_metadata_seeder,
+        task_seeder,
     )
 
     fine_tune_job_indexer = Factory(FineTuneJobIndexer, **mongo_kwargs)
@@ -169,6 +174,7 @@ class InfrastructureContainer(DeclarativeContainer):
     math_expression_sample_indexer = Factory(MathExpressionSampleIndexer, **mongo_kwargs)
     math_problem_indexer = Factory(MathProblemIndexer, **mongo_kwargs)
     object_metadata_indexer = Factory(ObjectMetadataIndexer, **mongo_kwargs)
+    task_indexer = Factory(TaskIndexer, **mongo_kwargs)
 
     document_indexers: Provider[list[BaseDocumentIndexer]] = List(
         fine_tune_job_indexer,
@@ -179,6 +185,7 @@ class InfrastructureContainer(DeclarativeContainer):
         math_expression_sample_indexer,
         math_problem_indexer,
         object_metadata_indexer,
+        task_indexer,
     )
 
     # Minio
@@ -309,10 +316,11 @@ class InfrastructureContainer(DeclarativeContainer):
     )
 
     # KaTeX
-    config.katex.port.from_env('KATEX_PORT')
+    config.katex.base_url.from_env('KATEX_BASE_URL')
+
     katex_client = Factory(
         KatexClient,
-        base_url=Callable(lambda port: f'http://host.docker.internal:{port}', config.katex.port),
+        base_url=config.katex.base_url,
     )
 
     ## SSH
@@ -340,13 +348,11 @@ class InfrastructureContainer(DeclarativeContainer):
     pbs_pro_client = Factory(PBSProClient, ssh_client=ssh_client)
 
     # Apptainer
-    config.apptainer.port.from_env('APPTAINER_PORT')
+    config.apptainer.base_url.from_env('APPTAINER_BASE_URL')
 
     apptainer_client = Factory(
         ApptainerClient,
-        base_url=Callable(
-            lambda port: f'http://host.docker.internal:{port}', config.apptainer.port
-        ),
+        base_url=config.apptainer.base_url,
     )
 
     pbs_pro_resource_list_loader_service = Factory(PBSProResourceListLoaderService)
@@ -476,4 +482,5 @@ class InfrastructureContainer(DeclarativeContainer):
         math_expression_repository=math_expression_repository,
         math_expression_label_repository=math_expression_label_repository,
         math_problem_repository=math_problem_repository,
+        task_repository=task_repository,
     )

@@ -3,6 +3,8 @@ from dependency_injector.providers import (
     Configuration,
     Dependency,
     Factory,
+    List,
+    Provider,
     Singleton,
 )
 
@@ -31,6 +33,7 @@ from math_rag.application.base.repositories.documents import (
     BaseMathExpressionRepository,
     BaseMathExpressionSampleRepository,
     BaseMathProblemRepository,
+    BaseTaskRepository,
 )
 from math_rag.application.base.repositories.objects import BaseMathArticleRepository
 from math_rag.application.base.services import (
@@ -41,6 +44,7 @@ from math_rag.application.base.services import (
     BaseLabelTaskImporterService,
     BaseMathArticleParserService,
 )
+from math_rag.application.base.services.backgrounds import BaseBackgroundService
 from math_rag.application.embedants import MathExpressionDescriptionEmbedant
 from math_rag.application.services import (
     EMSettingsLoaderService,
@@ -56,7 +60,12 @@ from math_rag.application.services import (
     MathExpressionLoaderService,
     MathExpressionSampleLoaderService,
 )
-from math_rag.application.services.backgrounds import TaskTrackerBackgroundService  # TODO
+from math_rag.application.services.backgrounds import (
+    FineTuneJobBackgroundService,
+    IndexBackgroundService,
+    MathExpressionDatasetBackgroundService,
+    MathExpressionDatasetTestBackgroundService,
+)
 
 
 class ApplicationContainer(DeclarativeContainer):
@@ -84,6 +93,7 @@ class ApplicationContainer(DeclarativeContainer):
     math_expression_label_repository = Dependency(instance_of=BaseMathExpressionLabelRepository)
     math_expression_sample_repository = Dependency(instance_of=BaseMathExpressionSampleRepository)
     math_problem_repository = Dependency(instance_of=BaseMathProblemRepository)
+    task_repository = Dependency(instance_of=BaseTaskRepository)
 
     dataset_loader_service = Dependency(instance_of=BaseDatasetLoaderService)
     dataset_publisher_service = Dependency(instance_of=BaseDatasetPublisherService)
@@ -172,9 +182,35 @@ class ApplicationContainer(DeclarativeContainer):
         label_task_importer_service=label_task_importer_service,
     )
 
-    # background
-    task_tracker_background_service = Singleton(
-        TaskTrackerBackgroundService,
-        task_tracker_repository=...,  # TODO there are multiple repositories
-        task_context=task_context,
+    # background services
+    fine_tune_job_background_service = Singleton(
+        FineTuneJobBackgroundService,
+        fine_tune_job_runner_service=fine_tune_job_runner_service,
+        fine_tune_job_repository=fine_tune_job_repository,
+        task_repository=task_repository,
+    )
+    index_background_service = Singleton(
+        IndexBackgroundService,
+        index_builder_service=index_builder_service,
+        index_repository=index_repository,
+        task_repository=task_repository,
+    )
+    math_expression_dataset_background_service = Singleton(
+        MathExpressionDatasetBackgroundService,
+        math_expression_dataset_builder_service=math_expression_dataset_builder_service,
+        math_expression_dataset_repository=math_expression_dataset_repository,
+        task_repository=task_repository,
+    )
+    math_expression_dataset_test_background_service = Singleton(
+        MathExpressionDatasetTestBackgroundService,
+        math_expression_dataset_tester_service=math_expression_dataset_tester_service,
+        math_expression_dataset_test_repository=math_expression_dataset_test_repository,
+        task_repository=task_repository,
+    )
+
+    background_services: Provider[list[BaseBackgroundService]] = List(
+        fine_tune_job_background_service,
+        index_background_service,
+        math_expression_dataset_background_service,
+        math_expression_dataset_test_background_service,
     )

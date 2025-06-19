@@ -2,18 +2,18 @@ from asyncio import sleep
 from logging import getLogger
 
 from math_rag.application.base.repositories.documents import BaseTaskRepository
-from math_rag.application.base.services.backgrounds import BaseTaskTrackerBackgroundService
+from math_rag.application.base.services.backgrounds import BaseBackgroundService
 from math_rag.core.enums import TaskStatus
 
 
 logger = getLogger(__name__)
 
 
-class PartialTaskTrackerBackgroundService(BaseTaskTrackerBackgroundService):
+class PartialBackgroundService(BaseBackgroundService):
     def __init__(self, task_repository: BaseTaskRepository):
         self.task_repository = task_repository
 
-    async def track(self):
+    async def start(self):
         while True:
             task = await self.task_repository.find_first_pending()
 
@@ -24,7 +24,7 @@ class PartialTaskTrackerBackgroundService(BaseTaskTrackerBackgroundService):
             task = await self.task_repository.update_task_status(task.id, TaskStatus.RUNNING)
 
             try:
-                await self.task()
+                await self.task(task.model_id)
                 task = await self.task_repository.update_task_status(task.id, TaskStatus.FINISHED)
                 logger.info(f'Task {task.id} finished')
 

@@ -9,6 +9,7 @@ from .math_expression_sample_seeder import MathExpressionSampleSeeder
 from .math_expression_seeder import MathExpressionSeeder
 from .math_problem_seeder import MathProblemSeeder
 from .object_metadata_seeder import ObjectMetadataSeeder
+from .task_seeder import TaskSeeder
 
 
 __all__ = [
@@ -23,4 +24,5 @@ __all__ = [
     'MathExpressionSeeder',
     'MathProblemSeeder',
     'ObjectMetadataSeeder',
+    'TaskSeeder',
 ]

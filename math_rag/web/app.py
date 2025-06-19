@@ -39,14 +39,9 @@ def on_exception(task: asyncio.Task):
 @asynccontextmanager
 async def lifespan(api: FastAPI):
     application_container: ApplicationContainer = api.state.application_container
-    background_services = [
-        application_container.index_build_tracker_background_service(),
-        application_container.dataset_build_tracker_background_service(),
-        application_container.fine_tune_job_run_tracker_background_service(),
-    ]
     tasks = [
-        asyncio.create_task(service.track(), name=service.__class__.__name__)
-        for service in background_services
+        asyncio.create_task(service.start(), name=service.__class__.__name__)
+        for service in application_container.background_services()
     ]
 
     for task in tasks:
