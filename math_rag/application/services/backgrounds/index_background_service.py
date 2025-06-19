@@ -3,7 +3,6 @@ from uuid import UUID
 from math_rag.application.base.repositories.documents import BaseIndexRepository, BaseTaskRepository
 from math_rag.application.base.services import BaseIndexBuilderService
 from math_rag.core.models import Index
-from math_rag.shared.utils import TypeUtil
 
 from .partials import PartialBackgroundService
 
@@ -28,5 +27,5 @@ class IndexBackgroundService(PartialBackgroundService):
 
         await self.index_builder_service.build(index)
 
-    def task_model_type(self) -> str:
-        return TypeUtil.to_fqn(Index)
+    def task_model_name(self) -> str:
+        return Index.__name__

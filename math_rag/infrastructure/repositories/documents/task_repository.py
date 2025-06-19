@@ -1,6 +1,5 @@
 from uuid import UUID
 
-from pydantic import BaseModel
 from pymongo import AsyncMongoClient, ReturnDocument
 
 from math_rag.application.base.repositories.documents import BaseTaskRepository
@@ -19,9 +18,9 @@ class TaskRepository(
     def __init__(self, client: AsyncMongoClient, deployment: str):
         super().__init__(client, deployment)
 
-    async def find_first_pending(self, model_type: str) -> Task | None:
+    async def find_first_pending(self, task_model_name: str) -> Task | None:
         bson_doc = await self.collection.find_one(
-            filter=dict(model_type=model_type, task_status=TaskStatus.PENDING.value),
+            filter=dict(model_type=task_model_name, task_status=TaskStatus.PENDING.value),
             sort=[('created_at', 1)],
         )
 

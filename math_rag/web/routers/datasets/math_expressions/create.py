@@ -9,7 +9,6 @@ from math_rag.application.base.repositories.documents import (
 )
 from math_rag.application.containers import ApplicationContainer
 from math_rag.core.models import MathExpressionDataset, Task
-from math_rag.shared.utils import TypeUtil
 from math_rag.web.requests.datasets.math_expressions import MathExpressionDatasetCreateRequest
 from math_rag.web.responses.datasets.math_expressions import MathExpressionDatasetCreateResponse
 
@@ -33,7 +32,7 @@ async def create_math_expression_dataset(
         build_priority=request.build_priority,
         build_details=request.build_details,
     )
-    task = Task(model_id=dataset.id, model_type=TypeUtil.to_fqn(MathExpressionDataset))
+    task = Task(model_id=dataset.id, model_name=MathExpressionDataset.__name__)
 
     await dataset_repository.insert_one(dataset)
     await task_repository.insert_one(task)

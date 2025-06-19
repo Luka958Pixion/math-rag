@@ -5,7 +5,7 @@ from math_rag.infrastructure.models.documents import TaskDocument
 from .document_indexer import DocumentIndexer
 
 
-FIELDS = ['model_id', 'model_type', 'task_status']
+FIELDS = ['model_id', 'model_name', 'task_status']
 
 
 class TaskIndexer(DocumentIndexer[TaskDocument]):

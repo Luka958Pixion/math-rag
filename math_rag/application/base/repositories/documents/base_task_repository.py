@@ -9,7 +9,7 @@ from .base_document_repository import BaseDocumentRepository
 
 class BaseTaskRepository(BaseDocumentRepository[Task]):
     @abstractmethod
-    async def find_first_pending(self, task_model_type: str) -> Task | None:
+    async def find_first_pending(self, task_model_name: str) -> Task | None:
         pass
 
     @abstractmethod

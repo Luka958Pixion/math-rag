@@ -6,7 +6,6 @@ from math_rag.application.base.repositories.documents import (
     BaseTaskRepository,
 )
 from math_rag.core.models import FineTuneJob
-from math_rag.shared.utils import TypeUtil
 
 from .partials import PartialBackgroundService
 
@@ -31,5 +30,5 @@ class FineTuneJobBackgroundService(PartialBackgroundService):
 
         await self.fine_tune_job_runner_service.run(job, poll_interval=5 * 60)
 
-    def task_model_type(self) -> str:
-        return TypeUtil.to_fqn(FineTuneJob)
+    def task_model_name(self) -> str:
+        return FineTuneJob.__name__

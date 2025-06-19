@@ -7,7 +7,6 @@ from math_rag.application.base.repositories.documents import (
 from math_rag.application.base.services import BaseMathExpressionDatasetTesterService
 from math_rag.application.enums.inference import LLMInferenceProvider, LLMModelProvider
 from math_rag.core.models import MathExpressionDatasetTest
-from math_rag.shared.utils import TypeUtil
 
 from .partials import PartialBackgroundService
 
@@ -39,5 +38,5 @@ class MathExpressionDatasetTestBackgroundService(PartialBackgroundService):
             model_provider=LLMModelProvider(test.model_provider),
         )
 
-    def task_model_type(self) -> str:
-        return TypeUtil.to_fqn(MathExpressionDatasetTest)
+    def task_model_name(self) -> str:
+        return MathExpressionDatasetTest.__name__

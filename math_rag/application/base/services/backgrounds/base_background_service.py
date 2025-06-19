@@ -12,5 +12,5 @@ class BaseBackgroundService(ABC):
         pass
 
     @abstractmethod
-    def task_model_type(self) -> str:
+    def task_model_name(self) -> str:
         pass

@@ -7,7 +7,7 @@ from math_rag.infrastructure.base import BaseDocument
 class TaskDocument(BaseDocument):
     id: UUID
     model_id: UUID
-    model_type: str
+    model_name: str
     created_at: datetime
     started_at: datetime
     failed_at: datetime

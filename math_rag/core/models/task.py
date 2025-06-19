@@ -9,7 +9,7 @@ from math_rag.core.enums import TaskStatus
 class Task(BaseModel):
     id: UUID = Field(default_factory=uuid4)
     model_id: UUID
-    model_type: str
+    model_name: str
     created_at: datetime = Field(default_factory=datetime.now)
     started_at: datetime = Field(default_factory=datetime.now)
     failed_at: datetime = Field(default_factory=datetime.now)
