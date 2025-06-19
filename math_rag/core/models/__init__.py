@@ -12,6 +12,7 @@ from .math_expression_label import MathExpressionLabel
 from .math_expression_label_task import MathExpressionLabelTask
 from .math_expression_sample import MathExpressionSample
 from .math_problem import MathProblem
+from .task import Task
 
 
 __all__ = [
@@ -29,4 +30,5 @@ __all__ = [
     'MathExpressionLabelTask',
     'MathExpressionSample',
     'MathProblem',
+    'Task',
 ]

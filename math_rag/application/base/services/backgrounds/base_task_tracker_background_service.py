@@ -1,8 +1,15 @@
 from abc import ABC, abstractmethod
-from typing import Awaitable
 
 
 class BaseTaskTrackerBackgroundService(ABC):
     @abstractmethod
-    async def track(self, awaitable: Awaitable[None], timeout: float | None):
+    async def track(self):
+        pass
+
+    @abstractmethod
+    async def task(self):
+        pass
+
+    @abstractmethod
+    async def timeout(self) -> float | None:
         pass

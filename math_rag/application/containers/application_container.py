@@ -3,7 +3,6 @@ from dependency_injector.providers import (
     Configuration,
     Dependency,
     Factory,
-    Provider,
     Singleton,
 )
 
@@ -27,6 +26,7 @@ from math_rag.application.base.repositories.documents import (
     BaseFineTuneJobRepository,
     BaseIndexRepository,
     BaseMathExpressionDatasetRepository,
+    BaseMathExpressionDatasetTestRepository,
     BaseMathExpressionLabelRepository,
     BaseMathExpressionRepository,
     BaseMathExpressionSampleRepository,
@@ -41,7 +41,6 @@ from math_rag.application.base.services import (
     BaseLabelTaskImporterService,
     BaseMathArticleParserService,
 )
-from math_rag.application.contexts import TaskContext
 from math_rag.application.embedants import MathExpressionDescriptionEmbedant
 from math_rag.application.services import (
     EMSettingsLoaderService,
@@ -57,40 +56,43 @@ from math_rag.application.services import (
     MathExpressionLoaderService,
     MathExpressionSampleLoaderService,
 )
-from math_rag.application.services.background import TaskTrackerBackgroundService
+from math_rag.application.services.backgrounds import TaskTrackerBackgroundService  # TODO
 
 
 class ApplicationContainer(DeclarativeContainer):
     config = Configuration()
 
     # dependencies
-    arxiv_client: Provider[BaseArxivClient] = Dependency()
-    katex_client: Provider[BaseKatexClient] = Dependency()
-    latex_converter_client: Provider[BaseLatexConverterClient] = Dependency()
+    arxiv_client = Dependency(instance_of=BaseArxivClient)
+    katex_client = Dependency(instance_of=BaseKatexClient)
+    latex_converter_client = Dependency(instance_of=BaseLatexConverterClient)
 
-    managed_em: Provider[BaseManagedEM] = Dependency()
-    managed_llm: Provider[BaseManagedLLM] = Dependency()
+    managed_em = Dependency(instance_of=BaseManagedEM)
+    managed_llm = Dependency(instance_of=BaseManagedLLM)
 
-    managed_em_scheduler: Provider[BaseBatchEMRequestManagedScheduler] = Dependency()
-    managed_llm_scheduler: Provider[BaseBatchLLMRequestManagedScheduler] = Dependency()
+    managed_em_scheduler = Dependency(instance_of=BaseBatchEMRequestManagedScheduler)
+    managed_llm_scheduler = Dependency(instance_of=BaseBatchLLMRequestManagedScheduler)
 
-    fine_tune_job_repository: Provider[BaseFineTuneJobRepository] = Dependency()
-    index_repository: Provider[BaseIndexRepository] = Dependency()
-    math_expression_dataset_repository: Provider[BaseMathExpressionDatasetRepository] = Dependency()
-    math_article_repository: Provider[BaseMathArticleRepository] = Dependency()
-    math_expression_repository: Provider[BaseMathExpressionRepository] = Dependency()
-    math_expression_label_repository: Provider[BaseMathExpressionLabelRepository] = Dependency()
-    math_expression_sample_repository: Provider[BaseMathExpressionSampleRepository] = Dependency()
-    math_problem_repository: Provider[BaseMathProblemRepository] = Dependency()
+    fine_tune_job_repository = Dependency(instance_of=BaseFineTuneJobRepository)
+    index_repository = Dependency(instance_of=BaseIndexRepository)
+    math_expression_dataset_repository = Dependency(instance_of=BaseMathExpressionDatasetRepository)
+    math_expression_dataset_test_repository = Dependency(
+        instance_of=BaseMathExpressionDatasetTestRepository
+    )
+    math_article_repository = Dependency(instance_of=BaseMathArticleRepository)
+    math_expression_repository = Dependency(instance_of=BaseMathExpressionRepository)
+    math_expression_label_repository = Dependency(instance_of=BaseMathExpressionLabelRepository)
+    math_expression_sample_repository = Dependency(instance_of=BaseMathExpressionSampleRepository)
+    math_problem_repository = Dependency(instance_of=BaseMathProblemRepository)
 
-    dataset_loader_service: Provider[BaseDatasetLoaderService] = Dependency()
-    dataset_publisher_service: Provider[BaseDatasetPublisherService] = Dependency()
-    math_article_parser_service: Provider[BaseMathArticleParserService] = Dependency()
-    label_config_builder_service: Provider[BaseLabelConfigBuilderService] = Dependency()
-    label_task_exporter_service: Provider[BaseLabelTaskExporterService] = Dependency()
-    label_task_importer_service: Provider[BaseLabelTaskImporterService] = Dependency()
+    dataset_loader_service = Dependency(instance_of=BaseDatasetLoaderService)
+    dataset_publisher_service = Dependency(instance_of=BaseDatasetPublisherService)
+    math_article_parser_service = Dependency(instance_of=BaseMathArticleParserService)
+    label_config_builder_service = Dependency(instance_of=BaseLabelConfigBuilderService)
+    label_task_exporter_service = Dependency(instance_of=BaseLabelTaskExporterService)
+    label_task_importer_service = Dependency(instance_of=BaseLabelTaskImporterService)
 
-    fine_tune_job_runner_service: Provider[BaseFineTuneJobRunnerService] = Dependency()
+    fine_tune_job_runner_service = Dependency(instance_of=BaseFineTuneJobRunnerService)
 
     # non-dependencies
     katex_corrector_assistant = Factory(
@@ -170,11 +172,7 @@ class ApplicationContainer(DeclarativeContainer):
         label_task_importer_service=label_task_importer_service,
     )
 
-    data = {fine_tune_job_repository.provided}
-
-    task_context = Singleton(
-        TaskContext
-    )  # TODO we need multiple for multiple services, not singleton
+    # background
     task_tracker_background_service = Singleton(
         TaskTrackerBackgroundService,
         task_tracker_repository=...,  # TODO there are multiple repositories

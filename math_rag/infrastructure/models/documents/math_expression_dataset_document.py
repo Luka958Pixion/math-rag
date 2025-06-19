@@ -12,7 +12,6 @@ class MathExpressionDatasetDocument(BaseDocument):
     build_from_id: UUID | None
     build_from_stage: str | None
     build_priority: str
-    task_status: str
 
     # NOTE: build_details are flattened
     categories: list[tuple[str, str]]

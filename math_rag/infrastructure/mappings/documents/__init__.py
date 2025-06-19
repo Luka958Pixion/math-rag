@@ -13,10 +13,12 @@ from .llm_message_mapping import LLMMessageMapping
 from .llm_params_mapping import LLMParamsMapping
 from .llm_request_mapping import LLMRequestMapping
 from .math_expression_dataset_mapping import MathExpressionDatasetMapping
+from .math_expression_dataset_test_mapping import MathExpressionDatasetTestMapping
 from .math_expression_label_mapping import MathExpressionLabelMapping
 from .math_expression_mapping import MathExpressionMapping
 from .math_expression_sample_mapping import MathExpressionSampleMapping
 from .math_problem_mapping import MathProblemMapping
+from .task_mapping import TaskMapping
 
 
 __all__ = [
@@ -35,8 +37,10 @@ __all__ = [
     'LLMParamsMapping',
     'LLMRequestMapping',
     'MathExpressionDatasetMapping',
+    'MathExpressionDatasetTestMapping',
     'MathExpressionLabelMapping',
     'MathExpressionMapping',
     'MathExpressionSampleMapping',
     'MathProblemMapping',
+    'TaskMapping',
 ]

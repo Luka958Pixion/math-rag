@@ -13,11 +13,13 @@ from .llm_message_document import LLMMessageDocument
 from .llm_params_document import LLMParamsDocument
 from .llm_request_document import LLMRequestDocument
 from .math_expression_dataset_document import MathExpressionDatasetDocument
+from .math_expression_dataset_test_document import MathExpressionDatasetTestDocument
 from .math_expression_document import MathExpressionDocument
 from .math_expression_label_document import MathExpressionLabelDocument
 from .math_expression_sample_document import MathExpressionSampleDocument
 from .math_problem_document import MathProblemDocument
 from .object_metadata_document import ObjectMetadataDocument
+from .task_document import TaskDocument
 
 
 __all__ = [
@@ -36,9 +38,11 @@ __all__ = [
     'LLMParamsDocument',
     'LLMRequestDocument',
     'MathExpressionDatasetDocument',
+    'MathExpressionDatasetTestDocument',
     'MathExpressionLabelDocument',
     'MathExpressionDocument',
     'MathExpressionSampleDocument',
     'MathProblemDocument',
     'ObjectMetadataDocument',
+    'TaskDocument',
 ]

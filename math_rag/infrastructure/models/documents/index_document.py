@@ -8,4 +8,3 @@ class IndexDocument(BaseDocument):
     id: UUID
     timestamp: datetime
     build_stage: str
-    task_status: str

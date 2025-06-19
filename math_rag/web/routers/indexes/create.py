@@ -5,7 +5,6 @@ from fastapi import APIRouter, Body, Depends
 
 from math_rag.application.base.repositories.documents import BaseIndexRepository
 from math_rag.application.containers import ApplicationContainer
-from math_rag.application.contexts import IndexBuildContext
 from math_rag.core.models import Index
 from math_rag.web.requests.indexes import IndexCreateRequest
 from math_rag.web.responses.indexes import IndexCreateResponse
@@ -20,7 +19,6 @@ router = APIRouter()
 async def create_index(
     request: IndexCreateRequest = Body(...),
     repository: BaseIndexRepository = Depends(Provide[ApplicationContainer.index_repository]),
-    context: IndexBuildContext = Depends(Provide[ApplicationContainer.index_build_context]),
 ):
     index = Index()
     await repository.insert_one(index)

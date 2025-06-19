@@ -66,6 +66,7 @@ from math_rag.infrastructure.repositories.documents import (
     IndexRepository,
     LLMFailedRequestRepository,
     MathExpressionDatasetRepository,
+    MathExpressionDatasetTestRepository,
     MathExpressionLabelRepository,
     MathExpressionRepository,
     MathExpressionSampleRepository,
@@ -127,6 +128,9 @@ class InfrastructureContainer(DeclarativeContainer):
     index_repository = Factory(IndexRepository, **mongo_kwargs)
     llm_failed_request_repository = Factory(LLMFailedRequestRepository, **mongo_kwargs)
     math_expression_dataset_repository = Factory(MathExpressionDatasetRepository, **mongo_kwargs)
+    math_expression_dataset_test_repository = Factory(
+        MathExpressionDatasetTestRepository, **mongo_kwargs
+    )
     math_expression_repository = Factory(MathExpressionRepository, **mongo_kwargs)
     math_expression_label_repository = Factory(MathExpressionLabelRepository, **mongo_kwargs)
     math_expression_sample_repository = Factory(MathExpressionSampleRepository, **mongo_kwargs)
@@ -466,6 +470,7 @@ class InfrastructureContainer(DeclarativeContainer):
         fine_tune_job_repository=fine_tune_job_repository,
         index_repository=index_repository,
         math_expression_dataset_repository=math_expression_dataset_repository,
+        math_expression_dataset_test_repository=math_expression_dataset_test_repository,
         math_expression_sample_repository=math_expression_sample_repository,
         math_article_repository=math_article_repository,
         math_expression_repository=math_expression_repository,

@@ -1,17 +1,20 @@
+from datetime import datetime
+from uuid import UUID, uuid4
+
 from pydantic import Field, model_validator
 
 from math_rag.core.base import BaseDataset
 from math_rag.core.enums import (
     MathExpressionDatasetBuildPriority,
     MathExpressionDatasetBuildStage,
-    TaskStatus,
 )
 
 from .math_expression_dataset_build_details import MathExpressionDatasetBuildDetails
 
 
 class MathExpressionDataset(BaseDataset):
-    task_status: TaskStatus = Field(default=TaskStatus.PENDING)
+    id: UUID = Field(default_factory=uuid4)
+    timestamp: datetime = Field(default_factory=datetime.now)
     build_stage: MathExpressionDatasetBuildStage = Field(
         default=MathExpressionDatasetBuildStage.LOAD_MATH_ARTICLES
     )

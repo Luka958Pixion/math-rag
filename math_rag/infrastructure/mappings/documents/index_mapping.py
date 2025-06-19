@@ -1,4 +1,4 @@
-from math_rag.core.enums import IndexBuildStage, IndexBuildStatus
+from math_rag.core.enums import IndexBuildStage
 from math_rag.core.models import Index
 from math_rag.infrastructure.base import BaseMapping
 from math_rag.infrastructure.models.documents import IndexDocument
@@ -11,7 +11,6 @@ class IndexMapping(BaseMapping[Index, IndexDocument]):
             id=target.id,
             timestamp=target.timestamp,
             build_stage=IndexBuildStage(target.build_stage),
-            task_status=IndexBuildStatus(target.task_status),
         )
 
     @staticmethod
@@ -20,5 +19,4 @@ class IndexMapping(BaseMapping[Index, IndexDocument]):
             id=source.id,
             timestamp=source.timestamp,
             build_stage=source.build_stage.value,
-            task_status=source.task_status.value,
         )
