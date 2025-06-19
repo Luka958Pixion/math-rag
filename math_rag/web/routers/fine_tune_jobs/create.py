@@ -22,7 +22,9 @@ async def create_fine_tune_job(
     repository: BaseFineTuneJobRepository = Depends(
         Provide[ApplicationContainer.fine_tune_job_repository]
     ),
-    context: FineTuneJobRunContext = Depends(Provide[ApplicationContainer.index_build_context]),
+    context: FineTuneJobRunContext = Depends(
+        Provide[ApplicationContainer.fine_tune_job_run_context]
+    ),
 ):
     fine_tune_job = FineTuneJob(provider_name=request.provider_name, model_name=request.model_name)
     await repository.insert_one(fine_tune_job)

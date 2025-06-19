@@ -16,6 +16,7 @@ from math_rag.application.base.clients import (
     BaseKatexClient,
     BaseLatexConverterClient,
 )
+from math_rag.application.base.fine_tune import BaseFineTuneJobRunnerService
 from math_rag.application.base.inference import (
     BaseBatchEMRequestManagedScheduler,
     BaseBatchLLMRequestManagedScheduler,
@@ -40,7 +41,11 @@ from math_rag.application.base.services import (
     BaseLabelTaskImporterService,
     BaseMathArticleParserService,
 )
-from math_rag.application.contexts import DatasetBuildContext, IndexBuildContext
+from math_rag.application.contexts import (
+    DatasetBuildContext,
+    FineTuneJobRunContext,
+    IndexBuildContext,
+)
 from math_rag.application.embedants import MathExpressionDescriptionEmbedant
 from math_rag.application.services import (
     EMSettingsLoaderService,
@@ -57,6 +62,7 @@ from math_rag.application.services import (
     MathExpressionSampleLoaderService,
 )
 from math_rag.application.services.background import (
+    FineTuneJobRunTrackerBackgroundService,
     IndexBuildTrackerBackgroundService,
     MathExpressionDatasetBuildTrackerBackgroundService,
 )
@@ -91,6 +97,8 @@ class ApplicationContainer(DeclarativeContainer):
     label_config_builder_service: Provider[BaseLabelConfigBuilderService] = Dependency()
     label_task_exporter_service: Provider[BaseLabelTaskExporterService] = Dependency()
     label_task_importer_service: Provider[BaseLabelTaskImporterService] = Dependency()
+
+    fine_tune_job_runner_service: Provider[BaseFineTuneJobRunnerService] = Dependency()
 
     # non-dependencies
     katex_corrector_assistant = Factory(
@@ -172,6 +180,14 @@ class ApplicationContainer(DeclarativeContainer):
         index_repository=index_repository,
         index_builder_service=index_builder_service,
         index_build_context=index_build_context,
+    )
+
+    fine_tune_job_run_context = Singleton(FineTuneJobRunContext)
+    fine_tune_job_run_tracker_background_service = Singleton(
+        FineTuneJobRunTrackerBackgroundService,
+        fine_tune_job_repository=fine_tune_job_repository,
+        fine_tune_job_runner_service=fine_tune_job_runner_service,
+        fine_tune_job_run_context=fine_tune_job_run_context,
     )
 
     math_expression_label_exporter_service = Factory(

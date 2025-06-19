@@ -462,6 +462,7 @@ class InfrastructureContainer(DeclarativeContainer):
         label_config_builder_service=label_studio_config_builder_service,
         label_task_exporter_service=label_studio_task_exporter_service,
         label_task_importer_service=label_studio_task_importer_service,
+        fine_tune_job_runner_service=fine_tune_job_runner_service,
         fine_tune_job_repository=fine_tune_job_repository,
         index_repository=index_repository,
         math_expression_dataset_repository=math_expression_dataset_repository,
