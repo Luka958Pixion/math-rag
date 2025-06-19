@@ -10,3 +10,7 @@ class BaseBackgroundService(ABC):
     @abstractmethod
     async def task(self, task_model_id: UUID):
         pass
+
+    @abstractmethod
+    def task_model_type(self) -> str:
+        pass

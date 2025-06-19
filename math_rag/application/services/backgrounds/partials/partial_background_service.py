@@ -15,10 +15,11 @@ class PartialBackgroundService(BaseBackgroundService):
 
     async def start(self):
         while True:
-            task = await self.task_repository.find_first_pending()
+            task_model_type = self.task_model_type()
+            task = await self.task_repository.find_first_pending(task_model_type)
 
             if not task:
-                sleep(30)
+                await sleep(30)
                 continue
 
             task = await self.task_repository.update_task_status(task.id, TaskStatus.RUNNING)

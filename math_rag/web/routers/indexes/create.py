@@ -6,6 +6,7 @@ from fastapi import APIRouter, Depends
 from math_rag.application.base.repositories.documents import BaseIndexRepository, BaseTaskRepository
 from math_rag.application.containers import ApplicationContainer
 from math_rag.core.models import Index, Task
+from math_rag.shared.utils import TypeUtil
 from math_rag.web.responses.indexes import IndexCreateResponse
 
 
@@ -20,7 +21,7 @@ async def create_index(
     task_repository: BaseTaskRepository = Depends(Provide[ApplicationContainer.task_repository]),
 ):
     index = Index()
-    task = Task(model_id=index.id)
+    task = Task(model_id=index.id, model_type=TypeUtil.to_fqn(Index))
 
     await index_repository.insert_one(index)
     await task_repository.insert_one(task)

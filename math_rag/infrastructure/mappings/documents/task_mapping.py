@@ -10,6 +10,7 @@ class TaskMapping(BaseMapping[Task, TaskDocument]):
         return Task(
             id=target.id,
             model_id=target.model_id,
+            model_type=target.model_type,
             created_at=target.created_at,
             started_at=target.started_at,
             failed_at=target.failed_at,
@@ -22,6 +23,7 @@ class TaskMapping(BaseMapping[Task, TaskDocument]):
         return TaskDocument(
             id=source.id,
             model_id=source.model_id,
+            model_type=source.model_type,
             created_at=source.created_at,
             started_at=source.started_at,
             failed_at=source.failed_at,

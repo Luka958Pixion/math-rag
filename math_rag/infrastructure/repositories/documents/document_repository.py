@@ -7,7 +7,6 @@ from uuid import UUID
 from bson.binary import UuidRepresentation
 from bson.json_util import JSONOptions, dumps, loads
 from pymongo import ASCENDING, AsyncMongoClient, InsertOne
-from pymongo.results import DeleteResult
 
 from math_rag.application.base.repositories.documents import BaseDocumentRepository
 from math_rag.infrastructure.types.repositories.documents import (

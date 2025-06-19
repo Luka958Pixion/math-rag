@@ -1,20 +1,16 @@
-from .datasets.math_expressions.create import router as create_math_expression_dataset_router
-from .datasets.math_expressions.delete import router as delete_math_expression_dataset_router
-from .fine_tune_jobs.create import router as create_fine_tune_job_router
-from .health import router as health_router
-from .indexes.create import router as create_index_router
-from .problems.create import router as create_problem_router
-from .scalar import router as scalar_router
+import importlib
+import pkgutil
+
+from fastapi import APIRouter
 
 
-routers = [
-    create_math_expression_dataset_router,
-    delete_math_expression_dataset_router,
-    create_fine_tune_job_router,
-    health_router,
-    create_index_router,
-    create_problem_router,
-    scalar_router,
-]
+routers: list[APIRouter] = []
+
+for _, module_name, _ in pkgutil.walk_packages(__path__, prefix=__name__ + '.'):
+    module = importlib.import_module(module_name)
+    router = getattr(module, 'router', None)
+
+    if router:
+        routers.append(router)
 
 __all__ = ['routers']

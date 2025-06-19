@@ -5,6 +5,8 @@ from math_rag.application.base.repositories.documents import (
     BaseTaskRepository,
 )
 from math_rag.application.base.services import BaseMathExpressionDatasetBuilderService
+from math_rag.core.models import MathExpressionDataset
+from math_rag.shared.utils import TypeUtil
 
 from .partials import PartialBackgroundService
 
@@ -30,3 +32,6 @@ class MathExpressionDatasetBackgroundService(PartialBackgroundService):
             raise ValueError()
 
         await self.math_expression_dataset_builder_service.build(dataset)
+
+    def task_model_type(self) -> str:
+        return TypeUtil.to_fqn(MathExpressionDataset)
