@@ -39,7 +39,7 @@ async def create_math_expression_dataset(
         id=dataset.id,
         timestamp=dataset.timestamp,
         build_stage=dataset.build_stage,
-        build_status=dataset.build_status,
+        task_status=dataset.task_status,
         build_from_id=dataset.build_from_id,
         build_from_stage=dataset.build_from_stage,
         build_priority=dataset.build_priority,

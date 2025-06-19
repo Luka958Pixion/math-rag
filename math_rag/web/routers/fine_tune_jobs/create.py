@@ -35,7 +35,7 @@ async def create_fine_tune_job(
     return FineTuneJobCreateResponse(
         id=fine_tune_job.id,
         timestamp=fine_tune_job.timestamp,
-        status=fine_tune_job.run_status,
+        status=fine_tune_job.task_status,
         provider_name=fine_tune_job.provider_name,
         model_name=fine_tune_job.model_name,
     )

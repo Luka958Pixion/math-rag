@@ -3,12 +3,12 @@ from uuid import UUID
 
 from pydantic import BaseModel
 
-from math_rag.core.enums import FineTuneJobRunStatus
+from math_rag.core.enums import TaskStatus
 
 
 class FineTuneJobCreateResponse(BaseModel):
     id: UUID
     timestamp: datetime
-    run_status: FineTuneJobRunStatus
+    task_status: TaskStatus
     provider_name: str
     model_name: str

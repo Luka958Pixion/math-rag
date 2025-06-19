@@ -1,7 +1,7 @@
 from enum import Enum
 
 
-class IndexBuildStatus(str, Enum):
+class TaskStatus(str, Enum):
     PENDING = 'pending'
     RUNNING = 'running'
     FINISHED = 'finished'

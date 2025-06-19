@@ -4,16 +4,14 @@ from math_rag.core.base import BaseDataset
 from math_rag.core.enums import (
     MathExpressionDatasetBuildPriority,
     MathExpressionDatasetBuildStage,
-    MathExpressionDatasetBuildStatus,
+    TaskStatus,
 )
 
 from .math_expression_dataset_build_details import MathExpressionDatasetBuildDetails
 
 
 class MathExpressionDataset(BaseDataset):
-    build_status: MathExpressionDatasetBuildStatus = Field(
-        default=MathExpressionDatasetBuildStatus.PENDING
-    )
+    task_status: TaskStatus = Field(default=TaskStatus.PENDING)
     build_stage: MathExpressionDatasetBuildStage = Field(
         default=MathExpressionDatasetBuildStage.LOAD_MATH_ARTICLES
     )

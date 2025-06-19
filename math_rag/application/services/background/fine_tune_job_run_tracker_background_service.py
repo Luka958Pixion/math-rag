@@ -38,7 +38,7 @@ class FineTuneJobRunTrackerBackgroundService(BaseFineTuneJobRunTrackerBackground
                 if not current_fine_tune_job:
                     continue
 
-                current_fine_tune_job = await self.fine_tune_job_repository.update_build_status(
+                current_fine_tune_job = await self.fine_tune_job_repository.update_task_status(
                     current_fine_tune_job.id, FineTuneJobRunStatus.RUNNING
                 )
 
@@ -48,13 +48,13 @@ class FineTuneJobRunTrackerBackgroundService(BaseFineTuneJobRunTrackerBackground
                         self.fine_tune_job_runner_service.build(current_fine_tune_job),
                         timeout=TIMEOUT,
                     )
-                    current_fine_tune_job = await self.fine_tune_job_repository.update_build_status(
+                    current_fine_tune_job = await self.fine_tune_job_repository.update_task_status(
                         current_fine_tune_job.id, FineTuneJobRunStatus.FINISHED
                     )
                     logger.info(f'Fine tune job {current_fine_tune_job.id} run finished')
 
                 except asyncio.TimeoutError:
-                    current_fine_tune_job = await self.fine_tune_job_repository.update_build_status(
+                    current_fine_tune_job = await self.fine_tune_job_repository.update_task_status(
                         current_fine_tune_job.id, FineTuneJobRunStatus.FAILED
                     )
                     logger.warning(
@@ -62,7 +62,7 @@ class FineTuneJobRunTrackerBackgroundService(BaseFineTuneJobRunTrackerBackground
                     )
 
                 except Exception as e:
-                    current_fine_tune_job = await self.fine_tune_job_repository.update_build_status(
+                    current_fine_tune_job = await self.fine_tune_job_repository.update_task_status(
                         current_fine_tune_job.id, FineTuneJobRunStatus.FAILED
                     )
                     logger.exception(

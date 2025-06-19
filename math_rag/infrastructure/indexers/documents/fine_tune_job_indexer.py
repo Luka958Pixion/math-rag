@@ -5,7 +5,7 @@ from math_rag.infrastructure.models.documents import FineTuneJobDocument
 from .document_indexer import DocumentIndexer
 
 
-FIELDS = ['run_status']
+FIELDS = ['task_status']
 
 
 class FineTuneJobIndexer(DocumentIndexer[FineTuneJobDocument]):

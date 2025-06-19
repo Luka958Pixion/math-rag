@@ -11,7 +11,7 @@ class IndexMapping(BaseMapping[Index, IndexDocument]):
             id=target.id,
             timestamp=target.timestamp,
             build_stage=IndexBuildStage(target.build_stage),
-            build_status=IndexBuildStatus(target.build_status),
+            task_status=IndexBuildStatus(target.task_status),
         )
 
     @staticmethod
@@ -20,5 +20,5 @@ class IndexMapping(BaseMapping[Index, IndexDocument]):
             id=source.id,
             timestamp=source.timestamp,
             build_stage=source.build_stage.value,
-            build_status=source.build_status.value,
+            task_status=source.task_status.value,
         )

@@ -5,7 +5,7 @@ from math_rag.infrastructure.models.documents import IndexDocument
 from .document_indexer import DocumentIndexer
 
 
-FIELDS = ['build_stage', 'build_status']
+FIELDS = ['build_stage', 'task_status']
 
 
 class IndexIndexer(DocumentIndexer[IndexDocument]):

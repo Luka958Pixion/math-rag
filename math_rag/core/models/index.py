@@ -3,11 +3,11 @@ from uuid import UUID, uuid4
 
 from pydantic import BaseModel, Field
 
-from math_rag.core.enums import IndexBuildStage, IndexBuildStatus
+from math_rag.core.enums import IndexBuildStage, TaskStatus
 
 
 class Index(BaseModel):
     id: UUID = Field(default_factory=uuid4)
     timestamp: datetime = Field(default_factory=datetime.now)
     build_stage: IndexBuildStage = Field(default=IndexBuildStage.LOAD_MATH_ARTICLES)
-    build_status: IndexBuildStatus = Field(default=IndexBuildStatus.PENDING)
+    task_status: TaskStatus = Field(default=TaskStatus.PENDING)

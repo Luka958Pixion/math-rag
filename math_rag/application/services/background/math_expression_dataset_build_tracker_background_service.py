@@ -8,7 +8,7 @@ from math_rag.application.base.services.background import (
     BaseMathExpressionDatasetBuildTrackerBackgroundService,
 )
 from math_rag.application.contexts import DatasetBuildContext
-from math_rag.core.enums import MathExpressionDatasetBuildStatus
+from math_rag.core.enums import TaskStatus
 
 
 TIMEOUT = 60 * 60 * 24 * 7  # 1 week
@@ -42,8 +42,8 @@ class MathExpressionDatasetBuildTrackerBackgroundService(
                 if not current_dataset:
                     continue
 
-                current_dataset = await self.math_expression_dataset_repository.update_build_status(
-                    current_dataset.id, MathExpressionDatasetBuildStatus.RUNNING
+                current_dataset = await self.math_expression_dataset_repository.update_task_status(
+                    current_dataset.id, TaskStatus.RUNNING
                 )
 
                 try:
@@ -53,24 +53,24 @@ class MathExpressionDatasetBuildTrackerBackgroundService(
                         timeout=TIMEOUT,
                     )
                     current_dataset = (
-                        await self.math_expression_dataset_repository.update_build_status(
-                            current_dataset.id, MathExpressionDatasetBuildStatus.FINISHED
+                        await self.math_expression_dataset_repository.update_task_status(
+                            current_dataset.id, TaskStatus.FINISHED
                         )
                     )
                     logger.info(f'Dataset {current_dataset.id} build finished')
 
                 except asyncio.TimeoutError:
                     current_dataset = (
-                        await self.math_expression_dataset_repository.update_build_status(
-                            current_dataset.id, MathExpressionDatasetBuildStatus.FAILED
+                        await self.math_expression_dataset_repository.update_task_status(
+                            current_dataset.id, TaskStatus.FAILED
                         )
                     )
                     logger.warning(f'Dataset {current_dataset.id} build failed due to a time out')
 
                 except Exception as e:
                     current_dataset = (
-                        await self.math_expression_dataset_repository.update_build_status(
-                            current_dataset.id, MathExpressionDatasetBuildStatus.FAILED
+                        await self.math_expression_dataset_repository.update_task_status(
+                            current_dataset.id, TaskStatus.FAILED
                         )
                     )
                     logger.exception(

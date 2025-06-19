@@ -8,7 +8,7 @@ from math_rag.application.base.services.background import (
     BaseIndexBuildTrackerBackgroundService,
 )
 from math_rag.application.contexts import IndexBuildContext
-from math_rag.core.enums import IndexBuildStatus
+from math_rag.core.enums import TaskStatus
 
 
 TIMEOUT = 60 * 60 * 24 * 7  # 1 week
@@ -40,8 +40,8 @@ class IndexBuildTrackerBackgroundService(BaseIndexBuildTrackerBackgroundService)
                 if not current_index:
                     continue
 
-                current_index = await self.index_repository.update_build_status(
-                    current_index.id, IndexBuildStatus.RUNNING
+                current_index = await self.index_repository.update_task_status(
+                    current_index.id, TaskStatus.RUNNING
                 )
 
                 try:
@@ -50,19 +50,19 @@ class IndexBuildTrackerBackgroundService(BaseIndexBuildTrackerBackgroundService)
                         self.index_builder_service.build(current_index),
                         timeout=TIMEOUT,
                     )
-                    current_index = await self.index_repository.update_build_status(
-                        current_index.id, IndexBuildStatus.FINISHED
+                    current_index = await self.index_repository.update_task_status(
+                        current_index.id, TaskStatus.FINISHED
                     )
                     logger.info(f'Index {current_index.id} build finished')
 
                 except asyncio.TimeoutError:
-                    current_index = await self.index_repository.update_build_status(
-                        current_index.id, IndexBuildStatus.FAILED
+                    current_index = await self.index_repository.update_task_status(
+                        current_index.id, TaskStatus.FAILED
                     )
                     logger.warning(f'Index {current_index.id} build failed due to a time out')
 
                 except Exception as e:
-                    current_index = await self.index_repository.update_build_status(
-                        current_index.id, IndexBuildStatus.FAILED
+                    current_index = await self.index_repository.update_task_status(
+                        current_index.id, TaskStatus.FAILED
                     )
                     logger.exception(f'Index {current_index.id} build failed due to an error: {e}')

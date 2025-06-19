@@ -32,5 +32,5 @@ async def create_index(
         id=index.id,
         timestamp=index.timestamp,
         build_stage=index.build_stage,
-        build_status=index.build_status,
+        task_status=index.task_status,
     )

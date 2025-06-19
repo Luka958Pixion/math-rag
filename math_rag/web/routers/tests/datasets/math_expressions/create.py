@@ -43,13 +43,4 @@ async def create_math_expression_dataset(
     async with context.condition:
         context.condition.notify()
 
-    return MathExpressionDatasetTestCreateResponse(
-        id=dataset.id,
-        timestamp=dataset.timestamp,
-        build_stage=dataset.build_stage,
-        build_status=dataset.build_status,
-        build_from_id=dataset.build_from_id,
-        build_from_stage=dataset.build_from_stage,
-        build_priority=dataset.build_priority,
-        build_details=dataset.build_details,
-    )
+    return MathExpressionDatasetTestCreateResponse(labels=...)
