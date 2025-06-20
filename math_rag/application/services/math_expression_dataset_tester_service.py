@@ -66,7 +66,14 @@ class MathExpressionDatasetTesterService(BaseMathExpressionDatasetTesterService)
             input_id_to_math_expression_id[input.id] = sample.math_expression_id
             inputs.append(input)
 
-        outputs = await self.math_expression_labeler_assistant.concurrent_assist(inputs)
+        if test.inference_provider == LLMInferenceProvider.HUGGING_FACE:
+            outputs = await self.math_expression_labeler_assistant.batch_assist(
+                inputs, use_scheduler=True
+            )
+
+        else:
+            outputs = await self.math_expression_labeler_assistant.concurrent_assist(inputs)
+
         labels = [
             MathExpressionLabel(
                 math_expression_id=input_id_to_math_expression_id[output.input_id],

@@ -1,0 +1,78 @@
+import asyncio
+
+from logging import getLogger
+
+from math_rag.application.base.repositories.documents import BaseMathExpressionDatasetRepository
+from math_rag.application.base.services import BaseMathExpressionDatasetBuilderService
+from math_rag.application.base.services.background import (
+    BaseMathExpressionDatasetBuildTrackerBackgroundService,
+)
+from math_rag.application.contexts import DatasetBuildContext
+from math_rag.core.enums import MathExpressionDatasetBuildStatus
+
+
+TIMEOUT = 60 * 60 * 24 * 7  # 1 week
+
+logger = getLogger(__name__)
+
+
+class MathExpressionDatasetBuildTrackerBackgroundService(
+    BaseMathExpressionDatasetBuildTrackerBackgroundService
+):
+    def __init__(
+        self,
+        math_expression_dataset_repository: BaseMathExpressionDatasetRepository,
+        math_expression_dataset_builder_service: BaseMathExpressionDatasetBuilderService,
+        dataset_build_context: DatasetBuildContext,
+    ):
+        self.math_expression_dataset_repository = math_expression_dataset_repository
+        self.math_expression_dataset_builder_service = math_expression_dataset_builder_service
+        self.dataset_build_context = dataset_build_context
+
+    async def track(self):
+        while True:
+            # wait until notified
+            async with self.dataset_build_context.condition:
+                await self.dataset_build_context.condition.wait()
+
+            # only one build at a time
+            async with self.dataset_build_context.lock:
+                current_dataset = await self.math_expression_dataset_repository.find_first_pending()
+
+                if not current_dataset:
+                    continue
+
+                current_dataset = await self.math_expression_dataset_repository.update_build_status(
+                    current_dataset.id, MathExpressionDatasetBuildStatus.RUNNING
+                )
+
+                try:
+                    # timeout each build to avoid hangs
+                    await asyncio.wait_for(
+                        self.math_expression_dataset_builder_service.build(current_dataset),
+                        timeout=TIMEOUT,
+                    )
+                    current_dataset = (
+                        await self.math_expression_dataset_repository.update_build_status(
+                            current_dataset.id, MathExpressionDatasetBuildStatus.FINISHED
+                        )
+                    )
+                    logger.info(f'Dataset {current_dataset.id} build finished')
+
+                except asyncio.TimeoutError:
+                    current_dataset = (
+                        await self.math_expression_dataset_repository.update_build_status(
+                            current_dataset.id, MathExpressionDatasetBuildStatus.FAILED
+                        )
+                    )
+                    logger.warning(f'Dataset {current_dataset.id} build failed due to a time out')
+
+                except Exception as e:
+                    current_dataset = (
+                        await self.math_expression_dataset_repository.update_build_status(
+                            current_dataset.id, MathExpressionDatasetBuildStatus.FAILED
+                        )
+                    )
+                    logger.exception(
+                        f'Dataset {current_dataset.id} build failed due to an error: {e}'
+                    )
