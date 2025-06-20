@@ -21,12 +21,21 @@ class LLMSettingsLoaderService(BaseLLMSettingsLoaderService):
 
     def load_basic_settings(self, provider: str, model: str) -> BasicLLMSettings:
         default_basic_settings = self._default_settings.basic
-        override_basic_settings = self._provider_settings[provider][model].basic
 
         if default_basic_settings is None:
             raise ValueError('Default basic settings must not be None')
 
-        if provider == DEFAULT or override_basic_settings is None:
+        if provider not in self._provider_settings.keys():
+            return default_basic_settings
+
+        model_settings = self._provider_settings[provider]
+
+        if model not in model_settings:
+            return default_basic_settings
+
+        override_basic_settings = model_settings[model].basic
+
+        if override_basic_settings is None:
             return default_basic_settings
 
         return PydanticOverriderUtil.override(
@@ -52,6 +61,8 @@ class LLMSettingsLoaderService(BaseLLMSettingsLoaderService):
     def load_concurrent_settings(self, provider: str, model: str) -> ConcurrentLLMSettings:
         default_concurrent_settings = self._default_settings.concurrent
         override_concurrent_settings = self._provider_settings[provider][model].concurrent
+
+        x = self._provider_settings[provider]
 
         if default_concurrent_settings is None:
             raise ValueError('Default concurrent settings must not be None')

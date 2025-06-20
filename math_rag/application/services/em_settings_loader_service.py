@@ -21,12 +21,21 @@ class EMSettingsLoaderService(BaseEMSettingsLoaderService):
 
     def load_basic_settings(self, provider: str, model: str) -> BasicEMSettings:
         default_basic_settings = self._default_settings.basic
-        override_basic_settings = self._provider_settings[provider][model].basic
 
         if default_basic_settings is None:
             raise ValueError('Default basic settings must not be None')
 
-        if provider == DEFAULT or override_basic_settings is None:
+        if provider not in self._provider_settings.keys():
+            return default_basic_settings
+
+        model_settings = self._provider_settings[provider]
+
+        if model not in model_settings:
+            return default_basic_settings
+
+        override_basic_settings = model_settings[model].basic
+
+        if override_basic_settings is None:
             return default_basic_settings
 
         return PydanticOverriderUtil.override(

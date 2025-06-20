@@ -48,10 +48,10 @@ class MathExpressionDatasetTesterService(BaseMathExpressionDatasetTesterService)
         self.math_expression_labeler_assistant.system_prompt = prompt_collection.system
         self.math_expression_labeler_assistant.user_prompt = prompt_collection.user
         self.math_expression_labeler_assistant.model = test.model
-        self.math_expression_labeler_assistant.inference_provider = LLMInferenceProvider.from_str(
+        self.math_expression_labeler_assistant.inference_provider = LLMInferenceProvider(
             test.inference_provider
         )
-        self.math_expression_labeler_assistant.model_provider = LLMModelProvider.from_str(
+        self.math_expression_labeler_assistant.model_provider = LLMModelProvider(
             test.model_provider
         )
 
