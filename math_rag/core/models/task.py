@@ -11,7 +11,7 @@ class Task(BaseModel):
     model_id: UUID
     model_name: str
     created_at: datetime = Field(default_factory=datetime.now)
-    started_at: datetime = Field(default_factory=datetime.now)
-    failed_at: datetime = Field(default_factory=datetime.now)
-    finished_at: datetime = Field(default_factory=datetime.now)
+    started_at: datetime | None = None
+    failed_at: datetime | None = None
+    finished_at: datetime | None = None
     task_status: TaskStatus = Field(default=TaskStatus.PENDING)

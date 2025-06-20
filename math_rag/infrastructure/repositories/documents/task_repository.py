@@ -1,3 +1,4 @@
+from datetime import datetime
 from uuid import UUID
 
 from pymongo import AsyncMongoClient, ReturnDocument
@@ -9,6 +10,13 @@ from math_rag.infrastructure.mappings.documents import TaskMapping
 from math_rag.infrastructure.models.documents import TaskDocument
 
 from .document_repository import DocumentRepository
+
+
+TASK_STATUS_TO_DATETIME_FIELD = {
+    TaskStatus.RUNNING: 'started_at',
+    TaskStatus.FAILED: 'failed_at',
+    TaskStatus.FINISHED: 'finished_at',
+}
 
 
 class TaskRepository(
@@ -32,9 +40,15 @@ class TaskRepository(
         return self.mapping_cls.to_source(doc)
 
     async def update_task_status(self, id: UUID, task_status: TaskStatus) -> Task:
+        update_set = dict(task_status=task_status.value)
+        datetime_field = TASK_STATUS_TO_DATETIME_FIELD.get(task_status)
+
+        if datetime_field:
+            update_set[datetime_field] = datetime.now()
+
         bson_doc = await self.collection.find_one_and_update(
             filter=dict(_id=id),
-            update={'$set': dict(task_status=task_status.value)},
+            update={'$set': update_set},
             return_document=ReturnDocument.AFTER,
         )
         doc = self.target_cls.model_validate(bson_doc)
