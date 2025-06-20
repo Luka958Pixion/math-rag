@@ -7,6 +7,7 @@ from math_rag.application.base.repositories.documents import BaseMathExpressionD
 from math_rag.application.base.services import BaseDatasetPublisherService
 from math_rag.application.containers import ApplicationContainer
 from math_rag.core.models import MathExpressionDataset
+from math_rag.shared.utils import StrUtil
 
 
 logger = getLogger(__name__)
@@ -23,7 +24,7 @@ async def delete_math_expression_datasets(
         Provide[ApplicationContainer.dataset_publisher_service]
     ),
 ):
-    dataset_name = MathExpressionDataset.__name__.lower()
+    dataset_name = StrUtil.to_snake_case(MathExpressionDataset.__name__)
     service.unpublish(dataset_name)
     logger.info(f'Unpublished dataset {dataset_name}')
 

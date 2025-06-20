@@ -15,6 +15,7 @@ from math_rag.core.models import (
     MathExpressionSample,
 )
 from math_rag.infrastructure.utils import LabelInstructionBuilderUtil
+from math_rag.shared.utils import StrUtil
 
 
 class MathExpressionLabelTaskImporterService(BaseMathExpressionLabelTaskImporterService):
@@ -33,8 +34,8 @@ class MathExpressionLabelTaskImporterService(BaseMathExpressionLabelTaskImporter
     async def import_tasks(
         self, project_id: int | None, *, dataset_id: UUID, split_name: str
     ) -> int:
-        dataset_name = MathExpressionDataset.__name__.lower()
-        project_name = MathExpressionLabelTask.__name__.lower()
+        dataset_name = StrUtil.to_snake_case(MathExpressionDataset.__name__)
+        project_name = StrUtil.to_snake_case(MathExpressionLabelTask.__name__)
         label_names = [label.value for label in MathExpressionLabelEnum]
 
         split_name_to_samples, file = self.dataset_loader_service.load(

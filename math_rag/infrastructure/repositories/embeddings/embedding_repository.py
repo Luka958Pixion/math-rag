@@ -13,7 +13,7 @@ from math_rag.infrastructure.types.repositories.embeddings import (
     SourceType,
     TargetType,
 )
-from math_rag.shared.utils import TypeUtil
+from math_rag.shared.utils import StrUtil, TypeUtil
 
 
 BACKUP_PATH = Path(__file__).parents[4] / '.tmp' / 'backups' / 'qdrant'
@@ -29,7 +29,7 @@ class EmbeddingRepository(
         self.mapping_cls = cast(type[MappingType], args[1][2])
 
         self.client = client
-        self.collection_name = self.target_cls.__name__.lower()
+        self.collection_name = StrUtil.to_snake_case(self.target_cls.__name__)
 
     async def upsert_one(self, item: SourceType, embedding: list[float]):
         point = PointStruct(**self.mapping_cls.to_target(item, embedding=embedding).model_dump())

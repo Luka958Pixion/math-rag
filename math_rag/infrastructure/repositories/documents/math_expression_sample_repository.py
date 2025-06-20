@@ -12,6 +12,7 @@ from math_rag.infrastructure.models.documents import (
     MathExpressionLabelDocument,
     MathExpressionSampleDocument,
 )
+from math_rag.shared.utils import StrUtil
 
 from .document_repository import DocumentRepository
 from .projections.math_expression_sample_projection import MathExpressionSampleProjection
@@ -26,9 +27,13 @@ class MathExpressionSampleRepository(
     def __init__(self, client: AsyncMongoClient, deployment: str):
         super().__init__(client, deployment)
 
-        self.math_expression_collection_name = MathExpressionDocument.__name__.lower()
+        self.math_expression_collection_name = StrUtil.to_snake_case(
+            MathExpressionDocument.__name__
+        )
         self.math_expression_collection = self.db[self.math_expression_collection_name]
-        self.math_expression_label_collection_name = MathExpressionLabelDocument.__name__.lower()
+        self.math_expression_label_collection_name = StrUtil.to_snake_case(
+            MathExpressionLabelDocument.__name__
+        )
         self.math_expression_label_collection = self.db[self.math_expression_label_collection_name]
 
     async def _aggregate(

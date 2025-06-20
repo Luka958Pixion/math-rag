@@ -11,6 +11,7 @@ from math_rag.core.models import (
     MathExpressionDataset,
     MathExpressionSample,
 )
+from math_rag.shared.utils import StrUtil
 
 
 logger = getLogger(__name__)
@@ -43,7 +44,7 @@ class MathExpressionDatasetPublisherService(BaseMathExpressionDatasetPublisherSe
 
         self.dataset_publisher_service.publish(
             dataset_id=dataset.id,
-            dataset_name=dataset.__class__.__name__.lower(),
+            dataset_name=StrUtil.to_snake_case(dataset.__class__.__name__),
             samples=math_expression_samples,
             sample_type=MathExpressionSample,
             fields=fields,

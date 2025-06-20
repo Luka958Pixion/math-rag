@@ -9,6 +9,7 @@ from bson.json_util import JSONOptions, dumps, loads
 from pymongo import ASCENDING, AsyncMongoClient, InsertOne
 
 from math_rag.infrastructure.models.documents import ObjectMetadataDocument
+from math_rag.shared.utils import StrUtil
 
 
 BACKUP_PATH = Path(__file__).parents[4] / '.tmp' / 'backups' / 'mongo'
@@ -18,7 +19,7 @@ class ObjectMetadataRepository:
     def __init__(self, client: AsyncMongoClient, deployment: str):
         self.client = client
         self.db = self.client[deployment]
-        self.collection_name = ObjectMetadataDocument.__name__.lower()
+        self.collection_name = StrUtil.to_snake_case(ObjectMetadataDocument.__name__)
         self.collection = self.db[self.collection_name]
         self.json_options = JSONOptions(uuid_representation=UuidRepresentation.STANDARD)
 

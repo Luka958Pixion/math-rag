@@ -4,7 +4,7 @@ from pymongo import AsyncMongoClient
 
 from math_rag.application.base.seeders.documents import BaseDocumentSeeder
 from math_rag.infrastructure.types.repositories.documents import TargetType
-from math_rag.shared.utils import TypeUtil
+from math_rag.shared.utils import StrUtil, TypeUtil
 
 
 class DocumentSeeder(BaseDocumentSeeder, Generic[TargetType]):
@@ -14,7 +14,7 @@ class DocumentSeeder(BaseDocumentSeeder, Generic[TargetType]):
 
         self.client = client
         self.db = self.client[deployment]
-        self.collection_name = self.target_cls.__name__.lower()
+        self.collection_name = StrUtil.to_snake_case(self.target_cls.__name__)
 
     async def seed(self, reset=False):
         if reset:

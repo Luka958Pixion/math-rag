@@ -14,7 +14,7 @@ from math_rag.infrastructure.types.repositories.documents import (
     SourceType,
     TargetType,
 )
-from math_rag.shared.utils import TypeUtil
+from math_rag.shared.utils import StrUtil, TypeUtil
 
 
 BACKUP_PATH = Path(__file__).parents[4] / '.tmp' / 'backups' / 'mongo'
@@ -31,7 +31,7 @@ class DocumentRepository(
 
         self.client = client
         self.db = self.client[deployment]
-        self.collection_name = self.target_cls.__name__.lower()
+        self.collection_name = StrUtil.to_snake_case(self.target_cls.__name__)
         self.collection = self.db[self.collection_name]
         self.json_options = JSONOptions(uuid_representation=UuidRepresentation.STANDARD)
 

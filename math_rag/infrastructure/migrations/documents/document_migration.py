@@ -4,7 +4,7 @@ from uuid import UUID
 from pymongo import AsyncMongoClient, UpdateOne
 
 from math_rag.infrastructure.types.repositories.documents import TargetType
-from math_rag.shared.utils import TypeUtil
+from math_rag.shared.utils import StrUtil, TypeUtil
 
 
 class DocumentMigration(Generic[TargetType]):
@@ -14,7 +14,7 @@ class DocumentMigration(Generic[TargetType]):
 
         self.client = client
         self.db = self.client[deployment]
-        self.collection_name = self.target_cls.__name__.lower()
+        self.collection_name = StrUtil.to_snake_case(self.target_cls.__name__)
         self.collection = self.db[self.collection_name]
 
     async def add_field(self, field: str, id_to_field_value: dict[UUID, Any]):

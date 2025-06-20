@@ -5,7 +5,7 @@ from pymongo.operations import IndexModel
 
 from math_rag.application.base.indexers.documents import BaseDocumentIndexer
 from math_rag.infrastructure.types.repositories.documents import TargetType
-from math_rag.shared.utils import TypeUtil
+from math_rag.shared.utils import StrUtil, TypeUtil
 
 
 class DocumentIndexer(BaseDocumentIndexer, Generic[TargetType]):
@@ -15,7 +15,7 @@ class DocumentIndexer(BaseDocumentIndexer, Generic[TargetType]):
 
         self.client = client
         self.db = self.client[deployment]
-        self.collection_name = self.target_cls.__name__.lower()
+        self.collection_name = StrUtil.to_snake_case(self.target_cls.__name__)
         self.collection = self.db[self.collection_name]
         self.fields = fields
 

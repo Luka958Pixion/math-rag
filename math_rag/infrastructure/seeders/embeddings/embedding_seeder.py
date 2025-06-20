@@ -5,7 +5,7 @@ from qdrant_client.models import Distance, HnswConfigDiff, VectorParams
 
 from math_rag.application.base.seeders.embeddings import BaseEmbeddingSeeder
 from math_rag.infrastructure.types.repositories.embeddings import TargetType
-from math_rag.shared.utils import TypeUtil
+from math_rag.shared.utils import StrUtil, TypeUtil
 
 
 class EmbeddingSeeder(BaseEmbeddingSeeder, Generic[TargetType]):
@@ -14,7 +14,7 @@ class EmbeddingSeeder(BaseEmbeddingSeeder, Generic[TargetType]):
         self.target_cls = cast(type[TargetType], args[0])
 
         self.client = client
-        self.collection_name = self.target_cls.__name__.lower()
+        self.collection_name = StrUtil.to_snake_case(self.target_cls.__name__)
 
     async def seed(self, reset=False):
         if reset:

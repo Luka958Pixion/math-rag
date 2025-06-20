@@ -16,11 +16,12 @@ from math_rag.core.models import (
     MathExpressionLabel,
     MathExpressionSample,
 )
+from math_rag.shared.utils import StrUtil
 
 
 logger = getLogger(__name__)
 
-DATASET_NAME = MathExpressionDataset.__name__.lower()
+DATASET_NAME = StrUtil.to_snake_case(MathExpressionDataset.__name__)
 DATASET_METADATA_FILE_NAME = 'prompt.json'
 
 
