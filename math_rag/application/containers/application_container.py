@@ -29,6 +29,7 @@ from math_rag.application.base.repositories.documents import (
     BaseIndexRepository,
     BaseMathExpressionDatasetRepository,
     BaseMathExpressionDatasetTestRepository,
+    BaseMathExpressionDatasetTestResultRepository,
     BaseMathExpressionLabelRepository,
     BaseMathExpressionRepository,
     BaseMathExpressionSampleRepository,
@@ -89,6 +90,9 @@ class ApplicationContainer(DeclarativeContainer):
     math_expression_dataset_repository = Dependency(instance_of=BaseMathExpressionDatasetRepository)
     math_expression_dataset_test_repository = Dependency(
         instance_of=BaseMathExpressionDatasetTestRepository
+    )
+    math_expression_dataset_test_result_repository = Dependency(
+        instance_of=BaseMathExpressionDatasetTestResultRepository
     )
     math_article_repository = Dependency(instance_of=BaseMathArticleRepository)
     math_expression_repository = Dependency(instance_of=BaseMathExpressionRepository)
@@ -208,6 +212,7 @@ class ApplicationContainer(DeclarativeContainer):
         MathExpressionDatasetTestBackgroundService,
         math_expression_dataset_tester_service=math_expression_dataset_tester_service,
         math_expression_dataset_test_repository=math_expression_dataset_test_repository,
+        math_expression_dataset_test_result_repository=math_expression_dataset_test_result_repository,
         task_repository=task_repository,
     )
     prometheus_snapshot_background_service = Singleton(

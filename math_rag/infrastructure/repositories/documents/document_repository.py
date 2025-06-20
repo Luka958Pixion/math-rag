@@ -6,7 +6,7 @@ from uuid import UUID
 
 from bson.binary import UuidRepresentation
 from bson.json_util import JSONOptions, dumps, loads
-from pymongo import ASCENDING, AsyncMongoClient, InsertOne
+from pymongo import ASCENDING, AsyncMongoClient, InsertOne, ReturnDocument
 
 from math_rag.application.base.repositories.documents import BaseDocumentRepository
 from math_rag.infrastructure.types.repositories.documents import (
@@ -123,6 +123,19 @@ class DocumentRepository(
 
         if batch:
             yield batch
+
+    async def update_one(self, *, filter: dict[str, Any], update: dict[str, Any]) -> SourceType:
+        if 'id' in filter:
+            filter['_id'] = filter.pop('id')
+
+        bson_doc = await self.collection.find_one_and_update(
+            filter=filter,
+            update={'$set': update},
+            return_document=ReturnDocument.AFTER,
+        )
+        doc = self.target_cls.model_validate(bson_doc)
+
+        return self.mapping_cls.to_source(doc)
 
     async def delete_one(self, filter: dict[str, Any]) -> int:
         if 'id' in filter:

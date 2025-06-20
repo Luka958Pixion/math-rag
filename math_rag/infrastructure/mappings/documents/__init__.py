@@ -14,6 +14,7 @@ from .llm_params_mapping import LLMParamsMapping
 from .llm_request_mapping import LLMRequestMapping
 from .math_expression_dataset_mapping import MathExpressionDatasetMapping
 from .math_expression_dataset_test_mapping import MathExpressionDatasetTestMapping
+from .math_expression_dataset_test_result_mapping import MathExpressionDatasetTestResultMapping
 from .math_expression_label_mapping import MathExpressionLabelMapping
 from .math_expression_mapping import MathExpressionMapping
 from .math_expression_sample_mapping import MathExpressionSampleMapping
@@ -38,6 +39,7 @@ __all__ = [
     'LLMRequestMapping',
     'MathExpressionDatasetMapping',
     'MathExpressionDatasetTestMapping',
+    'MathExpressionDatasetTestResultMapping',
     'MathExpressionLabelMapping',
     'MathExpressionMapping',
     'MathExpressionSampleMapping',

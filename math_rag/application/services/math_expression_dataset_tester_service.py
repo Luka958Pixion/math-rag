@@ -12,6 +12,7 @@ from math_rag.application.models.inference import LLMPromptCollection
 from math_rag.core.models import (
     MathExpressionDataset,
     MathExpressionDatasetTest,
+    MathExpressionDatasetTestResult,
     MathExpressionLabel,
     MathExpressionSample,
 )
@@ -32,7 +33,7 @@ class MathExpressionDatasetTesterService(BaseMathExpressionDatasetTesterService)
         self.dataset_loader_service = dataset_loader_service
         self.math_expression_labeler_assistant = math_expression_labeler_assistant
 
-    async def test(self, test: MathExpressionDatasetTest) -> list[MathExpressionLabel]:
+    async def test(self, test: MathExpressionDatasetTest) -> MathExpressionDatasetTestResult:
         # load dataset
         split_name_to_samples, dataset_metadata_file = self.dataset_loader_service.load(
             dataset_id=test.math_expression_dataset_id,
@@ -65,8 +66,7 @@ class MathExpressionDatasetTesterService(BaseMathExpressionDatasetTesterService)
             inputs.append(input)
 
         outputs = await self.math_expression_labeler_assistant.concurrent_assist(inputs)
-
-        return [
+        labels = [
             MathExpressionLabel(
                 math_expression_id=input_id_to_math_expression_id[output.input_id],
                 math_expression_dataset_id=test.math_expression_dataset_id,
@@ -75,3 +75,7 @@ class MathExpressionDatasetTesterService(BaseMathExpressionDatasetTesterService)
             )
             for output in outputs
         ]
+
+        return MathExpressionDatasetTestResult(
+            math_expression_dataset_test_id=test.id, math_expression_labels=labels
+        )

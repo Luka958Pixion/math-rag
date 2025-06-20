@@ -4,7 +4,7 @@ from dependency_injector.wiring import Provide, inject
 from fastapi import APIRouter, Body, Depends
 
 from math_rag.application.base.repositories.documents import (
-    BaseMathExpressionDatasetRepository,
+    BaseMathExpressionDatasetTestRepository,
     BaseTaskRepository,
 )
 from math_rag.application.containers import ApplicationContainer
@@ -27,8 +27,8 @@ router = APIRouter()
 @inject
 async def create_math_expression_dataset_test(
     request: MathExpressionDatasetTestCreateRequest = Body(...),
-    test_repository: BaseMathExpressionDatasetRepository = Depends(
-        Provide[ApplicationContainer.math_expression_dataset_repository]
+    test_repository: BaseMathExpressionDatasetTestRepository = Depends(
+        Provide[ApplicationContainer.math_expression_dataset_test_repository]
     ),
     task_repository: BaseTaskRepository = Depends(Provide[ApplicationContainer.task_repository]),
 ):

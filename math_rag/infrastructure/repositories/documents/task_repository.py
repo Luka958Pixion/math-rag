@@ -1,7 +1,7 @@
 from datetime import datetime
 from uuid import UUID
 
-from pymongo import AsyncMongoClient, ReturnDocument
+from pymongo import AsyncMongoClient
 
 from math_rag.application.base.repositories.documents import BaseTaskRepository
 from math_rag.core.enums import TaskStatus
@@ -40,17 +40,10 @@ class TaskRepository(
         return self.mapping_cls.to_source(doc)
 
     async def update_task_status(self, id: UUID, task_status: TaskStatus) -> Task:
-        update_set = dict(task_status=task_status.value)
+        update = dict(task_status=task_status.value)
         datetime_field = TASK_STATUS_TO_DATETIME_FIELD.get(task_status)
 
         if datetime_field:
-            update_set[datetime_field] = datetime.now()
+            update[datetime_field] = datetime.now()
 
-        bson_doc = await self.collection.find_one_and_update(
-            filter=dict(_id=id),
-            update={'$set': update_set},
-            return_document=ReturnDocument.AFTER,
-        )
-        doc = self.target_cls.model_validate(bson_doc)
-
-        return self.mapping_cls.to_source(doc)
+        return await self.update_one(filter=dict(id=id), update=update)

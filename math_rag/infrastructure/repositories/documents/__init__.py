@@ -7,6 +7,9 @@ from .katex_corrector_assistant_output_repository import KatexCorrectorAssistant
 from .llm_failed_request_repository import LLMFailedRequestRepository
 from .math_expression_dataset_repository import MathExpressionDatasetRepository
 from .math_expression_dataset_test_repository import MathExpressionDatasetTestRepository
+from .math_expression_dataset_test_result_repository import (
+    MathExpressionDatasetTestResultRepository,
+)
 from .math_expression_label_repository import MathExpressionLabelRepository
 from .math_expression_repository import MathExpressionRepository
 from .math_expression_sample_repository import MathExpressionSampleRepository
@@ -25,6 +28,7 @@ __all__ = [
     'LLMFailedRequestRepository',
     'MathExpressionDatasetRepository',
     'MathExpressionDatasetTestRepository',
+    'MathExpressionDatasetTestResultRepository',
     'MathExpressionLabelRepository',
     'MathExpressionRepository',
     'MathExpressionSampleRepository',

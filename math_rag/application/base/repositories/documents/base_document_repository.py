@@ -36,6 +36,10 @@ class BaseDocumentRepository(ABC, Generic[T]):
         yield
 
     @abstractmethod
+    async def update_one(self, *, filter: dict[str, Any], update: dict[str, Any]) -> T:
+        pass
+
+    @abstractmethod
     async def count(self, *, filter: dict[str, Any] | None) -> int:
         pass
 

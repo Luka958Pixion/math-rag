@@ -41,6 +41,8 @@ from math_rag.infrastructure.indexers.documents import (
     FineTuneJobIndexer,
     IndexIndexer,
     MathExpressionDatasetIndexer,
+    MathExpressionDatasetTestIndexer,
+    MathExpressionDatasetTestResultIndexer,
     MathExpressionIndexer,
     MathExpressionLabelIndexer,
     MathExpressionSampleIndexer,
@@ -67,6 +69,7 @@ from math_rag.infrastructure.repositories.documents import (
     LLMFailedRequestRepository,
     MathExpressionDatasetRepository,
     MathExpressionDatasetTestRepository,
+    MathExpressionDatasetTestResultRepository,
     MathExpressionLabelRepository,
     MathExpressionRepository,
     MathExpressionSampleRepository,
@@ -83,6 +86,8 @@ from math_rag.infrastructure.seeders.documents import (
     IndexSeeder,
     LLMFailedRequestSeeder,
     MathExpressionDatasetSeeder,
+    MathExpressionDatasetTestResultSeeder,
+    MathExpressionDatasetTestSeeder,
     MathExpressionLabelSeeder,
     MathExpressionSampleSeeder,
     MathExpressionSeeder,
@@ -133,6 +138,9 @@ class InfrastructureContainer(DeclarativeContainer):
     math_expression_dataset_test_repository = Factory(
         MathExpressionDatasetTestRepository, **mongo_kwargs
     )
+    math_expression_dataset_test_result_repository = Factory(
+        MathExpressionDatasetTestResultRepository, **mongo_kwargs
+    )
     math_expression_repository = Factory(MathExpressionRepository, **mongo_kwargs)
     math_expression_label_repository = Factory(MathExpressionLabelRepository, **mongo_kwargs)
     math_expression_sample_repository = Factory(MathExpressionSampleRepository, **mongo_kwargs)
@@ -145,6 +153,10 @@ class InfrastructureContainer(DeclarativeContainer):
     index_seeder = Factory(IndexSeeder, **mongo_kwargs)
     llm_failed_request_seeder = Factory(LLMFailedRequestSeeder, **mongo_kwargs)
     math_expression_dataset_seeder = Factory(MathExpressionDatasetSeeder, **mongo_kwargs)
+    math_expression_dataset_test_seeder = Factory(MathExpressionDatasetTestSeeder, **mongo_kwargs)
+    math_expression_dataset_test_result_seeder = Factory(
+        MathExpressionDatasetTestResultSeeder, **mongo_kwargs
+    )
     math_expression_label_seeder = Factory(MathExpressionLabelSeeder, **mongo_kwargs)
     math_expression_seeder = Factory(MathExpressionSeeder, **mongo_kwargs)
     math_expression_sample_seeder = Factory(MathExpressionSampleSeeder, **mongo_kwargs)
@@ -158,6 +170,8 @@ class InfrastructureContainer(DeclarativeContainer):
         index_seeder,
         llm_failed_request_seeder,
         math_expression_dataset_seeder,
+        math_expression_dataset_test_seeder,
+        math_expression_dataset_test_result_seeder,
         math_expression_label_seeder,
         math_expression_seeder,
         math_expression_sample_seeder,
@@ -169,6 +183,10 @@ class InfrastructureContainer(DeclarativeContainer):
     fine_tune_job_indexer = Factory(FineTuneJobIndexer, **mongo_kwargs)
     index_indexer = Factory(IndexIndexer, **mongo_kwargs)
     math_expression_dataset_indexer = Factory(MathExpressionDatasetIndexer, **mongo_kwargs)
+    math_expression_dataset_test_indexer = Factory(MathExpressionDatasetTestIndexer, **mongo_kwargs)
+    math_expression_dataset_test_result_indexer = Factory(
+        MathExpressionDatasetTestResultIndexer, **mongo_kwargs
+    )
     math_expression_label_indexer = Factory(MathExpressionLabelIndexer, **mongo_kwargs)
     math_expression_indexer = Factory(MathExpressionIndexer, **mongo_kwargs)
     math_expression_sample_indexer = Factory(MathExpressionSampleIndexer, **mongo_kwargs)
@@ -180,6 +198,8 @@ class InfrastructureContainer(DeclarativeContainer):
         fine_tune_job_indexer,
         index_indexer,
         math_expression_dataset_indexer,
+        math_expression_dataset_test_indexer,
+        math_expression_dataset_test_result_indexer,
         math_expression_label_indexer,
         math_expression_indexer,
         math_expression_sample_indexer,
@@ -478,6 +498,7 @@ class InfrastructureContainer(DeclarativeContainer):
         index_repository=index_repository,
         math_expression_dataset_repository=math_expression_dataset_repository,
         math_expression_dataset_test_repository=math_expression_dataset_test_repository,
+        math_expression_dataset_test_result_repository=math_expression_dataset_test_result_repository,
         math_expression_sample_repository=math_expression_sample_repository,
         math_article_repository=math_article_repository,
         math_expression_repository=math_expression_repository,
