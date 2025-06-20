@@ -22,8 +22,8 @@ class LLMParams(BaseModel, Generic[LLMResponseType]):
     n: int = 1
 
     # NOTE: additional parameters that are not used during inference
-    inference_provider: LLMInferenceProvider
-    model_provider: LLMModelProvider
+    inference_provider: LLMInferenceProvider | None
+    model_provider: LLMModelProvider | None
 
     @field_validator('response_type', mode='before')
     def allow_python_types(cls, value: type[LLMResponseType]):

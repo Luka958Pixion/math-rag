@@ -19,6 +19,7 @@ huggingface:
   text-embeddings-inference:
     batch:
       max_tokens_per_day: null
+      max_input_file_size: null
 
 openai:
   text-embedding-3-large:

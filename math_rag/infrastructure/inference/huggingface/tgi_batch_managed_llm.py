@@ -33,7 +33,7 @@ class TGIBatchManagedLLM(BaseBatchManagedLLM):
         HuggingFaceModelNameValidator.validate(model)
 
         batch_settings = self._llm_settings_loader_service.load_batch_settings(
-            'text-generation-inference', model
+            'huggingface', 'text-generation-inference'
         )
 
         if batch_settings.poll_interval is None:
@@ -43,6 +43,10 @@ class TGIBatchManagedLLM(BaseBatchManagedLLM):
             # NOTE: differs from openai
             raise ValueError('max_num_retries must be None')
 
+        elif batch_settings.max_input_file_size is not None:
+            # NOTE: differs from openai
+            raise ValueError('max_input_file_size must be None')
+
         elif batch_settings.max_num_retries is None:
             raise ValueError('max_num_retries can not be None')
 
@@ -51,6 +55,7 @@ class TGIBatchManagedLLM(BaseBatchManagedLLM):
             response_type,
             poll_interval=batch_settings.poll_interval,
             max_tokens_per_day=batch_settings.max_tokens_per_day,
+            max_input_file_size=batch_settings.max_input_file_size,
             max_num_retries=batch_settings.max_num_retries,
         )
 

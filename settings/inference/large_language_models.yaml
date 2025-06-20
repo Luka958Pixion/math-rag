@@ -19,6 +19,7 @@ huggingface:
   text-generation-inference:
     batch:
       max_tokens_per_day: null
+      max_input_file_size: null
 
 openai:
   gpt-4o-mini:

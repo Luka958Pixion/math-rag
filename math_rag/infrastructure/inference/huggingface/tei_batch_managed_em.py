@@ -21,7 +21,7 @@ class TEIBatchManagedEM(BaseBatchManagedEM):
         HuggingFaceModelNameValidator.validate(model)
 
         batch_settings = self._em_settings_loader_service.load_batch_settings(
-            'text-embeddings-inference', model
+            'huggingface', 'text-embeddings-inference'
         )
 
         if batch_settings.poll_interval is None:
@@ -30,6 +30,10 @@ class TEIBatchManagedEM(BaseBatchManagedEM):
         elif batch_settings.max_tokens_per_day is not None:
             # NOTE: differs from openai
             raise ValueError('max_num_retries must be None')
+
+        elif batch_settings.max_input_file_size is not None:
+            # NOTE: differs from openai
+            raise ValueError('max_input_file_size must be None')
 
         elif batch_settings.max_num_retries is None:
             raise ValueError('max_num_retries can not be None')

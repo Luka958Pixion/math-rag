@@ -34,6 +34,8 @@ class LLMRequestMapping(
                 max_completion_tokens=target['max_tokens'],
                 metadata=target['extra_body'],
                 n=target.get('n', 1),
+                inference_provider=None,
+                model_provider=None,
             ),
         )
 
