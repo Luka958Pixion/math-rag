@@ -14,6 +14,7 @@ class MathExpressionDatasetTestResultMapping(
     ) -> MathExpressionDatasetTestResult:
         return MathExpressionDatasetTestResult(
             id=target.id,
+            math_expression_dataset_id=target.math_expression_dataset_id,
             math_expression_dataset_test_id=target.math_expression_dataset_test_id,
             math_expression_labels=[
                 MathExpressionLabelMapping.to_source(math_expression_label)
@@ -28,6 +29,7 @@ class MathExpressionDatasetTestResultMapping(
     ) -> MathExpressionDatasetTestResultDocument:
         return MathExpressionDatasetTestResultDocument(
             id=source.id,
+            math_expression_dataset_id=source.math_expression_dataset_id,
             math_expression_dataset_test_id=source.math_expression_dataset_test_id,
             math_expression_labels=[
                 MathExpressionLabelMapping.to_target(math_expression_label)

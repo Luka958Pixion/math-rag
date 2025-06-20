@@ -16,7 +16,7 @@ logger = getLogger(__name__)
 router = APIRouter()
 
 
-@router.get('/tests/datasets/math-expressions', response_model=Response)
+@router.get('/results/tests/datasets/math-expressions', response_model=Response)
 @inject
 async def read_math_expression_dataset_test_result(
     math_expression_dataset_test_id: UUID = Query(...),

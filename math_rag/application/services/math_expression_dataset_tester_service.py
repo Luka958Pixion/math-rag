@@ -77,5 +77,7 @@ class MathExpressionDatasetTesterService(BaseMathExpressionDatasetTesterService)
         ]
 
         return MathExpressionDatasetTestResult(
-            math_expression_dataset_test_id=test.id, math_expression_labels=labels
+            math_expression_dataset_id=test.math_expression_dataset_id,
+            math_expression_dataset_test_id=test.id,
+            math_expression_labels=labels,
         )
