@@ -225,5 +225,5 @@ class ApplicationContainer(DeclarativeContainer):
         index_background_service,
         math_expression_dataset_background_service,
         math_expression_dataset_test_background_service,
-        prometheus_snapshot_background_service,
+        # prometheus_snapshot_background_service,   # NOTE: works, but not needed at the moment
     )
