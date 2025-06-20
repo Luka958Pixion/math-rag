@@ -50,7 +50,12 @@ from math_rag.infrastructure.indexers.documents import (
     ObjectMetadataIndexer,
     TaskIndexer,
 )
-from math_rag.infrastructure.inference.huggingface import TEIBatchEM, TGIBatchLLM
+from math_rag.infrastructure.inference.huggingface import (
+    TEIBatchEM,
+    TEIBatchManagedEM,
+    TGIBatchLLM,
+    TGIBatchManagedLLM,
+)
 from math_rag.infrastructure.inference.openai import (
     OpenAIBatchEMRequestManagedScheduler,
     OpenAIBatchEMRequestScheduler,
@@ -386,6 +391,11 @@ class InfrastructureContainer(DeclarativeContainer):
         apptainer_client=apptainer_client,
         pbs_pro_resource_list_loader_service=pbs_pro_resource_list_loader_service,
     )
+    tei_batch_managed_em = Factory(
+        TEIBatchManagedEM,
+        em=tei_batch_em,
+        em_settings_loader_service=ApplicationContainer.em_settings_loader_service,
+    )
 
     # TGI
     tgi_batch_llm = Factory(
@@ -395,6 +405,11 @@ class InfrastructureContainer(DeclarativeContainer):
         sftp_client=sftp_client,
         apptainer_client=apptainer_client,
         pbs_pro_resource_list_loader_service=pbs_pro_resource_list_loader_service,
+    )
+    tgi_batch_managed_llm = Factory(
+        TGIBatchManagedLLM,
+        llm=tgi_batch_llm,
+        llm_settings_loader_service=ApplicationContainer.llm_settings_loader_service,
     )
 
     # LoRA
@@ -459,13 +474,13 @@ class InfrastructureContainer(DeclarativeContainer):
     inference_provider_to_managed_em = Dict(
         {
             EMInferenceProvider.OPEN_AI: openai_managed_em,
-            EMInferenceProvider.HUGGING_FACE: tei_batch_em,
+            EMInferenceProvider.HUGGING_FACE: tei_batch_managed_em,
         }
     )
     inference_provider_to_managed_llm = Dict(
         {
             LLMInferenceProvider.OPEN_AI: openai_managed_llm,
-            LLMInferenceProvider.HUGGING_FACE: tgi_batch_llm,
+            LLMInferenceProvider.HUGGING_FACE: tgi_batch_managed_llm,
         }
     )
 

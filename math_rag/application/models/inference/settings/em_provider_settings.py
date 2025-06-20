@@ -7,6 +7,9 @@ class EMProviderSettings(RootModel[dict[str, EMModelSettings]]):
     def __getitem__(self, key: str) -> EMModelSettings:
         return self.root[key]
 
+    def get(self, key: str) -> EMModelSettings | None:
+        return self.root.get(key)
+
     def keys(self):
         return self.root.keys()
 

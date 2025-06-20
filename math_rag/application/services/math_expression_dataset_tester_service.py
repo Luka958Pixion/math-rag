@@ -48,7 +48,11 @@ class MathExpressionDatasetTesterService(BaseMathExpressionDatasetTesterService)
         # override assistant
         self.math_expression_labeler_assistant.system_prompt = prompt_collection.system
         self.math_expression_labeler_assistant.user_prompt = prompt_collection.user
-        self.math_expression_labeler_assistant.model = test.model
+        self.math_expression_labeler_assistant.model = (
+            f'{test.model_provider}/{test.model}'
+            if test.inference_provider == LLMInferenceProvider.HUGGING_FACE
+            else test.model
+        )
         self.math_expression_labeler_assistant.inference_provider = LLMInferenceProvider(
             test.inference_provider
         )
@@ -68,7 +72,7 @@ class MathExpressionDatasetTesterService(BaseMathExpressionDatasetTesterService)
 
         if test.inference_provider == LLMInferenceProvider.HUGGING_FACE:
             outputs = await self.math_expression_labeler_assistant.batch_assist(
-                inputs, use_scheduler=True
+                inputs, use_scheduler=False
             )
 
         else:
