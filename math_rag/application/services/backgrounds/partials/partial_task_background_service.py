@@ -2,14 +2,15 @@ from asyncio import sleep
 from logging import getLogger
 
 from math_rag.application.base.repositories.documents import BaseTaskRepository
-from math_rag.application.base.services.backgrounds import BaseBackgroundService
+from math_rag.application.base.services.backgrounds import BaseTaskBackgroundService
 from math_rag.core.enums import TaskStatus
 
 
 logger = getLogger(__name__)
+POLL_INTERVAL = 60
 
 
-class PartialBackgroundService(BaseBackgroundService):
+class PartialTaskBackgroundService(BaseTaskBackgroundService):
     def __init__(self, task_repository: BaseTaskRepository):
         self.task_repository = task_repository
 
@@ -19,7 +20,7 @@ class PartialBackgroundService(BaseBackgroundService):
             task = await self.task_repository.find_first_pending(task_model_name)
 
             if not task:
-                await sleep(30)
+                await sleep(POLL_INTERVAL)
                 continue
 
             task = await self.task_repository.update_task_status(task.id, TaskStatus.RUNNING)

@@ -4,6 +4,7 @@ from .math_expression_dataset_background_service import MathExpressionDatasetBac
 from .math_expression_dataset_test_background_service import (
     MathExpressionDatasetTestBackgroundService,
 )
+from .prometheus_snapshot_background_service import PrometheusSnapshotBackgroundService
 
 
 __all__ = [
@@ -11,4 +12,5 @@ __all__ = [
     'IndexBackgroundService',
     'MathExpressionDatasetBackgroundService',
     'MathExpressionDatasetTestBackgroundService',
+    'PrometheusSnapshotBackgroundService',
 ]

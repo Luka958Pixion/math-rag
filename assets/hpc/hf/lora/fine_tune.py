@@ -157,7 +157,6 @@ def fine_tune_and_evaluate(
         token=HF_TOKEN,
         trust_remote_code=True,
     )
-    original_validate_dataset = dataset_dict['validate']
 
     prompt_json_path = huggingface_hub.hf_hub_download(
         repo_id=repo_id,
@@ -166,7 +165,21 @@ def fine_tune_and_evaluate(
         token=HF_TOKEN,
     )
     prompt_collection_json_bytes = Path(prompt_json_path).read_bytes()
-    prompt_collection = json.loads(prompt_collection_json_bytes)
+    prompt_collection = cast(dict, json.loads(prompt_collection_json_bytes))
+
+    # remove unwanted columns
+    user_prompt = cast(dict, prompt_collection.get('user'))
+    input_keys = cast(list[str], user_prompt.get('input_keys'))
+    columns_to_keep = [*input_keys, 'label']
+    columns_to_remove = {
+        column
+        for _, columns in dataset_dict.column_names.items()
+        for column in columns
+        if column not in columns_to_keep
+    }
+    dataset_dict = dataset_dict.remove_columns(list(columns_to_remove))
+
+    original_validate_dataset = dataset_dict['validate']
 
     dataset_dict = dataset_dict.map(
         lambda x: model_spec.format_prompt(x, prompt_collection),

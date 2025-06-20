@@ -43,6 +43,7 @@ from math_rag.application.base.services import (
     BaseLabelTaskExporterService,
     BaseLabelTaskImporterService,
     BaseMathArticleParserService,
+    BasePrometheusSnapshotLoaderService,
 )
 from math_rag.application.base.services.backgrounds import BaseBackgroundService
 from math_rag.application.embedants import MathExpressionDescriptionEmbedant
@@ -65,6 +66,7 @@ from math_rag.application.services.backgrounds import (
     IndexBackgroundService,
     MathExpressionDatasetBackgroundService,
     MathExpressionDatasetTestBackgroundService,
+    PrometheusSnapshotBackgroundService,
 )
 
 
@@ -101,6 +103,7 @@ class ApplicationContainer(DeclarativeContainer):
     label_config_builder_service = Dependency(instance_of=BaseLabelConfigBuilderService)
     label_task_exporter_service = Dependency(instance_of=BaseLabelTaskExporterService)
     label_task_importer_service = Dependency(instance_of=BaseLabelTaskImporterService)
+    prometheus_snapshot_loader_service = Dependency(instance_of=BasePrometheusSnapshotLoaderService)
 
     fine_tune_job_runner_service = Dependency(instance_of=BaseFineTuneJobRunnerService)
 
@@ -207,10 +210,15 @@ class ApplicationContainer(DeclarativeContainer):
         math_expression_dataset_test_repository=math_expression_dataset_test_repository,
         task_repository=task_repository,
     )
+    prometheus_snapshot_background_service = Singleton(
+        PrometheusSnapshotBackgroundService,
+        prometheus_snapshot_loader_service=prometheus_snapshot_loader_service,
+    )
 
     background_services: Provider[list[BaseBackgroundService]] = List(
         fine_tune_job_background_service,
         index_background_service,
         math_expression_dataset_background_service,
         math_expression_dataset_test_background_service,
+        prometheus_snapshot_background_service,
     )

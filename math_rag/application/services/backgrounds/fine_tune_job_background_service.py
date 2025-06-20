@@ -7,10 +7,10 @@ from math_rag.application.base.repositories.documents import (
 )
 from math_rag.core.models import FineTuneJob
 
-from .partials import PartialBackgroundService
+from .partials import PartialTaskBackgroundService
 
 
-class FineTuneJobBackgroundService(PartialBackgroundService):
+class FineTuneJobBackgroundService(PartialTaskBackgroundService):
     def __init__(
         self,
         fine_tune_job_runner_service: BaseFineTuneJobRunnerService,

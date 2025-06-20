@@ -3,6 +3,7 @@ from pathlib import Path
 
 import docker
 
+from math_rag.application.base.services import BasePrometheusSnapshotLoaderService
 from math_rag.infrastructure.clients import (
     FileSystemClient,
     PBSProClient,
@@ -22,7 +23,7 @@ PROMETHEUS_CONTAINER_NAMES = ['prometheus-tei', 'prometheus-tgi']
 logger = getLogger(__name__)
 
 
-class PrometheusSnapshotLoaderService:
+class PrometheusSnapshotLoaderService(BasePrometheusSnapshotLoaderService):
     def __init__(
         self,
         file_system_client: FileSystemClient,

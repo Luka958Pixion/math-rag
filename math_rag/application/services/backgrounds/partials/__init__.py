@@ -1,4 +1,4 @@
-from .partial_background_service import PartialBackgroundService
+from .partial_task_background_service import PartialTaskBackgroundService
 
 
-__all__ = ['PartialBackgroundService']
+__all__ = ['PartialTaskBackgroundService']

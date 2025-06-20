@@ -7,10 +7,10 @@ from math_rag.application.base.repositories.documents import (
 from math_rag.application.base.services import BaseMathExpressionDatasetBuilderService
 from math_rag.core.models import MathExpressionDataset
 
-from .partials import PartialBackgroundService
+from .partials import PartialTaskBackgroundService
 
 
-class MathExpressionDatasetBackgroundService(PartialBackgroundService):
+class MathExpressionDatasetBackgroundService(PartialTaskBackgroundService):
     def __init__(
         self,
         math_expression_dataset_builder_service: BaseMathExpressionDatasetBuilderService,

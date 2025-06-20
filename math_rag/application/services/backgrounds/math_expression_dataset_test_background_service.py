@@ -8,10 +8,10 @@ from math_rag.application.base.services import BaseMathExpressionDatasetTesterSe
 from math_rag.application.enums.inference import LLMInferenceProvider, LLMModelProvider
 from math_rag.core.models import MathExpressionDatasetTest
 
-from .partials import PartialBackgroundService
+from .partials import PartialTaskBackgroundService
 
 
-class MathExpressionDatasetTestBackgroundService(PartialBackgroundService):
+class MathExpressionDatasetTestBackgroundService(PartialTaskBackgroundService):
     def __init__(
         self,
         math_expression_dataset_tester_service: BaseMathExpressionDatasetTesterService,

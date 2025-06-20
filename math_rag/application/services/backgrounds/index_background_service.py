@@ -4,10 +4,10 @@ from math_rag.application.base.repositories.documents import BaseIndexRepository
 from math_rag.application.base.services import BaseIndexBuilderService
 from math_rag.core.models import Index
 
-from .partials import PartialBackgroundService
+from .partials import PartialTaskBackgroundService
 
 
-class IndexBackgroundService(PartialBackgroundService):
+class IndexBackgroundService(PartialTaskBackgroundService):
     def __init__(
         self,
         index_builder_service: BaseIndexBuilderService,
