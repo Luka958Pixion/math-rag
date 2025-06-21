@@ -7,6 +7,7 @@ from math_rag.application.models.inference import (
     EMParams,
     EMRequest,
     EMResponseList,
+    EMRouterParams,
 )
 
 from .partials import PartialEmbedant
@@ -24,6 +25,8 @@ class MathExpressionDescriptionEmbedant(PartialEmbedant[EmbedantInput, EmbedantO
             params=EMParams(
                 model='text-embedding-3-small',
                 dimensions=1536,
+            ),
+            router_params=EMRouterParams(
                 inference_provider=EMInferenceProvider.OPEN_AI,
                 model_provider=EMModelProvider.OPEN_AI,
             ),

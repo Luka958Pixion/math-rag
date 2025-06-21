@@ -12,6 +12,7 @@ from .em_request_tracker import EMRequestTracker
 from .em_response import EMResponse
 from .em_response_list import EMResponseList
 from .em_result import EMResult
+from .em_router_params import EMRouterParams
 from .em_status_tracker import EMStatusTracker
 from .llm_batch_request import LLMBatchRequest
 from .llm_batch_request_schedule import LLMBatchRequestSchedule
@@ -32,6 +33,7 @@ from .llm_request_tracker import LLMRequestTracker
 from .llm_response import LLMResponse
 from .llm_response_list import LLMResponseList
 from .llm_result import LLMResult
+from .llm_router_params import LLMRouterParams
 from .llm_status_tracker import LLMStatusTracker
 from .llm_text_response import LLMTextResponse
 
@@ -51,6 +53,7 @@ __all__ = [
     'EMResponse',
     'EMResponseList',
     'EMResult',
+    'EMRouterParams',
     'EMStatusTracker',
     'LLMConversation',
     'LLMError',
@@ -59,6 +62,7 @@ __all__ = [
     'LLMMessage',
     'LLMParams',
     'LLMPrompt',
+    'LLMPromptCollection',
     'LLMRequest',
     'LLMBatchRequest',
     'LLMBatchRequestSchedule',
@@ -67,6 +71,7 @@ __all__ = [
     'LLMRequestTracker',
     'LLMResponse',
     'LLMResponseList',
+    'LLMRouterParams',
     'LLMStatusTracker',
     'LLMTextResponse',
     'LLMResult',

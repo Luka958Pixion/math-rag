@@ -2,6 +2,7 @@ from .em_error_mapping import EMErrorMapping
 from .em_failed_request_mapping import EMFailedRequestMapping
 from .em_params_mapping import EMParamsMapping
 from .em_request_mapping import EMRequestMapping
+from .em_router_params_mapping import EMRouterParamsMapping
 from .fine_tune_job_mapping import FineTuneJobMapping
 from .index_mapping import IndexMapping
 from .katex_corrector_assistant_input_mapping import KatexCorrectorAssistantInputMapping
@@ -12,6 +13,7 @@ from .llm_failed_request_mapping import LLMFailedRequestMapping
 from .llm_message_mapping import LLMMessageMapping
 from .llm_params_mapping import LLMParamsMapping
 from .llm_request_mapping import LLMRequestMapping
+from .llm_router_params_mapping import LLMRouterParamsMapping
 from .math_expression_dataset_mapping import MathExpressionDatasetMapping
 from .math_expression_dataset_test_mapping import MathExpressionDatasetTestMapping
 from .math_expression_dataset_test_result_mapping import MathExpressionDatasetTestResultMapping
@@ -27,6 +29,7 @@ __all__ = [
     'EMFailedRequestMapping',
     'EMParamsMapping',
     'EMRequestMapping',
+    'EMRouterParamsMapping',
     'FineTuneJobMapping',
     'IndexMapping',
     'KatexCorrectorAssistantInputMapping',
@@ -37,6 +40,7 @@ __all__ = [
     'LLMMessageMapping',
     'LLMParamsMapping',
     'LLMRequestMapping',
+    'LLMRouterParamsMapping',
     'MathExpressionDatasetMapping',
     'MathExpressionDatasetTestMapping',
     'MathExpressionDatasetTestResultMapping',

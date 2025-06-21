@@ -16,6 +16,3 @@ class LLMParamsDocument(BaseDocument):
     metadata: dict[str, str] | None = None
     store: bool | None = None
     n: int = 1
-
-    inference_provider: str
-    model_provider: str

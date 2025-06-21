@@ -2,6 +2,7 @@ from .em_error_document import EMErrorDocument
 from .em_failed_request_document import EMFailedRequestDocument
 from .em_params_document import EMParamsDocument
 from .em_request_document import EMRequestDocument
+from .em_router_params_document import EMRouterParamsDocument
 from .fine_tune_job_document import FineTuneJobDocument
 from .index_document import IndexDocument
 from .katex_corrector_assistant_input_document import KatexCorrectorAssistantInputDocument
@@ -12,6 +13,7 @@ from .llm_failed_request_document import LLMFailedRequestDocument
 from .llm_message_document import LLMMessageDocument
 from .llm_params_document import LLMParamsDocument
 from .llm_request_document import LLMRequestDocument
+from .llm_router_params_document import LLMRouterParamsDocument
 from .math_expression_dataset_document import MathExpressionDatasetDocument
 from .math_expression_dataset_test_document import MathExpressionDatasetTestDocument
 from .math_expression_dataset_test_result_document import MathExpressionDatasetTestResultDocument
@@ -28,6 +30,7 @@ __all__ = [
     'EMFailedRequestDocument',
     'EMParamsDocument',
     'EMRequestDocument',
+    'EMRouterParamsDocument',
     'FineTuneJobDocument',
     'IndexDocument',
     'KatexCorrectorAssistantInputDocument',
@@ -38,6 +41,7 @@ __all__ = [
     'LLMMessageDocument',
     'LLMParamsDocument',
     'LLMRequestDocument',
+    'LLMRouterParamsDocument',
     'MathExpressionDatasetDocument',
     'MathExpressionDatasetTestDocument',
     'MathExpressionDatasetTestResultDocument',

@@ -27,19 +27,19 @@ class ManagedLLMRouter(BaseManagedLLM):
     ) -> BaseManagedLLM:
         # get inference provider
         if isinstance(request, LLMRequest):
-            inference_provider = request.params.inference_provider
+            inference_provider = request.router_params.inference_provider
 
         elif isinstance(request, LLMBatchRequest):
             if not request.requests:
                 raise ValueError(f'Batch request {request.id} is empty')
 
-            inference_provider = request.requests[0].params.inference_provider
+            inference_provider = request.requests[0].router_params.inference_provider
 
         elif isinstance(request, LLMConcurrentRequest):
             if not request.requests:
                 raise ValueError(f'Batch request {request.id} is empty')
 
-            inference_provider = request.requests[0].params.inference_provider
+            inference_provider = request.requests[0].router_params.inference_provider
 
         else:
             raise TypeError(f'Unknown LLM request type: {type(request)}')

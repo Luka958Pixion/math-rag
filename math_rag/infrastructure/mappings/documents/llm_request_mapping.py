@@ -7,6 +7,7 @@ from math_rag.infrastructure.models.documents import LLMRequestDocument
 
 from .llm_conversation_mapping import LLMConversationMapping
 from .llm_params_mapping import LLMParamsMapping
+from .llm_router_params_mapping import LLMRouterParamsMapping
 
 
 class LLMRequestMapping(
@@ -19,6 +20,7 @@ class LLMRequestMapping(
             id=target.id,
             conversation=LLMConversationMapping.to_source(target.conversation),
             params=LLMParamsMapping[LLMResponseType].to_source(target.params),
+            router_params=LLMRouterParamsMapping.to_source(target.router_params),
         )
 
     @staticmethod
@@ -27,4 +29,5 @@ class LLMRequestMapping(
             id=source.id,
             conversation=LLMConversationMapping.to_target(source.conversation),
             params=LLMParamsMapping[LLMResponseType].to_target(source.params),
+            router_params=LLMRouterParamsMapping.to_target(source.router_params),
         )

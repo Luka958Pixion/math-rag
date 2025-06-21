@@ -13,6 +13,7 @@ from math_rag.application.models.inference import (
     LLMParams,
     LLMRequest,
     LLMResponseList,
+    LLMRouterParams,
 )
 
 from .partials import PartialAssistant
@@ -72,6 +73,8 @@ class KatexCorrectorRetryAssistant(
                 metadata=dict(input_id=str(input.id)),
                 store=self.store,
                 max_completion_tokens=self.max_completion_tokens,
+            ),
+            router_params=LLMRouterParams(
                 inference_provider=self.inference_provider,
                 model_provider=self.model_provider,
             ),

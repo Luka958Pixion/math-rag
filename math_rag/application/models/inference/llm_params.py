@@ -3,7 +3,6 @@ from uuid import UUID, uuid4
 
 from pydantic import BaseModel, Field, field_validator
 
-from math_rag.application.enums.inference import LLMInferenceProvider, LLMModelProvider
 from math_rag.application.types.inference import LLMResponseType
 
 
@@ -20,10 +19,6 @@ class LLMParams(BaseModel, Generic[LLMResponseType]):
     metadata: dict[str, str] | None = None
     store: bool | None = None
     n: int = 1
-
-    # NOTE: additional parameters that are not used during inference
-    inference_provider: LLMInferenceProvider | None
-    model_provider: LLMModelProvider | None
 
     @field_validator('response_type', mode='before')
     def allow_python_types(cls, value: type[LLMResponseType]):

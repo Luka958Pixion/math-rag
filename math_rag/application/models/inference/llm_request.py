@@ -7,9 +7,11 @@ from math_rag.application.types.inference import LLMResponseType
 
 from .llm_conversation import LLMConversation
 from .llm_params import LLMParams
+from .llm_router_params import LLMRouterParams
 
 
 class LLMRequest(BaseModel, Generic[LLMResponseType]):
     id: UUID = Field(default_factory=uuid4)
     conversation: LLMConversation
     params: LLMParams[LLMResponseType]
+    router_params: LLMRouterParams | None

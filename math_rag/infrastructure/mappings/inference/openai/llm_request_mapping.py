@@ -39,6 +39,7 @@ class LLMRequestMapping(
                 store=target['store'],
                 n=target.get('n', 1),
             ),
+            router_params=None,
         )
 
     @staticmethod

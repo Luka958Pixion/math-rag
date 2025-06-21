@@ -19,19 +19,19 @@ class ManagedEMRouter(BaseManagedEM):
     def _em(self, request: EMRequest | EMBatchRequest | EMConcurrentRequest) -> BaseManagedEM:
         # get inference provider
         if isinstance(request, EMRequest):
-            inference_provider = request.params.inference_provider
+            inference_provider = request.router_params.inference_provider
 
         elif isinstance(request, EMBatchRequest):
             if not request.requests:
                 raise ValueError(f'Batch request {request.id} is empty')
 
-            inference_provider = request.requests[0].params.inference_provider
+            inference_provider = request.requests[0].router_params.inference_provider
 
         elif isinstance(request, EMConcurrentRequest):
             if not request.requests:
                 raise ValueError(f'Batch request {request.id} is empty')
 
-            inference_provider = request.requests[0].params.inference_provider
+            inference_provider = request.requests[0].router_params.inference_provider
 
         else:
             raise TypeError(f'Unknown EM request type: {type(request)}')
