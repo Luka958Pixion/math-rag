@@ -16,8 +16,6 @@ from math_rag.shared.utils import StrUtil
 
 logger = getLogger(__name__)
 
-FIELDS = ['latex', 'label']
-
 
 class MathExpressionDatasetPublisherService(BaseMathExpressionDatasetPublisherService):
     def __init__(

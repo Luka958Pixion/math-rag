@@ -7,7 +7,7 @@ from math_rag.core.enums.arxiv import BaseArxivCategory
 
 class BaseArxivClient(ABC):
     @abstractmethod
-    def search(self, category: BaseArxivCategory, limit: int) -> list[Result]:
+    def search(self, category: BaseArxivCategory, limit: int, offset: int) -> list[Result]:
         pass
 
     @abstractmethod

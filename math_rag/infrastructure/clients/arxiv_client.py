@@ -30,7 +30,7 @@ class ArxivClient(BaseArxivClient):
     def __init__(self, client: Client):
         self.client = client
 
-    def search(self, category: BaseArxivCategory, limit: int) -> list[Result]:
+    def search(self, category: BaseArxivCategory, limit: int, offset: int) -> list[Result]:
         category_name = self._get_category_name(category)
         subcategory_name = self._get_subcategory_name(category)
         query = f'cat:{category_name}.{subcategory_name or str()}'
@@ -41,7 +41,7 @@ class ArxivClient(BaseArxivClient):
             sort_by=SortCriterion.SubmittedDate,
             sort_order=SortOrder.Descending,
         )
-        results = self.client.results(search)
+        results = self.client.results(search, offset)
 
         return list(results)
 

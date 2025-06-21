@@ -65,7 +65,9 @@ class MathArticleLoaderService(BaseMathArticleLoaderService):
         num_retries = 0
 
         while num_retries < max_num_retries:
-            results = self.arxiv_client.search(category, new_category_limit)
+            results = self.arxiv_client.search(
+                category, new_category_limit * 10, (new_category_limit - 1) * 10
+            )
             process_tasks = [self._process_result(result) for result in results]
             processed_files = await gather(*process_tasks)
 

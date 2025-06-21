@@ -53,11 +53,11 @@ class LLMRequestMapping(
             else source.params.response_type
         )
 
-        return {
+        raw = {
             'messages': LLMConversationMapping.to_target(source.conversation),
             'model': source.params.model,
             'temperature': source.params.temperature,
-            'logprobs': source.params.top_logprobs is not None,
+            'logprobs': source.params.logprobs,
             'top_logprobs': source.params.top_logprobs,
             'top_p': source.params.top_p,
             'response_format': response_format,
@@ -66,3 +66,5 @@ class LLMRequestMapping(
             'store': source.params.store,
             'n': source.params.n,
         }
+
+        return {key: value for key, value in raw.items() if value is not None}
