@@ -90,6 +90,7 @@ class MathExpressionDatasetTesterService(BaseMathExpressionDatasetTesterService)
 
         return MathExpressionDatasetTestResult(
             math_expression_dataset_id=test.math_expression_dataset_id,
+            math_expression_dataset_split_name=test.math_expression_dataset_split_name,
             math_expression_dataset_test_id=test.id,
             math_expression_labels=labels,
         )
