@@ -15,3 +15,7 @@ class StrUtil:
 
         # lowercase
         return text.lower()
+
+    @staticmethod
+    def to_kebab_case(text: str) -> str:
+        return StrUtil.to_snake_case(text).replace('_', '-')

@@ -36,6 +36,7 @@ class MathExpressionLabelTaskImporterService(BaseMathExpressionLabelTaskImporter
     ) -> int:
         dataset_name = StrUtil.to_snake_case(MathExpressionDataset.__name__)
         project_name = StrUtil.to_snake_case(MathExpressionLabelTask.__name__)
+        project_name = f'{project_name} | {str(dataset_id)[:8]} | {split_name}'
         label_names = [label.value for label in MathExpressionLabelEnum]
 
         split_name_to_samples, file = self.dataset_loader_service.load(

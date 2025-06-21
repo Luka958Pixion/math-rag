@@ -45,6 +45,7 @@ class NotebookHook:
         logging.getLogger('pylatexenc.latexwalker').setLevel(logging.ERROR)
         logging.getLogger('httpx').setLevel(logging.WARNING)
         logging.getLogger('openai').setLevel(logging.WARNING)
+        logging.getLogger('asyncssh').setLevel(logging.WARNING)
 
     def _init_containers(self) -> None:
         # import after path adjustment

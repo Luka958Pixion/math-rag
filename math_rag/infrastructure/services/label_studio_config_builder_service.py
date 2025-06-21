@@ -54,8 +54,8 @@ class LabelStudioConfigBuilderService(BaseLabelConfigBuilderService):
 
                 choice_tuples = []
 
-                for name in label_names:
-                    choice_tag = ChoiceTag(value=name)
+                for i, name in enumerate(label_names, start=1):
+                    choice_tag = ChoiceTag(value=name, hotkey=str(i))
                     choice_tag_attrs = choice_tag.model_dump(by_alias=True)
                     choice_tag_attrs_serial = _serialize_attrs(choice_tag_attrs)
                     choice_tuples.append(('Choice', choice_tag_attrs_serial, ()))

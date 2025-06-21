@@ -122,6 +122,8 @@ services:
   label-studio:
     image: heartexlabs/label-studio:latest
     container_name: label-studio
+    environment:
+      EDITOR_KEYMAP: '{"annotation:submit":{"key":"Enter","description":""}}'
     ports:
       - 8080:8080
     volumes:

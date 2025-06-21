@@ -24,6 +24,7 @@ basicConfig(level=INFO, format='%(asctime)s - %(levelname)s - %(message)s')
 getLogger('pylatexenc.latexwalker').setLevel(ERROR)
 getLogger('httpx').setLevel(WARNING)
 getLogger('openai').setLevel(WARNING)
+getLogger('asyncssh').setLevel(WARNING)
 
 logger = getLogger(__name__)
 
