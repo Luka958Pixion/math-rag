@@ -53,3 +53,11 @@ openai:
     concurrent:
       max_requests_per_minute: 5000.0
       max_tokens_per_minute: 450000.0
+
+  o3:
+    batch:
+      max_tokens_per_day: 100000000.0
+
+    concurrent:
+      max_requests_per_minute: 5000.0
+      max_tokens_per_minute: 800000.0

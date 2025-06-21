@@ -8,7 +8,10 @@ from .llm_message_mapping import LLMMessageMapping
 class LLMConversationMapping(BaseMapping[LLMConversation, LLMConversationDocument]):
     @staticmethod
     def to_source(target: LLMConversationDocument) -> LLMConversation:
-        return LLMConversation(id=target.id, messages=target.messages)
+        return LLMConversation(
+            id=target.id,
+            messages=[LLMMessageMapping.to_source(message) for message in target.messages],
+        )
 
     @staticmethod
     def to_target(source: LLMConversation) -> LLMConversationDocument:

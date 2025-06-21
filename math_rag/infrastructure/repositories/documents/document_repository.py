@@ -83,6 +83,12 @@ class DocumentRepository(
         elif 'id' in filter:
             filter['_id'] = filter.pop('id')
 
+        for key in list(filter.keys()):
+            value = filter[key]
+
+            if isinstance(value, list):
+                filter[key] = {'$in': value}
+
         cursor = self.collection.find(filter)
 
         if 'timestamp' in self.target_cls.model_fields:
@@ -103,6 +109,12 @@ class DocumentRepository(
 
         elif 'id' in filter:
             filter['_id'] = filter.pop('id')
+
+        for key in list(filter.keys()):
+            value = filter[key]
+
+            if isinstance(value, list):
+                filter[key] = {'$in': value}
 
         cursor = self.collection.find(filter)
 
