@@ -18,4 +18,4 @@ class BaseMathExpressionSampleRepository(BaseDocumentRepository[MathExpressionSa
     async def batch_find_many(
         self, math_expression_dataset_id: UUID, *, batch_size: int
     ) -> AsyncGenerator[list[MathExpressionSample], None]:
-        pass
+        yield

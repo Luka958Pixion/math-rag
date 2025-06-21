@@ -28,14 +28,37 @@ class MathExpressionDatasetPublisherService(BaseMathExpressionDatasetPublisherSe
         self.math_expression_sample_repository = math_expression_sample_repository
         self.dataset_publisher_service = dataset_publisher_service
 
+    def _filter_duplicate_katex(
+        self, samples: list[MathExpressionSample]
+    ) -> list[MathExpressionSample]:
+        katex_set = set()
+        katex_unique_samples = []
+
+        for sample in samples:
+            if sample.katex in katex_set:
+                continue
+
+            katex_set.add(sample.katex)
+            katex_unique_samples.append(sample)
+
+        return katex_unique_samples
+
+    def _filter_empty_katex(
+        self, samples: list[MathExpressionSample]
+    ) -> list[MathExpressionSample]:
+        return [sample for sample in samples if sample.katex.strip()]
+
     async def publish(self, dataset: MathExpressionDataset):
+        id = dataset.build_from_id if dataset.build_from_id else dataset.id
         math_expression_samples = [
             math_expression_sample
             async for batch in self.math_expression_sample_repository.batch_find_many(
-                dataset.build_from_id if dataset.build_from_id else dataset.id, batch_size=1000
+                id, batch_size=1000
             )
             for math_expression_sample in batch
         ]
+        math_expression_samples = self._filter_duplicate_katex(math_expression_samples)
+        math_expression_samples = self._filter_empty_katex(math_expression_samples)
 
         fields = [field for field in MathExpressionSample.model_fields]
         json_str = MATH_EXPRESSION_LABELER_PROMPT_COLLECTION.model_dump_json(indent=4)
