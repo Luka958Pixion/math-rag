@@ -23,7 +23,10 @@ _USER_PROMPT_TEMPLATE = """
 ### Corrected KaTeX:
 """
 
-_SYSTEM_PROMPT = LLMPrompt(template=_SYSTEM_PROMPT_TEMPLATE.strip(), input_keys=[])
+_SYSTEM_PROMPT = LLMPrompt(
+    template=_SYSTEM_PROMPT_TEMPLATE.strip(),
+    input_keys=[],
+)
 
 _USER_PROMPT = LLMPrompt(template=_USER_PROMPT_TEMPLATE.strip(), input_keys=['katex', 'error'])
 
