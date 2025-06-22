@@ -1,6 +1,5 @@
 import asyncio
-
-from logging import ERROR, INFO, WARNING, basicConfig, getLogger
+import logging
 
 import uvicorn
 
@@ -20,13 +19,16 @@ API_PORT = config('API_PORT', cast=int)
 MCP_PORT = config('MCP_PORT', cast=int)
 
 
-basicConfig(level=INFO, format='%(asctime)s - %(levelname)s - %(message)s')
-getLogger('pylatexenc.latexwalker').setLevel(ERROR)
-getLogger('httpx').setLevel(WARNING)
-getLogger('openai').setLevel(WARNING)
-getLogger('asyncssh').setLevel(WARNING)
+logging.basicConfig(
+    level=logging.INFO,
+    format='%(asctime)s - %(levelname)s - %(name)s - %(filename)s:%(lineno)d - %(message)s',
+)
+logging.getLogger('pylatexenc.latexwalker').setLevel(logging.ERROR)
+logging.getLogger('httpx').setLevel(logging.WARNING)
+logging.getLogger('openai').setLevel(logging.WARNING)
+logging.getLogger('asyncssh').setLevel(logging.WARNING)
 
-logger = getLogger(__name__)
+logger = logging.getLogger(__name__)
 
 
 async def main():

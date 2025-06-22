@@ -88,7 +88,7 @@ class OpenAIConcurrentLLM(BaseConcurrentLLM):
         except OPENAI_API_ERRORS_TO_RAISE as e:
             raise
 
-        except Exception:
+        except Exception as e:
             logger.error(f'Uncaught exception {type(e).__class__}: {e}')
             raise
 

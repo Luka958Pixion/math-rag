@@ -28,7 +28,7 @@ class MathExpressionLabelerAssistant(
 
         self.system_prompt = MATH_EXPRESSION_LABELER_SYSTEM_PROMPT
         self.user_prompt = MATH_EXPRESSION_LABELER_USER_PROMPT
-        self.model = 'gpt-4.1-mini'
+        self.model = 'gpt-4.1-nano'
         self.temperature = 0.0
         self.store = True
         self.max_completion_tokens = 50
