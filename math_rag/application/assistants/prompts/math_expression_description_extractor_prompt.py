@@ -13,10 +13,17 @@ _USER_PROMPT_TEMPLATE = """
 TODO
 """
 
-_SYSTEM_PROMPT = LLMPrompt(template=_SYSTEM_PROMPT_TEMPLATE.strip(), input_keys=[])
+_SYSTEM_PROMPT = LLMPrompt(
+    template=_SYSTEM_PROMPT_TEMPLATE.strip(),
+    input_keys=[],
+)
 
-_USER_PROMPT = LLMPrompt(template=_USER_PROMPT_TEMPLATE.strip(), input_keys=[])
+_USER_PROMPT = LLMPrompt(
+    template=_USER_PROMPT_TEMPLATE.strip(),
+    input_keys=[],
+)
 
 MATH_EXPRESSION_DESCRIPTION_EXTRACTOR_PROMPTS = LLMPromptCollection(
-    system=_SYSTEM_PROMPT, user=_USER_PROMPT
+    system=_SYSTEM_PROMPT,
+    user=_USER_PROMPT,
 )

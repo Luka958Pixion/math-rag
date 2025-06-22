@@ -28,6 +28,9 @@ _SYSTEM_PROMPT = LLMPrompt(
     input_keys=[],
 )
 
-_USER_PROMPT = LLMPrompt(template=_USER_PROMPT_TEMPLATE.strip(), input_keys=['katex', 'error'])
+_USER_PROMPT = LLMPrompt(
+    template=_USER_PROMPT_TEMPLATE.strip(),
+    input_keys=['katex', 'error'],
+)
 
 KATEX_CORRECTOR_PROMPTS = LLMPromptCollection(system=_SYSTEM_PROMPT, user=_USER_PROMPT)
