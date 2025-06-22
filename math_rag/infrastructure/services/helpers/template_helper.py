@@ -9,12 +9,13 @@ from pylatexenc.latexwalker import (
     LatexSpecialsNode,
 )
 
+from math_rag.infrastructure.constants.services import (
+    IMAGE_PLACEHOLDER_TEMPLATE,
+    MATH_PLACEHOLDER_PATTERN,
+    MATH_PLACEHOLDER_TEMPLATE,
+)
+
 from .base_latex_node_visitor import BaseLatexNodeVisitor
-
-
-IMAGE_PLACEHOLDER_TEMPLATE = '[image_placeholder | {index}]'
-MATH_PLACEHOLDER_TEMPLATE = '[math_placeholder | {index}]'
-MATH_PLACEHOLDER_PATTERN = r'\[math_placeholder(?: \| \d+)?\]'
 
 
 class TemplateHelper(BaseLatexNodeVisitor):
