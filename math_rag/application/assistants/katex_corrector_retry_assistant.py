@@ -18,9 +18,9 @@ from math_rag.application.models.inference import (
 
 from .partials import PartialAssistant
 from .prompts import (
+    _SYSTEM_PROMPT,
+    _USER_PROMPT,
     KATEX_CORRECTOR_RETRY_USER_PROMPT,
-    KATEX_CORRECTOR_SYSTEM_PROMPT,
-    KATEX_CORRECTOR_USER_PROMPT,
 )
 
 
@@ -41,9 +41,7 @@ class KatexCorrectorRetryAssistant(
         self, input: KatexCorrectorRetryAssistantInput
     ) -> LLMRequest[KatexCorrectorRetryAssistantOutput]:
         initial_input = input.pairs[0][0]
-        initial_prompt = KATEX_CORRECTOR_USER_PROMPT.format(
-            katex=initial_input.katex, error=initial_input.error
-        )
+        initial_prompt = _USER_PROMPT.format(katex=initial_input.katex, error=initial_input.error)
         user_message_contents = [
             KATEX_CORRECTOR_RETRY_USER_PROMPT.format(katex=input.katex, error=input.error)
             for input, _ in input.pairs[1:]
@@ -52,7 +50,7 @@ class KatexCorrectorRetryAssistant(
 
         outputs = [pair[1] for pair in input.pairs]
 
-        system_message_content = KATEX_CORRECTOR_SYSTEM_PROMPT.format()
+        system_message_content = _SYSTEM_PROMPT.format()
         system_message = LLMMessage(role='system', content=system_message_content)
         messages = [system_message]
 

@@ -3,8 +3,12 @@ from math_rag.application.base.inference import (
     BaseManagedLLM,
 )
 from math_rag.application.enums.inference import LLMInferenceProvider, LLMModelProvider
-from math_rag.application.models.assistants import KatexCorrectorAssistantInput as Input
-from math_rag.application.models.assistants import KatexCorrectorAssistantOutput as Output
+from math_rag.application.models.assistants import (
+    MathExpressionDescriptionCorrectorAssistantInput as Input,
+)
+from math_rag.application.models.assistants import (
+    MathExpressionDescriptionCorrectorAssistantOutput as Output,
+)
 from math_rag.application.models.inference import (
     LLMConversation,
     LLMMessage,
@@ -15,15 +19,16 @@ from math_rag.application.models.inference import (
 )
 
 from .partials import PartialAssistant
-from .prompts import KATEX_CORRECTOR_PROMPTS as PROMPTS
+from .prompts import MATH_EXPRESSION_DESCRIPTION_EXTRACTOR_SYSTEM_PROMPT as SYSTEM_PROMPT
+from .prompts import MATH_EXPRESSION_DESCRIPTION_EXTRACTOR_USER_PROMPT as USER_PROMPT
 
 
-class KatexCorrectorAssistant(PartialAssistant[Input, Output]):
+class MathExpressionDescriptionExtractorAssistant(PartialAssistant[Input, Output]):
     def __init__(self, llm: BaseManagedLLM, scheduler: BaseBatchLLMRequestManagedScheduler | None):
         super().__init__(llm, scheduler)
 
-        self.system_prompt = PROMPTS.system
-        self.user_prompt = PROMPTS.user
+        self.system_prompt = SYSTEM_PROMPT
+        self.user_prompt = USER_PROMPT
         self.model = 'gpt-4.1-nano'
         self.temperature = 0.0
         self.store = True
@@ -34,6 +39,7 @@ class KatexCorrectorAssistant(PartialAssistant[Input, Output]):
     def encode_to_request(self, input: Input) -> LLMRequest[Output]:
         system_message_content = self.system_prompt.format()
         user_message_content = self.user_prompt.format(katex=input.katex, error=input.error)
+        # TODO
 
         return LLMRequest(
             conversation=LLMConversation(

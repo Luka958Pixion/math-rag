@@ -1,4 +1,4 @@
-from math_rag.application.models.inference import LLMPrompt, LLMPromptCollection
+from math_rag.application.models.inference import LLMPrompt
 
 
 _SYSTEM_PROMPT_TEMPLATE = """
@@ -13,7 +13,7 @@ Your task is to correct the following KaTeX expression so that it is fully compa
 - Do not add explanations—only return the corrected KaTeX code.
 """
 
-_USER_PROMPT_TEMPLATE = """
+M_USER_PROMPT_TEMPLATE = """
 ### Input KaTeX:
 {katex}
 
@@ -23,8 +23,10 @@ _USER_PROMPT_TEMPLATE = """
 ### Corrected KaTeX:
 """
 
-_SYSTEM_PROMPT = LLMPrompt(template=_SYSTEM_PROMPT_TEMPLATE.strip(), input_keys=[])
+MATH_EXPRESSION_DESCRIPTION_EXTRACTOR_SYSTEM_PROMPT = LLMPrompt(
+    template=_SYSTEM_PROMPT_TEMPLATE.strip(), input_keys=[]
+)
 
-_USER_PROMPT = LLMPrompt(template=_USER_PROMPT_TEMPLATE.strip(), input_keys=['katex', 'error'])
-
-KATEX_CORRECTOR_PROMPTS = LLMPromptCollection(system=_SYSTEM_PROMPT, user=_USER_PROMPT)
+MATH_EXPRESSION_DESCRIPTION_EXTRACTOR_USER_PROMPT = LLMPrompt(
+    template=M_USER_PROMPT_TEMPLATE.strip(), input_keys=['katex', 'error']
+)

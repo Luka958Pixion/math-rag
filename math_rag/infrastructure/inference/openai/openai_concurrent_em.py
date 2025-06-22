@@ -1,7 +1,7 @@
-from asyncio import Queue, TaskGroup, create_task, sleep
+from asyncio import Queue, TaskGroup, sleep
 from collections import deque
 from logging import getLogger
-from time import ctime, perf_counter
+from time import ctime, time
 
 from openai import AsyncOpenAI, RateLimitError
 
@@ -61,7 +61,7 @@ class OpenAIConcurrentEM(BaseConcurrentEM):
 
         except RateLimitError as e:
             exception = e
-            status_tracker.time_of_last_rate_limit_error = perf_counter()
+            status_tracker.time_of_last_rate_limit_error = time()
             status_tracker.num_rate_limit_errors += 1
 
         except OPENAI_API_ERRORS_TO_RETRY_NO_RATE_LIMIT as e:
@@ -133,7 +133,7 @@ class OpenAIConcurrentEM(BaseConcurrentEM):
 
         available_request_capacity = max_requests_per_minute
         available_token_capacity = max_tokens_per_minute
-        last_update_time = perf_counter()
+        last_update_time = time()
 
         requests_not_empty = True
 
@@ -163,7 +163,7 @@ class OpenAIConcurrentEM(BaseConcurrentEM):
                         else:
                             requests_not_empty = False
 
-                current_time = perf_counter()
+                current_time = time()
                 seconds_since_update = current_time - last_update_time
                 available_request_capacity = min(
                     available_request_capacity
@@ -204,7 +204,7 @@ class OpenAIConcurrentEM(BaseConcurrentEM):
                 await sleep(CONCURRENT_WAIT_IDLE)
 
                 seconds_since_rate_limit_error = (
-                    perf_counter() - status_tracker.time_of_last_rate_limit_error
+                    time() - status_tracker.time_of_last_rate_limit_error
                 )
 
                 if seconds_since_rate_limit_error < CONCURRENT_WAIT_AFTER_RATE_LIMIT_ERROR:
