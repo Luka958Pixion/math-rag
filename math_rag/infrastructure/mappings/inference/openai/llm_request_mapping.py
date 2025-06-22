@@ -53,7 +53,7 @@ class LLMRequestMapping(
             else source.params.response_type
         )
 
-        raw = {
+        return {
             'messages': LLMConversationMapping.to_target(source.conversation),
             'model': source.params.model,
             'temperature': source.params.temperature,
@@ -66,5 +66,3 @@ class LLMRequestMapping(
             'store': source.params.store,
             'n': source.params.n,
         }
-
-        return {key: value for key, value in raw.items() if value is not None}
