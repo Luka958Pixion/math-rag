@@ -12,9 +12,9 @@ from pylatexenc.latexwalker import (
 from .base_latex_node_visitor import BaseLatexNodeVisitor
 
 
-IMAGE_PLACEHOLDER = '[image_placeholder]'
-MATH_PLACEHOLDER = '[math_placeholder]'
-MATH_PLACEHOLDER_PATTERN = r'\[math_placeholder\]'
+IMAGE_PLACEHOLDER_TEMPLATE = '[image_placeholder | {index}]'
+MATH_PLACEHOLDER_TEMPLATE = '[math_placeholder | {index}]'
+MATH_PLACEHOLDER_PATTERN = r'\[math_placeholder(?: \| \d+)?\]'
 
 
 class TemplateHelper(BaseLatexNodeVisitor):
@@ -22,6 +22,8 @@ class TemplateHelper(BaseLatexNodeVisitor):
         super().__init__()
 
         self._strings: list[str] = []
+        self._num_image_nodes = 0
+        self._num_math_nodes = 0
 
     @property
     def template(self) -> str:
@@ -41,14 +43,21 @@ class TemplateHelper(BaseLatexNodeVisitor):
         if node.environmentname == 'figure':
             # prevent visiting image
             node.nodelist = []
-            self._strings.append(IMAGE_PLACEHOLDER)
+
+            image_placeholder = IMAGE_PLACEHOLDER_TEMPLATE.format(index=self._num_image_nodes)
+            self._strings.append(image_placeholder)
+            self._num_image_nodes += 1
 
     def visit_latex_macro_node(self, node: LatexMacroNode):
         if node.macroname == 'includegraphics':
-            self._strings.append(IMAGE_PLACEHOLDER)
+            image_placeholder = IMAGE_PLACEHOLDER_TEMPLATE.format(index=self._num_image_nodes)
+            self._strings.append(image_placeholder)
+            self._num_image_nodes += 1
 
     def visit_latex_math_node(self, node: LatexMathNode):
-        self._strings.append(MATH_PLACEHOLDER)
+        math_placeholder = MATH_PLACEHOLDER_TEMPLATE.format(index=self._num_math_nodes)
+        self._strings.append(math_placeholder)
+        self._num_math_nodes += 1
 
     def visit_latex_specials_node(self, node: LatexSpecialsNode):
         pass
