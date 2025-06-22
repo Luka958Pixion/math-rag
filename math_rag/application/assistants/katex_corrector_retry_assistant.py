@@ -4,8 +4,10 @@ from math_rag.application.base.inference import (
 )
 from math_rag.application.enums.inference import LLMInferenceProvider, LLMModelProvider
 from math_rag.application.models.assistants import (
-    KatexCorrectorRetryAssistantInput,
-    KatexCorrectorRetryAssistantOutput,
+    KatexCorrectorRetryAssistantInput as Input,
+)
+from math_rag.application.models.assistants import (
+    KatexCorrectorRetryAssistantOutput as Output,
 )
 from math_rag.application.models.inference import (
     LLMConversation,
@@ -17,16 +19,11 @@ from math_rag.application.models.inference import (
 )
 
 from .partials import PartialAssistant
-from .prompts import (
-    _SYSTEM_PROMPT,
-    _USER_PROMPT,
-    KATEX_CORRECTOR_RETRY_USER_PROMPT,
-)
+from .prompts import KATEX_CORRECTOR_PROMPTS as PROMTPS
+from .prompts import KATEX_CORRECTOR_RETRY_USER_PROMPT
 
 
-class KatexCorrectorRetryAssistant(
-    PartialAssistant[KatexCorrectorRetryAssistantInput, KatexCorrectorRetryAssistantOutput]
-):
+class KatexCorrectorRetryAssistant(PartialAssistant[Input, Output]):
     def __init__(self, llm: BaseManagedLLM, scheduler: BaseBatchLLMRequestManagedScheduler | None):
         super().__init__(llm, scheduler)
 
@@ -37,11 +34,9 @@ class KatexCorrectorRetryAssistant(
         self.inference_provider = LLMInferenceProvider.OPEN_AI
         self.model_provider = LLMModelProvider.OPEN_AI
 
-    def encode_to_request(
-        self, input: KatexCorrectorRetryAssistantInput
-    ) -> LLMRequest[KatexCorrectorRetryAssistantOutput]:
+    def encode_to_request(self, input: Input) -> LLMRequest[Output]:
         initial_input = input.pairs[0][0]
-        initial_prompt = _USER_PROMPT.format(katex=initial_input.katex, error=initial_input.error)
+        initial_prompt = PROMTPS.user.format(katex=initial_input.katex, error=initial_input.error)
         user_message_contents = [
             KATEX_CORRECTOR_RETRY_USER_PROMPT.format(katex=input.katex, error=input.error)
             for input, _ in input.pairs[1:]
@@ -50,7 +45,7 @@ class KatexCorrectorRetryAssistant(
 
         outputs = [pair[1] for pair in input.pairs]
 
-        system_message_content = _SYSTEM_PROMPT.format()
+        system_message_content = PROMTPS.system.format()
         system_message = LLMMessage(role='system', content=system_message_content)
         messages = [system_message]
 
@@ -64,10 +59,10 @@ class KatexCorrectorRetryAssistant(
 
         return LLMRequest(
             conversation=LLMConversation(messages=messages),
-            params=LLMParams[KatexCorrectorRetryAssistantOutput](
+            params=LLMParams[Output](
                 model=self.model,
                 temperature=self.temperature,
-                response_type=KatexCorrectorRetryAssistantOutput.bind(input.id),
+                response_type=Output.bind(input.id),
                 metadata=dict(input_id=str(input.id)),
                 store=self.store,
                 max_completion_tokens=self.max_completion_tokens,
@@ -78,7 +73,5 @@ class KatexCorrectorRetryAssistant(
             ),
         )
 
-    def decode_from_response_list(
-        self, response_list: LLMResponseList[KatexCorrectorRetryAssistantOutput]
-    ) -> KatexCorrectorRetryAssistantOutput:
+    def decode_from_response_list(self, response_list: LLMResponseList[Output]) -> Output:
         return response_list.responses[0].content

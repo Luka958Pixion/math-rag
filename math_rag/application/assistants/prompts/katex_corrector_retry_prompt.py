@@ -1,7 +1,7 @@
 from math_rag.application.models.inference import LLMPrompt
 
 
-KATEX_CORRECTOR_RETRY_USER_PROMPT_TEMPLATE = """
+_USER_PROMPT_TEMPLATE = """
 Your KaTeX is still not rendering properly, fix it.
 
 ### Error Message:
@@ -12,5 +12,5 @@ Your KaTeX is still not rendering properly, fix it.
 
 
 KATEX_CORRECTOR_RETRY_USER_PROMPT = LLMPrompt(
-    template=KATEX_CORRECTOR_RETRY_USER_PROMPT_TEMPLATE.strip(), input_keys=['error']
+    template=_USER_PROMPT_TEMPLATE.strip(), input_keys=['error']
 )

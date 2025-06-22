@@ -4,8 +4,10 @@ from math_rag.application.base.inference import (
 )
 from math_rag.application.enums.inference import LLMInferenceProvider, LLMModelProvider
 from math_rag.application.models.assistants import (
-    MathExpressionLabelerAssistantInput,
-    MathExpressionLabelerAssistantOutput,
+    MathExpressionLabelerAssistantInput as Input,
+)
+from math_rag.application.models.assistants import (
+    MathExpressionLabelerAssistantOutput as Output,
 )
 from math_rag.application.models.inference import (
     LLMConversation,
@@ -17,17 +19,15 @@ from math_rag.application.models.inference import (
 )
 
 from .partials import PartialAssistant
-from .prompts import _SYSTEM_PROMPT, _USER_PROMPT
+from .prompts import MATH_EXPRESSION_LABELER_PROMPTS as PROMPTS
 
 
-class MathExpressionLabelerAssistant(
-    PartialAssistant[MathExpressionLabelerAssistantInput, MathExpressionLabelerAssistantOutput]
-):
+class MathExpressionLabelerAssistant(PartialAssistant[Input, Output]):
     def __init__(self, llm: BaseManagedLLM, scheduler: BaseBatchLLMRequestManagedScheduler | None):
         super().__init__(llm, scheduler)
 
-        self.system_prompt = _SYSTEM_PROMPT
-        self.user_prompt = _USER_PROMPT
+        self.system_prompt = PROMPTS.system
+        self.user_prompt = PROMPTS.user
         self.model = 'gpt-4.1-nano'
         self.temperature = 0.0
         self.store = True
@@ -35,9 +35,7 @@ class MathExpressionLabelerAssistant(
         self.inference_provider = LLMInferenceProvider.OPEN_AI
         self.model_provider = LLMModelProvider.OPEN_AI
 
-    def encode_to_request(
-        self, input: MathExpressionLabelerAssistantInput
-    ) -> LLMRequest[MathExpressionLabelerAssistantOutput]:
+    def encode_to_request(self, input: Input) -> LLMRequest[Output]:
         system_message_content = self.system_prompt.format()
         user_message_content = self.user_prompt.format(latex=input.latex)
 
@@ -48,10 +46,10 @@ class MathExpressionLabelerAssistant(
                     LLMMessage(role='user', content=user_message_content),
                 ]
             ),
-            params=LLMParams[MathExpressionLabelerAssistantOutput](
+            params=LLMParams[Output](
                 model=self.model,
                 temperature=self.temperature,
-                response_type=MathExpressionLabelerAssistantOutput.bind(input.id),
+                response_type=Output.bind(input.id),
                 metadata=dict(input_id=str(input.id)),
                 store=self.store,
                 max_completion_tokens=self.max_completion_tokens,
@@ -62,7 +60,5 @@ class MathExpressionLabelerAssistant(
             ),
         )
 
-    def decode_from_response_list(
-        self, response_list: LLMResponseList[MathExpressionLabelerAssistantOutput]
-    ) -> MathExpressionLabelerAssistantOutput:
+    def decode_from_response_list(self, response_list: LLMResponseList[Output]) -> Output:
         return response_list.responses[0].content

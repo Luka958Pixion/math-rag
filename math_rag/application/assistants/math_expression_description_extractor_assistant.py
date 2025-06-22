@@ -19,16 +19,15 @@ from math_rag.application.models.inference import (
 )
 
 from .partials import PartialAssistant
-from .prompts import MATH_EXPRESSION_DESCRIPTION_EXTRACTOR_SYSTEM_PROMPT as SYSTEM_PROMPT
-from .prompts import MATH_EXPRESSION_DESCRIPTION_EXTRACTOR_USER_PROMPT as USER_PROMPT
+from .prompts import MATH_EXPRESSION_DESCRIPTION_EXTRACTOR_PROMPTS as PROMPTS
 
 
 class MathExpressionDescriptionExtractorAssistant(PartialAssistant[Input, Output]):
     def __init__(self, llm: BaseManagedLLM, scheduler: BaseBatchLLMRequestManagedScheduler | None):
         super().__init__(llm, scheduler)
 
-        self.system_prompt = SYSTEM_PROMPT
-        self.user_prompt = USER_PROMPT
+        self.system_prompt = PROMPTS.system
+        self.user_prompt = PROMPTS.user
         self.model = 'gpt-4.1-nano'
         self.temperature = 0.0
         self.store = True
