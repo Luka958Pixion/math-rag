@@ -28,7 +28,7 @@ class MathExpressionLabelerAssistant(PartialAssistant[Input, Output]):
 
         self.system_prompt = PROMPTS.system
         self.user_prompt = PROMPTS.user
-        self.model = 'gpt-4.1-nano'
+        self.model = 'gpt-4.1-mini'
         self.temperature = 0.0
         self.store = True
         self.max_completion_tokens = 50
