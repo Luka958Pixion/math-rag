@@ -1,6 +1,6 @@
 from logging import getLogger
 
-from math_rag.application.assistants.prompts import MATH_EXPRESSION_LABELER_PROMPT_COLLECTION
+from math_rag.application.assistants.prompts import MATH_EXPRESSION_LABELER_PROMPTS
 from math_rag.application.base.repositories.documents import BaseMathExpressionSampleRepository
 from math_rag.application.base.services import (
     BaseDatasetPublisherService,
@@ -59,7 +59,7 @@ class MathExpressionDatasetPublisherService(BaseMathExpressionDatasetPublisherSe
         math_expression_samples = self._filter_empty_katex(math_expression_samples)
 
         fields = [field for field in MathExpressionSample.model_fields]
-        json_str = MATH_EXPRESSION_LABELER_PROMPT_COLLECTION.model_dump_json(indent=4)
+        json_str = MATH_EXPRESSION_LABELER_PROMPTS.model_dump_json(indent=4)
         content = json_str.encode('utf-8')
         dataset_metadata_file = DatasetMetadataFile(name='prompt.json', content=content)
 

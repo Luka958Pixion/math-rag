@@ -17,7 +17,7 @@ from math_rag.application.models.inference import (
 )
 
 from .partials import PartialAssistant
-from .prompts import MATH_EXPRESSION_LABELER_SYSTEM_PROMPT, MATH_EXPRESSION_LABELER_USER_PROMPT
+from .prompts import _SYSTEM_PROMPT, _USER_PROMPT
 
 
 class MathExpressionLabelerAssistant(
@@ -26,8 +26,8 @@ class MathExpressionLabelerAssistant(
     def __init__(self, llm: BaseManagedLLM, scheduler: BaseBatchLLMRequestManagedScheduler | None):
         super().__init__(llm, scheduler)
 
-        self.system_prompt = MATH_EXPRESSION_LABELER_SYSTEM_PROMPT
-        self.user_prompt = MATH_EXPRESSION_LABELER_USER_PROMPT
+        self.system_prompt = _SYSTEM_PROMPT
+        self.user_prompt = _USER_PROMPT
         self.model = 'gpt-4.1-nano'
         self.temperature = 0.0
         self.store = True
