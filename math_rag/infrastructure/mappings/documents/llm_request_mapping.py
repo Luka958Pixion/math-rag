@@ -20,7 +20,9 @@ class LLMRequestMapping(
             id=target.id,
             conversation=LLMConversationMapping.to_source(target.conversation),
             params=LLMParamsMapping[LLMResponseType].to_source(target.params),
-            router_params=LLMRouterParamsMapping.to_source(target.router_params),
+            router_params=LLMRouterParamsMapping.to_source(target.router_params)
+            if target.router_params
+            else None,
         )
 
     @staticmethod
@@ -29,5 +31,7 @@ class LLMRequestMapping(
             id=source.id,
             conversation=LLMConversationMapping.to_target(source.conversation),
             params=LLMParamsMapping[LLMResponseType].to_target(source.params),
-            router_params=LLMRouterParamsMapping.to_target(source.router_params),
+            router_params=LLMRouterParamsMapping.to_target(source.router_params)
+            if source.router_params
+            else None,
         )

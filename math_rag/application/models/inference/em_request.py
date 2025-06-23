@@ -10,4 +10,4 @@ class EMRequest(BaseModel):
     id: UUID = Field(default_factory=uuid4)
     text: str
     params: EMParams
-    router_params: EMRouterParams
+    router_params: EMRouterParams | None

@@ -13,7 +13,9 @@ class EMRequestMapping(BaseMapping[EMRequest, EMRequestDocument]):
             id=target.id,
             text=target.text,
             params=EMParamsMapping.to_source(target.params),
-            router_params=EMRouterParamsMapping.to_source(target.router_params),
+            router_params=EMRouterParamsMapping.to_source(target.router_params)
+            if target.router_params
+            else None,
         )
 
     @staticmethod
@@ -22,5 +24,7 @@ class EMRequestMapping(BaseMapping[EMRequest, EMRequestDocument]):
             id=source.id,
             text=source.text,
             params=EMParamsMapping.to_target(source.params),
-            router_params=EMRouterParamsMapping.to_target(source.router_params),
+            router_params=EMRouterParamsMapping.to_target(source.router_params)
+            if source.router_params
+            else None,
         )

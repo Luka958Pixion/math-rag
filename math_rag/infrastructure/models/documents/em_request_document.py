@@ -10,4 +10,4 @@ class EMRequestDocument(BaseDocument):
     id: UUID
     text: str
     params: EMParamsDocument
-    router_params: EMRouterParamsDocument
+    router_params: EMRouterParamsDocument | None
