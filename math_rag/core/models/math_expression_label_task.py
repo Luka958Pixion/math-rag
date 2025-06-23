@@ -12,4 +12,4 @@ class MathExpressionLabelTask(BaseLabelTask, frozen=True):
     math_expression_dataset_id: UUID
     timestamp: datetime = Field(default_factory=datetime.now)
     katex: str
-    html: str
+    svg: str

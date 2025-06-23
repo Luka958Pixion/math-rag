@@ -89,32 +89,61 @@ class TemplateChunkerUtil:
 
         return chunks
 
-    @staticmethod
-    def chunk(text: str, *, max_window_size: int) -> list[str]:
+    def chunk(text: str, *, max_window_size: int, max_padding: int) -> list[str]:
         """
         Break text into chunks that each include a sliding window of
         [math_placeholder | int] tokens without exceeding max_window_size.
+        Optionally pad each chunk by up to max_padding total characters (split evenly)
+        without cutting words or including other placeholders.
         """
         positions, lengths = TemplateChunkerUtil._parse_placeholders(text)
+        placeholder_spans = [(pos, pos + length) for pos, length in zip(positions, lengths)]
         block_ranges = TemplateChunkerUtil._find_contiguous_block_ranges(
             positions, lengths, max_window_size
         )
-        chunks: list[str] = []
+        raw_ranges: list[tuple[int, int]] = []
 
         for i, j in block_ranges:
-            # extract the text slice
-            block_start_offset = positions[i]
-            block_end_offset = positions[j - 1] + lengths[j - 1]
-            block_text = text[block_start_offset:block_end_offset]
-
-            # find relative positions and lengths
-            relative_positions = [position - block_start_offset for position in positions[i:j]]
-            relative_lengths = lengths[i:j]
-
-            # chunk
-            block_chunks = TemplateChunkerUtil._chunk_block(
-                block_text, relative_positions, relative_lengths, max_window_size
+            block_start = positions[i]
+            block_end = positions[j - 1] + lengths[j - 1]
+            rel_positions = [pos - block_start for pos in positions[i:j]]
+            rel_lengths = lengths[i:j]
+            rel_spans = TemplateChunkerUtil._chunk_block(
+                text[block_start:block_end], rel_positions, rel_lengths, max_window_size
             )
-            chunks.extend(block_chunks)
+
+            for start_rel, end_rel in rel_spans:
+                raw_ranges.append((block_start + start_rel, block_start + end_rel))
+
+        chunks: list[str] = []
+        text_len = len(text)
+
+        left_pad = max_padding // 2
+        right_pad = max_padding - left_pad
+
+        for chunk_start, chunk_end in raw_ranges:
+            if max_padding > 0:
+                start = max(0, chunk_start - left_pad)
+                end = min(text_len, chunk_end + right_pad)
+
+                if start > 0 and text[start].isalnum():
+                    b = text.rfind(' ', 0, start)
+                    start = 0 if b < 0 else b + 1
+
+                if end < text_len and text[end].isalnum():
+                    b = text.find(' ', end)
+                    end = text_len if b < 0 else b
+
+                for span_start, span_end in placeholder_spans:
+                    if span_start < chunk_start and span_end > start:
+                        start = span_end
+
+                    if span_start < end and span_end > chunk_end:
+                        end = span_start
+
+                chunks.append(text[start:end])
+
+            else:
+                chunks.append(text[chunk_start:chunk_end])
 
         return chunks

@@ -5,7 +5,7 @@ from math_rag.infrastructure.constants.services import MATH_PLACEHOLDER_PATTERN
 
 class TemplateContextExtractorUtil:
     @staticmethod
-    def get_contexts(text: str, *, max_context_size: int) -> list[str]:
+    def extract(text: str, *, max_context_size: int) -> list[str]:
         """
         For each math-placeholder in text, return a context substring of up to
         max_context_size characters total (including the placeholder itself),

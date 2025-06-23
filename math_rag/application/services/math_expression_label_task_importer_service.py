@@ -64,12 +64,12 @@ class MathExpressionLabelTaskImporterService(BaseMathExpressionLabelTaskImporter
                 math_expression_dataset_id=sample.math_expression_dataset_id,
                 timestamp=sample.timestamp,
                 katex=sample.katex,
-                html=katex_render_result.svg,
+                svg=katex_render_result.svg,
             )
             for sample, katex_render_result in zip(samples, katex_render_results)
         ]
         field_name_to_tag_type = {
-            'html': 'image',
+            'svg': 'image',
             'katex': 'text',
             'label': 'choices',
         }
