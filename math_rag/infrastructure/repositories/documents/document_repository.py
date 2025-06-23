@@ -6,7 +6,7 @@ from uuid import UUID
 
 from bson.binary import UuidRepresentation
 from bson.json_util import JSONOptions, dumps, loads
-from pymongo import ASCENDING, AsyncMongoClient, InsertOne, ReturnDocument
+from pymongo import ASCENDING, AsyncMongoClient, InsertOne, ReturnDocument, UpdateOne
 
 from math_rag.application.base.repositories.documents import BaseDocumentRepository
 from math_rag.infrastructure.types.repositories.documents import (
@@ -148,6 +148,38 @@ class DocumentRepository(
         doc = self.target_cls.model_validate(bson_doc)
 
         return self.mapping_cls.to_source(doc)
+
+    async def update_many(self, *, filter: dict[str, Any], update: dict[str, Any]) -> int:
+        if 'id' in filter:
+            filter['_id'] = filter.pop('id')
+
+        result = await self.collection.update_many(filter, {'$set': update})
+
+        return result.modified_count
+
+    async def batch_update_many(
+        self,
+        filter_to_update: list[tuple[dict[str, Any], dict[str, Any]]],
+        *,
+        batch_size: int,
+    ) -> int:
+        operations: list[UpdateOne] = []
+
+        for filter, update in filter_to_update:
+            if 'id' in filter:
+                filter['_id'] = filter.pop('id')
+
+            operation = UpdateOne(filter, {'$set': update})
+            operations.append(operation)
+
+        modified_count = 0
+
+        for i in range(0, len(operations), batch_size):
+            batch = operations[i : i + batch_size]
+            result = await self.collection.bulk_write(batch)
+            modified_count += result.modified_count
+
+        return modified_count
 
     async def delete_one(self, filter: dict[str, Any]) -> int:
         if 'id' in filter:

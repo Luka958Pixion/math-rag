@@ -5,7 +5,7 @@ from math_rag.infrastructure.constants.services import MATH_PLACEHOLDER_PATTERN
 
 class TemplateFormatterUtil:
     @staticmethod
-    def format(text: str, index_to_arg: dict[int, str], omit_wrapper: bool = False) -> str:
+    def format(text: str, index_to_arg: dict[int, str], *, omit_wrapper: bool) -> str:
         """
         Replace each [math_placeholder | int] in the text with
         '[arg | int]' by default or 'arg' if omit_wrapper is True.
@@ -39,6 +39,7 @@ class TemplateFormatterUtil:
 
                 else:
                     replacement = f'[{arg} | {index}]'
+
             else:
                 replacement = placeholder_text
 

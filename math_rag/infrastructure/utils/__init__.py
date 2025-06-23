@@ -14,7 +14,7 @@ from .label_instruction_builder_util import LabelInstructionBuilderUtil
 from .llm_token_counter_util import LLMTokenCounterUtil
 from .tar_file_extractor_util import TarFileExtractorUtil
 from .template_chunker_util import TemplateChunkerUtil
-from .template_context_extractor_util import TemplateContextExtractorUtil
+from .template_context_chunker_util import TemplateContextChunkerUtil
 from .template_formatter_util import TemplateFormatterUtil
 from .uuid_encoder_util import UUIDEncoderUtil
 
@@ -36,7 +36,7 @@ __all__ = [
     'LLMTokenCounterUtil',
     'TarFileExtractorUtil',
     'TemplateChunkerUtil',
-    'TemplateContextExtractorUtil',
+    'TemplateContextChunkerUtil',
     'TemplateFormatterUtil',
     'UUIDEncoderUtil',
 ]

@@ -40,6 +40,16 @@ class BaseDocumentRepository(ABC, Generic[T]):
         pass
 
     @abstractmethod
+    async def update_many(self, *, filter: dict[str, Any], update: dict[str, Any]) -> int:
+        pass
+
+    @abstractmethod
+    async def batch_update_many(
+        self, filter_to_update: list[tuple[dict[str, Any], dict[str, Any]]], *, batch_size: int
+    ) -> int:
+        pass
+
+    @abstractmethod
     async def count(self, *, filter: dict[str, Any] | None) -> int:
         pass
 
