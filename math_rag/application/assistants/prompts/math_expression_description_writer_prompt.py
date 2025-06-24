@@ -2,15 +2,24 @@ from math_rag.application.models.inference import LLMPrompt, LLMPromptCollection
 
 
 _SYSTEM_PROMPT_TEMPLATE = """
-You are an expert TODO
+You are an expert math expression description writer.
+
+Your task is to produce a precise, self-contained description of a target math expression, based strictly on the surrounding context.
 
 ### Instructions:
-- TODO
+- Be concise and unambiguous.
+- Only describe what can be inferred from the given context.
+- Avoid introducing any external assumptions or definitions.
 """
 
 _USER_PROMPT_TEMPLATE = """
-### Input:
-TODO
+### Math expression of interest:
+{katex}
+
+### Math expression with surrounding context:
+{context}
+
+### Description:
 """
 
 _SYSTEM_PROMPT = LLMPrompt(
@@ -20,7 +29,7 @@ _SYSTEM_PROMPT = LLMPrompt(
 
 _USER_PROMPT = LLMPrompt(
     template=_USER_PROMPT_TEMPLATE.strip(),
-    input_keys=[],
+    input_keys=['katex', 'context'],
 )
 
 MATH_EXPRESSION_DESCRIPTION_WRITER_PROMPTS = LLMPromptCollection(

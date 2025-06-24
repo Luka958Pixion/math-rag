@@ -10,8 +10,12 @@ from dependency_injector.providers import (
 
 from math_rag.application.assistants import (
     KatexCorrectorAssistant,
+    KatexCorrectorRetryAssistant,
+    MathExpressionComparatorAssistant,
+    MathExpressionDescriptionOptimizerAssistant,
     MathExpressionDescriptionWriterAssistant,
     MathExpressionLabelerAssistant,
+    MathExpressionRelationshipDescriptionWriterAssistant,
 )
 from math_rag.application.base.clients import (
     BaseArxivClient,
@@ -113,8 +117,29 @@ class ApplicationContainer(DeclarativeContainer):
     fine_tune_job_runner_service = Dependency(instance_of=BaseFineTuneJobRunnerService)
 
     # non-dependencies
+    # assistants
+
+    (MathExpressionRelationshipDescriptionWriterAssistant,)
+
     katex_corrector_assistant = Factory(
-        KatexCorrectorAssistant, llm=managed_llm, scheduler=managed_llm_scheduler
+        KatexCorrectorAssistant,
+        llm=managed_llm,
+        scheduler=managed_llm_scheduler,
+    )
+    katex_corrector_retry_assistant = Factory(
+        KatexCorrectorRetryAssistant,
+        llm=managed_llm,
+        scheduler=managed_llm_scheduler,
+    )
+    math_expression_comparator_assistant = Factory(
+        MathExpressionComparatorAssistant,
+        llm=managed_llm,
+        scheduler=managed_llm_scheduler,
+    )
+    math_expression_description_optimizer_assistant = Factory(
+        MathExpressionDescriptionOptimizerAssistant,
+        llm=managed_llm,
+        scheduler=managed_llm_scheduler,
     )
     math_expression_description_writer_assistant = Factory(
         MathExpressionDescriptionWriterAssistant,
@@ -122,15 +147,24 @@ class ApplicationContainer(DeclarativeContainer):
         scheduler=managed_llm_scheduler,
     )
     math_expression_labeler_assistant = Factory(
-        MathExpressionLabelerAssistant, llm=managed_llm, scheduler=managed_llm_scheduler
+        MathExpressionLabelerAssistant,
+        llm=managed_llm,
+        scheduler=managed_llm_scheduler,
+    )
+    math_expression_relationship_description_writer_assistant = Factory(
+        MathExpressionRelationshipDescriptionWriterAssistant,
+        llm=managed_llm,
+        scheduler=managed_llm_scheduler,
     )
 
+    # embedants
     math_expression_description_embedant = Factory(
         MathExpressionDescriptionEmbedant,
         em=managed_em,
         scheduler=managed_em_scheduler,
     )
 
+    # services
     em_settings_loader_service = Factory(EMSettingsLoaderService)
     llm_settings_loader_service = Factory(LLMSettingsLoaderService)
     math_article_loader_service = Factory(

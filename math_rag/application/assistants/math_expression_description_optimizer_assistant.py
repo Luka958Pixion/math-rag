@@ -3,8 +3,12 @@ from math_rag.application.base.inference import (
     BaseManagedLLM,
 )
 from math_rag.application.enums.inference import LLMInferenceProvider, LLMModelProvider
-from math_rag.application.models.assistants.inputs import MathExpressionDescriptionWriter as Input
-from math_rag.application.models.assistants.outputs import MathExpressionDescriptionWriter as Output
+from math_rag.application.models.assistants.inputs import (
+    MathExpressionDescriptionOptimizer as Input,
+)
+from math_rag.application.models.assistants.outputs import (
+    MathExpressionDescriptionOptimizer as Output,
+)
 from math_rag.application.models.inference import (
     LLMConversation,
     LLMMessage,
@@ -15,16 +19,16 @@ from math_rag.application.models.inference import (
 )
 
 from .partials import PartialAssistant
-from .prompts import MATH_EXPRESSION_DESCRIPTION_WRITER_PROMPTS as PROMPTS
+from .prompts import MATH_EXPRESSION_DESCRIPTION_OPTIMIZER_PROMPTS as PROMPTS
 
 
-class MathExpressionDescriptionWriterAssistant(PartialAssistant[Input, Output]):
+class MathExpressionDescriptionOptimizerAssistant(PartialAssistant[Input, Output]):
     def __init__(self, llm: BaseManagedLLM, scheduler: BaseBatchLLMRequestManagedScheduler | None):
         super().__init__(llm, scheduler)
 
     def encode_to_request(self, input: Input) -> LLMRequest[Output]:
         system_message_content = PROMPTS.system.format()
-        user_message_content = PROMPTS.user.format(katex=input.katex, context=input.context)
+        user_message_content = PROMPTS.user.format(description=input.description)
 
         return LLMRequest(
             conversation=LLMConversation(

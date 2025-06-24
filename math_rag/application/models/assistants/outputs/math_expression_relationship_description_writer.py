@@ -1,5 +1,5 @@
 from math_rag.application.models.assistants.base import BaseAssistantOutput
 
 
-class MathExpressionDescriptionOptimizer(BaseAssistantOutput):
+class MathExpressionRelationshipDescriptionWriter(BaseAssistantOutput):
     description: str
