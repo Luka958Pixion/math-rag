@@ -219,7 +219,8 @@ class ApplicationContainer(DeclarativeContainer):
     )
 
     math_expression_label_exporter_service = Factory(
-        MathExpressionLabelExporterService, label_task_exporter_service=label_task_exporter_service
+        MathExpressionLabelExporterService,
+        label_task_exporter_service=label_task_exporter_service,
     )
     math_expression_label_task_importer_service = Factory(
         MathExpressionLabelTaskImporterService,

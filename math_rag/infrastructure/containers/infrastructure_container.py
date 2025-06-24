@@ -247,7 +247,8 @@ class InfrastructureContainer(DeclarativeContainer):
     )
 
     math_expression_description_seeder = Factory(
-        MathExpressionDescriptionSeeder, client=async_qdrant_client
+        MathExpressionDescriptionSeeder,
+        client=async_qdrant_client,
     )
 
     embedding_seeders: Provider[list[BaseEmbeddingSeeder]] = List(
@@ -255,7 +256,8 @@ class InfrastructureContainer(DeclarativeContainer):
     )
 
     math_expression_description_repository = Factory(
-        MathExpressionDescriptionRepository, client=async_qdrant_client
+        MathExpressionDescriptionRepository,
+        client=async_qdrant_client,
     )
 
     # Google
@@ -438,7 +440,9 @@ class InfrastructureContainer(DeclarativeContainer):
     config.hugging_face.token.from_env('HF_TOKEN')
 
     hugging_face_api = Singleton(
-        HfApi, endpoint=config.hugging_face.base_url, token=config.hugging_face.token
+        HfApi,
+        endpoint=config.hugging_face.base_url,
+        token=config.hugging_face.token,
     )
 
     dataset_loader_service = Factory(
@@ -459,15 +463,19 @@ class InfrastructureContainer(DeclarativeContainer):
     config.label_studio.api_key.from_env('LABEL_STUDIO_API_KEY')
 
     async_label_studio = Singleton(
-        AsyncLabelStudio, base_url=config.label_studio.base_url, api_key=config.label_studio.api_key
+        AsyncLabelStudio,
+        base_url=config.label_studio.base_url,
+        api_key=config.label_studio.api_key,
     )
 
     label_studio_config_builder_service = Factory(LabelStudioConfigBuilderService)
     label_studio_task_exporter_service = Factory(
-        LabelStudioTaskExporterService, async_label_studio=async_label_studio
+        LabelStudioTaskExporterService,
+        async_label_studio=async_label_studio,
     )
     label_studio_task_importer_service = Factory(
-        LabelStudioTaskImporterService, async_label_studio=async_label_studio
+        LabelStudioTaskImporterService,
+        async_label_studio=async_label_studio,
     )
 
     # routers
@@ -485,10 +493,12 @@ class InfrastructureContainer(DeclarativeContainer):
     )
 
     managed_em_router = Factory(
-        ManagedEMRouter, inference_provider_to_managed_em=inference_provider_to_managed_em
+        ManagedEMRouter,
+        inference_provider_to_managed_em=inference_provider_to_managed_em,
     )
     managed_llm_router = Factory(
-        ManagedLLMRouter, inference_provider_to_managed_llm=inference_provider_to_managed_llm
+        ManagedLLMRouter,
+        inference_provider_to_managed_llm=inference_provider_to_managed_llm,
     )
 
     # ApplicationContainer
