@@ -2,8 +2,6 @@ from .document_repository import DocumentRepository
 from .em_failed_request_repository import EMFailedRequestRepository
 from .fine_tune_job_repository import FineTuneJobRepository
 from .index_repository import IndexRepository
-from .katex_corrector_assistant_input_repository import KatexCorrectorAssistantInputRepository
-from .katex_corrector_assistant_output_repository import KatexCorrectorAssistantOutputRepository
 from .llm_failed_request_repository import LLMFailedRequestRepository
 from .math_expression_dataset_repository import MathExpressionDatasetRepository
 from .math_expression_dataset_test_repository import MathExpressionDatasetTestRepository
@@ -23,8 +21,6 @@ __all__ = [
     'EMFailedRequestRepository',
     'FineTuneJobRepository',
     'IndexRepository',
-    'KatexCorrectorAssistantInputRepository',
-    'KatexCorrectorAssistantOutputRepository',
     'LLMFailedRequestRepository',
     'MathExpressionDatasetRepository',
     'MathExpressionDatasetTestRepository',
