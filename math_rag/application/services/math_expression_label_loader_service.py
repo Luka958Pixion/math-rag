@@ -7,7 +7,7 @@ from math_rag.application.base.repositories.documents import (
     BaseMathExpressionRepository,
 )
 from math_rag.application.base.services import BaseMathExpressionLabelLoaderService
-from math_rag.application.models.assistants import MathExpressionLabelerAssistantInput
+from math_rag.application.models.assistants.inputs import MathExpressionLabeler as AssistantInput
 from math_rag.core.enums import MathExpressionDatasetBuildPriority
 from math_rag.core.models import Index, MathExpressionDataset, MathExpressionLabel
 
@@ -27,7 +27,7 @@ class MathExpressionLabelLoaderService(BaseMathExpressionLabelLoaderService):
         self.math_expression_label_repository = math_expression_label_repository
 
     async def load_for_dataset(self, dataset: MathExpressionDataset):
-        inputs: list[MathExpressionLabelerAssistantInput] = []
+        inputs: list[AssistantInput] = []
         input_id_to_math_expression_id: dict[UUID, UUID] = {}
 
         async for math_expressions in self.math_expression_repository.batch_find_many(
@@ -39,7 +39,7 @@ class MathExpressionLabelLoaderService(BaseMathExpressionLabelLoaderService):
             },
         ):
             for math_expression in math_expressions:
-                input = MathExpressionLabelerAssistantInput(latex=math_expression.latex)
+                input = AssistantInput(latex=math_expression.latex)
                 input_id_to_math_expression_id[input.id] = math_expression.id
                 inputs.append(input)
 
@@ -73,7 +73,7 @@ class MathExpressionLabelLoaderService(BaseMathExpressionLabelLoaderService):
         )
 
     async def load_for_index(self, index: Index):
-        inputs: list[MathExpressionLabelerAssistantInput] = []
+        inputs: list[AssistantInput] = []
         input_id_to_math_expression_id: dict[UUID, UUID] = {}
 
         async for math_expressions in self.math_expression_repository.batch_find_many(
@@ -81,7 +81,7 @@ class MathExpressionLabelLoaderService(BaseMathExpressionLabelLoaderService):
             filter={'index_id': index.id},
         ):
             for math_expression in math_expressions:
-                input = MathExpressionLabelerAssistantInput(latex=math_expression.latex)
+                input = AssistantInput(latex=math_expression.latex)
                 input_id_to_math_expression_id[input.id] = math_expression.id
                 inputs.append(input)
 

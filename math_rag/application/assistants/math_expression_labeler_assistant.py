@@ -3,12 +3,8 @@ from math_rag.application.base.inference import (
     BaseManagedLLM,
 )
 from math_rag.application.enums.inference import LLMInferenceProvider, LLMModelProvider
-from math_rag.application.models.assistants import (
-    MathExpressionLabelerAssistantInput as Input,
-)
-from math_rag.application.models.assistants import (
-    MathExpressionLabelerAssistantOutput as Output,
-)
+from math_rag.application.models.assistants.inputs import MathExpressionLabeler as Input
+from math_rag.application.models.assistants.outputs import MathExpressionLabeler as Output
 from math_rag.application.models.inference import (
     LLMConversation,
     LLMMessage,

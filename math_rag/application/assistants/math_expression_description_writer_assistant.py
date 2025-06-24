@@ -3,12 +3,8 @@ from math_rag.application.base.inference import (
     BaseManagedLLM,
 )
 from math_rag.application.enums.inference import LLMInferenceProvider, LLMModelProvider
-from math_rag.application.models.assistants import (
-    MathExpressionDescriptionCorrectorAssistantInput as Input,
-)
-from math_rag.application.models.assistants import (
-    MathExpressionDescriptionCorrectorAssistantOutput as Output,
-)
+from math_rag.application.models.assistants.inputs import MathExpressionDescriptionWriter as Input
+from math_rag.application.models.assistants.outputs import MathExpressionDescriptionWriter as Output
 from math_rag.application.models.inference import (
     LLMConversation,
     LLMMessage,
@@ -19,26 +15,16 @@ from math_rag.application.models.inference import (
 )
 
 from .partials import PartialAssistant
-from .prompts import MATH_EXPRESSION_DESCRIPTION_EXTRACTOR_PROMPTS as PROMPTS
+from .prompts import MATH_EXPRESSION_DESCRIPTION_WRITER_PROMPTS as PROMPTS
 
 
-class MathExpressionDescriptionExtractorAssistant(PartialAssistant[Input, Output]):
+class MathExpressionDescriptionWriterAssistant(PartialAssistant[Input, Output]):
     def __init__(self, llm: BaseManagedLLM, scheduler: BaseBatchLLMRequestManagedScheduler | None):
         super().__init__(llm, scheduler)
 
-        self.system_prompt = PROMPTS.system
-        self.user_prompt = PROMPTS.user
-        self.model = 'gpt-4.1-nano'
-        self.temperature = 0.0
-        self.store = True
-        self.max_completion_tokens = 1024
-        self.inference_provider = LLMInferenceProvider.OPEN_AI
-        self.model_provider = LLMModelProvider.OPEN_AI
-
     def encode_to_request(self, input: Input) -> LLMRequest[Output]:
-        system_message_content = self.system_prompt.format()
-        user_message_content = self.user_prompt.format(katex=input.katex, error=input.error)
-        # TODO
+        system_message_content = PROMPTS.system.format()
+        user_message_content = PROMPTS.user.format(...)  # TODO
 
         return LLMRequest(
             conversation=LLMConversation(
@@ -48,16 +34,16 @@ class MathExpressionDescriptionExtractorAssistant(PartialAssistant[Input, Output
                 ]
             ),
             params=LLMParams[Output](
-                model=self.model,
-                temperature=self.temperature,
+                model='gpt-4.1-nano',
+                temperature=0.0,
                 response_type=Output.bind(input.id),
                 metadata=dict(input_id=str(input.id)),
-                store=self.store,
-                max_completion_tokens=self.max_completion_tokens,
+                store=True,
+                max_completion_tokens=1024,
             ),
             router_params=LLMRouterParams(
-                inference_provider=self.inference_provider,
-                model_provider=self.model_provider,
+                inference_provider=LLMInferenceProvider.OPEN_AI,
+                model_provider=LLMModelProvider.OPEN_AI,
             ),
         )
 

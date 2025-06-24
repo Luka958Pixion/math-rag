@@ -10,7 +10,7 @@ from dependency_injector.providers import (
 
 from math_rag.application.assistants import (
     KatexCorrectorAssistant,
-    MathExpressionDescriptionExtractorAssistant,
+    MathExpressionDescriptionWriterAssistant,
     MathExpressionLabelerAssistant,
 )
 from math_rag.application.base.clients import (
@@ -116,8 +116,8 @@ class ApplicationContainer(DeclarativeContainer):
     katex_corrector_assistant = Factory(
         KatexCorrectorAssistant, llm=managed_llm, scheduler=managed_llm_scheduler
     )
-    math_expression_description_extractor_assistant = Factory(
-        MathExpressionDescriptionExtractorAssistant,
+    math_expression_description_writer_assistant = Factory(
+        MathExpressionDescriptionWriterAssistant,
         llm=managed_llm,
         scheduler=managed_llm_scheduler,
     )

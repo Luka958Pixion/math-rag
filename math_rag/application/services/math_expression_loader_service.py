@@ -10,9 +10,7 @@ from math_rag.application.base.services import (
     BaseMathArticleParserService,
     BaseMathExpressionLoaderService,
 )
-from math_rag.application.models.assistants import (
-    KatexCorrectorAssistantInput,
-)
+from math_rag.application.models.assistants.inputs import KatexCorrector as AssistantInput
 from math_rag.application.models.clients import KatexValidateResult
 from math_rag.core.enums import MathExpressionDatasetBuildPriority
 from math_rag.core.models import Index, LatexMathNode, MathExpression, MathExpressionDataset
@@ -85,11 +83,11 @@ class MathExpressionLoaderService(BaseMathExpressionLoaderService):
 
         if invalid:
             # create the inputs
-            inputs: list[KatexCorrectorAssistantInput] = []
+            inputs: list[AssistantInput] = []
             input_id_to_node: dict[UUID, LatexMathNode] = {}
 
             for node, result in invalid:
-                input = KatexCorrectorAssistantInput(
+                input = AssistantInput(
                     katex=node.latex.strip('$'),
                     error=result.error,
                 )
@@ -183,11 +181,11 @@ class MathExpressionLoaderService(BaseMathExpressionLoaderService):
 
         if invalid:
             # create the inputs
-            inputs: list[KatexCorrectorAssistantInput] = []
+            inputs: list[AssistantInput] = []
             input_id_to_node: dict[UUID, LatexMathNode] = {}
 
             for node, result in invalid:
-                input = KatexCorrectorAssistantInput(
+                input = AssistantInput(
                     katex=node.latex.strip('$'),
                     error=result.error,
                 )

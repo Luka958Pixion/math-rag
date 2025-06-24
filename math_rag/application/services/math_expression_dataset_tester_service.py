@@ -7,7 +7,7 @@ from math_rag.application.base.services import (
     BaseMathExpressionDatasetTesterService,
 )
 from math_rag.application.enums.inference import LLMInferenceProvider, LLMModelProvider
-from math_rag.application.models.assistants import MathExpressionLabelerAssistantInput
+from math_rag.application.models.assistants.inputs import MathExpressionLabeler as AssistantInput
 from math_rag.application.models.inference import LLMPromptCollection
 from math_rag.core.models import (
     MathExpressionDataset,
@@ -62,11 +62,11 @@ class MathExpressionDatasetTesterService(BaseMathExpressionDatasetTesterService)
 
         # test
         samples = split_name_to_samples[test.math_expression_dataset_split_name]
-        inputs: list[MathExpressionLabelerAssistantInput] = []
+        inputs: list[AssistantInput] = []
         input_id_to_math_expression_id: dict[UUID, UUID] = {}
 
         for sample in samples:
-            input = MathExpressionLabelerAssistantInput(latex=sample.katex)
+            input = AssistantInput(latex=sample.katex)
             input_id_to_math_expression_id[input.id] = sample.math_expression_id
             inputs.append(input)
 

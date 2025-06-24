@@ -4,7 +4,7 @@ from math_rag.application.models.assistants.base import BaseAssistantOutput
 from math_rag.core.enums import MathExpressionLabelEnum
 
 
-class MathExpressionLabelerAssistantOutput(BaseAssistantOutput):
+class MathExpressionLabeler(BaseAssistantOutput):
     label: MathExpressionLabelEnum = Field(
         ...,
         validation_alias=AliasChoices('label', 'class'),

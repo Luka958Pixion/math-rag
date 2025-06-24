@@ -3,8 +3,8 @@ from math_rag.application.base.inference import (
     BaseManagedLLM,
 )
 from math_rag.application.enums.inference import LLMInferenceProvider, LLMModelProvider
-from math_rag.application.models.assistants import KatexCorrectorAssistantInput as Input
-from math_rag.application.models.assistants import KatexCorrectorAssistantOutput as Output
+from math_rag.application.models.assistants.inputs import KatexCorrector as Input
+from math_rag.application.models.assistants.outputs import KatexCorrector as Output
 from math_rag.application.models.inference import (
     LLMConversation,
     LLMMessage,
@@ -22,18 +22,9 @@ class KatexCorrectorAssistant(PartialAssistant[Input, Output]):
     def __init__(self, llm: BaseManagedLLM, scheduler: BaseBatchLLMRequestManagedScheduler | None):
         super().__init__(llm, scheduler)
 
-        self.system_prompt = PROMPTS.system
-        self.user_prompt = PROMPTS.user
-        self.model = 'gpt-4.1-nano'
-        self.temperature = 0.0
-        self.store = True
-        self.max_completion_tokens = 1024
-        self.inference_provider = LLMInferenceProvider.OPEN_AI
-        self.model_provider = LLMModelProvider.OPEN_AI
-
     def encode_to_request(self, input: Input) -> LLMRequest[Output]:
-        system_message_content = self.system_prompt.format()
-        user_message_content = self.user_prompt.format(katex=input.katex, error=input.error)
+        system_message_content = PROMPTS.system.format()
+        user_message_content = PROMPTS.user.format(katex=input.katex, error=input.error)
 
         return LLMRequest(
             conversation=LLMConversation(
@@ -43,16 +34,16 @@ class KatexCorrectorAssistant(PartialAssistant[Input, Output]):
                 ]
             ),
             params=LLMParams[Output](
-                model=self.model,
-                temperature=self.temperature,
+                model='gpt-4.1-nano',
+                temperature=0.0,
                 response_type=Output.bind(input.id),
                 metadata=dict(input_id=str(input.id)),
-                store=self.store,
-                max_completion_tokens=self.max_completion_tokens,
+                store=True,
+                max_completion_tokens=1024,
             ),
             router_params=LLMRouterParams(
-                inference_provider=self.inference_provider,
-                model_provider=self.model_provider,
+                inference_provider=LLMInferenceProvider.OPEN_AI,
+                model_provider=LLMModelProvider.OPEN_AI,
             ),
         )
 

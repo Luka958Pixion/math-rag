@@ -5,8 +5,6 @@ from .em_request_document import EMRequestDocument
 from .em_router_params_document import EMRouterParamsDocument
 from .fine_tune_job_document import FineTuneJobDocument
 from .index_document import IndexDocument
-from .katex_corrector_assistant_input_document import KatexCorrectorAssistantInputDocument
-from .katex_corrector_assistant_output_document import KatexCorrectorAssistantOutputDocument
 from .llm_conversation_document import LLMConversationDocument
 from .llm_error_document import LLMErrorDocument
 from .llm_failed_request_document import LLMFailedRequestDocument
@@ -33,8 +31,6 @@ __all__ = [
     'EMRouterParamsDocument',
     'FineTuneJobDocument',
     'IndexDocument',
-    'KatexCorrectorAssistantInputDocument',
-    'KatexCorrectorAssistantOutputDocument',
     'LLMConversationDocument',
     'LLMErrorDocument',
     'LLMFailedRequestDocument',
