@@ -62,7 +62,7 @@ class OpenAIBatchLLMRequestScheduler(BaseBatchLLMRequestScheduler):
             exceeds_tokens = (current_tokens + tokens) > max_tokens_per_day
             exceeds_size = (current_input_file_size + input_file_size) > max_input_file_size
 
-            if current_batch_request and (exceeds_tokens or exceeds_size):
+            if current_batch_request.requests and (exceeds_tokens or exceeds_size):
                 # append new schedule entry
                 schedule_entry = LLMBatchRequestScheduleEntry[LLMResponseType](
                     batch_request=current_batch_request, timestamp=schedule_timestamp
