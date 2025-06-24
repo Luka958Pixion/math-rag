@@ -96,8 +96,10 @@ class OpenAIBatchLLMRequestScheduler(BaseBatchLLMRequestScheduler):
     ) -> AsyncGenerator[LLMBatchResult[LLMResponseType], None]:
         for entry in schedule.entries:
             current_timestamp = datetime.now()
+            delta = entry.timestamp - current_timestamp
+            seconds = delta.total_seconds()
 
-            if current_timestamp < entry.timestamp:
-                await sleep(entry.timestamp - current_timestamp)
+            if seconds > 0:
+                await sleep(seconds)
 
             yield await self.llm.batch_generate(entry.batch_request, response_type)

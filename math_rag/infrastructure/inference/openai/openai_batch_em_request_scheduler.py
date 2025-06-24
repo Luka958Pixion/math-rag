@@ -94,8 +94,10 @@ class OpenAIBatchEMRequestScheduler(BaseBatchEMRequestScheduler):
     ) -> AsyncGenerator[EMBatchResult, None]:
         for entry in schedule.entries:
             current_timestamp = datetime.now()
+            delta = entry.timestamp - current_timestamp
+            seconds = delta.total_seconds()
 
-            if current_timestamp < entry.timestamp:
-                await sleep(entry.timestamp - current_timestamp)
+            if seconds > 0:
+                await sleep(seconds)
 
             yield await self.em.batch_embed(entry.batch_request)
