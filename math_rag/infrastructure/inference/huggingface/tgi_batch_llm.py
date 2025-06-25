@@ -16,6 +16,7 @@ from math_rag.application.models.inference import (
     LLMResponseList,
 )
 from math_rag.application.types.inference import LLMResponseType
+from math_rag.infrastructure.base import BaseInitializer
 from math_rag.infrastructure.clients import (
     ApptainerClient,
     FileSystemClient,
@@ -57,7 +58,7 @@ STATUS_TRACKER_DELAY = 30
 logger = getLogger(__name__)
 
 
-class TGIBatchLLM(PartialBatchLLM):
+class TGIBatchLLM(BaseInitializer, PartialBatchLLM):
     def __init__(
         self,
         file_system_client: FileSystemClient,
@@ -129,7 +130,7 @@ class TGIBatchLLM(PartialBatchLLM):
 
             return True
 
-    async def init_resources(self):
+    async def initialize(self):
         # common directory paths
         tmp_path = LOCAL_ROOT_PATH / '.tmp'
         hf_path = LOCAL_ROOT_PATH / 'assets/hpc/hf'

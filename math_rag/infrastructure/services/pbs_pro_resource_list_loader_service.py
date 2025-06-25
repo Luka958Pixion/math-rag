@@ -4,7 +4,7 @@ from typing import Literal
 from pydantic import RootModel
 
 from math_rag.infrastructure.models.hpc.pbs import PBSProResourceList
-from math_rag.shared.utils import PydanticOverriderUtil, YamlReaderUtil
+from math_rag.shared.utils import PydanticOverriderUtil, YAMLReaderUtil
 
 
 RESOURCES_PATH = Path(__file__).parents[3] / 'settings' / 'resources'
@@ -31,13 +31,13 @@ class _PBSProResourceListMapping(RootModel[dict[str, PBSProResourceList]]):
 class PBSProResourceListLoaderService:
     def __init__(self):
         self._model_settings_dict = {
-            'ft': YamlReaderUtil.read(
+            'ft': YAMLReaderUtil.read(
                 RESOURCES_PATH / 'fine_tune.yaml', model=_PBSProResourceListMapping
             ),
-            'tgi': YamlReaderUtil.read(
+            'tgi': YAMLReaderUtil.read(
                 RESOURCES_PATH / 'text_embeddings_inference.yaml', model=_PBSProResourceListMapping
             ),
-            'tei': YamlReaderUtil.read(
+            'tei': YAMLReaderUtil.read(
                 RESOURCES_PATH / 'text_generation_inference.yaml', model=_PBSProResourceListMapping
             ),
         }

@@ -1,11 +1,11 @@
+from json import dump
 from pathlib import Path
 
 from pydantic import BaseModel
-from yaml import safe_dump
 
 
-class YAMLWriterUtil:
+class JSONWriterUtil:
     @staticmethod
     def write(path: Path, *, model: BaseModel):
         with open(path, 'w') as file:
-            safe_dump(model.model_dump(), file)
+            dump(model.model_dump(), file, indent=4)

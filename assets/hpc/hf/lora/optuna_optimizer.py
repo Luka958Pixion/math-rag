@@ -8,13 +8,13 @@ from fine_tune import fine_tune_and_evaluate
 from fine_tune_settings import FineTuneSettings
 from optuna import Trial, create_study
 from optuna.trial import FrozenTrial
-from utils import YamlReaderUtil
+from utils import JSONReaderUtil
 
 
 config = Config(repository=RepositoryEnv('.env.hpc'))
 
 FINE_TUNE_JOB_ID = config('FINE_TUNE_JOB_ID', cast=UUID)
-FINE_TUNE_SETTINGS_PATH = Path(f'input_{FINE_TUNE_JOB_ID}.yaml')
+FINE_TUNE_SETTINGS_PATH = Path(f'input_{FINE_TUNE_JOB_ID}.json')
 
 
 basicConfig(level=INFO, format='%(asctime)s - %(levelname)s - %(message)s')
@@ -41,7 +41,7 @@ def log(trial: FrozenTrial):
 
 
 def main():
-    fine_tune_settings = YamlReaderUtil.read(FINE_TUNE_SETTINGS_PATH, model=FineTuneSettings)
+    fine_tune_settings = JSONReaderUtil.read(FINE_TUNE_SETTINGS_PATH, model=FineTuneSettings)
     optuna_settings = fine_tune_settings.optuna_settings
     optuna_settings.study_settings.study_name += f'-fine-tune-job-{FINE_TUNE_JOB_ID}'
 

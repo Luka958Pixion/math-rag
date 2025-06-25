@@ -23,7 +23,7 @@ class TestOutput(BaseAssistantOutput):
 async def test_batch_generate(infrastructure_container: InfrastructureContainer):
     # arrange
     tgi_batch_llm = infrastructure_container.tgi_batch_llm()
-    await tgi_batch_llm.init_resources()
+    await tgi_batch_llm.initialize()
 
     test_input = TestInput()
     request = LLMRequest(

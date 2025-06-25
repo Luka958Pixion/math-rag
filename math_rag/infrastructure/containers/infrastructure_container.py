@@ -25,6 +25,7 @@ from math_rag.application.base.seeders.embeddings import BaseEmbeddingSeeder
 from math_rag.application.base.seeders.objects import BaseObjectSeeder
 from math_rag.application.containers import ApplicationContainer
 from math_rag.application.enums.inference import EMInferenceProvider, LLMInferenceProvider
+from math_rag.infrastructure.base import BaseInitializer
 from math_rag.infrastructure.clients import (
     ApptainerClient,
     ArxivClient,
@@ -421,6 +422,10 @@ class InfrastructureContainer(DeclarativeContainer):
         sftp_client=sftp_client,
         apptainer_client=apptainer_client,
         pbs_pro_resource_list_loader_service=pbs_pro_resource_list_loader_service,
+    )
+
+    initializers: Provider[list[BaseInitializer]] = List(
+        tei_batch_em, tgi_batch_llm, fine_tune_job_runner_service
     )
 
     # Prometheus

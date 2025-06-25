@@ -56,6 +56,10 @@ async def main():
     for document_indexer in infrastructure_container.document_indexers():
         await document_indexer.index()
 
+    # initialize
+    for initializer in infrastructure_container.initializers():
+        await initializer.initialize()
+
     # serve
     api = create_api(application_container)
     api_uvicorn_config = uvicorn.Config(

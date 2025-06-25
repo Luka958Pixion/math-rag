@@ -6,6 +6,7 @@ from uuid import UUID
 
 from math_rag.application.base.fine_tune import BaseFineTuneJobRunnerService
 from math_rag.core.models import FineTuneJob
+from math_rag.infrastructure.base import BaseInitializer
 from math_rag.infrastructure.clients import (
     ApptainerClient,
     FileSystemClient,
@@ -26,7 +27,7 @@ from math_rag.infrastructure.utils import (
     FileWriterUtil,
 )
 from math_rag.infrastructure.validators.inference.huggingface import HuggingFaceModelNameValidator
-from math_rag.shared.utils import YamlWriterUtil
+from math_rag.shared.utils import JSONWriterUtil
 
 
 PBS_JOB_NAME = 'lora'
@@ -40,7 +41,7 @@ STATUS_TRACKER_DELAY = 60
 logger = getLogger(__name__)
 
 
-class FineTuneJobRunnerService(BaseFineTuneJobRunnerService):
+class FineTuneJobRunnerService(BaseInitializer, BaseFineTuneJobRunnerService):
     def __init__(
         self,
         file_system_client: FileSystemClient,
@@ -112,7 +113,7 @@ class FineTuneJobRunnerService(BaseFineTuneJobRunnerService):
 
             return True
 
-    async def init_resources(self):
+    async def initialize(BaseInitializer, self):
         # common directory paths
         tmp_path = LOCAL_ROOT_PATH / '.tmp'
         hf_path = LOCAL_ROOT_PATH / 'assets/hpc/hf'
@@ -190,12 +191,12 @@ class FineTuneJobRunnerService(BaseFineTuneJobRunnerService):
             await self._upload_file(local_path, remote_path)
 
     async def init(self, fine_tune_job: FineTuneJob) -> str:
-        model = f'{fine_tune_job.provider_name}/{fine_tune_job.model_name}'
+        model = fine_tune_job.fine_tune_settings.model_settings.model_name
         HuggingFaceModelNameValidator.validate(model)
 
         # write input file
-        input_local_path = LOCAL_ROOT_PATH / '.tmp' / f'input_{fine_tune_job.id}.yaml'
-        YamlWriterUtil.write(input_local_path, model=fine_tune_job.fine_tune_settings)
+        input_local_path = LOCAL_ROOT_PATH / '.tmp' / f'input_{fine_tune_job.id}.json'
+        JSONWriterUtil.write(input_local_path, model=fine_tune_job.fine_tune_settings)
 
         # upload input file and avoid race-conditions
         input_remote_path = REMOTE_ROOT_PATH / input_local_path.name

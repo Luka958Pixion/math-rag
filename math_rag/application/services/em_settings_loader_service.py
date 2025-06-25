@@ -9,7 +9,7 @@ from math_rag.application.models.inference.settings import (
     EMProviderSettings,
     EMSettings,
 )
-from math_rag.shared.utils import PydanticOverriderUtil, YamlReaderUtil
+from math_rag.shared.utils import PydanticOverriderUtil, YAMLReaderUtil
 
 
 T = TypeVar('T')
@@ -20,7 +20,7 @@ DEFAULT = 'default'
 
 class EMSettingsLoaderService(BaseEMSettingsLoaderService):
     def __init__(self):
-        self._provider_settings = YamlReaderUtil.read(YAML_PATH, model=EMProviderSettings)
+        self._provider_settings = YAMLReaderUtil.read(YAML_PATH, model=EMProviderSettings)
         self._default_settings = self._provider_settings[DEFAULT][DEFAULT]
 
     def _load_settings(

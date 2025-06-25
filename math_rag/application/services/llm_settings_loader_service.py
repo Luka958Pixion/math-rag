@@ -9,7 +9,7 @@ from math_rag.application.models.inference.settings import (
     LLMProviderSettings,
     LLMSettings,
 )
-from math_rag.shared.utils import PydanticOverriderUtil, YamlReaderUtil
+from math_rag.shared.utils import PydanticOverriderUtil, YAMLReaderUtil
 
 
 T = TypeVar('T')
@@ -21,7 +21,7 @@ DEFAULT = 'default'
 
 class LLMSettingsLoaderService(BaseLLMSettingsLoaderService):
     def __init__(self):
-        self._provider_settings = YamlReaderUtil.read(YAML_PATH, model=LLMProviderSettings)
+        self._provider_settings = YAMLReaderUtil.read(YAML_PATH, model=LLMProviderSettings)
         self._default_settings = self._provider_settings[DEFAULT][DEFAULT]
 
     def _load_settings(

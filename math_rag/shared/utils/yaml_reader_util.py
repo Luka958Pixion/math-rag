@@ -8,7 +8,7 @@ from yaml import safe_load
 T = TypeVar('T', bound=BaseModel)
 
 
-class YamlReaderUtil:
+class YAMLReaderUtil:
     @staticmethod
     def read(path: Path, *, model: type[T]) -> T:
         with open(path, 'r') as file:
