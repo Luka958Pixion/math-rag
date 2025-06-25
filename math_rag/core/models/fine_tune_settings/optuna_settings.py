@@ -1,8 +1,8 @@
 from pydantic import BaseModel
 
-from .optuna_lora_settings import OptunaTrialSettings
-from .optuna_lora_start_settings import OptunaTrialStartSettings
 from .optuna_study_settings import OptunaStudySettings
+from .optuna_trial_settings import OptunaTrialSettings
+from .optuna_trial_start_settings import OptunaTrialStartSettings
 
 
 class OptunaSettings(BaseModel):

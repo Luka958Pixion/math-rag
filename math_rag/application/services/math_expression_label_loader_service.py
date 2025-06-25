@@ -39,7 +39,7 @@ class MathExpressionLabelLoaderService(BaseMathExpressionLabelLoaderService):
             },
         ):
             for math_expression in math_expressions:
-                input = AssistantInput(latex=math_expression.latex)
+                input = AssistantInput(katex=math_expression.latex)
                 input_id_to_math_expression_id[input.id] = math_expression.id
                 inputs.append(input)
 
@@ -81,7 +81,7 @@ class MathExpressionLabelLoaderService(BaseMathExpressionLabelLoaderService):
             filter={'index_id': index.id},
         ):
             for math_expression in math_expressions:
-                input = AssistantInput(latex=math_expression.latex)
+                input = AssistantInput(katex=math_expression.latex)
                 input_id_to_math_expression_id[input.id] = math_expression.id
                 inputs.append(input)
 

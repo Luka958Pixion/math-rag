@@ -1,7 +1,6 @@
-# https://chatgpt.com/share/683cd917-c774-8007-a74b-7bae56366d4a
 dataset_settings: 
-  dataset_name: mathexpressiondataset
-  config_name: 52865e8e-de42-4dc1-81e5-b212b2547d61
+  dataset_name: math_expression_dataset
+  config_name: b5887579-5742-4e0f-91ce-2fae26bf2c01
 
 model_settings:
   model_name: meta-llama/Llama-3.1-8B-Instruct

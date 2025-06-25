@@ -3,9 +3,10 @@ from uuid import UUID, uuid4
 
 from pydantic import BaseModel, Field
 
+from .fine_tune_settings import FineTuneSettings
+
 
 class FineTuneJob(BaseModel):
     id: UUID = Field(default_factory=uuid4)
     timestamp: datetime = Field(default_factory=datetime.now)
-    provider_name: str
-    model_name: str
+    fine_tune_settings: FineTuneSettings

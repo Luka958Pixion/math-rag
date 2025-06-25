@@ -15,15 +15,11 @@ from math_rag.infrastructure.clients import (
 from math_rag.infrastructure.enums.fine_tune.huggingface import HelperJobStatus
 from math_rag.infrastructure.enums.hpc import HPCQueue
 from math_rag.infrastructure.enums.hpc.pbs import PBSProJobState
-from math_rag.infrastructure.models.clients import ChangeModePermission
 from math_rag.infrastructure.models.fine_tune.huggingface import (
     HelperJob,
     HelperJobStatusTracker,
 )
-from math_rag.infrastructure.services import (
-    FineTuneSettingsLoaderService,
-    PBSProResourceListLoaderService,
-)
+from math_rag.infrastructure.services import PBSProResourceListLoaderService
 from math_rag.infrastructure.utils import (
     FileHasherUtil,
     FileStreamWriterUtil,
@@ -51,14 +47,12 @@ class FineTuneJobRunnerService(BaseFineTuneJobRunnerService):
         pbs_pro_client: PBSProClient,
         sftp_client: SFTPClient,
         apptainer_client: ApptainerClient,
-        fine_tune_settings_loader_service: FineTuneSettingsLoaderService,
         pbs_pro_resource_list_loader_service: PBSProResourceListLoaderService,
     ):
         self.file_system_client = file_system_client
         self.pbs_pro_client = pbs_pro_client
         self.sftp_client = sftp_client
         self.apptainer_client = apptainer_client
-        self.fine_tune_settings_loader_service = fine_tune_settings_loader_service
         self.pbs_pro_resource_list_loader_service = pbs_pro_resource_list_loader_service
 
     async def _has_file_changed(self, local_path: Path, remote_path: Path) -> bool:
@@ -199,14 +193,9 @@ class FineTuneJobRunnerService(BaseFineTuneJobRunnerService):
         model = f'{fine_tune_job.provider_name}/{fine_tune_job.model_name}'
         HuggingFaceModelNameValidator.validate(model)
 
-        # load settings
-        fine_tune_settings = self.fine_tune_settings_loader_service.load(
-            fine_tune_job.provider_name, fine_tune_job.model_name
-        )
-
         # write input file
         input_local_path = LOCAL_ROOT_PATH / '.tmp' / f'input_{fine_tune_job.id}.yaml'
-        YamlWriterUtil.write(input_local_path, model=fine_tune_settings)
+        YamlWriterUtil.write(input_local_path, model=fine_tune_job.fine_tune_settings)
 
         # upload input file and avoid race-conditions
         input_remote_path = REMOTE_ROOT_PATH / input_local_path.name

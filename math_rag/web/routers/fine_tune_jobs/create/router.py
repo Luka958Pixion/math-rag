@@ -27,7 +27,7 @@ async def create_fine_tune_job(
     ),
     task_repository: BaseTaskRepository = Depends(Provide[ApplicationContainer.task_repository]),
 ):
-    job = FineTuneJob(provider_name=request.provider_name, model_name=request.model_name)
+    job = FineTuneJob(fine_tune_settings=request.fine_tune_settings)
     task = Task(model_id=job.id, model_name=FineTuneJob.__name__)
 
     await job_repository.insert_one(job)

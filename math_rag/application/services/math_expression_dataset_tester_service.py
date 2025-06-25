@@ -66,7 +66,7 @@ class MathExpressionDatasetTesterService(BaseMathExpressionDatasetTesterService)
         input_id_to_math_expression_id: dict[UUID, UUID] = {}
 
         for sample in samples:
-            input = AssistantInput(latex=sample.katex)
+            input = AssistantInput(katex=sample.katex)
             input_id_to_math_expression_id[input.id] = sample.math_expression_id
             inputs.append(input)
 

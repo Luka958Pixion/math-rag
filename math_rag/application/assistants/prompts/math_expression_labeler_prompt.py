@@ -15,7 +15,7 @@ Return the class only (no symbols or extra text)!
 
 _USER_PROMPT_TEMPLATE = """
 ### LaTeX:
-{latex}
+{katex}
 
 ### Class:
 """
@@ -27,7 +27,7 @@ _SYSTEM_PROMPT = LLMPrompt(
 
 _USER_PROMPT = LLMPrompt(
     template=_USER_PROMPT_TEMPLATE.strip(),
-    input_keys=['latex'],
+    input_keys=['katex'],
 )
 
 MATH_EXPRESSION_LABELER_PROMPTS = LLMPromptCollection(system=_SYSTEM_PROMPT, user=_USER_PROMPT)

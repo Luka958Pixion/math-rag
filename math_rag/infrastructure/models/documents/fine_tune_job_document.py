@@ -3,9 +3,10 @@ from uuid import UUID
 
 from math_rag.infrastructure.base import BaseDocument
 
+from .fine_tune_settings import FineTuneSettingsDocument
+
 
 class FineTuneJobDocument(BaseDocument):
     id: UUID
     timestamp: datetime
-    provider_name: str
-    model_name: str
+    fine_tune_settings: FineTuneSettingsDocument

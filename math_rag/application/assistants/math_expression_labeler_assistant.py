@@ -33,7 +33,7 @@ class MathExpressionLabelerAssistant(PartialAssistant[Input, Output]):
 
     def encode_to_request(self, input: Input) -> LLMRequest[Output]:
         system_message_content = self.system_prompt.format()
-        user_message_content = self.user_prompt.format(latex=input.latex)
+        user_message_content = self.user_prompt.format(katex=input.katex)
 
         return LLMRequest(
             conversation=LLMConversation(

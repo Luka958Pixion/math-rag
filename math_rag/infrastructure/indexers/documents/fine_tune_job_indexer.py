@@ -5,7 +5,7 @@ from math_rag.infrastructure.models.documents import FineTuneJobDocument
 from .document_indexer import DocumentIndexer
 
 
-FIELDS = ['provider_name', 'model_name']
+FIELDS = []
 
 
 class FineTuneJobIndexer(DocumentIndexer[FineTuneJobDocument]):

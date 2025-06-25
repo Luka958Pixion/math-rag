@@ -105,7 +105,6 @@ from math_rag.infrastructure.seeders.objects import MathArticleSeeder
 from math_rag.infrastructure.services import (
     DatasetLoaderService,
     DatasetPublisherService,
-    FineTuneSettingsLoaderService,
     LabelStudioConfigBuilderService,
     LabelStudioTaskExporterService,
     LabelStudioTaskImporterService,
@@ -415,14 +414,12 @@ class InfrastructureContainer(DeclarativeContainer):
     )
 
     # LoRA
-    fine_tune_settings_loader_service = Factory(FineTuneSettingsLoaderService)
     fine_tune_job_runner_service = Factory(
         FineTuneJobRunnerService,
         file_system_client=file_system_client,
         pbs_pro_client=pbs_pro_client,
         sftp_client=sftp_client,
         apptainer_client=apptainer_client,
-        fine_tune_settings_loader_service=fine_tune_settings_loader_service,
         pbs_pro_resource_list_loader_service=pbs_pro_resource_list_loader_service,
     )
 

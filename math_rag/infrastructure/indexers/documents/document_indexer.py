@@ -20,6 +20,9 @@ class DocumentIndexer(BaseDocumentIndexer, Generic[TargetType]):
         self.fields = fields
 
     async def index(self, reset: bool = False):
+        if not self.fields:
+            return
+
         if reset:
             indexes = await self.collection.index_information()
 
