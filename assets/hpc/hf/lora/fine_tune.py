@@ -10,6 +10,8 @@ from uuid import UUID
 import huggingface_hub
 import wandb
 
+from accelerate import Accelerator
+from accelerate.utils import DistributedDataParallelKwargs
 from datasets import ClassLabel, DatasetDict, load_dataset
 from datasets.download import DownloadConfig
 from decouple import config
@@ -21,6 +23,7 @@ from peft import LoraConfig, get_peft_model, prepare_model_for_kbit_training
 from pydantic import BaseModel, create_model
 from sklearn.metrics import accuracy_score, f1_score, precision_score, recall_score
 from stubs import ModelSpec
+from torch import cuda
 from torch.optim import AdamW
 from transformers import (
     AutoModelForCausalLM,
@@ -50,6 +53,14 @@ WANDB_API_KEY = config('WANDB_API_KEY', default=None)
 
 basicConfig(level=INFO, format='%(asctime)s [%(threadName)s] %(levelname)s: %(message)s')
 logger = getLogger(__name__)
+
+accelerator = Accelerator(
+    kwargs_handlers=[DistributedDataParallelKwargs(find_unused_parameters=False)]
+)
+use_accelerator = accelerator.num_processes > 1
+
+devices = [cuda.get_device_name(i) for i in range(cuda.device_count())]
+logger.info(f'Running {len(devices)} devices: {devices}')
 
 
 def import_model_spec(name: str) -> ModelSpec:
@@ -81,6 +92,10 @@ class LoRAWandbCallback(WandbCallback):
         self.lora_dropout = trial.params[settings.optuna_settings.trial_settings.lora_dropout.name]
 
     def on_train_begin(self, args, state, control, **kwargs):
+        # avoid creating multiple runs
+        if use_accelerator and not accelerator.is_main_process:
+            return control
+
         if wandb.run is not None:
             wandb.finish()
 
@@ -93,6 +108,11 @@ class LoRAWandbCallback(WandbCallback):
                 'lora_dropout': self.lora_dropout,
             },
             tags=['lora', 'optuna'],
+            settings=wandb.Settings(
+                mode='shared',
+                x_primary=True,
+                x_stats_gpu_device_ids=[accelerator.device.index],
+            ),
         )
 
         return control
@@ -200,23 +220,29 @@ def fine_tune_and_evaluate(
     bits_and_bytes_config = BitsAndBytesConfig(
         load_in_8bit=True,
         llm_int8_threshold=6.0,
-        llm_int8_enable_fp32_cpu_offload=True,
+        llm_int8_enable_fp32_cpu_offload=False,  # TODO try False
     )
     model = AutoModelForCausalLM.from_pretrained(
         pretrained_model_name_or_path=model_name,
         trust_remote_code=True,
         quantization_config=bits_and_bytes_config,
-        device_map='auto',
+        # device_map='auto',    # NOTE: avoid torch DTensor error
+        device_map={str(): accelerator.device} if use_accelerator else 'auto',
     )
     model = cast(PreTrainedModel, model)
     model_spec.init_language_model(model)
     model.resize_token_embeddings(len(tokenizer))
     model.config.pad_token_id = tokenizer.pad_token_id
+    model.config.use_cache = False
 
     model = prepare_model_for_kbit_training(
         model=model,
         use_gradient_checkpointing=True,
     )
+    model = cast(PreTrainedModel, model)
+    model.gradient_checkpointing_enable(
+        gradient_checkpointing_kwargs={'use_reentrant': False}
+    )  # NOTE: avoid DDP error
 
     r = trial.params[settings.optuna_settings.trial_settings.r.name]
     lora_alpha = trial.params[settings.optuna_settings.trial_settings.lora_alpha.name]

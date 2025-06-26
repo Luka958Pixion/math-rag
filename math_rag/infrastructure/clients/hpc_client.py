@@ -27,7 +27,7 @@ class HPCClient:
 
     async def job_statistics(self) -> HPCJobStatistics | None:
         awk_cmd = AwkCmdBuilderUtil.build(row_number=4, col_numbers=range(1, 8 + 1), operator='>=')
-        stdout = await self.ssh_client.run(f'jobstat -u {self.user} | {awk_cmd}')
+        stdout = await self.ssh_client.run(f'jobstat -u {self.ssh_client.user} | {awk_cmd}')
 
         if stdout == 'No jobs meet the search limits':
             return None
@@ -36,11 +36,11 @@ class HPCClient:
 
     async def gpu_statistics(self) -> HPCGPUStatistics | None:
         awk_cmd = AwkCmdBuilderUtil.build(
-            row_number=3, col_numbers=range(1, 5 + 1), operator='>=', separator='"_"'
+            row_number=3, col_numbers=range(1, 7 + 1), operator='>=', separator='"_"'
         )
         stdout = await self.ssh_client.run(f'gpustat | {awk_cmd}')
 
-        if stdout == f'No running jobs for {self.user}':
+        if stdout == f'No running jobs for {self.ssh_client.user}':
             return None
 
         return HPCGPUStatisticsMapping.to_source(stdout)

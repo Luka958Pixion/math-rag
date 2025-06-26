@@ -9,8 +9,8 @@ class HPCGPUStatisticsSubEntryMapping(BaseMapping[HPCGPUStatisticsSubEntry, list
         return HPCGPUStatisticsSubEntry(
             node=target[0],
             gpu=target[1],
-            used_percent=target[2].removesuffix(' %'),
-            mem_used=FormatParserUtil.parse_memory(target[3].replace(' ', '')),
+            used_percent=target[2],
+            mem_used=FormatParserUtil.parse_memory(target[4] + target[5]),
         )
 
     @staticmethod

@@ -1,4 +1,3 @@
-from .hpc_gpu_statistics_entry_mapping import HPCGPUStatisticsEntryMapping
 from .hpc_gpu_statistics_mapping import HPCGPUStatisticsMapping
 from .hpc_gpu_statistics_sub_entry_mapping import HPCGPUStatisticsSubEntryMapping
 from .hpc_job_statistics_entry_mapping import HPCJobStatisticsEntryMapping
@@ -15,7 +14,6 @@ __all__ = [
     'HPCJobStatisticsEntryMapping',
     'HPCJobStatisticsMapping',
     'HPCGPUStatisticsSubEntryMapping',
-    'HPCGPUStatisticsEntryMapping',
     'HPCGPUStatisticsMapping',
     'HPCJobTemporarySizeEntryMapping',
     'HPCJobTemporarySizeMapping',

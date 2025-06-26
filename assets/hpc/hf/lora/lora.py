@@ -176,11 +176,29 @@ class FineTuneJobStatusTracker:
         )
 
 
+class Qstat:
+    @staticmethod
+    def ngpus() -> int:
+        try:
+            output = subprocess.check_output(['qstat', '-f', PBS_JOB_ID], text=True)
+
+            for line in output.splitlines():
+                if 'Resource_List.ngpus' in line:
+                    return line.split(' = ')[1].strip()
+
+        except subprocess.CalledProcessError as e:
+            logger.error(f'Error running qstat: {e}')
+            raise
+
+        raise ValueError(f'Resource_List.ngpus not found in: {output}')
+
+
 class LoRA:
     @staticmethod
     def run(lora_handler: ProcessHandler, fine_tune_job_id: UUID) -> ProcessExitStatus:
         logger.info('Starting LoRA...')
 
+        ngpus = Qstat.ngpus()
         bind = f'{WORKDIR}/home:/home'
         cmd = (
             'apptainer run '
@@ -190,6 +208,7 @@ class LoRA:
             f'--env http_proxy={HTTP_PROXY} '
             f'--env https_proxy={HTTPS_PROXY} '
             f'--env FINE_TUNE_JOB_ID={fine_tune_job_id} '
+            f'--env NGPUS={ngpus} '
             f'{LORA_SIF_PATH}'
         )
         process = Popen(cmd, shell=True)

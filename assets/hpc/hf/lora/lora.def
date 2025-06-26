@@ -12,10 +12,26 @@ From: python:3.12
     pip install -r requirements.txt
 
     # install bitsandbytes and triton separately (not available on MacOS)
-    pip install bitsandbytes==0.45.5 triton==3.1.0
+    pip install bitsandbytes==0.45.5 triton==3.1.0 
+    pip install accelerate==1.8.1
 
 %runscript
-    python optuna_optimizer.py
+    if [ -z "$NGPUS" ]; then
+        echo 'Error: $NGPUS is not set. Please re-run with --env NGPUS=...'
+        exit 1
+    fi
+
+    if [ "$NGPUS" -gt 1 ]; then
+        accelerate launch \
+            --num_processes "$NGPUS" \
+            --num_machines 1 \
+            --mixed_precision 'no' \
+            --dynamo_backend 'no' \
+            optuna_optimizer.py
+    else
+        python optuna_optimizer.py
+    fi
+
 
 %labels
     Author luka.panic@pixion.co
@@ -39,4 +55,5 @@ From: python:3.12
             --env http_proxy=...
             --env https_proxy=...
             --env FINE_TUNE_JOB_ID=...
+            --env NGPUS=...
             lora.sif
