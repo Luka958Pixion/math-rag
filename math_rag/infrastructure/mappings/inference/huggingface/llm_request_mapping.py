@@ -37,6 +37,7 @@ class LLMRequestMapping(
                 inference_provider=None,
                 model_provider=None,
             ),
+            router_params=None,
         )
 
     @staticmethod

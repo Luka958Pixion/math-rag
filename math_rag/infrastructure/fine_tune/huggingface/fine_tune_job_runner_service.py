@@ -113,7 +113,7 @@ class FineTuneJobRunnerService(BaseInitializer, BaseFineTuneJobRunnerService):
 
             return True
 
-    async def initialize(BaseInitializer, self):
+    async def initialize(self):
         # common directory paths
         tmp_path = LOCAL_ROOT_PATH / '.tmp'
         hf_path = LOCAL_ROOT_PATH / 'assets/hpc/hf'
