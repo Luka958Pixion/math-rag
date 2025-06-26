@@ -327,7 +327,7 @@ class FineTuneJobRunnerService(BaseInitializer, BaseFineTuneJobRunnerService):
             case HelperJobStatus.FINISHED | HelperJobStatus.UNFINISHED:
                 pass
 
-        input_local_path = LOCAL_ROOT_PATH / '.tmp' / f'input_{fine_tune_job_id}.yaml'
+        input_local_path = LOCAL_ROOT_PATH / '.tmp' / f'input_{fine_tune_job_id}.json'
         input_remote_path = REMOTE_ROOT_PATH / input_local_path.name
 
         await self.file_system_client.remove([input_remote_path])

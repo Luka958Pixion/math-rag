@@ -12,7 +12,7 @@ class SSHClient:
     def __init__(self, host: str, user: str, passphrase: str):
         self.host = host
         self.user = user
-        self._private_key = read_private_key('~/.ssh/id_ed25519', passphrase)
+        self._private_key = read_private_key('/.ssh/id_ed25519', passphrase)
         self._connection: SSHClientConnection | None = None
 
     @async_context_manager

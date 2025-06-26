@@ -28,7 +28,7 @@
         "uid": "hpc"
       },
       "type": "timeseries",
-      "title": "CPU Usage (%): $job_id",
+      "title": "CPU Usage (%)",
       "gridPos": {
         "x": 0,
         "y": 0,
@@ -53,7 +53,7 @@
         "uid": "hpc"
       },
       "type": "timeseries",
-      "title": "Total CPU Time (s): $job_id",
+      "title": "Total CPU Time",
       "gridPos": {
         "x": 12,
         "y": 0,
@@ -78,7 +78,7 @@
         "uid": "hpc"
       },
       "type": "timeseries",
-      "title": "Number of CPUs: $job_id",
+      "title": "Number of CPUs",
       "gridPos": {
         "x": 0,
         "y": 6,
@@ -103,7 +103,7 @@
         "uid": "hpc"
       },
       "type": "timeseries",
-      "title": "Memory Usage (MiB): $job_id",
+      "title": "Memory Usage",
       "gridPos": {
         "x": 12,
         "y": 6,
@@ -112,19 +112,19 @@
       },
       "targets": [
         {
-          "expr": "pbs_job_mem_bytes{job_id=~\"$job_id\"} / 1024 / 1024",
+          "expr": "pbs_job_mem_bytes{job_id=~\"$job_id\"} / 1024 / 1024 / 1024",
           "refId": "B"
         }
       ],
       "fieldConfig": {
         "defaults": {
-          "unit": "dataMiB"
+          "unit": "GiB"
         },
         "overrides": [
           {
             "matcher": {
               "id": "byName",
-              "options": "Memory Usage (MiB): \\$job_id"
+              "options": "Memory Usage (GiB): \\$job_id"
             },
             "properties": [
               {
@@ -142,7 +142,7 @@
         "uid": "hpc"
       },
       "type": "timeseries",
-      "title": "Virtual Memory (MiB): $job_id",
+      "title": "Virtual Memory",
       "gridPos": {
         "x": 0,
         "y": 12,
@@ -151,13 +151,13 @@
       },
       "targets": [
         {
-          "expr": "pbs_job_vmem_bytes{job_id=~\"$job_id\"} / 1024 / 1024",
+          "expr": "pbs_job_vmem_bytes{job_id=~\"$job_id\"} / 1024 / 1024 / 1024",
           "refId": "E"
         }
       ],
       "fieldConfig": {
         "defaults": {
-          "unit": "dataMiB"
+          "unit": "GiB"
         }
       }
     },
@@ -167,7 +167,7 @@
         "uid": "hpc"
       },
       "type": "timeseries",
-      "title": "Wall Clock Time (s): $job_id",
+      "title": "Wall Clock Time",
       "gridPos": {
         "x": 12,
         "y": 12,

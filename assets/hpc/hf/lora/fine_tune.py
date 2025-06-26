@@ -111,7 +111,7 @@ class LoRAWandbCallback(WandbCallback):
             settings=wandb.Settings(
                 mode='shared',
                 x_primary=True,
-                x_stats_gpu_device_ids=[accelerator.device.index],
+                # x_stats_gpu_device_ids=[accelerator.device.index],
             ),
         )
 
