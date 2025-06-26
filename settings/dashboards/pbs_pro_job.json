@@ -14,7 +14,7 @@
           "type": "prometheus",
           "uid": "hpc"
         },
-        "query": "label_values(pbs_job_cpu_percent, job_id)",
+        "query": "label_values(resources_used_cpu_percent, job_id)",
         "includeAll": true,
         "allValue": ".*",
         "multi": false
@@ -37,7 +37,7 @@
       },
       "targets": [
         {
-          "expr": "pbs_job_cpu_percent{job_id=~\"$job_id\"}",
+          "expr": "resources_used_cpu_percent{job_id=~\"$job_id\"}",
           "refId": "A"
         }
       ],
@@ -62,7 +62,7 @@
       },
       "targets": [
         {
-          "expr": "pbs_job_cpu_seconds_total{job_id=~\"$job_id\"}",
+          "expr": "resources_used_cpu_seconds_total{job_id=~\"$job_id\"}",
           "refId": "C"
         }
       ],
@@ -87,7 +87,7 @@
       },
       "targets": [
         {
-          "expr": "pbs_job_num_cpus{job_id=~\"$job_id\"}",
+          "expr": "resources_used_num_cpus{job_id=~\"$job_id\"}",
           "refId": "D"
         }
       ],
@@ -112,7 +112,7 @@
       },
       "targets": [
         {
-          "expr": "pbs_job_mem_bytes{job_id=~\"$job_id\"} / 1024 / 1024 / 1024",
+          "expr": "resources_used_mem_bytes{job_id=~\"$job_id\"} / 1024 / 1024 / 1024",
           "refId": "B"
         }
       ],
@@ -151,7 +151,7 @@
       },
       "targets": [
         {
-          "expr": "pbs_job_vmem_bytes{job_id=~\"$job_id\"} / 1024 / 1024 / 1024",
+          "expr": "resources_used_vmem_bytes{job_id=~\"$job_id\"} / 1024 / 1024 / 1024",
           "refId": "E"
         }
       ],
@@ -176,7 +176,7 @@
       },
       "targets": [
         {
-          "expr": "pbs_job_wall_seconds_total{job_id=~\"$job_id\"}",
+          "expr": "resources_used_wall_seconds_total{job_id=~\"$job_id\"}",
           "refId": "F"
         }
       ],

@@ -108,12 +108,14 @@ from math_rag.infrastructure.seeders.objects import MathArticleSeeder
 from math_rag.infrastructure.services import (
     DatasetLoaderService,
     DatasetPublisherService,
+    GPUStatsPusher,
     LabelStudioConfigBuilderService,
     LabelStudioTaskExporterService,
     LabelStudioTaskImporterService,
     LatexNodeWalkerService,
     LatexParserService,
     MathArticleParserService,
+    PBSProResoucesUsedPusher,
     PBSProResourceListLoaderService,
     PrometheusSnapshotLoaderService,
 )
@@ -492,6 +494,18 @@ class InfrastructureContainer(DeclarativeContainer):
     label_studio_task_importer_service = Factory(
         LabelStudioTaskImporterService,
         async_label_studio=async_label_studio,
+    )
+
+    # Pushgateway
+    gpu_stats_pusher = Factory(
+        GPUStatsPusher,
+        pbs_pro_client=pbs_pro_client,
+        pushgateway_base_url=config.pushgateway.base_url,
+    )
+    pbs_pro_resources_used_pusher = Factory(
+        PBSProResoucesUsedPusher,
+        pbs_pro_client=pbs_pro_client,
+        pushgateway_base_url=config.pushgateway.base_url,
     )
 
     # routers
