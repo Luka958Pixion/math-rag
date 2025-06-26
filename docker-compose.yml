@@ -80,24 +80,13 @@ services:
     ports:
       - 9096:9091
 
-  prometheus-hpc:
-    image: prom/prometheus:latest
-    container_name: prometheus-hpc
-    command:
-      - --config.file=/etc/prometheus/prometheus.yml
-      - --storage.tsdb.path=/prometheus
-    volumes:
-      - ./pushgateway/prometheus.yml:/etc/prometheus/prometheus.yml:ro
-      - ./.tmp/prometheus/snapshots/hpc:/prometheus
-    ports:
-      - 9097:9090
-
   prometheus-tei:
     image: prom/prometheus:latest
     container_name: prometheus-tei
     command:
       - --config.file=/dev/null
       - --storage.tsdb.path=/prometheus
+      - --web.enable-admin-api
     volumes:
       - ./.tmp/prometheus/snapshots/tei:/prometheus
     ports:
@@ -109,10 +98,24 @@ services:
     command:
       - --config.file=/dev/null
       - --storage.tsdb.path=/prometheus
+      - --web.enable-admin-api
     volumes:
       - ./.tmp/prometheus/snapshots/tgi:/prometheus
     ports:
       - 9095:9090
+
+  prometheus-hpc:
+    image: prom/prometheus:latest
+    container_name: prometheus-hpc
+    command:
+      - --config.file=/etc/prometheus/prometheus.yml
+      - --storage.tsdb.path=/prometheus
+      - --web.enable-admin-api
+    volumes:
+      - ./settings/pushgateways/prometheus.yml:/etc/prometheus/prometheus.yml:ro
+      - ./.tmp/prometheus/snapshots/hpc:/prometheus
+    ports:
+      - 9100:9090
 
   grafana:
     image: grafana/grafana:latest
@@ -121,7 +124,9 @@ services:
       - 3000:3000
     volumes:
       - grafana-data:/var/lib/grafana
-      - ./provisioning/datasources:/etc/grafana/provisioning/datasources
+      - ./settings/provisionings/dashboards:/etc/grafana/provisioning/dashboards
+      - ./settings/provisionings/datasources:/etc/grafana/provisioning/datasources
+      - ./settings/dashboards:/var/lib/grafana/dashboards
     environment:
       - GF_SECURITY_ADMIN_USER=admin
       - GF_SECURITY_ADMIN_PASSWORD=admin

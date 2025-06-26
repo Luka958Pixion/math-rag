@@ -34,6 +34,8 @@ from math_rag.infrastructure.clients import (
     KatexClient,
     MathpixClient,
     PBSProClient,
+    PrometheusAdminClient,
+    PushgatewayClient,
     SFTPClient,
     SSHClient,
 )
@@ -373,6 +375,18 @@ class InfrastructureContainer(DeclarativeContainer):
 
     # PBS Pro
     pbs_pro_client = Factory(PBSProClient, ssh_client=ssh_client)
+
+    # Pushgateway
+    config.pushgateway.base_url.from_env('PUSHGATEWAY_BASE_URL')
+
+    pushgateway_client = Factory(PushgatewayClient, base_url=config.pushgateway.base_url)
+
+    # Prometheus Admin
+    config.prometheus.hpc.base_url.from_env('PROMETHEUS_HPC_BASE_URL')
+
+    prometheus_hpc_admin_client = Factory(
+        PrometheusAdminClient, base_url=config.prometheus.hpc.base_url
+    )
 
     # Apptainer
     config.apptainer.base_url.from_env('APPTAINER_BASE_URL')

@@ -1,0 +1,190 @@
+{
+  "uid": "pbs-pro-job",
+  "title": "PBS Pro Job",
+  "schemaVersion": 36,
+  "version": 1,
+  "refresh": "5s",
+  "templating": {
+    "list": [
+      {
+        "name": "job_id",
+        "type": "query",
+        "label": "Job ID",
+        "datasource": {
+          "type": "prometheus",
+          "uid": "hpc"
+        },
+        "query": "label_values(pbs_job_cpu_percent, job_id)",
+        "includeAll": true,
+        "allValue": ".*",
+        "multi": false
+      }
+    ]
+  },
+  "panels": [
+    {
+      "datasource": {
+        "type": "prometheus",
+        "uid": "hpc"
+      },
+      "type": "timeseries",
+      "title": "CPU Usage (%): $job_id",
+      "gridPos": {
+        "x": 0,
+        "y": 0,
+        "w": 12,
+        "h": 6
+      },
+      "targets": [
+        {
+          "expr": "pbs_job_cpu_percent{job_id=~\"$job_id\"}",
+          "refId": "A"
+        }
+      ],
+      "fieldConfig": {
+        "defaults": {
+          "unit": "percent"
+        }
+      }
+    },
+    {
+      "datasource": {
+        "type": "prometheus",
+        "uid": "hpc"
+      },
+      "type": "timeseries",
+      "title": "Total CPU Time (s): $job_id",
+      "gridPos": {
+        "x": 12,
+        "y": 0,
+        "w": 12,
+        "h": 6
+      },
+      "targets": [
+        {
+          "expr": "pbs_job_cpu_seconds_total{job_id=~\"$job_id\"}",
+          "refId": "C"
+        }
+      ],
+      "fieldConfig": {
+        "defaults": {
+          "unit": "s"
+        }
+      }
+    },
+    {
+      "datasource": {
+        "type": "prometheus",
+        "uid": "hpc"
+      },
+      "type": "timeseries",
+      "title": "Number of CPUs: $job_id",
+      "gridPos": {
+        "x": 0,
+        "y": 6,
+        "w": 12,
+        "h": 6
+      },
+      "targets": [
+        {
+          "expr": "pbs_job_num_cpus{job_id=~\"$job_id\"}",
+          "refId": "D"
+        }
+      ],
+      "fieldConfig": {
+        "defaults": {
+          "unit": "short"
+        }
+      }
+    },
+    {
+      "datasource": {
+        "type": "prometheus",
+        "uid": "hpc"
+      },
+      "type": "timeseries",
+      "title": "Memory Usage (MiB): $job_id",
+      "gridPos": {
+        "x": 12,
+        "y": 6,
+        "w": 12,
+        "h": 6
+      },
+      "targets": [
+        {
+          "expr": "pbs_job_mem_bytes{job_id=~\"$job_id\"} / 1024 / 1024",
+          "refId": "B"
+        }
+      ],
+      "fieldConfig": {
+        "defaults": {
+          "unit": "dataMiB"
+        },
+        "overrides": [
+          {
+            "matcher": {
+              "id": "byName",
+              "options": "Memory Usage (MiB): \\$job_id"
+            },
+            "properties": [
+              {
+                "id": "axis",
+                "value": "right"
+              }
+            ]
+          }
+        ]
+      }
+    },
+    {
+      "datasource": {
+        "type": "prometheus",
+        "uid": "hpc"
+      },
+      "type": "timeseries",
+      "title": "Virtual Memory (MiB): $job_id",
+      "gridPos": {
+        "x": 0,
+        "y": 12,
+        "w": 12,
+        "h": 6
+      },
+      "targets": [
+        {
+          "expr": "pbs_job_vmem_bytes{job_id=~\"$job_id\"} / 1024 / 1024",
+          "refId": "E"
+        }
+      ],
+      "fieldConfig": {
+        "defaults": {
+          "unit": "dataMiB"
+        }
+      }
+    },
+    {
+      "datasource": {
+        "type": "prometheus",
+        "uid": "hpc"
+      },
+      "type": "timeseries",
+      "title": "Wall Clock Time (s): $job_id",
+      "gridPos": {
+        "x": 12,
+        "y": 12,
+        "w": 12,
+        "h": 6
+      },
+      "targets": [
+        {
+          "expr": "pbs_job_wall_seconds_total{job_id=~\"$job_id\"}",
+          "refId": "F"
+        }
+      ],
+      "fieldConfig": {
+        "defaults": {
+          "unit": "s"
+        }
+      }
+    }
+  ]
+}

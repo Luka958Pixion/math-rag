@@ -15,7 +15,7 @@ from math_rag.shared.utils import PydanticOverriderUtil, YAMLReaderUtil
 T = TypeVar('T')
 
 
-YAML_PATH = Path(__file__).parents[3] / 'settings' / 'inference' / 'large_language_models.yaml'
+YAML_PATH = Path(__file__).parents[3] / 'settings' / 'inferences' / 'large_language_models.yaml'
 DEFAULT = 'default'
 
 

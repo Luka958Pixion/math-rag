@@ -14,7 +14,7 @@ from math_rag.shared.utils import PydanticOverriderUtil, YAMLReaderUtil
 
 T = TypeVar('T')
 
-YAML_PATH = Path(__file__).parents[3] / 'settings' / 'inference' / 'embedding_models.yaml'
+YAML_PATH = Path(__file__).parents[3] / 'settings' / 'inferences' / 'embedding_models.yaml'
 DEFAULT = 'default'
 
 

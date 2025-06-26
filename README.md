@@ -14,6 +14,8 @@ Create `.env` file with the following variables:
 - `JUPYTER_BASE_URL=http://host.docker.internal:7030`
 - `KATEX_BASE_URL=http://host.docker.internal:7020`
 - `APPTAINER_BASE_URL=http://host.docker.internal:7010`
+- `PUSHGATEWAY_BASE_URL=http://host.docker.internal:9096`
+- `PROMETHEUS_HPC_BASE_URL=http://host.docker.internal:9100`
 - `MINIO_ENDPOINT=minio:9000`
 - `MINIO_ACCESS_KEY=admin`
 - `MINIO_SECRET_KEY=password`

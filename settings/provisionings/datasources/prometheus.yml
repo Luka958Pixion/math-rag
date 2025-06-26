@@ -1,12 +1,6 @@
 apiVersion: 1
 
 datasources:
-  - name: High Performance Computing
-    type: prometheus
-    access: proxy
-    url: http://host.docker.internal:9097
-    isDefault: false
-
   - name: Prometheus Text Embeddings Inference
     type: prometheus
     access: proxy
@@ -17,4 +11,11 @@ datasources:
     type: prometheus
     access: proxy
     url: http://host.docker.internal:9095
+    isDefault: false
+
+  - uid: hpc 
+    name: High Performance Computing
+    type: prometheus
+    access: proxy
+    url: http://host.docker.internal:9100
     isDefault: false
