@@ -16,7 +16,14 @@ from uuid import UUID
 
 
 # current job
-PBS_JOB_ID = os.environ['PBS_JOBID']
+PBS_JOB_ID = os.environ.get('PBS_JOBID', default=str())
+CUDA_VISIBLE_DEVICES = os.environ.get('CUDA_VISIBLE_DEVICES', default=str())
+
+if not PBS_JOB_ID:
+    raise RuntimeError('PBS_JOB_ID is not set')
+
+elif not CUDA_VISIBLE_DEVICES:
+    raise RuntimeError('CUDA_VISIBLE_DEVICES is not set')
 
 # squid proxy
 HTTP_PROXY = 'http://10.150.1.1:3128'
@@ -178,17 +185,20 @@ class FineTuneJobStatusTracker:
 
 class NvidiaSMI:
     @staticmethod
-    def indexes() -> list[int]:
+    def _uuid_to_index() -> dict[str, int]:
         try:
             output = subprocess.check_output(
-                ['nvidia-smi', '--query-gpu=index', '--format=csv,noheader,nounits'], text=True
+                ['nvidia-smi', '--query-gpu=index,uuid', '--format=csv,noheader,nounits'], text=True
             )
             output = output.strip()
 
             if not output:
                 raise ValueError('nvidia-smi returned no content')
 
-            return [int(line) for line in output.splitlines()]
+            return {
+                uuid.strip(): int(index.strip())
+                for index, uuid in (line.split(',') for line in output.splitlines())
+            }
 
         except subprocess.CalledProcessError as e:
             logger.error(f'Error running nvidia-smi: {e}')
@@ -197,6 +207,21 @@ class NvidiaSMI:
         except ValueError as e:
             logger.error(f'Error parsing nvidia-smi stdout: {e}')
             raise
+
+    def gpu_indexes() -> list[int]:
+        uuid_to_index = NvidiaSMI._uuid_to_index()
+
+        # NOTE: these UUIDs have a 'GPU-' prefix
+        uuids = [device.strip() for device in CUDA_VISIBLE_DEVICES.split(',')]
+        indexes: list[int] = []
+
+        for uuid in uuids:
+            if uuid not in uuid_to_index:
+                raise RuntimeError(f'GPU UUID {uuid} not found in nvidia-smi output')
+
+            indexes.append(uuid_to_index[uuid])
+
+        return indexes
 
 
 class Qstat:
@@ -211,7 +236,7 @@ class Qstat:
 
             for line in output.splitlines():
                 if 'Resource_List.ngpus' in line:
-                    return line.split(' = ')[1].strip()
+                    return int(line.split(' = ')[1].strip())
 
             raise ValueError(f'Resource_List.ngpus not found in: {output}')
 
@@ -226,7 +251,7 @@ class LoRA:
         logger.info('Starting LoRA...')
 
         num_gpus = Qstat.ngpus()
-        gpu_indexes = NvidiaSMI.indexes()
+        gpu_indexes = NvidiaSMI.gpu_indexes()
 
         if num_gpus != len(gpu_indexes):
             raise ValueError(
@@ -234,7 +259,7 @@ class LoRA:
             )
 
         bind = f'{WORKDIR}/home:/home'
-        gpu_indexes_str = ','.join(gpu_indexes)
+        gpu_indexes_str = ','.join(str(i) for i in gpu_indexes)
         cmd = (
             'apptainer run '
             '--nv '

@@ -1,6 +1,7 @@
 from .base_dataset_loader_service import BaseDatasetLoaderService
 from .base_dataset_publisher_service import BaseDatasetPublisherService
 from .base_em_settings_loader_service import BaseEMSettingsLoaderService
+from .base_gpu_stats_pusher_service import BaseGPUStatsPusherService
 from .base_index_builder_service import BaseIndexBuilderService
 from .base_label_config_builder_service import BaseLabelConfigBuilderService
 from .base_label_task_exporter_service import BaseLabelTaskExporterService
@@ -20,6 +21,7 @@ from .base_math_expression_label_task_importer_service import (
 )
 from .base_math_expression_loader_service import BaseMathExpressionLoaderService
 from .base_math_expression_sample_loader_service import BaseMathExpressionSampleLoaderService
+from .base_pbs_pro_resources_used_pusher_service import BasePBSProResoucesUsedPusherService
 from .base_prometheus_snapshot_loader_service import BasePrometheusSnapshotLoaderService
 
 
@@ -27,6 +29,7 @@ __all__ = [
     'BaseDatasetLoaderService',
     'BaseDatasetPublisherService',
     'BaseEMSettingsLoaderService',
+    'BaseGPUStatsPusherService',
     'BaseIndexBuilderService',
     'BaseLabelConfigBuilderService',
     'BaseLabelTaskExporterService',
@@ -42,5 +45,6 @@ __all__ = [
     'BaseMathExpressionLabelTaskImporterService',
     'BaseMathExpressionLoaderService',
     'BaseMathExpressionSampleLoaderService',
+    'BasePBSProResoucesUsedPusherService',
     'BasePrometheusSnapshotLoaderService',
 ]

@@ -17,12 +17,12 @@ From: python:3.12
 
 %runscript
     if [ -z "$NUM_GPUS" ]; then
-        echo 'Error: $NUM_GPUS is not set. Please re-run with --env NUM_GPUS=...'
+        echo "Error: $NUM_GPUS is not set. Please re-run with --env NUM_GPUS=..."
         exit 1
     fi
 
     if [ "$NUM_GPUS" -gt 1 ]; then
-        echo 'Starting accelerate launch ($NUM_GPUS GPUs)...'
+        echo "Starting accelerate launch ($NUM_GPUS GPUs)..."
         accelerate launch \
             --num_processes "$NUM_GPUS" \
             --num_machines 1 \
@@ -33,7 +33,7 @@ From: python:3.12
             --gpu_indexes $GPU_INDEXES \
             --use_accelerate
     else
-        echo 'Starting python...'
+        echo "Starting python..."
         python optuna_optimizer.py \
             --fine_tune_job_id $FINE_TUNE_JOB_ID \
             --gpu_indexes $GPU_INDEXES

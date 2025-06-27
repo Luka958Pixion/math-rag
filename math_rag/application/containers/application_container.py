@@ -45,10 +45,12 @@ from math_rag.application.base.repositories.objects import BaseMathArticleReposi
 from math_rag.application.base.services import (
     BaseDatasetLoaderService,
     BaseDatasetPublisherService,
+    BaseGPUStatsPusherService,
     BaseLabelConfigBuilderService,
     BaseLabelTaskExporterService,
     BaseLabelTaskImporterService,
     BaseMathArticleParserService,
+    BasePBSProResoucesUsedPusherService,
     BasePrometheusSnapshotLoaderService,
 )
 from math_rag.application.base.services.backgrounds import BaseBackgroundService
@@ -69,9 +71,11 @@ from math_rag.application.services import (
 )
 from math_rag.application.services.backgrounds import (
     FineTuneJobBackgroundService,
+    GPUStatsBackgroundService,
     IndexBackgroundService,
     MathExpressionDatasetBackgroundService,
     MathExpressionDatasetTestBackgroundService,
+    PBSProResourcesUsedBackgroundService,
     PrometheusSnapshotBackgroundService,
 )
 
@@ -108,19 +112,20 @@ class ApplicationContainer(DeclarativeContainer):
 
     dataset_loader_service = Dependency(instance_of=BaseDatasetLoaderService)
     dataset_publisher_service = Dependency(instance_of=BaseDatasetPublisherService)
+    gpu_stats_pusher_service = Dependency(instance_of=BaseGPUStatsPusherService)
     math_article_parser_service = Dependency(instance_of=BaseMathArticleParserService)
     label_config_builder_service = Dependency(instance_of=BaseLabelConfigBuilderService)
     label_task_exporter_service = Dependency(instance_of=BaseLabelTaskExporterService)
     label_task_importer_service = Dependency(instance_of=BaseLabelTaskImporterService)
     prometheus_snapshot_loader_service = Dependency(instance_of=BasePrometheusSnapshotLoaderService)
+    pbs_pro_resources_used_pusher_service = Dependency(
+        instance_of=BasePBSProResoucesUsedPusherService
+    )
 
     fine_tune_job_runner_service = Dependency(instance_of=BaseFineTuneJobRunnerService)
 
     # non-dependencies
     # assistants
-
-    (MathExpressionRelationshipDescriptionWriterAssistant,)
-
     katex_corrector_assistant = Factory(
         KatexCorrectorAssistant,
         llm=managed_llm,
@@ -237,6 +242,9 @@ class ApplicationContainer(DeclarativeContainer):
         fine_tune_job_repository=fine_tune_job_repository,
         task_repository=task_repository,
     )
+    gpu_stats_background_service = Singleton(
+        GPUStatsBackgroundService, gpu_stats_pusher_service=gpu_stats_pusher_service
+    )
     index_background_service = Singleton(
         IndexBackgroundService,
         index_builder_service=index_builder_service,
@@ -256,6 +264,10 @@ class ApplicationContainer(DeclarativeContainer):
         math_expression_dataset_test_result_repository=math_expression_dataset_test_result_repository,
         task_repository=task_repository,
     )
+    pbs_pro_resources_used_background_service = Singleton(
+        PBSProResourcesUsedBackgroundService,
+        pbs_pro_resources_used_pusher_service=pbs_pro_resources_used_pusher_service,
+    )
     prometheus_snapshot_background_service = Singleton(
         PrometheusSnapshotBackgroundService,
         prometheus_snapshot_loader_service=prometheus_snapshot_loader_service,
@@ -263,8 +275,10 @@ class ApplicationContainer(DeclarativeContainer):
 
     background_services: Provider[list[BaseBackgroundService]] = List(
         fine_tune_job_background_service,
+        gpu_stats_background_service,
         index_background_service,
         math_expression_dataset_background_service,
         math_expression_dataset_test_background_service,
-        # prometheus_snapshot_background_service,   # NOTE: works, but not needed at the moment
+        pbs_pro_resources_used_background_service,
+        # prometheus_snapshot_background_service,   # NOTE: not needed at the moment
     )

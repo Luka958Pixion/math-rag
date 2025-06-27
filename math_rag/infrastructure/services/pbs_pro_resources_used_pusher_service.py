@@ -1,9 +1,10 @@
 from prometheus_client import CollectorRegistry, Gauge, push_to_gateway
 
+from math_rag.application.base.services import BasePBSProResoucesUsedPusherService
 from math_rag.infrastructure.clients import PBSProClient
 
 
-class PBSProResoucesUsedPusher:
+class PBSProResoucesUsedPusherService(BasePBSProResoucesUsedPusherService):
     def __init__(self, pbs_pro_client: PBSProClient, pushgateway_base_url: str):
         self.pbs_pro_client = pbs_pro_client
         self.pushgateway_base_url = pushgateway_base_url
@@ -46,7 +47,12 @@ class PBSProResoucesUsedPusher:
             registry=self.registry,
         )
 
-    async def push(self, job_id: str):
+    async def push(self, job_name: str):
+        job_id = await self.pbs_pro_client.queue_select(job_name)
+
+        if not job_id:
+            return
+
         pbs_pro_job_full = await self.pbs_pro_client.queue_status_full(job_id)
         resources_used = pbs_pro_job_full.resources_used
 

@@ -1,9 +1,10 @@
 from prometheus_client import CollectorRegistry, Gauge, push_to_gateway
 
+from math_rag.application.base.services import BaseGPUStatsPusherService
 from math_rag.infrastructure.clients import HPCClient
 
 
-class GPUStatsPusher:
+class GPUStatsPusherService(BaseGPUStatsPusherService):
     def __init__(self, hpc_client: HPCClient, pushgateway_base_url: str):
         self.hpc_client = hpc_client
         self.pushgateway_base_url = pushgateway_base_url
@@ -24,6 +25,9 @@ class GPUStatsPusher:
 
     async def push(self):
         gpu_stats = await self.hpc_client.gpu_statistics()
+
+        if not gpu_stats.entries:
+            return
 
         for entry in gpu_stats.entries:
             job_id = str(entry.job_id)

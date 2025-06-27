@@ -1,4 +1,6 @@
 from importlib import import_module
+from inspect import getfile
+from pathlib import Path
 from types import UnionType
 from typing import Generic, TypeVar, Union, get_args, get_origin
 
@@ -49,3 +51,7 @@ class TypeUtil(Generic[T]):
                 return args[0] if args[1] is type(None) else args[1]
 
         return annotation
+
+    @staticmethod
+    def get_file_name(cls: type) -> str:
+        return Path(getfile(cls)).stem

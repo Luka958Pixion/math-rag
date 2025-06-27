@@ -21,7 +21,7 @@ MCP_PORT = config('MCP_PORT', cast=int)
 
 logging.basicConfig(
     level=logging.INFO,
-    format='%(asctime)s - %(levelname)s - %(name)s - %(filename)s:%(lineno)d - %(message)s',
+    format='%(asctime)s - %(levelname)s - %(name)s - %(message)s',
 )
 logging.getLogger('pylatexenc.latexwalker').setLevel(logging.ERROR)
 logging.getLogger('httpx').setLevel(logging.WARNING)

@@ -274,6 +274,7 @@ class FineTuneJobRunnerService(BaseInitializer, BaseFineTuneJobRunnerService):
         )
         await self.sftp_client.upload(helper_job_local_path, helper_job_remote_part_path)
         await self.file_system_client.move(helper_job_remote_part_path, helper_job_remote_path)
+        helper_job_local_path.unlink()
 
         return job_id
 
