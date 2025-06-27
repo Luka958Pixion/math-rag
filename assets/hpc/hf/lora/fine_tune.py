@@ -4,6 +4,7 @@ import json
 from enum import Enum
 from logging import INFO, basicConfig, getLogger
 from pathlib import Path
+from time import perf_counter
 from typing import TYPE_CHECKING, cast
 from uuid import UUID
 
@@ -99,6 +100,25 @@ class LoRAWandbCallback(WandbCallback):
         self.lora_alpha = trial.params[settings.optuna_settings.trial_settings.lora_alpha.name]
         self.lora_dropout = trial.params[settings.optuna_settings.trial_settings.lora_dropout.name]
 
+        self._train_duration = 0.0
+        self._validation_duration = 0.0
+
+    @property
+    def train_duration(self) -> float:
+        return self._train_duration
+
+    @train_duration.setter
+    def train_duration(self, value: float) -> None:
+        self._train_duration = value
+
+    @property
+    def validation_duration(self) -> float:
+        return self._validation_duration
+
+    @validation_duration.setter
+    def validation_duration(self, value: float) -> None:
+        self._validation_duration = value
+
     def on_train_begin(self, args, state, control, **kwargs):
         # avoid creating multiple runs
         if self.use_accelerate and not accelerator.is_main_process:
@@ -126,6 +146,12 @@ class LoRAWandbCallback(WandbCallback):
         return control
 
     def on_train_end(self, args, state, control, **kwargs):
+        wandb.log(
+            {
+                'train_duration_hours': self.train_duration / 3600,
+                'validation_duration_hours': self.validation_duration / 3600,
+            }
+        )
         wandb.finish()
 
 
@@ -322,11 +348,15 @@ def fine_tune_and_evaluate(
     )
     last_checkpoint = get_last_checkpoint(sft_config.output_dir)
 
+    train_start = perf_counter()
     trainer.train(
         resume_from_checkpoint=last_checkpoint,
         trial=trial,
         ignore_keys_for_eval=['past_key_values', 'hidden_states', 'attentions'],
     )
+    train_end = perf_counter()
+    lora_wandb_callback.train_duration = train_end - train_start
+
     trainer.model.save_pretrained(
         save_directory=model_path,
         push_to_hub=False,
@@ -355,6 +385,7 @@ def fine_tune_and_evaluate(
     sequence_generator_adapter = outlines_json(outlines_model, Label)
     predictions = []
 
+    validate_start = perf_counter()
     for sample in original_validate_dataset:
         messages = model_spec.format_prompt(sample, prompt_collection)['messages']
         input_token_ids = tokenizer.apply_chat_template(
@@ -366,6 +397,9 @@ def fine_tune_and_evaluate(
             input_token_ids, max_tokens=settings.model_settings.max_tokens, stop_at='}'
         )
         predictions.append(result.label.value)
+
+    validate_end = perf_counter()
+    lora_wandb_callback.validation_duration = validate_end - validate_start
 
     match metric:
         case Metric.ACCURACY:

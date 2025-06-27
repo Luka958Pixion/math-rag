@@ -34,7 +34,9 @@ From: python:3.12
             --use_accelerate
     else
         echo 'Starting python...'
-        python optuna_optimizer.py --gpu_indexes $GPU_INDEXES
+        python optuna_optimizer.py \
+            --fine_tune_job_id $FINE_TUNE_JOB_ID \
+            --gpu_indexes $GPU_INDEXES
     fi
 
 
