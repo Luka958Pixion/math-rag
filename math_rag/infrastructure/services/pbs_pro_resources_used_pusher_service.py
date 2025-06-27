@@ -53,6 +53,8 @@ class PBSProResoucesUsedPusherService(BasePBSProResoucesUsedPusherService):
         if not job_id:
             return
 
+        # NOTE: short job id version
+        job_id = job_id.split('.')[0]
         pbs_pro_job_full = await self.pbs_pro_client.queue_status_full(job_id)
         resources_used = pbs_pro_job_full.resources_used
 

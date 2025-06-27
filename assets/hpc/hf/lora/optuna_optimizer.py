@@ -32,28 +32,35 @@ def objective(
     fine_tune_settings_path = Path(f'input_{fine_tune_job_id}.json')
     fine_tune_result_path = Path(f'output_{fine_tune_job_id}_{trial.number}.json')
 
-    cmd = (
-        'python fine_tune.py '
-        f'--fine_tune_job_id {fine_tune_job_id} '
-        f'--fine_tune_settings_path {fine_tune_settings_path} '
-        f'--fine_tune_result_path {fine_tune_result_path} '
-        f'--trial_number {trial.number} '
-        f'--gpu_indexes {gpu_indexes} '
-    )
-
     if use_accelerate:
         num_machines = 1
         mixed_precision = 'no'
         dynamo_backend = 'no'
 
-        accelerate_cmd = (
+        cmd = (
             'accelerate launch '
             f'--num_processes {num_gpus} '
             f'--num_machines {num_machines} '
             f'--mixed_precision {mixed_precision} '
             f'--dynamo_backend {dynamo_backend} '
+            'fine_tune.py '
+            f'--fine_tune_job_id {fine_tune_job_id} '
+            f'--fine_tune_settings_path {fine_tune_settings_path} '
+            f'--fine_tune_result_path {fine_tune_result_path} '
+            f'--trial_number {trial.number} '
+            f'--gpu_indexes {gpu_indexes} '
+            '--use_accelerate'
         )
-        cmd = accelerate_cmd + cmd + '--use_accelerate'
+
+    else:
+        cmd = (
+            'python fine_tune.py '
+            f'--fine_tune_job_id {fine_tune_job_id} '
+            f'--fine_tune_settings_path {fine_tune_settings_path} '
+            f'--fine_tune_result_path {fine_tune_result_path} '
+            f'--trial_number {trial.number} '
+            f'--gpu_indexes {gpu_indexes} '
+        )
 
     subprocess.run(cmd, check=True, text=True, shell=True)
     result = JSONReaderUtil.read(fine_tune_result_path, model=Result)

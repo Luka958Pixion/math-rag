@@ -204,7 +204,6 @@ def fine_tune_and_evaluate(
 
     # login
     if accelerator and accelerator.is_main_process:
-        huggingface_hub.login(token=HF_TOKEN)
         wandb.login(key=WANDB_API_KEY)
 
     # initialize tokenizer
@@ -351,6 +350,9 @@ def fine_tune_and_evaluate(
         remove_unused_columns=True,
         ddp_find_unused_parameters=False,
         use_liger_kernel=True,
+        # NOTE: requires at least dataloader_num_workers * num_gpus
+        dataloader_num_workers=4,
+        dataloader_pin_memory=True,
     )
     graceful_stop_callback = GracefulStopCallback()
     lora_wandb_callback = LoRAWandbCallback(
@@ -396,6 +398,8 @@ def fine_tune_and_evaluate(
 
     # evaluate
     if accelerator is None or accelerator.is_main_process:
+        class_label = cast(ClassLabel, original_validate_dataset.features['label'])
+
         if TYPE_CHECKING:
 
             class LabelEnum(str, Enum):
@@ -408,7 +412,6 @@ def fine_tune_and_evaluate(
             LabelEnum = Enum('LabelEnum', {name: name for name in class_label.names}, type=str)
             Label = create_model('Label', label=(LabelEnum, ...))
 
-        class_label = cast(ClassLabel, original_validate_dataset.features['label'])
         true_labels = [class_label.names[int(x['label'])] for x in original_validate_dataset]
 
         outlines_model = Transformers(model, tokenizer)
@@ -508,7 +511,7 @@ def main():
     fine_tune_settings = JSONReaderUtil.read(args.fine_tune_settings_path, model=FineTuneSettings)
     study_settings = fine_tune_settings.optuna_settings.study_settings
     study = load_study(
-        study_name=study_settings.study_name,
+        study_name=f'{study_settings.study_name}-fine-tune-job-{args.fine_tune_job_id}',
         storage=study_settings.storage,
     )
     frozen_trial = next(trial for trial in study.trials if trial.number == args.trial_number)
