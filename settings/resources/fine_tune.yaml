@@ -1,7 +1,7 @@
 default:
   mem: 34359738368  # 32 * 1024 * 1024 * 1024
-  num_cpus: 1
-  num_gpus: 2
+  num_cpus: 4
+  num_gpus: 4
   num_nodes: 1
   place: pack
   select: ""

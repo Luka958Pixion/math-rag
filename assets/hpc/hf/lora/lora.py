@@ -176,21 +176,48 @@ class FineTuneJobStatusTracker:
         )
 
 
+class NvidiaSMI:
+    @staticmethod
+    def indexes() -> list[int]:
+        try:
+            output = subprocess.check_output(
+                ['nvidia-smi', '--query-gpu=index', '--format=csv,noheader,nounits'], text=True
+            )
+            output = output.strip()
+
+            if not output:
+                raise ValueError('nvidia-smi returned no content')
+
+            return [int(line) for line in output.splitlines()]
+
+        except subprocess.CalledProcessError as e:
+            logger.error(f'Error running nvidia-smi: {e}')
+            raise
+
+        except ValueError as e:
+            logger.error(f'Error parsing nvidia-smi stdout: {e}')
+            raise
+
+
 class Qstat:
     @staticmethod
     def ngpus() -> int:
         try:
             output = subprocess.check_output(['qstat', '-f', PBS_JOB_ID], text=True)
+            output = output.strip()
+
+            if not output:
+                raise ValueError(f'qstat returned no content')
 
             for line in output.splitlines():
                 if 'Resource_List.ngpus' in line:
                     return line.split(' = ')[1].strip()
 
+            raise ValueError(f'Resource_List.ngpus not found in: {output}')
+
         except subprocess.CalledProcessError as e:
             logger.error(f'Error running qstat: {e}')
             raise
-
-        raise ValueError(f'Resource_List.ngpus not found in: {output}')
 
 
 class LoRA:
@@ -198,8 +225,16 @@ class LoRA:
     def run(lora_handler: ProcessHandler, fine_tune_job_id: UUID) -> ProcessExitStatus:
         logger.info('Starting LoRA...')
 
-        ngpus = Qstat.ngpus()
+        num_gpus = Qstat.ngpus()
+        gpu_indexes = NvidiaSMI.indexes()
+
+        if num_gpus != len(gpu_indexes):
+            raise ValueError(
+                f'Qstat found {num_gpus} GPUs, while nvidia SMI found {len(gpu_indexes)} GPUs'
+            )
+
         bind = f'{WORKDIR}/home:/home'
+        gpu_indexes_str = ','.join(gpu_indexes)
         cmd = (
             'apptainer run '
             '--nv '
@@ -208,7 +243,8 @@ class LoRA:
             f'--env http_proxy={HTTP_PROXY} '
             f'--env https_proxy={HTTPS_PROXY} '
             f'--env FINE_TUNE_JOB_ID={fine_tune_job_id} '
-            f'--env NGPUS={ngpus} '
+            f'--env NUM_GPUS={num_gpus} '
+            f"--env GPU_INDEXES='{gpu_indexes_str}' "
             f'{LORA_SIF_PATH}'
         )
         process = Popen(cmd, shell=True)

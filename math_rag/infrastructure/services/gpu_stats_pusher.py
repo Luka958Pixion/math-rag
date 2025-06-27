@@ -10,13 +10,13 @@ class GPUStatsPusher:
         self.registry = CollectorRegistry()
 
         self.gpu_util_percent_gauge = Gauge(
-            'resources_used_gpu_util_percent',
+            'gpu_stats_util_percent',
             'GPU utilization percent of PBS job',
             ['job_id', 'node', 'gpu'],
             registry=self.registry,
         )
         self.gpu_mem_bytes_gauge = Gauge(
-            'resources_used_gpu_mem_bytes',
+            'gpu_stats_mem_bytes',
             'GPU memory used (bytes) of PBS job',
             ['job_id', 'node', 'gpu'],
             registry=self.registry,
@@ -24,8 +24,10 @@ class GPUStatsPusher:
 
     async def push(self):
         gpu_stats = await self.hpc_client.gpu_statistics()
+
         for entry in gpu_stats.entries:
             job_id = str(entry.job_id)
+
             for sub in entry.sub_entries:
                 self.gpu_util_percent_gauge.labels(job_id=job_id, node=sub.node, gpu=sub.gpu).set(
                     sub.used_percent

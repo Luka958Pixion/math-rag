@@ -57,4 +57,8 @@ class PBSProResoucesUsedPusher:
         self.vmem_bytes_gauge.labels(job_id=job_id).set(resources_used.vmem)
         self.wall_time_gauge.labels(job_id=job_id).set(resources_used.wall_time.total_seconds())
 
-        push_to_gateway(self.pushgateway_base_url, job=job_id, registry=self.registry)
+        push_to_gateway(
+            self.pushgateway_base_url,
+            job=f'pbs_pro_resources_used_{job_id}',
+            registry=self.registry,
+        )

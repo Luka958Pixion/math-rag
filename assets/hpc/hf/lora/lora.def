@@ -16,20 +16,25 @@ From: python:3.12
     pip install accelerate==1.8.1
 
 %runscript
-    if [ -z "$NGPUS" ]; then
-        echo 'Error: $NGPUS is not set. Please re-run with --env NGPUS=...'
+    if [ -z "$NUM_GPUS" ]; then
+        echo 'Error: $NUM_GPUS is not set. Please re-run with --env NUM_GPUS=...'
         exit 1
     fi
 
-    if [ "$NGPUS" -gt 1 ]; then
+    if [ "$NUM_GPUS" -gt 1 ]; then
+        echo 'Starting accelerate launch ($NUM_GPUS GPUs)...'
         accelerate launch \
-            --num_processes "$NGPUS" \
+            --num_processes "$NUM_GPUS" \
             --num_machines 1 \
             --mixed_precision 'no' \
             --dynamo_backend 'no' \
-            optuna_optimizer.py
+            optuna_optimizer.py \
+            --fine_tune_job_id $FINE_TUNE_JOB_ID \
+            --gpu_indexes $GPU_INDEXES \
+            --use_accelerate
     else
-        python optuna_optimizer.py
+        echo 'Starting python...'
+        python optuna_optimizer.py --gpu_indexes $GPU_INDEXES
     fi
 
 
@@ -55,5 +60,6 @@ From: python:3.12
             --env http_proxy=...
             --env https_proxy=...
             --env FINE_TUNE_JOB_ID=...
-            --env NGPUS=...
+            --env NUM_GPUS=...
+            --env GPU_INDEXES=...
             lora.sif

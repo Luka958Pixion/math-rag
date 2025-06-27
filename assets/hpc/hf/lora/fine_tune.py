@@ -57,7 +57,6 @@ logger = getLogger(__name__)
 accelerator = Accelerator(
     kwargs_handlers=[DistributedDataParallelKwargs(find_unused_parameters=False)]
 )
-use_accelerator = accelerator.num_processes > 1
 
 devices = [cuda.get_device_name(i) for i in range(cuda.device_count())]
 logger.info(f'Running {len(devices)} devices: {devices}')
@@ -82,10 +81,19 @@ class GracefulStopCallback(TrainerCallback):
 
 
 class LoRAWandbCallback(WandbCallback):
-    def __init__(self, trial: Trial, settings: FineTuneSettings, fine_tune_job_id: UUID):
+    def __init__(
+        self,
+        trial: Trial,
+        settings: FineTuneSettings,
+        fine_tune_job_id: UUID,
+        use_accelerate: bool,
+        gpu_indexes: list[int],
+    ):
         super().__init__()
         self.trial = trial
         self.fine_tune_job_id = fine_tune_job_id
+        self.use_accelerate = use_accelerate
+        self.gpu_indexes = gpu_indexes
 
         self.r = trial.params[settings.optuna_settings.trial_settings.r.name]
         self.lora_alpha = trial.params[settings.optuna_settings.trial_settings.lora_alpha.name]
@@ -93,7 +101,7 @@ class LoRAWandbCallback(WandbCallback):
 
     def on_train_begin(self, args, state, control, **kwargs):
         # avoid creating multiple runs
-        if use_accelerator and not accelerator.is_main_process:
+        if self.use_accelerate and not accelerator.is_main_process:
             return control
 
         if wandb.run is not None:
@@ -111,7 +119,7 @@ class LoRAWandbCallback(WandbCallback):
             settings=wandb.Settings(
                 mode='shared',
                 x_primary=True,
-                # x_stats_gpu_device_ids=[accelerator.device.index],
+                x_stats_gpu_device_ids=self.gpu_indexes,
             ),
         )
 
@@ -133,7 +141,11 @@ METRIC_NAMES = {name.value for name in Metric}
 
 
 def fine_tune_and_evaluate(
-    trial: Trial, settings: FineTuneSettings, fine_tune_job_id: UUID
+    trial: Trial,
+    fine_tune_job_id: UUID,
+    settings: FineTuneSettings,
+    use_accelerate: bool,
+    gpu_indexes: list[int],
 ) -> float:
     # validate
     model_name = settings.model_settings.model_name
@@ -220,14 +232,15 @@ def fine_tune_and_evaluate(
     bits_and_bytes_config = BitsAndBytesConfig(
         load_in_8bit=True,
         llm_int8_threshold=6.0,
-        llm_int8_enable_fp32_cpu_offload=False,  # TODO try False
+        # TODO try False
+        llm_int8_enable_fp32_cpu_offload=False,
     )
     model = AutoModelForCausalLM.from_pretrained(
         pretrained_model_name_or_path=model_name,
         trust_remote_code=True,
         quantization_config=bits_and_bytes_config,
-        # device_map='auto',    # NOTE: avoid torch DTensor error
-        device_map={str(): accelerator.device} if use_accelerator else 'auto',
+        # NOTE: avoid torch DTensor error
+        device_map={str(): accelerator.device} if use_accelerate else 'auto',
     )
     model = cast(PreTrainedModel, model)
     model_spec.init_language_model(model)
@@ -240,9 +253,8 @@ def fine_tune_and_evaluate(
         use_gradient_checkpointing=True,
     )
     model = cast(PreTrainedModel, model)
-    model.gradient_checkpointing_enable(
-        gradient_checkpointing_kwargs={'use_reentrant': False}
-    )  # NOTE: avoid DDP error
+    # NOTE: avoid DDP error
+    model.gradient_checkpointing_enable(gradient_checkpointing_kwargs={'use_reentrant': False})
 
     r = trial.params[settings.optuna_settings.trial_settings.r.name]
     lora_alpha = trial.params[settings.optuna_settings.trial_settings.lora_alpha.name]
@@ -293,7 +305,9 @@ def fine_tune_and_evaluate(
         remove_unused_columns=True,
     )
     graceful_stop_callback = GracefulStopCallback()
-    lora_wandb_callback = LoRAWandbCallback(trial, settings, fine_tune_job_id)
+    lora_wandb_callback = LoRAWandbCallback(
+        trial, settings, fine_tune_job_id, use_accelerate, gpu_indexes
+    )
     data_collator = DataCollatorForLanguageModeling(tokenizer, mlm=False)
 
     trainer = SFTTrainer(

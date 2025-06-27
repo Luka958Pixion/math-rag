@@ -2,7 +2,7 @@
   "uid": "gpu-stats",
   "title": "GPU Stats",
   "schemaVersion": 36,
-  "version": 3,
+  "version": 6,
   "refresh": "5s",
   "templating": {
     "list": []
@@ -15,13 +15,17 @@
       "gridPos": { "x": 0, "y": 0, "w": 12, "h": 8 },
       "targets": [
         {
-          "expr": "pbs_job_gpu_util_percent{}",
+          "expr": "gpu_stats_util_percent{}",
           "refId": "A",
           "legendFormat": "{{job_id}}/{{node}}/{{gpu}}"
         }
       ],
       "fieldConfig": {
-        "defaults": { "unit": "percent" }
+        "defaults": {
+          "unit": "percent",
+          "min": 0,
+          "max": 100
+        }
       }
     },
     {
@@ -31,13 +35,15 @@
       "gridPos": { "x": 12, "y": 0, "w": 12, "h": 8 },
       "targets": [
         {
-          "expr": "pbs_job_gpu_mem_bytes{} / 1024 / 1024 / 1024",
+          "expr": "gpu_stats_mem_bytes{} / 1024 / 1024 / 1024",
           "refId": "B",
           "legendFormat": "{{job_id}}/{{node}}/{{gpu}}"
         }
       ],
       "fieldConfig": {
-        "defaults": { "unit": "GiB" }
+        "defaults": {
+          "unit": "GiB"
+        }
       }
     }
   ]
