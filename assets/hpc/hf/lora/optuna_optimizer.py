@@ -1,14 +1,15 @@
+import subprocess
+
 from argparse import ArgumentParser, Namespace
 from functools import partial
 from logging import INFO, basicConfig, getLogger
 from pathlib import Path
-from typing import cast
 from uuid import UUID
 
-from fine_tune import fine_tune_and_evaluate
-from fine_tune_settings import FineTuneSettings
+from fine_tune_settings import FineTuneSettings, OptunaTrialSettings
 from optuna import Trial, create_study
 from optuna.trial import FrozenTrial
+from results import Result
 from utils import JSONReaderUtil
 
 
@@ -19,19 +20,45 @@ logger = getLogger(__name__)
 def objective(
     trial: Trial,
     fine_tune_job_id: UUID,
-    fine_tune_settings: FineTuneSettings,
+    optuna_trial_settings: OptunaTrialSettings,
+    gpu_indexes: str,
+    num_gpus: int,
     use_accelerate: bool,
-    gpu_indexes: list[int],
 ) -> float:
-    trial_settings = fine_tune_settings.optuna_settings.trial_settings
+    trial.suggest_int(**optuna_trial_settings.r.model_dump())
+    trial.suggest_int(**optuna_trial_settings.lora_alpha.model_dump())
+    trial.suggest_float(**optuna_trial_settings.lora_dropout.model_dump())
 
-    trial.suggest_int(**trial_settings.r.model_dump())
-    trial.suggest_int(**trial_settings.lora_alpha.model_dump())
-    trial.suggest_float(**trial_settings.lora_dropout.model_dump())
+    fine_tune_settings_path = Path(f'input_{fine_tune_job_id}.json')
+    fine_tune_result_path = Path(f'output_{fine_tune_job_id}_{trial.number}.json')
 
-    return fine_tune_and_evaluate(
-        trial, fine_tune_job_id, fine_tune_settings, use_accelerate, gpu_indexes
+    cmd = (
+        'python fine_tune.py '
+        f'--fine_tune_job_id {fine_tune_job_id} '
+        f'--fine_tune_settings_path {fine_tune_settings_path} '
+        f'--fine_tune_result_path {fine_tune_result_path} '
+        f'--trial_number {trial.number} '
+        f'--gpu_indexes {gpu_indexes} '
     )
+
+    if use_accelerate:
+        num_machines = 1
+        mixed_precision = 'no'
+        dynamo_backend = 'no'
+
+        accelerate_cmd = (
+            'accelerate launch '
+            f'--num_processes {num_gpus} '
+            f'--num_machines {num_machines} '
+            f'--mixed_precision {mixed_precision} '
+            f'--dynamo_backend {dynamo_backend} '
+        )
+        cmd = accelerate_cmd + cmd + '--use_accelerate'
+
+    subprocess.run(cmd, check=True, text=True, shell=True)
+    result = JSONReaderUtil.read(fine_tune_result_path, model=Result)
+
+    return result.score
 
 
 def log(trial: FrozenTrial):
@@ -43,47 +70,27 @@ def log(trial: FrozenTrial):
         logger.info(f'  {key}: {value}')
 
 
-class RawArgs(Namespace):
-    fine_tune_job_id: UUID | None
-    gpu_indexes: str | None
-
-    use_accelerate: bool
-
-
 class Args(Namespace):
-    fine_tune_job_id: UUID | None
-    gpu_indexes: list[int] | None
+    fine_tune_job_id: UUID
+    gpu_indexes: str
+    num_gpus: int
     use_accelerate: bool
 
 
 def parse_args() -> Args:
     parser = ArgumentParser()
-    parser.add_argument('--fine_tune_job_id', type=UUID, default=None)
-    parser.add_argument('--gpu_indexes', type=str, default=None)
+    parser.add_argument('--fine_tune_job_id', type=UUID, required=True)
+    parser.add_argument('--gpu_indexes', type=str, required=True)
+    parser.add_argument('--num_gpus', type=int, required=True)
     parser.add_argument('--use_accelerate', action='store_true', default=False)
 
-    args = parser.parse_args(namespace=RawArgs())
-
-    if args.gpu_indexes:
-        args.gpu_indexes = [int(i) for i in args.gpu_indexes.split(',')]
-
-    return cast(Args, args)
+    return parser.parse_args(namespace=Args())
 
 
 def main():
     args = parse_args()
 
-    if not args.fine_tune_job_id:
-        raise ValueError('fine_tune_job_id is required')
-
-    elif args.gpu_indexes is None:
-        raise ValueError('gpu_indexes are required')
-
-    elif not args.gpu_indexes:
-        raise ValueError('gpu_indexes are empty')
-
     fine_tune_settings_path = Path(f'input_{args.fine_tune_job_id}.json')
-
     fine_tune_settings = JSONReaderUtil.read(fine_tune_settings_path, model=FineTuneSettings)
     optuna_settings = fine_tune_settings.optuna_settings
     optuna_settings.study_settings.study_name += f'-fine-tune-job-{args.fine_tune_job_id}'
@@ -92,9 +99,10 @@ def main():
     objective_function = partial(
         objective,
         fine_tune_job_id=args.fine_tune_job_id,
-        fine_tune_settings=fine_tune_settings,
-        use_accelerate=args.use_accelerate,
+        optuna_trial_settings=optuna_settings.trial_settings,
         gpu_indexes=args.gpu_indexes,
+        num_gpus=args.num_gpus,
+        use_accelerate=args.use_accelerate,
     )
 
     study.enqueue_trial(optuna_settings.trial_start_settings.model_dump())

@@ -13,7 +13,7 @@ From: python:3.12
 
     # install bitsandbytes and triton separately (not available on MacOS)
     pip install bitsandbytes==0.45.5 triton==3.1.0 
-    pip install accelerate==1.8.1
+    pip install accelerate==1.8.1 liger-kernel==0.5.10
 
 %runscript
     if [ -z "$NUM_GPUS" ]; then
@@ -22,21 +22,16 @@ From: python:3.12
     fi
 
     if [ "$NUM_GPUS" -gt 1 ]; then
-        echo "Starting accelerate launch ($NUM_GPUS GPUs)..."
-        accelerate launch \
-            --num_processes "$NUM_GPUS" \
-            --num_machines 1 \
-            --mixed_precision 'no' \
-            --dynamo_backend 'no' \
-            optuna_optimizer.py \
-            --fine_tune_job_id $FINE_TUNE_JOB_ID \
-            --gpu_indexes $GPU_INDEXES \
-            --use_accelerate
-    else
-        echo "Starting python..."
         python optuna_optimizer.py \
             --fine_tune_job_id $FINE_TUNE_JOB_ID \
-            --gpu_indexes $GPU_INDEXES
+            --gpu_indexes $GPU_INDEXES \
+            --num_gpus $NUM_GPUS \
+            --use_accelerate
+    else
+        python optuna_optimizer.py \
+            --fine_tune_job_id $FINE_TUNE_JOB_ID \
+            --gpu_indexes $GPU_INDEXES \
+            --num_gpus $NUM_GPUS
     fi
 
 

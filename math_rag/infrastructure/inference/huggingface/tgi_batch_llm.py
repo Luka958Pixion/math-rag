@@ -115,18 +115,18 @@ class TGIBatchLLM(BaseInitializer, PartialBatchLLM):
             if force or await self._has_file_changed(local_path, remote_path):
                 await self.file_system_client.remove(remote_path)
                 await self.sftp_client.upload(local_path, remote_path)
-                logger.info(f'Reupload completed: {remote_path}')
+                logger.debug(f'Reupload completed: {remote_path}')
 
                 return True
 
             else:
-                logger.info(f'Upload skipped: {local_path} unchanged')
+                logger.debug(f'Upload skipped: {local_path} unchanged')
 
                 return False
 
         else:
             await self.sftp_client.upload(local_path, remote_path)
-            logger.info(f'Upload completed: {remote_path}')
+            logger.debug(f'Upload completed: {remote_path}')
 
             return True
 

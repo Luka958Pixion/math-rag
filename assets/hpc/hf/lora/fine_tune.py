@@ -1,6 +1,20 @@
+# local_rank = config('LOCAL_RANK', cast=int)
+# rank = config('RANK', cast=int)
+# world_size = config('WORLD_SIZE', cast=int)
+# torch.cuda.set_device(local_rank)
+# torch.distributed.init_process_group(
+#     backend='nccl',
+#     init_method='env://',
+#     world_size=world_size,
+#     rank=rank,
+#     device_id=torch.device('cuda', local_rank),
+# )
 import importlib
 import json
+import warnings
 
+from argparse import ArgumentParser, ArgumentTypeError, Namespace
+from contextlib import nullcontext
 from enum import Enum
 from logging import INFO, basicConfig, getLogger
 from pathlib import Path
@@ -9,6 +23,7 @@ from typing import TYPE_CHECKING, cast
 from uuid import UUID
 
 import huggingface_hub
+import torch
 import wandb
 
 from accelerate import Accelerator
@@ -16,16 +31,15 @@ from accelerate.utils import DistributedDataParallelKwargs
 from datasets import ClassLabel, DatasetDict, load_dataset
 from datasets.download import DownloadConfig
 from decouple import config
-from fine_tune_settings import FineTuneSettings
-from optuna import Trial
+from fine_tune_settings import FineTuneSettings, OptunaTrialSettings
+from optuna import Trial, load_study
 from outlines.generate.json import json as outlines_json
 from outlines.models.transformers import Transformers
 from peft import LoraConfig, get_peft_model, prepare_model_for_kbit_training
 from pydantic import BaseModel, create_model
+from results import Result
 from sklearn.metrics import accuracy_score, f1_score, precision_score, recall_score
 from stubs import ModelSpec
-from torch import cuda
-from torch.optim import AdamW
 from transformers import (
     AutoModelForCausalLM,
     AutoTokenizer,
@@ -41,6 +55,7 @@ from transformers import (
 from transformers.integrations import WandbCallback
 from transformers.trainer_utils import get_last_checkpoint
 from trl import SFTConfig, SFTTrainer
+from utils import JSONReaderUtil, JSONWriterUtil
 
 
 # huggingface
@@ -55,12 +70,9 @@ WANDB_API_KEY = config('WANDB_API_KEY', default=None)
 basicConfig(level=INFO, format='%(asctime)s [%(threadName)s] %(levelname)s: %(message)s')
 logger = getLogger(__name__)
 
-accelerator = Accelerator(
-    kwargs_handlers=[DistributedDataParallelKwargs(find_unused_parameters=False)]
+warnings.filterwarnings(
+    'ignore', message=r'MatMul8bitLt: inputs will be cast from .* to float16 during quantization'
 )
-
-devices = [cuda.get_device_name(i) for i in range(cuda.device_count())]
-logger.info(f'Running {len(devices)} devices: {devices}')
 
 
 def import_model_spec(name: str) -> ModelSpec:
@@ -85,20 +97,20 @@ class LoRAWandbCallback(WandbCallback):
     def __init__(
         self,
         trial: Trial,
-        settings: FineTuneSettings,
+        optuna_trial_settings: OptunaTrialSettings,
         fine_tune_job_id: UUID,
-        use_accelerate: bool,
         gpu_indexes: list[int],
+        accelerator: Accelerator | None,
     ):
         super().__init__()
         self.trial = trial
         self.fine_tune_job_id = fine_tune_job_id
-        self.use_accelerate = use_accelerate
         self.gpu_indexes = gpu_indexes
+        self.accelerator = accelerator
 
-        self.r = trial.params[settings.optuna_settings.trial_settings.r.name]
-        self.lora_alpha = trial.params[settings.optuna_settings.trial_settings.lora_alpha.name]
-        self.lora_dropout = trial.params[settings.optuna_settings.trial_settings.lora_dropout.name]
+        self.r = trial.params[optuna_trial_settings.r.name]
+        self.lora_alpha = trial.params[optuna_trial_settings.lora_alpha.name]
+        self.lora_dropout = trial.params[optuna_trial_settings.lora_dropout.name]
 
         self._train_duration = 0.0
         self._validation_duration = 0.0
@@ -120,8 +132,7 @@ class LoRAWandbCallback(WandbCallback):
         self._validation_duration = value
 
     def on_train_begin(self, args, state, control, **kwargs):
-        # avoid creating multiple runs
-        if self.use_accelerate and not accelerator.is_main_process:
+        if self.accelerator and not self.accelerator.is_main_process:
             return control
 
         if wandb.run is not None:
@@ -146,6 +157,9 @@ class LoRAWandbCallback(WandbCallback):
         return control
 
     def on_train_end(self, args, state, control, **kwargs):
+        if self.accelerator and not self.accelerator.is_main_process:
+            return control
+
         wandb.log(
             {
                 'train_duration_hours': self.train_duration / 3600,
@@ -169,13 +183,13 @@ METRIC_NAMES = {name.value for name in Metric}
 def fine_tune_and_evaluate(
     trial: Trial,
     fine_tune_job_id: UUID,
-    settings: FineTuneSettings,
-    use_accelerate: bool,
+    fine_tune_settings: FineTuneSettings,
     gpu_indexes: list[int],
-) -> float:
+    accelerator: Accelerator | None,
+) -> Result:
     # validate
-    model_name = settings.model_settings.model_name
-    metric_name = settings.optuna_settings.metric_name
+    model_name = fine_tune_settings.model_settings.model_name
+    metric_name = fine_tune_settings.optuna_settings.metric_name
 
     if model_name not in MODEL_NAMES:
         raise ValueError(f'Model {model_name} is not available')
@@ -189,8 +203,9 @@ def fine_tune_and_evaluate(
     model_spec = import_model_spec(model_name)
 
     # login
-    huggingface_hub.login(token=HF_TOKEN)
-    wandb.login(key=WANDB_API_KEY)
+    if accelerator and accelerator.is_main_process:
+        huggingface_hub.login(token=HF_TOKEN)
+        wandb.login(key=WANDB_API_KEY)
 
     # initialize tokenizer
     tokenizer = AutoTokenizer.from_pretrained(
@@ -202,26 +217,30 @@ def fine_tune_and_evaluate(
     model_spec.init_tokenizer(tokenizer)
 
     # load dataset
-    repo_id = f'{HF_USERNAME}/{settings.dataset_settings.dataset_name}'
+    repo_id = f'{HF_USERNAME}/{fine_tune_settings.dataset_settings.dataset_name}'
     download_config = DownloadConfig(
         max_retries=3,
         disable_tqdm=True,
     )
     dataset_dict: DatasetDict = load_dataset(
         path=repo_id,
-        name=settings.dataset_settings.config_name,
+        name=fine_tune_settings.dataset_settings.config_name,
         split=None,
         download_config=download_config,
         token=HF_TOKEN,
         trust_remote_code=True,
     )
 
-    prompt_json_path = huggingface_hub.hf_hub_download(
+    download_kwargs = dict(
         repo_id=repo_id,
         filename='prompt.json',
         repo_type='dataset',
         token=HF_TOKEN,
     )
+
+    with accelerator.main_process_first() if accelerator else nullcontext():
+        prompt_json_path = huggingface_hub.hf_hub_download(**download_kwargs)
+
     prompt_collection_json_bytes = Path(prompt_json_path).read_bytes()
     prompt_collection = cast(dict, json.loads(prompt_collection_json_bytes))
 
@@ -246,7 +265,7 @@ def fine_tune_and_evaluate(
     dataset_dict = dataset_dict.map(
         lambda batch: model_spec.formatting_func(tokenizer, {'messages': batch['messages']}),
         batched=True,
-        batch_size=settings.sft_settings.per_device_train_batch_size,
+        batch_size=fine_tune_settings.sft_settings.per_device_train_batch_size,
         remove_columns=['messages'],
     )
 
@@ -266,7 +285,7 @@ def fine_tune_and_evaluate(
         trust_remote_code=True,
         quantization_config=bits_and_bytes_config,
         # NOTE: avoid torch DTensor error
-        device_map={str(): accelerator.device} if use_accelerate else 'auto',
+        device_map={str(): accelerator.device} if accelerator else 'auto',
     )
     model = cast(PreTrainedModel, model)
     model_spec.init_language_model(model)
@@ -282,15 +301,16 @@ def fine_tune_and_evaluate(
     # NOTE: avoid DDP error
     model.gradient_checkpointing_enable(gradient_checkpointing_kwargs={'use_reentrant': False})
 
-    r = trial.params[settings.optuna_settings.trial_settings.r.name]
-    lora_alpha = trial.params[settings.optuna_settings.trial_settings.lora_alpha.name]
-    lora_dropout = trial.params[settings.optuna_settings.trial_settings.lora_dropout.name]
+    trial_settings = fine_tune_settings.optuna_settings.trial_settings
+    r = trial.params[trial_settings.r.name]
+    lora_alpha = trial.params[trial_settings.lora_alpha.name]
+    lora_dropout = trial.params[trial_settings.lora_dropout.name]
 
     peft_config = LoraConfig(
         r=r,
         lora_alpha=lora_alpha,
         lora_dropout=lora_dropout,
-        target_modules=settings.model_settings.target_modules,
+        target_modules=fine_tune_settings.model_settings.target_modules,
         use_dora=True,
     )
     model = get_peft_model(
@@ -314,25 +334,31 @@ def fine_tune_and_evaluate(
         per_device_eval_batch_size=2,
         eval_accumulation_steps=4,
         save_strategy='steps',
-        save_steps=100,
+        save_steps=500,
         save_total_limit=2,
         disable_tqdm=True,
-        per_device_train_batch_size=settings.sft_settings.per_device_train_batch_size,
-        gradient_accumulation_steps=settings.sft_settings.gradient_accumulation_steps,
-        learning_rate=settings.sft_settings.learning_rate,
-        num_train_epochs=settings.sft_settings.num_train_epochs,
-        fp16=settings.sft_settings.fp16,
-        weight_decay=settings.sft_settings.weight_decay,
+        per_device_train_batch_size=fine_tune_settings.sft_settings.per_device_train_batch_size,
+        gradient_accumulation_steps=fine_tune_settings.sft_settings.gradient_accumulation_steps,
+        learning_rate=fine_tune_settings.sft_settings.learning_rate,
+        num_train_epochs=fine_tune_settings.sft_settings.num_train_epochs,
+        fp16=fine_tune_settings.sft_settings.fp16,
+        weight_decay=fine_tune_settings.sft_settings.weight_decay,
         report_to='none',
         logging_strategy='steps',
         logging_steps=100,
         logging_first_step=True,
         label_names=['labels'],
         remove_unused_columns=True,
+        ddp_find_unused_parameters=False,
+        use_liger_kernel=True,
     )
     graceful_stop_callback = GracefulStopCallback()
     lora_wandb_callback = LoRAWandbCallback(
-        trial, settings, fine_tune_job_id, use_accelerate, gpu_indexes
+        trial,
+        fine_tune_settings.optuna_settings.trial_settings,
+        fine_tune_job_id,
+        gpu_indexes,
+        accelerator,
     )
     data_collator = DataCollatorForLanguageModeling(tokenizer, mlm=False)
 
@@ -344,7 +370,10 @@ def fine_tune_and_evaluate(
         eval_dataset=validate_dataset,
         processing_class=tokenizer,
         callbacks=[graceful_stop_callback, lora_wandb_callback],
-        optimizer_cls_and_kwargs=(AdamW, settings.optimizer_settings.model_dump()),
+        optimizer_cls_and_kwargs=(
+            torch.optim.AdamW,
+            fine_tune_settings.optimizer_settings.model_dump(),
+        ),
     )
     last_checkpoint = get_last_checkpoint(sft_config.output_dir)
 
@@ -357,59 +386,145 @@ def fine_tune_and_evaluate(
     train_end = perf_counter()
     lora_wandb_callback.train_duration = train_end - train_start
 
-    trainer.model.save_pretrained(
-        save_directory=model_path,
-        push_to_hub=False,
-        token=None,
-        save_peft_format=True,
-    )
+    if accelerator is None or accelerator.is_main_process:
+        trainer.model.save_pretrained(
+            save_directory=model_path,
+            push_to_hub=False,
+            token=None,
+            save_peft_format=True,
+        )
 
     # evaluate
-    class_label = cast(ClassLabel, original_validate_dataset.features['label'])
+    if accelerator is None or accelerator.is_main_process:
+        if TYPE_CHECKING:
 
-    if TYPE_CHECKING:
+            class LabelEnum(str, Enum):
+                pass
 
-        class LabelEnum(str, Enum):
-            pass
+            class Label(BaseModel):
+                label: LabelEnum
 
-        class Label(BaseModel):
-            label: LabelEnum
+        else:
+            LabelEnum = Enum('LabelEnum', {name: name for name in class_label.names}, type=str)
+            Label = create_model('Label', label=(LabelEnum, ...))
 
-    else:
-        LabelEnum = Enum('LabelEnum', {name: name for name in class_label.names}, type=str)
-        Label = create_model('Label', label=(LabelEnum, ...))
+        class_label = cast(ClassLabel, original_validate_dataset.features['label'])
+        true_labels = [class_label.names[int(x['label'])] for x in original_validate_dataset]
 
-    true_labels = [class_label.names[int(x['label'])] for x in original_validate_dataset]
+        outlines_model = Transformers(model, tokenizer)
+        sequence_generator_adapter = outlines_json(outlines_model, Label)
+        predictions = []
 
-    outlines_model = Transformers(model, tokenizer)
-    sequence_generator_adapter = outlines_json(outlines_model, Label)
-    predictions = []
+        validate_start = perf_counter()
+        for sample in original_validate_dataset:
+            messages = model_spec.format_prompt(sample, prompt_collection)['messages']
+            input_token_ids = tokenizer.apply_chat_template(
+                # NOTE: removes the assistant message (answer)
+                messages[:2],
+                tokenize=False,
+                add_generation_prompt=False,
+            )
+            result: Label = sequence_generator_adapter(
+                input_token_ids,
+                max_tokens=fine_tune_settings.model_settings.max_tokens,
+                stop_at='}',
+            )
+            predictions.append(result.label.value)
 
-    validate_start = perf_counter()
-    for sample in original_validate_dataset:
-        messages = model_spec.format_prompt(sample, prompt_collection)['messages']
-        input_token_ids = tokenizer.apply_chat_template(
-            messages[:2],  # removes the assistant message (answer)
-            tokenize=False,
-            add_generation_prompt=False,
+        validate_end = perf_counter()
+        lora_wandb_callback.validation_duration = validate_end - validate_start
+
+        match metric:
+            case Metric.ACCURACY:
+                return Result(score=accuracy_score(true_labels, predictions))
+
+            case Metric.PRECISION:
+                return Result(score=precision_score(true_labels, predictions, average='macro'))
+
+            case Metric.RECALL:
+                return Result(score=recall_score(true_labels, predictions, average='macro'))
+
+            case Metric.F1:
+                return Result(score=f1_score(true_labels, predictions, average='macro'))
+
+            case _:
+                raise ValueError()
+
+
+def parse_gpu_indexes(value: str) -> list[int]:
+    try:
+        return [int(i.strip()) for i in value.split(',')]
+
+    except ValueError:
+        raise ArgumentTypeError('GPU indexes must be comma-separated integers')
+
+
+class Args(Namespace):
+    fine_tune_job_id: UUID
+    fine_tune_settings_path: Path
+    fine_tune_result_path: Path
+    trial_number: int
+    gpu_indexes: list[int]
+    use_accelerate: bool
+
+
+def parse_args() -> Args:
+    parser = ArgumentParser()
+    parser.add_argument('--fine_tune_job_id', type=UUID, required=True)
+    parser.add_argument('--fine_tune_settings_path', type=Path, required=True)
+    parser.add_argument('--fine_tune_result_path', type=Path, required=True)
+    parser.add_argument('--trial_number', type=int, required=True)
+    parser.add_argument('--gpu_indexes', type=parse_gpu_indexes, required=True)
+    parser.add_argument('--use_accelerate', action='store_true', default=False)
+
+    return parser.parse_args(namespace=Args())
+
+
+def main():
+    args = parse_args()
+
+    # accelerate
+    if args.use_accelerate:
+        local_rank = config('LOCAL_RANK', cast=int)
+        rank = config('RANK', cast=int)
+        world_size = config('WORLD_SIZE', cast=int)
+
+        torch.cuda.set_device(local_rank)
+        torch.distributed.init_process_group(
+            backend='nccl',
+            init_method='env://',
+            world_size=world_size,
+            rank=rank,
+            device_id=torch.device('cuda', local_rank),
         )
-        result: Label = sequence_generator_adapter(
-            input_token_ids, max_tokens=settings.model_settings.max_tokens, stop_at='}'
-        )
-        predictions.append(result.label.value)
 
-    validate_end = perf_counter()
-    lora_wandb_callback.validation_duration = validate_end - validate_start
+    handler = DistributedDataParallelKwargs(find_unused_parameters=False)
+    accelerator = Accelerator(kwargs_handlers=[handler]) if args.use_accelerate else None
 
-    match metric:
-        case Metric.ACCURACY:
-            return accuracy_score(true_labels, predictions)
+    if accelerator:
+        torch.cuda.set_device(accelerator.local_process_index)
 
-        case Metric.PRECISION:
-            return precision_score(true_labels, predictions, average='macro')
+    # optuna
+    fine_tune_settings = JSONReaderUtil.read(args.fine_tune_settings_path, model=FineTuneSettings)
+    study_settings = fine_tune_settings.optuna_settings.study_settings
+    study = load_study(
+        study_name=study_settings.study_name,
+        storage=study_settings.storage,
+    )
+    frozen_trial = next(trial for trial in study.trials if trial.number == args.trial_number)
 
-        case Metric.RECALL:
-            return recall_score(true_labels, predictions, average='macro')
+    # fine tune and evaluate
+    result = fine_tune_and_evaluate(
+        trial=frozen_trial,
+        fine_tune_job_id=args.fine_tune_job_id,
+        fine_tune_settings=fine_tune_settings,
+        gpu_indexes=args.gpu_indexes,
+        accelerator=accelerator,
+    )
 
-        case Metric.F1:
-            return f1_score(true_labels, predictions, average='macro')
+    if accelerator is None or accelerator.is_main_process:
+        JSONWriterUtil.write(args.fine_tune_result_path, model=result)
+
+
+if __name__ == '__main__':
+    main()

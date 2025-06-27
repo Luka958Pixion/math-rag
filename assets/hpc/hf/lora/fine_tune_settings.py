@@ -64,6 +64,7 @@ class SFTSettings(BaseModel):
     gradient_accumulation_steps: int
     num_train_epochs: int
     weight_decay: float
+    bf16: bool
     fp16: bool
 
 

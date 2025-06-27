@@ -98,18 +98,18 @@ class FineTuneJobRunnerService(BaseInitializer, BaseFineTuneJobRunnerService):
             if force or await self._has_file_changed(local_path, remote_path):
                 await self.file_system_client.remove(remote_path)
                 await self.sftp_client.upload(local_path, remote_path)
-                logger.info(f'Reupload completed: {remote_path}')
+                logger.debug(f'Reupload completed: {remote_path}')
 
                 return True
 
             else:
-                logger.info(f'Upload skipped: {local_path} unchanged')
+                logger.debug(f'Upload skipped: {local_path} unchanged')
 
                 return False
 
         else:
             await self.sftp_client.upload(local_path, remote_path)
-            logger.info(f'Upload completed: {remote_path}')
+            logger.debug(f'Upload completed: {remote_path}')
 
             return True
 
@@ -132,6 +132,7 @@ class FineTuneJobRunnerService(BaseInitializer, BaseFineTuneJobRunnerService):
             LOCAL_ROOT_PATH / '.env.hpc',
             lora_path / 'optuna_optimizer.py',
             lora_path / 'utils.py',
+            lora_path / 'results.py',
             lora_path / 'fine_tune_settings.py',
             lora_path / 'fine_tune.py',
             lora_path / 'llama_3_1_8b_instruct.py',

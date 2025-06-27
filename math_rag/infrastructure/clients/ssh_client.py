@@ -50,7 +50,7 @@ class SSHClient:
         stdout = result.stdout.strip()
         stderr = result.stderr.strip()
 
-        logger.info(f'Command `{command}` in `{self.run.__name__}` ' f'returned stdout: {stdout}')
+        # logger.info(f'Command `{command}` in `{self.run.__name__}` ' f'returned stdout: {stdout}')
 
         if stderr:
             logger.error(

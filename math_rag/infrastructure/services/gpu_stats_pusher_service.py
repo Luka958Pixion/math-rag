@@ -32,12 +32,12 @@ class GPUStatsPusherService(BaseGPUStatsPusherService):
         for entry in gpu_stats.entries:
             job_id = str(entry.job_id)
 
-            for sub in entry.sub_entries:
-                self.gpu_util_percent_gauge.labels(job_id=job_id, node=sub.node, gpu=sub.gpu).set(
-                    sub.used_percent
-                )
-                self.gpu_mem_bytes_gauge.labels(job_id=job_id, node=sub.node, gpu=sub.gpu).set(
-                    sub.mem_used
-                )
+            for sub_entry in entry.sub_entries:
+                self.gpu_util_percent_gauge.labels(
+                    job_id=job_id, node=sub_entry.node, gpu=sub_entry.gpu
+                ).set(sub_entry.used_percent)
+                self.gpu_mem_bytes_gauge.labels(
+                    job_id=job_id, node=sub_entry.node, gpu=sub_entry.gpu
+                ).set(sub_entry.mem_used)
 
         push_to_gateway(self.pushgateway_base_url, job='gpu_stats', registry=self.registry)
