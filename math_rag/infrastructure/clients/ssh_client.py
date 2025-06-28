@@ -1,6 +1,13 @@
 from logging import getLogger
 
-from asyncssh import ConnectionLost, DisconnectError, SSHClientConnection, connect, read_private_key
+from asyncssh import (
+    ChannelOpenError,
+    ConnectionLost,
+    DisconnectError,
+    SSHClientConnection,
+    connect,
+    read_private_key,
+)
 from asyncssh.misc import async_context_manager
 from backoff import expo, on_exception
 
@@ -20,9 +27,9 @@ class SSHClient:
         return await connect(self.host, username=self.user, client_keys=[self._private_key])
 
     async def connect_retry(self) -> SSHClientConnection:
-        return await on_exception(expo, (ConnectionLost, DisconnectError), max_tries=4)(
-            self.connect
-        )()
+        return await on_exception(
+            expo, (ConnectionLost, DisconnectError, ChannelOpenError), max_tries=10
+        )(self.connect)()
 
     async def _get_connection(self) -> SSHClientConnection:
         if self._connection is None or self._connection.is_closed():

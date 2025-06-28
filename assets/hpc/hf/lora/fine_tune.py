@@ -35,7 +35,7 @@ from fine_tune_settings import FineTuneSettings, OptunaTrialSettings
 from optuna import Trial, load_study
 from outlines.generate.json import json as outlines_json
 from outlines.models.transformers import Transformers
-from peft import LoraConfig, get_peft_model, prepare_model_for_kbit_training
+from peft import LoraConfig, PeftModel, get_peft_model, prepare_model_for_kbit_training
 from pydantic import BaseModel, create_model
 from results import Result
 from sklearn.metrics import accuracy_score, f1_score, precision_score, recall_score
@@ -285,18 +285,20 @@ def fine_tune_and_evaluate(
         quantization_config=bits_and_bytes_config,
         # NOTE: avoid torch DTensor error
         device_map={str(): accelerator.device} if accelerator else 'auto',
+        attn_implementation='flash_attention_2',
     )
     model = cast(PreTrainedModel, model)
     model_spec.init_language_model(model)
     model.resize_token_embeddings(len(tokenizer))
     model.config.pad_token_id = tokenizer.pad_token_id
-    model.config.use_cache = False
 
     model = prepare_model_for_kbit_training(
         model=model,
         use_gradient_checkpointing=True,
     )
     model = cast(PreTrainedModel, model)
+    # NOTE: use_cache can not be used with gradient_checkpointing
+    model.config.use_cache = False
     # NOTE: avoid DDP error
     model.gradient_checkpointing_enable(gradient_checkpointing_kwargs={'use_reentrant': False})
 
@@ -350,8 +352,6 @@ def fine_tune_and_evaluate(
         remove_unused_columns=True,
         ddp_find_unused_parameters=False,
         use_liger_kernel=True,
-        # NOTE: requires at least dataloader_num_workers * num_gpus
-        dataloader_num_workers=4,
         dataloader_pin_memory=True,
     )
     graceful_stop_callback = GracefulStopCallback()
@@ -389,11 +389,13 @@ def fine_tune_and_evaluate(
     lora_wandb_callback.train_duration = train_end - train_start
 
     if accelerator is None or accelerator.is_main_process:
+        trainer.model = cast(PeftModel, trainer.model)
         trainer.model.save_pretrained(
             save_directory=model_path,
             push_to_hub=False,
             token=None,
             save_peft_format=True,
+            save_embedding_layers=True,
         )
 
     # evaluate
@@ -486,47 +488,55 @@ def parse_args() -> Args:
 def main():
     args = parse_args()
 
-    # accelerate
-    if args.use_accelerate:
-        local_rank = config('LOCAL_RANK', cast=int)
-        rank = config('RANK', cast=int)
-        world_size = config('WORLD_SIZE', cast=int)
+    try:
+        # accelerate
+        if args.use_accelerate:
+            local_rank = config('LOCAL_RANK', cast=int)
+            rank = config('RANK', cast=int)
+            world_size = config('WORLD_SIZE', cast=int)
 
-        torch.cuda.set_device(local_rank)
-        torch.distributed.init_process_group(
-            backend='nccl',
-            init_method='env://',
-            world_size=world_size,
-            rank=rank,
-            device_id=torch.device('cuda', local_rank),
+            torch.cuda.set_device(local_rank)
+            torch.distributed.init_process_group(
+                backend='nccl',
+                init_method='env://',
+                world_size=world_size,
+                rank=rank,
+                device_id=torch.device('cuda', local_rank),
+            )
+
+        handler = DistributedDataParallelKwargs(find_unused_parameters=False)
+        accelerator = Accelerator(kwargs_handlers=[handler]) if args.use_accelerate else None
+
+        if accelerator:
+            torch.cuda.set_device(accelerator.local_process_index)
+
+        # optuna
+        fine_tune_settings = JSONReaderUtil.read(
+            args.fine_tune_settings_path, model=FineTuneSettings
+        )
+        study_settings = fine_tune_settings.optuna_settings.study_settings
+        study = load_study(
+            study_name=f'{study_settings.study_name}-fine-tune-job-{args.fine_tune_job_id}',
+            storage=study_settings.storage,
+        )
+        frozen_trial = next(trial for trial in study.trials if trial.number == args.trial_number)
+
+        # fine tune and evaluate
+        result = fine_tune_and_evaluate(
+            trial=frozen_trial,
+            fine_tune_job_id=args.fine_tune_job_id,
+            fine_tune_settings=fine_tune_settings,
+            gpu_indexes=args.gpu_indexes,
+            accelerator=accelerator,
         )
 
-    handler = DistributedDataParallelKwargs(find_unused_parameters=False)
-    accelerator = Accelerator(kwargs_handlers=[handler]) if args.use_accelerate else None
+        if accelerator is None or accelerator.is_main_process:
+            JSONWriterUtil.write(args.fine_tune_result_path, model=result)
 
-    if accelerator:
-        torch.cuda.set_device(accelerator.local_process_index)
-
-    # optuna
-    fine_tune_settings = JSONReaderUtil.read(args.fine_tune_settings_path, model=FineTuneSettings)
-    study_settings = fine_tune_settings.optuna_settings.study_settings
-    study = load_study(
-        study_name=f'{study_settings.study_name}-fine-tune-job-{args.fine_tune_job_id}',
-        storage=study_settings.storage,
-    )
-    frozen_trial = next(trial for trial in study.trials if trial.number == args.trial_number)
-
-    # fine tune and evaluate
-    result = fine_tune_and_evaluate(
-        trial=frozen_trial,
-        fine_tune_job_id=args.fine_tune_job_id,
-        fine_tune_settings=fine_tune_settings,
-        gpu_indexes=args.gpu_indexes,
-        accelerator=accelerator,
-    )
-
-    if accelerator is None or accelerator.is_main_process:
-        JSONWriterUtil.write(args.fine_tune_result_path, model=result)
+    finally:
+        if torch.distributed.is_initialized():
+            torch.distributed.barrier()
+            torch.distributed.destroy_process_group()
 
 
 if __name__ == '__main__':
