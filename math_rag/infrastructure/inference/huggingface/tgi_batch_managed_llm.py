@@ -1,6 +1,6 @@
 from uuid import UUID
 
-from math_rag.application.base.inference import BaseBatchLLM, BaseBatchManagedLLM
+from math_rag.application.base.inference import BaseBatchManagedLLM
 from math_rag.application.base.services import BaseLLMSettingsLoaderService
 from math_rag.application.models.inference import (
     LLMBatchRequest,
@@ -11,11 +11,13 @@ from math_rag.infrastructure.validators.inference.huggingface import (
     HuggingFaceModelNameValidator,
 )
 
+from .tgi_batch_llm import TGIBatchLLM
+
 
 class TGIBatchManagedLLM(BaseBatchManagedLLM):
     def __init__(
         self,
-        llm: BaseBatchLLM,
+        llm: TGIBatchLLM,
         llm_settings_loader_service: BaseLLMSettingsLoaderService,
     ):
         self._llm = llm

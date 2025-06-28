@@ -14,7 +14,8 @@
         "tamasfe.even-better-toml",
         "uctakeoff.vscode-counter",
         "ms-toolsai.jupyter",
-        "charliermarsh.ruff"
+        "charliermarsh.ruff",
+        "mermaidchart.vscode-mermaid-chart"
       ]
     }
   },

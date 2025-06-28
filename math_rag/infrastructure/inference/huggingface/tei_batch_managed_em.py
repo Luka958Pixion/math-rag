@@ -1,15 +1,17 @@
 from uuid import UUID
 
-from math_rag.application.base.inference import BaseBatchEM, BaseBatchManagedEM
+from math_rag.application.base.inference import BaseBatchManagedEM
 from math_rag.application.base.services import BaseEMSettingsLoaderService
 from math_rag.application.models.inference import EMBatchRequest, EMBatchResult
 from math_rag.infrastructure.validators.inference.huggingface import (
     HuggingFaceModelNameValidator,
 )
 
+from .tei_batch_em import TEIBatchEM
+
 
 class TEIBatchManagedEM(BaseBatchManagedEM):
-    def __init__(self, em: BaseBatchEM, em_settings_loader_service: BaseEMSettingsLoaderService):
+    def __init__(self, em: TEIBatchEM, em_settings_loader_service: BaseEMSettingsLoaderService):
         self._em = em
         self._em_settings_loader_service = em_settings_loader_service
 

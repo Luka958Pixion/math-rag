@@ -28,7 +28,7 @@ import wandb
 
 from accelerate import Accelerator
 from accelerate.utils import DistributedDataParallelKwargs
-from datasets import ClassLabel, DatasetDict, load_dataset
+from datasets import ClassLabel, Dataset, DatasetDict, load_dataset
 from datasets.download import DownloadConfig
 from decouple import config
 from fine_tune_settings import FineTuneSettings, OptunaTrialSettings
@@ -112,25 +112,6 @@ class LoRAWandbCallback(WandbCallback):
         self.lora_alpha = trial.params[optuna_trial_settings.lora_alpha.name]
         self.lora_dropout = trial.params[optuna_trial_settings.lora_dropout.name]
 
-        self._train_duration = 0.0
-        self._validation_duration = 0.0
-
-    @property
-    def train_duration(self) -> float:
-        return self._train_duration
-
-    @train_duration.setter
-    def train_duration(self, value: float) -> None:
-        self._train_duration = value
-
-    @property
-    def validation_duration(self) -> float:
-        return self._validation_duration
-
-    @validation_duration.setter
-    def validation_duration(self, value: float) -> None:
-        self._validation_duration = value
-
     def on_train_begin(self, args, state, control, **kwargs):
         if self.accelerator and not self.accelerator.is_main_process:
             return control
@@ -160,12 +141,6 @@ class LoRAWandbCallback(WandbCallback):
         if self.accelerator and not self.accelerator.is_main_process:
             return control
 
-        wandb.log(
-            {
-                'train_duration_hours': self.train_duration / 3600,
-                'validation_duration_hours': self.validation_duration / 3600,
-            }
-        )
         wandb.finish()
 
 
@@ -180,31 +155,28 @@ MODEL_NAMES = {'meta-llama/Llama-3.1-8B-Instruct'}
 METRIC_NAMES = {name.value for name in Metric}
 
 
-def fine_tune_and_evaluate(
-    trial: Trial,
+def subset_dataset_splits(
+    dataset_dict: DatasetDict, split_name_to_size: dict[str, int]
+) -> DatasetDict:
+    return DatasetDict(
+        {
+            split_name: dataset_dict[split_name].select(
+                range(min(len(dataset_dict[split_name]), split_name_to_size[split_name]))
+            )
+            for split_name in dataset_dict
+        }
+    )
+
+
+def train(
+    accelerator: Accelerator | None,
     fine_tune_job_id: UUID,
     fine_tune_settings: FineTuneSettings,
     gpu_indexes: list[int],
-    accelerator: Accelerator | None,
-) -> Result:
-    # validate
+    model_spec: ModelSpec,
+    trial: Trial,
+) -> tuple[PeftModel, PreTrainedTokenizerBase, dict, Dataset]:
     model_name = fine_tune_settings.model_settings.model_name
-    metric_name = fine_tune_settings.optuna_settings.metric_name
-
-    if model_name not in MODEL_NAMES:
-        raise ValueError(f'Model {model_name} is not available')
-
-    if metric_name not in METRIC_NAMES:
-        raise ValueError(f'Metric {metric_name} is not available')
-
-    metric = Metric(metric_name)
-
-    # load model specification
-    model_spec = import_model_spec(model_name)
-
-    # login
-    if accelerator and accelerator.is_main_process:
-        wandb.login(key=WANDB_API_KEY)
 
     # initialize tokenizer
     tokenizer = AutoTokenizer.from_pretrained(
@@ -229,6 +201,9 @@ def fine_tune_and_evaluate(
         token=HF_TOKEN,
         trust_remote_code=True,
     )
+
+    # NOTE: for debugging
+    dataset_dict = subset_dataset_splits(dataset_dict, dict(train=500, validation=100, test=50))
 
     download_kwargs = dict(
         repo_id=repo_id,
@@ -255,7 +230,7 @@ def fine_tune_and_evaluate(
     }
     dataset_dict = dataset_dict.remove_columns(list(columns_to_remove))
 
-    original_validate_dataset = dataset_dict['validate']
+    validate_dataset = dataset_dict['validate']
 
     dataset_dict = dataset_dict.map(
         lambda x: model_spec.format_prompt(x, prompt_collection),
@@ -269,8 +244,6 @@ def fine_tune_and_evaluate(
     )
 
     train_dataset = dataset_dict['train']
-    validate_dataset = dataset_dict['validate']
-    # test_dataset = dataset_dict['test']
 
     # initialize model
     bits_and_bytes_config = BitsAndBytesConfig(
@@ -369,7 +342,6 @@ def fine_tune_and_evaluate(
         args=sft_config,
         data_collator=data_collator,
         train_dataset=train_dataset,
-        eval_dataset=validate_dataset,
         processing_class=tokenizer,
         callbacks=[graceful_stop_callback, lora_wandb_callback],
         optimizer_cls_and_kwargs=(
@@ -386,7 +358,8 @@ def fine_tune_and_evaluate(
         ignore_keys_for_eval=['past_key_values', 'hidden_states', 'attentions'],
     )
     train_end = perf_counter()
-    lora_wandb_callback.train_duration = train_end - train_start
+    train_duration = train_end - train_start
+    logger.info(f'Training finished after {train_duration / 3600:.2f} hours')
 
     if accelerator is None or accelerator.is_main_process:
         trainer.model = cast(PeftModel, trainer.model)
@@ -398,30 +371,56 @@ def fine_tune_and_evaluate(
             save_embedding_layers=True,
         )
 
-    # evaluate
-    if accelerator is None or accelerator.is_main_process:
-        class_label = cast(ClassLabel, original_validate_dataset.features['label'])
+    return model, tokenizer, prompt_collection, validate_dataset
 
-        if TYPE_CHECKING:
 
-            class LabelEnum(str, Enum):
-                pass
+def evaluate(
+    accelerator: Accelerator | None,
+    fine_tune_settings: FineTuneSettings,
+    metric: Metric,
+    model: PeftModel,
+    model_spec: ModelSpec,
+    tokenizer: PreTrainedTokenizerBase,
+    prompt_collection: dict,
+    validate_dataset: Dataset,
+) -> Result:
+    class_label = cast(ClassLabel, validate_dataset.features['label'])
 
-            class Label(BaseModel):
-                label: LabelEnum
+    if TYPE_CHECKING:
 
-        else:
-            LabelEnum = Enum('LabelEnum', {name: name for name in class_label.names}, type=str)
-            Label = create_model('Label', label=(LabelEnum, ...))
+        class LabelEnum(str, Enum):
+            pass
 
-        true_labels = [class_label.names[int(x['label'])] for x in original_validate_dataset]
+        class Label(BaseModel):
+            label: LabelEnum
 
-        outlines_model = Transformers(model, tokenizer)
-        sequence_generator_adapter = outlines_json(outlines_model, Label)
-        predictions = []
+    else:
+        LabelEnum = Enum('LabelEnum', {name: name for name in class_label.names}, type=str)
+        Label = create_model('Label', label=(LabelEnum, ...))
 
-        validate_start = perf_counter()
-        for sample in original_validate_dataset:
+    true_labels = [class_label.names[int(x['label'])] for x in validate_dataset]
+
+    if accelerator:
+        validate_dataset = validate_dataset.shard(
+            num_shards=accelerator.num_processes,
+            index=accelerator.process_index,
+            contiguous=True,
+        )
+
+    # prepare model for inference
+    device = accelerator.device if accelerator else torch.device('cuda')
+    model.to(device)
+    model.eval()
+    model.config.use_cache = True
+
+    outlines_model = Transformers(model, tokenizer)
+    sequence_generator_adapter = outlines_json(outlines_model, Label)
+
+    predictions_shard = []
+    validate_start = perf_counter()
+
+    with torch.no_grad():
+        for sample in validate_dataset:
             messages = model_spec.format_prompt(sample, prompt_collection)['messages']
             input_token_ids = tokenizer.apply_chat_template(
                 # NOTE: removes the assistant message (answer)
@@ -431,29 +430,40 @@ def fine_tune_and_evaluate(
             )
             result: Label = sequence_generator_adapter(
                 input_token_ids,
-                max_tokens=fine_tune_settings.model_settings.max_tokens,
+                max_new_tokens=fine_tune_settings.model_settings.max_tokens,
                 stop_at='}',
             )
-            predictions.append(result.label.value)
+            predictions_shard.append(result.label.value)
 
-        validate_end = perf_counter()
-        lora_wandb_callback.validation_duration = validate_end - validate_start
+    validate_end = perf_counter()
+    validation_duration = validate_end - validate_start
+    logger.info(f'Validation finished after {validation_duration / 3600:.2f} hours')
 
+    if accelerator:
+        label_to_id = {name: i for i, name in enumerate(class_label.names)}
+        local_ids = torch.tensor([label_to_id[label] for label in predictions_shard], device=device)
+        gathered_ids = accelerator.gather(local_ids)
+
+        if accelerator.is_main_process:
+            predictions = [class_label.names[i] for i in gathered_ids.cpu().tolist()]
+
+    else:
+        predictions = predictions_shard
+
+    if accelerator is None or accelerator.is_main_process:
         match metric:
             case Metric.ACCURACY:
-                return Result(score=accuracy_score(true_labels, predictions))
-
+                score = accuracy_score(true_labels, predictions)
             case Metric.PRECISION:
-                return Result(score=precision_score(true_labels, predictions, average='macro'))
-
+                score = precision_score(true_labels, predictions, average='macro')
             case Metric.RECALL:
-                return Result(score=recall_score(true_labels, predictions, average='macro'))
-
+                score = recall_score(true_labels, predictions, average='macro')
             case Metric.F1:
-                return Result(score=f1_score(true_labels, predictions, average='macro'))
-
+                score = f1_score(true_labels, predictions, average='macro')
             case _:
                 raise ValueError()
+
+        return Result(score=score)
 
 
 def parse_gpu_indexes(value: str) -> list[int]:
@@ -510,10 +520,32 @@ def main():
         if accelerator:
             torch.cuda.set_device(accelerator.local_process_index)
 
-        # optuna
+        # login
+        if accelerator and accelerator.is_main_process:
+            wandb.login(key=WANDB_API_KEY)
+
+        # read settings
         fine_tune_settings = JSONReaderUtil.read(
             args.fine_tune_settings_path, model=FineTuneSettings
         )
+
+        # validate
+        model_name = fine_tune_settings.model_settings.model_name
+        metric_name = fine_tune_settings.optuna_settings.metric_name
+
+        if model_name not in MODEL_NAMES:
+            raise ValueError(f'Model {model_name} is not available')
+
+        if metric_name not in METRIC_NAMES:
+            raise ValueError(f'Metric {metric_name} is not available')
+
+        # import model specification
+        model_spec = import_model_spec(model_name)
+
+        # select metric
+        metric = Metric(metric_name)
+
+        # optuna
         study_settings = fine_tune_settings.optuna_settings.study_settings
         study = load_study(
             study_name=f'{study_settings.study_name}-fine-tune-job-{args.fine_tune_job_id}',
@@ -521,13 +553,26 @@ def main():
         )
         frozen_trial = next(trial for trial in study.trials if trial.number == args.trial_number)
 
-        # fine tune and evaluate
-        result = fine_tune_and_evaluate(
-            trial=frozen_trial,
+        # fine tune
+        model, tokenizer, prompt_collection, validate_dataset = train(
+            accelerator=accelerator,
             fine_tune_job_id=args.fine_tune_job_id,
             fine_tune_settings=fine_tune_settings,
             gpu_indexes=args.gpu_indexes,
+            model_spec=model_spec,
+            trial=frozen_trial,
+        )
+
+        # evaluate
+        result = evaluate(
             accelerator=accelerator,
+            fine_tune_settings=fine_tune_settings,
+            metric=metric,
+            model=model,
+            model_spec=model_spec,
+            tokenizer=tokenizer,
+            prompt_collection=prompt_collection,
+            validate_dataset=validate_dataset,
         )
 
         if accelerator is None or accelerator.is_main_process:
