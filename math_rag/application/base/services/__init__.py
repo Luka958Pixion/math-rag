@@ -3,6 +3,7 @@ from .base_dataset_publisher_service import BaseDatasetPublisherService
 from .base_em_settings_loader_service import BaseEMSettingsLoaderService
 from .base_gpu_stats_pusher_service import BaseGPUStatsPusherService
 from .base_index_builder_service import BaseIndexBuilderService
+from .base_katex_corrector_service import BaseKatexCorrectorService
 from .base_label_config_builder_service import BaseLabelConfigBuilderService
 from .base_label_task_exporter_service import BaseLabelTaskExporterService
 from .base_label_task_importer_service import BaseLabelTaskImporterService
@@ -31,6 +32,7 @@ __all__ = [
     'BaseEMSettingsLoaderService',
     'BaseGPUStatsPusherService',
     'BaseIndexBuilderService',
+    'BaseKatexCorrectorService',
     'BaseLabelConfigBuilderService',
     'BaseLabelTaskExporterService',
     'BaseLabelTaskImporterService',

@@ -4,10 +4,7 @@ from asyncio import sleep
 from collections.abc import AsyncGenerator
 from datetime import datetime, timedelta
 
-from math_rag.application.base.inference import (
-    BaseBatchLLMRequestScheduler,
-    BaseBatchManagedLLM,
-)
+from math_rag.application.base.inference import BaseBatchLLMRequestScheduler
 from math_rag.application.models.inference import (
     LLMBatchRequest,
     LLMBatchRequestSchedule,
@@ -19,9 +16,11 @@ from math_rag.infrastructure.mappings.inference.openai import LLMRequestMapping
 from math_rag.infrastructure.utils import LLMTokenCounterUtil
 from math_rag.infrastructure.validators.inference.openai import OpenAIModelNameValidator
 
+from .openai_batch_managed_llm import OpenAIBatchManagedLLM
+
 
 class OpenAIBatchLLMRequestScheduler(BaseBatchLLMRequestScheduler):
-    def __init__(self, llm: BaseBatchManagedLLM):
+    def __init__(self, llm: OpenAIBatchManagedLLM):
         self.llm = llm
 
     def schedule(

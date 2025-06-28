@@ -1,5 +1,5 @@
 from .katex_corrector_assistant import KatexCorrectorAssistant
-from .katex_corrector_retry_assistant import KatexCorrectorRetryAssistant
+from .katex_corrector_retrier_assistant import KatexCorrectorRetrierAssistant
 from .math_expression_comparator_assistant import MathExpressionComparatorAssistant
 from .math_expression_description_optimizer_assistant import (
     MathExpressionDescriptionOptimizerAssistant,
@@ -15,7 +15,7 @@ from .math_expression_relationship_description_writer_assistant import (
 
 __all__ = [
     'KatexCorrectorAssistant',
-    'KatexCorrectorRetryAssistant',
+    'KatexCorrectorRetrierAssistant',
     'MathExpressionComparatorAssistant',
     'MathExpressionDescriptionOptimizerAssistant',
     'MathExpressionDescriptionWriterAssistant',

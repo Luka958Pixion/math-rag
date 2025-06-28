@@ -3,8 +3,8 @@ from math_rag.application.base.inference import (
     BaseManagedLLM,
 )
 from math_rag.application.enums.inference import LLMInferenceProvider, LLMModelProvider
-from math_rag.application.models.assistants.inputs import KatexCorrectorRetry as Input
-from math_rag.application.models.assistants.outputs import KatexCorrectorRetry as Output
+from math_rag.application.models.assistants.inputs import KatexCorrectorRetrier as Input
+from math_rag.application.models.assistants.outputs import KatexCorrectorRetrier as Output
 from math_rag.application.models.inference import (
     LLMConversation,
     LLMMessage,
@@ -19,7 +19,7 @@ from .prompts import KATEX_CORRECTOR_PROMPTS as PROMTPS
 from .prompts import KATEX_CORRECTOR_RETRY_USER_PROMPT
 
 
-class KatexCorrectorRetryAssistant(PartialAssistant[Input, Output]):
+class KatexCorrectorRetrierAssistant(PartialAssistant[Input, Output]):
     def __init__(self, llm: BaseManagedLLM, scheduler: BaseBatchLLMRequestManagedScheduler | None):
         super().__init__(llm, scheduler)
 

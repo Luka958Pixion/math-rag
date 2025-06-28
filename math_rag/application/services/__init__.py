@@ -1,5 +1,6 @@
 from .em_settings_loader_service import EMSettingsLoaderService
 from .index_builder_service import IndexBuilderService
+from .katex_corrector_service import KatexCorrectorService
 from .llm_settings_loader_service import LLMSettingsLoaderService
 from .math_article_loader_service import MathArticleLoaderService
 from .math_expression_dataset_builder_service import MathExpressionDatasetBuilderService
@@ -16,6 +17,7 @@ __all__ = [
     'MathExpressionDatasetBuilderService',
     'EMSettingsLoaderService',
     'IndexBuilderService',
+    'KatexCorrectorService',
     'LLMSettingsLoaderService',
     'MathArticleLoaderService',
     'MathExpressionDatasetPublisherService',

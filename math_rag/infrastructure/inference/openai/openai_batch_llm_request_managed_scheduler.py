@@ -1,9 +1,6 @@
 from collections.abc import AsyncGenerator
 
-from math_rag.application.base.inference import (
-    BaseBatchLLMRequestManagedScheduler,
-    BaseBatchLLMRequestScheduler,
-)
+from math_rag.application.base.inference import BaseBatchLLMRequestManagedScheduler
 from math_rag.application.base.services import BaseLLMSettingsLoaderService
 from math_rag.application.models.inference import (
     LLMBatchRequest,
@@ -12,11 +9,13 @@ from math_rag.application.models.inference import (
 )
 from math_rag.application.types.inference import LLMResponseType
 
+from .openai_batch_llm_request_scheduler import OpenAIBatchLLMRequestScheduler
+
 
 class OpenAIBatchLLMRequestManagedScheduler(BaseBatchLLMRequestManagedScheduler):
     def __init__(
         self,
-        scheduler: BaseBatchLLMRequestScheduler,
+        scheduler: OpenAIBatchLLMRequestScheduler,
         llm_settings_loader_service: BaseLLMSettingsLoaderService,
     ):
         self.scheduler = scheduler

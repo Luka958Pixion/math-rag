@@ -6,7 +6,7 @@ from ..outputs.katex_corrector import KatexCorrector as Output
 from .katex_corrector import KatexCorrector as Input
 
 
-class KatexCorrectorRetry(BaseAssistantInput):
+class KatexCorrectorRetrier(BaseAssistantInput):
     pairs: list[tuple[Input, Output | None]]
 
     @field_validator('pairs')

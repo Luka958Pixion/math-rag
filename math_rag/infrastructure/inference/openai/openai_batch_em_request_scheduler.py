@@ -4,10 +4,7 @@ from asyncio import sleep
 from collections.abc import AsyncGenerator
 from datetime import datetime, timedelta
 
-from math_rag.application.base.inference import (
-    BaseBatchEMRequestScheduler,
-    BaseBatchManagedEM,
-)
+from math_rag.application.base.inference import BaseBatchEMRequestScheduler
 from math_rag.application.models.inference import (
     EMBatchRequest,
     EMBatchRequestSchedule,
@@ -18,9 +15,11 @@ from math_rag.infrastructure.mappings.inference.openai import EMRequestMapping
 from math_rag.infrastructure.utils import EMTokenCounterUtil
 from math_rag.infrastructure.validators.inference.openai import OpenAIModelNameValidator
 
+from .openai_batch_managed_em import OpenAIBatchManagedEM
+
 
 class OpenAIBatchEMRequestScheduler(BaseBatchEMRequestScheduler):
-    def __init__(self, em: BaseBatchManagedEM):
+    def __init__(self, em: OpenAIBatchManagedEM):
         self.em = em
 
     def schedule(

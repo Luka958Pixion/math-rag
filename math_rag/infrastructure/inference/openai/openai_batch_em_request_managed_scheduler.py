@@ -1,9 +1,6 @@
 from collections.abc import AsyncGenerator
 
-from math_rag.application.base.inference import (
-    BaseBatchEMRequestManagedScheduler,
-    BaseBatchEMRequestScheduler,
-)
+from math_rag.application.base.inference import BaseBatchEMRequestManagedScheduler
 from math_rag.application.base.services import BaseEMSettingsLoaderService
 from math_rag.application.models.inference import (
     EMBatchRequest,
@@ -11,11 +8,13 @@ from math_rag.application.models.inference import (
     EMBatchResult,
 )
 
+from .openai_batch_em_request_scheduler import OpenAIBatchEMRequestScheduler
+
 
 class OpenAIBatchEMRequestManagedScheduler(BaseBatchEMRequestManagedScheduler):
     def __init__(
         self,
-        scheduler: BaseBatchEMRequestScheduler,
+        scheduler: OpenAIBatchEMRequestScheduler,
         em_settings_loader_service: BaseEMSettingsLoaderService,
     ):
         self.scheduler = scheduler

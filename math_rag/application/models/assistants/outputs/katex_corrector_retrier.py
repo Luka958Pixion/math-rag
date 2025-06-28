@@ -1,5 +1,5 @@
 from math_rag.application.models.assistants.base import BaseAssistantOutput
 
 
-class KatexCorrectorRetry(BaseAssistantOutput):
+class KatexCorrectorRetrier(BaseAssistantOutput):
     katex: str

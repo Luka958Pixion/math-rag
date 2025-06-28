@@ -7,6 +7,7 @@ from math_rag.application.base.clients import BaseKatexClient
 from math_rag.application.base.repositories.documents import BaseMathExpressionRepository
 from math_rag.application.base.repositories.objects import BaseMathArticleRepository
 from math_rag.application.base.services import (
+    BaseKatexCorrectorService,
     BaseMathArticleParserService,
     BaseMathExpressionLoaderService,
 )
@@ -27,12 +28,14 @@ class MathExpressionLoaderService(BaseMathExpressionLoaderService):
         self,
         katex_client: BaseKatexClient,
         katex_corrector_assistant: KatexCorrectorAssistant,
+        katex_corrector_service: BaseKatexCorrectorService,
         math_article_parser_service: BaseMathArticleParserService,
         math_article_repository: BaseMathArticleRepository,
         math_expression_repository: BaseMathExpressionRepository,
     ):
         self.katex_client = katex_client
         self.katex_corrector_assistant = katex_corrector_assistant
+        self.katex_corrector_service = katex_corrector_service
         self.math_article_parser_service = math_article_parser_service
         self.math_article_repository = math_article_repository
         self.math_expression_repository = math_expression_repository
@@ -168,69 +171,23 @@ class MathExpressionLoaderService(BaseMathExpressionLoaderService):
             math_nodes.extend(math_nodes_)
             logger.info(f'Parsed {len(math_nodes_)} math nodes from {math_article.id}')
 
-        # extract and validate KaTeX
+        # extract, validate and correct KaTeX
         katexes = [node.latex.strip('$') for node in math_nodes]
-        results = await self.katex_client.batch_validate_many(katexes, batch_size=50)
-        valid, invalid = self._split_by_validity(math_nodes, results)
-        logger.info(f'Validated KaTeX: {len(valid)}/{len(results)}')
-
-        # prepare final_katexes, preserving originals for valid ones
-        final_katexes: list[str | None] = [
-            katex if results[i].valid else None for i, katex in enumerate(katexes)
-        ]
-
-        if invalid:
-            # create the inputs
-            inputs: list[AssistantInput] = []
-            input_id_to_node: dict[UUID, LatexMathNode] = {}
-
-            for node, result in invalid:
-                input = AssistantInput(
-                    katex=node.latex.strip('$'),
-                    error=result.error,
-                )
-                input_id_to_node[input.id] = node
-                inputs.append(input)
-
-            outputs = await self.katex_corrector_assistant.concurrent_assist(inputs)
-            corrected_katexes = [output.katex for output in outputs]
-            corrected_nodes = [input_id_to_node[output.input_id] for output in outputs]
-
-            re_results = await self.katex_client.batch_validate_many(
-                corrected_katexes, batch_size=50
-            )
-            re_valid, _ = self._split_by_validity(corrected_nodes, re_results)
-
-            # merge only the successfully re-validated corrections
-            for node, katex, result in zip(corrected_nodes, corrected_katexes, re_results):
-                if result.valid:
-                    index = math_nodes.index(node)
-                    final_katexes[index] = katex
-
-            num_corrected = len(re_valid)
-            num_non_corrected = len(invalid) - num_corrected
-
-            logger.info(
-                f'Re-validated KaTeX: corrected {num_corrected} expressions, '
-                f'still failing total {num_non_corrected} expressions'
-            )
+        valid_katexes = await self.katex_corrector_service.correct(katexes, max_num_retries=10)
 
         # create and insert math expressions
-        math_expressions: list[MathExpression] = []
-
-        for node, katex in zip(math_nodes, final_katexes):
-            math_expressions.append(
-                MathExpression(
-                    math_article_id=math_article.id,
-                    math_expression_dataset_id=None,
-                    index_id=index.id,
-                    latex=node.latex,
-                    katex=katex,
-                    position=node.position,
-                    is_inline=node.is_inline,
-                )
+        math_expressions = [
+            MathExpression(
+                math_article_id=math_article.id,
+                math_expression_dataset_id=None,
+                index_id=index.id,
+                latex=node.latex,
+                katex=katex,
+                position=node.position,
+                is_inline=node.is_inline,
             )
-
+            for node, katex in zip(math_nodes, valid_katexes)
+        ]
         await self.math_expression_repository.batch_insert_many(math_expressions, batch_size=1000)
         await self.math_expression_repository.backup()
         logger.info(f'{self.__class__.__name__} loaded {len(math_expressions)} math expressions')

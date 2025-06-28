@@ -10,7 +10,7 @@ from dependency_injector.providers import (
 
 from math_rag.application.assistants import (
     KatexCorrectorAssistant,
-    KatexCorrectorRetryAssistant,
+    KatexCorrectorRetrierAssistant,
     MathExpressionComparatorAssistant,
     MathExpressionDescriptionOptimizerAssistant,
     MathExpressionDescriptionWriterAssistant,
@@ -58,6 +58,7 @@ from math_rag.application.embedants import MathExpressionDescriptionEmbedant
 from math_rag.application.services import (
     EMSettingsLoaderService,
     IndexBuilderService,
+    KatexCorrectorService,
     LLMSettingsLoaderService,
     MathArticleLoaderService,
     MathExpressionDatasetBuilderService,
@@ -131,8 +132,8 @@ class ApplicationContainer(DeclarativeContainer):
         llm=managed_llm,
         scheduler=managed_llm_scheduler,
     )
-    katex_corrector_retry_assistant = Factory(
-        KatexCorrectorRetryAssistant,
+    katex_corrector_retrier_assistant = Factory(
+        KatexCorrectorRetrierAssistant,
         llm=managed_llm,
         scheduler=managed_llm_scheduler,
     )
@@ -177,10 +178,18 @@ class ApplicationContainer(DeclarativeContainer):
         arxiv_client=arxiv_client,
         math_article_repository=math_article_repository,
     )
+
+    katex_corrector_service = Factory(
+        KatexCorrectorService,
+        katex_client=katex_client,
+        katex_corrector_assistant=katex_corrector_assistant,
+        katex_corrector_retrier_assistant=katex_corrector_retrier_assistant,
+    )
     math_expression_loader_service = Factory(
         MathExpressionLoaderService,
         katex_client=katex_client,
         katex_corrector_assistant=katex_corrector_assistant,
+        katex_corrector_service=katex_corrector_service,
         math_article_parser_service=math_article_parser_service,
         math_article_repository=math_article_repository,
         math_expression_repository=math_expression_repository,
