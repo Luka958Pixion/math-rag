@@ -7,6 +7,12 @@ class BaseBatchLLMRequestScheduler {
     execute()
 }
 
+class BaseBatchLLMRequestManagedScheduler {
+    <<abstract>>
+    schedule()
+    execute()
+}
+
 class OpenAIBatchLLMRequestScheduler {
     schedule()
     execute()
@@ -24,7 +30,7 @@ class OpenAIBatchManagedLLM {
 }
 
 BaseBatchLLMRequestScheduler <|-- OpenAIBatchLLMRequestScheduler
-BaseBatchLLMRequestScheduler <|-- OpenAIBatchLLMRequestManagedScheduler
+BaseBatchLLMRequestManagedScheduler <|-- OpenAIBatchLLMRequestManagedScheduler
 
 OpenAIBatchLLMRequestScheduler o-- OpenAIBatchManagedLLM
 OpenAIBatchLLMRequestManagedScheduler o-- OpenAIBatchLLMRequestScheduler

@@ -22,7 +22,7 @@ _default_fine_tune_settings = FineTuneSettings(
     model_settings=ModelSettings(
         model_name='meta-llama/Llama-3.1-8B-Instruct',
         target_modules=['q_proj', 'v_proj'],
-        max_tokens=20,
+        max_tokens=50,
     ),
     optimizer_settings=OptimizerSettings(lr=0.0002, weight_decay=0.01),
     optuna_settings=OptunaSettings(

@@ -192,7 +192,7 @@ def train(
     )
 
     # NOTE: for debugging
-    # dataset_dict = subset_dataset_splits(dataset_dict, dict(train=100, validate=100, test=50))
+    # dataset_dict = subset_dataset_splits(dataset_dict, dict(train=100, validate=1111, test=100))
 
     download_kwargs = dict(
         repo_id=repo_id,
@@ -238,7 +238,6 @@ def train(
     bits_and_bytes_config = BitsAndBytesConfig(
         load_in_8bit=True,
         llm_int8_threshold=6.0,
-        # TODO try False
         llm_int8_enable_fp32_cpu_offload=False,
     )
     model = AutoModelForCausalLM.from_pretrained(
@@ -436,10 +435,9 @@ def validate(
             predictions_shard.append(result.label.value)
 
     if accelerator:
-        label_to_id = {name: i for i, name in enumerate(class_label.names)}
-        local_ids = torch.tensor([label_to_id[label] for label in predictions_shard], device=device)
-        gathered_ids = accelerator.gather(local_ids)
-        predictions = [class_label.names[i] for i in gathered_ids.cpu().tolist()]
+        all_preds_per_rank: list[list[str]] = [None] * accelerator.num_processes
+        torch.distributed.all_gather_object(all_preds_per_rank, predictions_shard)
+        predictions = [label for shard in all_preds_per_rank for label in shard]
 
     else:
         predictions = predictions_shard
