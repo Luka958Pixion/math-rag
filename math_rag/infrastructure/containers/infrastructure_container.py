@@ -46,6 +46,7 @@ from math_rag.infrastructure.indexers.documents import (
     MathExpressionDatasetIndexer,
     MathExpressionDatasetTestIndexer,
     MathExpressionDatasetTestResultIndexer,
+    MathExpressionDescriptionIndexer,
     MathExpressionIndexer,
     MathExpressionLabelIndexer,
     MathExpressionSampleIndexer,
@@ -78,6 +79,7 @@ from math_rag.infrastructure.repositories.documents import (
     MathExpressionDatasetRepository,
     MathExpressionDatasetTestRepository,
     MathExpressionDatasetTestResultRepository,
+    MathExpressionDescriptionRepository,
     MathExpressionLabelRepository,
     MathExpressionRepository,
     MathExpressionSampleRepository,
@@ -85,7 +87,9 @@ from math_rag.infrastructure.repositories.documents import (
     ObjectMetadataRepository,
     TaskRepository,
 )
-from math_rag.infrastructure.repositories.embeddings import MathExpressionDescriptionRepository
+from math_rag.infrastructure.repositories.embeddings import (
+    MathExpressionDescriptionOptimizedRepository,
+)
 from math_rag.infrastructure.repositories.files import GoogleDriveRepository
 from math_rag.infrastructure.repositories.objects import MathArticleRepository
 from math_rag.infrastructure.seeders.documents import (
@@ -96,6 +100,7 @@ from math_rag.infrastructure.seeders.documents import (
     MathExpressionDatasetSeeder,
     MathExpressionDatasetTestResultSeeder,
     MathExpressionDatasetTestSeeder,
+    MathExpressionDescriptionSeeder,
     MathExpressionLabelSeeder,
     MathExpressionSampleSeeder,
     MathExpressionSeeder,
@@ -103,7 +108,7 @@ from math_rag.infrastructure.seeders.documents import (
     ObjectMetadataSeeder,
     TaskSeeder,
 )
-from math_rag.infrastructure.seeders.embeddings import MathExpressionDescriptionSeeder
+from math_rag.infrastructure.seeders.embeddings import MathExpressionDescriptionOptimizedSeeder
 from math_rag.infrastructure.seeders.objects import MathArticleSeeder
 from math_rag.infrastructure.services import (
     DatasetLoaderService,
@@ -150,6 +155,9 @@ class InfrastructureContainer(DeclarativeContainer):
     math_expression_dataset_test_result_repository = Factory(
         MathExpressionDatasetTestResultRepository, **mongo_kwargs
     )
+    math_expression_description_repository = Factory(
+        MathExpressionDescriptionRepository, **mongo_kwargs
+    )
     math_expression_repository = Factory(MathExpressionRepository, **mongo_kwargs)
     math_expression_label_repository = Factory(MathExpressionLabelRepository, **mongo_kwargs)
     math_expression_sample_repository = Factory(MathExpressionSampleRepository, **mongo_kwargs)
@@ -163,6 +171,7 @@ class InfrastructureContainer(DeclarativeContainer):
     llm_failed_request_seeder = Factory(LLMFailedRequestSeeder, **mongo_kwargs)
     math_expression_dataset_seeder = Factory(MathExpressionDatasetSeeder, **mongo_kwargs)
     math_expression_dataset_test_seeder = Factory(MathExpressionDatasetTestSeeder, **mongo_kwargs)
+    math_expression_description_seeder = Factory(MathExpressionDescriptionSeeder, **mongo_kwargs)
     math_expression_dataset_test_result_seeder = Factory(
         MathExpressionDatasetTestResultSeeder, **mongo_kwargs
     )
@@ -180,6 +189,7 @@ class InfrastructureContainer(DeclarativeContainer):
         llm_failed_request_seeder,
         math_expression_dataset_seeder,
         math_expression_dataset_test_seeder,
+        math_expression_description_seeder,
         math_expression_dataset_test_result_seeder,
         math_expression_label_seeder,
         math_expression_seeder,
@@ -196,6 +206,7 @@ class InfrastructureContainer(DeclarativeContainer):
     math_expression_dataset_test_result_indexer = Factory(
         MathExpressionDatasetTestResultIndexer, **mongo_kwargs
     )
+    math_expression_description_indexer = Factory(MathExpressionDescriptionIndexer, **mongo_kwargs)
     math_expression_label_indexer = Factory(MathExpressionLabelIndexer, **mongo_kwargs)
     math_expression_indexer = Factory(MathExpressionIndexer, **mongo_kwargs)
     math_expression_sample_indexer = Factory(MathExpressionSampleIndexer, **mongo_kwargs)
@@ -209,6 +220,7 @@ class InfrastructureContainer(DeclarativeContainer):
         math_expression_dataset_indexer,
         math_expression_dataset_test_indexer,
         math_expression_dataset_test_result_indexer,
+        math_expression_description_indexer,
         math_expression_label_indexer,
         math_expression_indexer,
         math_expression_sample_indexer,
@@ -250,17 +262,17 @@ class InfrastructureContainer(DeclarativeContainer):
         url=config.qdrant.url,
     )
 
-    math_expression_description_seeder = Factory(
-        MathExpressionDescriptionSeeder,
+    math_expression_description_optimized_seeder = Factory(
+        MathExpressionDescriptionOptimizedSeeder,
         client=async_qdrant_client,
     )
 
     embedding_seeders: Provider[list[BaseEmbeddingSeeder]] = List(
-        math_expression_description_seeder
+        math_expression_description_optimized_seeder
     )
 
     math_expression_description_repository = Factory(
-        MathExpressionDescriptionRepository,
+        MathExpressionDescriptionOptimizedRepository,
         client=async_qdrant_client,
     )
 

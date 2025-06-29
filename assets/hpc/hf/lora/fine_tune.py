@@ -1,14 +1,3 @@
-# local_rank = config('LOCAL_RANK', cast=int)
-# rank = config('RANK', cast=int)
-# world_size = config('WORLD_SIZE', cast=int)
-# torch.cuda.set_device(local_rank)
-# torch.distributed.init_process_group(
-#     backend='nccl',
-#     init_method='env://',
-#     world_size=world_size,
-#     rank=rank,
-#     device_id=torch.device('cuda', local_rank),
-# )
 import importlib
 import json
 import warnings
@@ -37,7 +26,7 @@ from outlines.generate.json import json as outlines_json
 from outlines.models.transformers import Transformers
 from peft import LoraConfig, PeftModel, get_peft_model, prepare_model_for_kbit_training
 from pydantic import BaseModel, create_model
-from results import Result
+from results import Result, TrialResult
 from sklearn.metrics import accuracy_score, f1_score, precision_score, recall_score
 from stubs import ModelSpec
 from transformers import (
@@ -175,7 +164,7 @@ def train(
     gpu_indexes: list[int],
     model_spec: ModelSpec,
     trial: Trial,
-) -> tuple[PeftModel, PreTrainedTokenizerBase, dict, Dataset]:
+) -> tuple[PeftModel, PreTrainedTokenizerBase, dict, Dataset, float]:
     model_name = fine_tune_settings.model_settings.model_name
 
     # initialize tokenizer
@@ -203,7 +192,7 @@ def train(
     )
 
     # NOTE: for debugging
-    dataset_dict = subset_dataset_splits(dataset_dict, dict(train=500, validation=100, test=50))
+    dataset_dict = subset_dataset_splits(dataset_dict, dict(train=100, validate=100, test=50))
 
     download_kwargs = dict(
         repo_id=repo_id,
@@ -258,7 +247,7 @@ def train(
         quantization_config=bits_and_bytes_config,
         # NOTE: avoid torch DTensor error
         device_map={str(): accelerator.device} if accelerator else 'auto',
-        attn_implementation='flash_attention_2',
+        # attn_implementation='flash_attention_2',
     )
     model = cast(PreTrainedModel, model)
     model_spec.init_language_model(model)
@@ -357,9 +346,20 @@ def train(
         trial=trial,
         ignore_keys_for_eval=['past_key_values', 'hidden_states', 'attentions'],
     )
-    train_end = perf_counter()
-    train_duration = train_end - train_start
-    logger.info(f'Training finished after {train_duration / 3600:.2f} hours')
+    local_train_duration = perf_counter() - train_start
+
+    if accelerator:
+        # make a 1-element tensor and all-gather it across ranks
+        tensor = torch.tensor(local_train_duration, device=accelerator.device)
+        locals = accelerator.gather(tensor)
+        # every rank picks the max
+        train_duration = locals.max().item()
+
+    else:
+        train_duration = local_train_duration
+
+    if accelerator:
+        accelerator.wait_for_everyone()
 
     if accelerator is None or accelerator.is_main_process:
         trainer.model = cast(PeftModel, trainer.model)
@@ -371,10 +371,10 @@ def train(
             save_embedding_layers=True,
         )
 
-    return model, tokenizer, prompt_collection, validate_dataset
+    return model, tokenizer, prompt_collection, validate_dataset, train_duration
 
 
-def evaluate(
+def validate(
     accelerator: Accelerator | None,
     fine_tune_settings: FineTuneSettings,
     metric: Metric,
@@ -383,7 +383,7 @@ def evaluate(
     tokenizer: PreTrainedTokenizerBase,
     prompt_collection: dict,
     validate_dataset: Dataset,
-) -> Result:
+) -> tuple[float, float]:
     class_label = cast(ClassLabel, validate_dataset.features['label'])
 
     if TYPE_CHECKING:
@@ -430,40 +430,49 @@ def evaluate(
             )
             result: Label = sequence_generator_adapter(
                 input_token_ids,
-                max_new_tokens=fine_tune_settings.model_settings.max_tokens,
+                max_tokens=fine_tune_settings.model_settings.max_tokens,
                 stop_at='}',
             )
             predictions_shard.append(result.label.value)
-
-    validate_end = perf_counter()
-    validation_duration = validate_end - validate_start
-    logger.info(f'Validation finished after {validation_duration / 3600:.2f} hours')
 
     if accelerator:
         label_to_id = {name: i for i, name in enumerate(class_label.names)}
         local_ids = torch.tensor([label_to_id[label] for label in predictions_shard], device=device)
         gathered_ids = accelerator.gather(local_ids)
-
-        if accelerator.is_main_process:
-            predictions = [class_label.names[i] for i in gathered_ids.cpu().tolist()]
+        predictions = [class_label.names[i] for i in gathered_ids.cpu().tolist()]
 
     else:
         predictions = predictions_shard
 
-    if accelerator is None or accelerator.is_main_process:
-        match metric:
-            case Metric.ACCURACY:
-                score = accuracy_score(true_labels, predictions)
-            case Metric.PRECISION:
-                score = precision_score(true_labels, predictions, average='macro')
-            case Metric.RECALL:
-                score = recall_score(true_labels, predictions, average='macro')
-            case Metric.F1:
-                score = f1_score(true_labels, predictions, average='macro')
-            case _:
-                raise ValueError()
+    local_validate_duration = perf_counter() - validate_start
 
-        return Result(score=score)
+    if accelerator:
+        # make a 1-element tensor and all-gather it across ranks
+        tensor = torch.tensor(local_validate_duration, device=accelerator.device)
+        locals = accelerator.gather(tensor)
+        # every rank picks the max
+        validate_duration = locals.max().item()
+
+    else:
+        validate_duration = local_validate_duration
+
+    match metric:
+        case Metric.ACCURACY:
+            score = accuracy_score(true_labels, predictions)
+
+        case Metric.PRECISION:
+            score = precision_score(true_labels, predictions, average='macro')
+
+        case Metric.RECALL:
+            score = recall_score(true_labels, predictions, average='macro')
+
+        case Metric.F1:
+            score = f1_score(true_labels, predictions, average='macro')
+
+        case _:
+            raise ValueError()
+
+    return score, validate_duration
 
 
 def parse_gpu_indexes(value: str) -> list[int]:
@@ -554,7 +563,7 @@ def main():
         frozen_trial = next(trial for trial in study.trials if trial.number == args.trial_number)
 
         # fine tune
-        model, tokenizer, prompt_collection, validate_dataset = train(
+        model, tokenizer, prompt_collection, validate_dataset, train_duration = train(
             accelerator=accelerator,
             fine_tune_job_id=args.fine_tune_job_id,
             fine_tune_settings=fine_tune_settings,
@@ -564,7 +573,7 @@ def main():
         )
 
         # evaluate
-        result = evaluate(
+        score, validate_duration = validate(
             accelerator=accelerator,
             fine_tune_settings=fine_tune_settings,
             metric=metric,
@@ -575,7 +584,22 @@ def main():
             validate_dataset=validate_dataset,
         )
 
+        # create or update result
         if accelerator is None or accelerator.is_main_process:
+            result = (
+                Result(trial_results=[])
+                if frozen_trial.number == 0
+                else JSONReaderUtil.read(args.fine_tune_result_path, model=Result)
+            )
+            trial_result = TrialResult(
+                number=frozen_trial.number,
+                metric=metric.value,
+                score=score,
+                train_duration=train_duration,
+                validate_duration=validate_duration,
+            )
+            result.trial_results.append(trial_result)
+
             JSONWriterUtil.write(args.fine_tune_result_path, model=result)
 
     finally:

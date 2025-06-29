@@ -1,4 +1,6 @@
-from .math_expression_description_embedding import MathExpressionDescriptionEmbedding
+from .math_expression_description_optimized_embedding import (
+    MathExpressionDescriptionOptimizedEmbedding,
+)
 
 
-__all__ = ['MathExpressionDescriptionEmbedding']
+__all__ = ['MathExpressionDescriptionOptimizedEmbedding']

@@ -6,6 +6,7 @@ from .llm_failed_request_seeder import LLMFailedRequestSeeder
 from .math_expression_dataset_seeder import MathExpressionDatasetSeeder
 from .math_expression_dataset_test_result_seeder import MathExpressionDatasetTestResultSeeder
 from .math_expression_dataset_test_seeder import MathExpressionDatasetTestSeeder
+from .math_expression_description_seeder import MathExpressionDescriptionSeeder
 from .math_expression_label_seeder import MathExpressionLabelSeeder
 from .math_expression_sample_seeder import MathExpressionSampleSeeder
 from .math_expression_seeder import MathExpressionSeeder
@@ -23,6 +24,7 @@ __all__ = [
     'MathExpressionDatasetSeeder',
     'MathExpressionDatasetTestResultSeeder',
     'MathExpressionDatasetTestSeeder',
+    'MathExpressionDescriptionSeeder',
     'MathExpressionLabelSeeder',
     'MathExpressionSampleSeeder',
     'MathExpressionSeeder',

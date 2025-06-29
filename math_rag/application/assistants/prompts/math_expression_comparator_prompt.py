@@ -7,6 +7,7 @@ You are an expert math-expression comparator.
 Your task is to decide whether two given mathematical expressions represent exactly the same entity, based solely on their surrounding contexts.
 
 ### Instructions:
+- The context lists expressions in the form `[<LaTeX> | index]`.
 - Rely only on information inferable from the two contexts.
 - Determine exact equivalence: return true if and only if they are the same entity.
 - Provide a concise reason justifying your decision.
@@ -27,10 +28,10 @@ _USER_PROMPT_TEMPLATE = """
 ### Context for second expression:
 {other_context}
 
-### Decision (JSON):
+### Decision:
 {
-  "is_identical": <true/false>,
-  "reason": "<your explanation here>"
+  "is_identical": ...,
+  "reason": "..."
 }
 """
 

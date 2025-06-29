@@ -15,6 +15,7 @@ from .llm_router_params_document import LLMRouterParamsDocument
 from .math_expression_dataset_document import MathExpressionDatasetDocument
 from .math_expression_dataset_test_document import MathExpressionDatasetTestDocument
 from .math_expression_dataset_test_result_document import MathExpressionDatasetTestResultDocument
+from .math_expression_description_document import MathExpressionDescriptionDocument
 from .math_expression_document import MathExpressionDocument
 from .math_expression_label_document import MathExpressionLabelDocument
 from .math_expression_sample_document import MathExpressionSampleDocument
@@ -42,6 +43,7 @@ __all__ = [
     'MathExpressionDatasetTestDocument',
     'MathExpressionDatasetTestResultDocument',
     'MathExpressionLabelDocument',
+    'MathExpressionDescriptionDocument',
     'MathExpressionDocument',
     'MathExpressionSampleDocument',
     'MathProblemDocument',

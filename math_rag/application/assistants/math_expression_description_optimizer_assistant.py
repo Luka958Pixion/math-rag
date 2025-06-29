@@ -38,7 +38,7 @@ class MathExpressionDescriptionOptimizerAssistant(PartialAssistant[Input, Output
                 ]
             ),
             params=LLMParams[Output](
-                model='gpt-4.1-nano',
+                model='gpt-4.1',
                 temperature=0.0,
                 response_type=Output.bind(input.id),
                 metadata=dict(input_id=str(input.id)),

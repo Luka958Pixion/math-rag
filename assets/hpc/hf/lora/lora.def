@@ -1,5 +1,5 @@
 Bootstrap: docker
-From: pytorch/pytorch:2.7.1-cuda12.8-cudnn9-devel
+From: python:3.12
 
 %files
     requirements.txt /requirements.txt
@@ -9,28 +9,25 @@ From: pytorch/pytorch:2.7.1-cuda12.8-cudnn9-devel
 
 %post
     pip install --upgrade pip
-    # pip install -r requirements.txt (python version conflict)
-    
-    pip install peft==0.15.1
-    pip install transformers==4.51.3
-    pip install trl==0.16.1
-    pip install sentencepiece==0.2.0
-    pip install datasets==3.5.0
-    pip install wandb==0.19.9
-    pip install huggingface-hub==0.30.2
-    pip install python-decouple==3.8
-    pip install optuna==4.3.0
-    pip install scikit-learn==1.6.1
-    pip install outlines==0.2.3
-    pip install accelerate==1.8.1
+    pip install -r requirements.txt
 
+    # additional dependencies
     pip install bitsandbytes==0.45.5 triton==3.1.0 
     pip install accelerate==1.8.1 liger-kernel==0.5.10
-    pip install --no-build-isolation flash-attn==2.8.0.post2
 
 %runscript
     if [ -z "$NUM_GPUS" ]; then
         echo "Error: $NUM_GPUS is not set. Please re-run with --env NUM_GPUS=..."
+        exit 1
+    fi
+
+    if [ -z "$FINE_TUNE_JOB_ID" ]; then
+        echo "Error: FINE_TUNE_JOB_ID is not set. Please re-run with --env FINE_TUNE_JOB_ID=..."
+        exit 1
+    fi
+
+    if [ -z "$GPU_INDEXES" ]; then
+        echo "Error: GPU_INDEXES is not set. Please re-run with --env GPU_INDEXES=..."
         exit 1
     fi
 

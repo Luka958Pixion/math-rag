@@ -1,4 +1,4 @@
-from .math_expression_description_mapping import MathExpressionDescriptionMapping
+from .math_expression_description_optimized_mapping import MathExpressionDescriptionOptimizedMapping
 
 
-__all__ = ['MathExpressionDescriptionMapping']
+__all__ = ['MathExpressionDescriptionOptimizedMapping']

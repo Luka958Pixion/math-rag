@@ -1,5 +1,7 @@
 from .embedding_repository import EmbeddingRepository
-from .math_expression_description_repository import MathExpressionDescriptionRepository
+from .math_expression_description_optimized_repository import (
+    MathExpressionDescriptionOptimizedRepository,
+)
 
 
-__all__ = ['EmbeddingRepository', 'MathExpressionDescriptionRepository']
+__all__ = ['EmbeddingRepository', 'MathExpressionDescriptionOptimizedRepository']

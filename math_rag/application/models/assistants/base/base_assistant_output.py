@@ -4,6 +4,8 @@ from uuid import UUID, uuid4
 from pydantic import BaseModel, Field
 from pydantic.json_schema import SkipJsonSchema
 
+from .base_assistant_input import BaseAssistantInput
+
 
 class BaseAssistantOutput(BaseModel, ABC):
     id: SkipJsonSchema[UUID] = Field(default_factory=uuid4)
@@ -17,3 +19,11 @@ class BaseAssistantOutput(BaseModel, ABC):
                 super().__init__(**kwargs)
 
         return BoundAssistantOutput
+
+    @staticmethod
+    def sort_by_input_id(
+        inputs: list[BaseAssistantInput], outputs: list['BaseAssistantOutput']
+    ) -> list['BaseAssistantOutput | None']:
+        input_id_to_output = {output.input_id: output for output in outputs}
+
+        return [input_id_to_output.get(input.id) for input in inputs]

@@ -4,6 +4,7 @@ from .index_indexer import IndexIndexer
 from .math_expression_dataset_indexer import MathExpressionDatasetIndexer
 from .math_expression_dataset_test_indexer import MathExpressionDatasetTestIndexer
 from .math_expression_dataset_test_result_indexer import MathExpressionDatasetTestResultIndexer
+from .math_expression_description_indexer import MathExpressionDescriptionIndexer
 from .math_expression_indexer import MathExpressionIndexer
 from .math_expression_label_indexer import MathExpressionLabelIndexer
 from .math_expression_sample_indexer import MathExpressionSampleIndexer
@@ -19,6 +20,7 @@ __all__ = [
     'MathExpressionDatasetIndexer',
     'MathExpressionDatasetTestIndexer',
     'MathExpressionDatasetTestResultIndexer',
+    'MathExpressionDescriptionIndexer',
     'MathExpressionIndexer',
     'MathExpressionLabelIndexer',
     'MathExpressionSampleIndexer',

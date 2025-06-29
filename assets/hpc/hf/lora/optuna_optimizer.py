@@ -30,7 +30,7 @@ def objective(
     trial.suggest_float(**optuna_trial_settings.lora_dropout.model_dump())
 
     fine_tune_settings_path = Path(f'input_{fine_tune_job_id}.json')
-    fine_tune_result_path = Path(f'output_{fine_tune_job_id}_{trial.number}.json')
+    fine_tune_result_path = Path(f'output_{fine_tune_job_id}.json')
 
     if use_accelerate:
         num_machines = 1
@@ -65,7 +65,11 @@ def objective(
     subprocess.run(cmd, check=True, text=True, shell=True)
     result = JSONReaderUtil.read(fine_tune_result_path, model=Result)
 
-    return result.score
+    for trial_result in result.trial_results:
+        if trial_result.number == trial.number:
+            return trial_result.score
+
+    raise ValueError(f'Trial with number {trial.number} not found')
 
 
 def log(trial: FrozenTrial):
