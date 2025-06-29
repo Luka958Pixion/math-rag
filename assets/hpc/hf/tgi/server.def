@@ -22,13 +22,26 @@ scrape_configs:
       - targets: ['0.0.0.0:8000']
 EOF
 
-    text-generation-launcher \
-        --model-id /model \
-        --port 8000 \
-        --hostname 0.0.0.0 \
-        --prometheus-port 9000 \
-        > /tmp/tgi_output.log \
-        2> /tmp/tgi_error.log &
+    if [ -z "$LORA_ADAPTERS" ]; then
+        echo "Starting TGI..."
+        text-generation-launcher \
+            --model-id /model \
+            --port 8000 \
+            --hostname 0.0.0.0 \
+            --prometheus-port 9000 \
+            > /tmp/tgi_output.log \
+            2> /tmp/tgi_error.log &
+    else
+        echo "Starting TGI with LoRA adapters: $LORA_ADAPTERS..."
+        text-generation-launcher \
+            --model-id /model \
+            --lora-adapters "$LORA_ADAPTERS" \
+            --port 8000 \
+            --hostname 0.0.0.0 \
+            --prometheus-port 9000 \
+            > /tmp/tgi_output.log \
+            2> /tmp/tgi_error.log &
+    fi
 
     TGI_PID=$!
 
@@ -58,10 +71,12 @@ EOF
 
     Environment:
         - MODEL_HUB_ID
+        - LORA_ADAPTERS
 
     Usage:
         apptainer instance start \
             --nv \
             --bind "$PWD/mount/$MODEL_HUB_ID:/model,$PWD/data:/data" \
+            --env LORA_ADAPTERS=$LORA_ADAPTERS \
             server.sif \
             tgi_server_instance

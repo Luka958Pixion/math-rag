@@ -192,7 +192,7 @@ def train(
     )
 
     # NOTE: for debugging
-    dataset_dict = subset_dataset_splits(dataset_dict, dict(train=100, validate=100, test=50))
+    # dataset_dict = subset_dataset_splits(dataset_dict, dict(train=100, validate=100, test=50))
 
     download_kwargs = dict(
         repo_id=repo_id,

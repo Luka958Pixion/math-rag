@@ -153,8 +153,15 @@ class TGIBatchLLM(BaseInitializer, PartialBatchLLM):
         client_py_path = tgi_path / 'client.py'
         tgi_py_path = tgi_path / 'tgi.py'
         tgi_sh_path = tgi_path / 'tgi.sh'
+        lora_adapters_json_path = tgi_path / 'lora_adapters.json'
 
-        runtime_local_paths = [env_path, client_py_path, tgi_py_path, tgi_sh_path]
+        runtime_local_paths = [
+            env_path,
+            client_py_path,
+            tgi_py_path,
+            tgi_sh_path,
+            lora_adapters_json_path,
+        ]
 
         # verify local paths
         local_paths = (

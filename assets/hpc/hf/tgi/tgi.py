@@ -217,18 +217,52 @@ class ServerInstance:
     def start(server_state: ProcessHandler, mount_path: Path, data_path: Path) -> ProcessExitStatus:
         logger.info(f'Starting {TGI_SERVER_INSTANCE_NAME}...')
 
+        with open('lora_adapters.json', 'r') as file:
+            lora_adapters = json.load(file)
+
+        if not isinstance(lora_adapters, list):
+            raise TypeError()
+
+        lora_adapters = cast(list[str], lora_adapters)
+
         bindings = [
             f'{mount_path}:/model',
             f'{data_path}:/data',
         ]
-        bind = ','.join(bindings)
-        cmd = (
-            'apptainer instance start '
-            '--nv '
-            f'--bind {bind} '
-            f'{SERVER_SIF_PATH} '
-            f'{TGI_SERVER_INSTANCE_NAME}'
-        )
+
+        if not lora_adapters:
+            bind = ','.join(bindings)
+            cmd = (
+                'apptainer instance start '
+                '--nv '
+                f'--bind {bind} '
+                f'{SERVER_SIF_PATH} '
+                f'{TGI_SERVER_INSTANCE_NAME}'
+            )
+        else:
+            lora_adapter_strs: list[str] = []
+
+            for i, adapter in enumerate(lora_adapters):
+                id = f'adapter_{i}'
+                path = f'/lora/{id}'
+                lora_adapter_strs.append(f'{id}={path}')
+                bindings.append(f'{adapter}:{path}')
+
+            bind = ','.join(bindings)
+            lora_adapters_str = ','.join(lora_adapter_strs)
+
+            cmd = (
+                'apptainer instance start '
+                '--nv '
+                f'--bind {bind} '
+                f'--env LORA_ADAPTERS="{lora_adapters_str}" '
+                f'{SERVER_SIF_PATH} '
+                f'{TGI_SERVER_INSTANCE_NAME}'
+            )
+
+        logger.info(f'Starting {TGI_SERVER_INSTANCE_NAME} with:')
+        logger.info(cmd)
+
         process = Popen(cmd, shell=True)
         exit_status = server_state.wait(process)
 
