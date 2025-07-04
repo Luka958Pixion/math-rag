@@ -4,6 +4,6 @@ from uuid import UUID, uuid4
 from pydantic import BaseModel, Field
 
 
-class BaseEmbedantOutput(BaseModel, ABC):
+class BaseEmbedderOutput(BaseModel, ABC):
     id: UUID = Field(default_factory=uuid4)
     input_id: UUID

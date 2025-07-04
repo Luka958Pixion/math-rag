@@ -1,26 +1,26 @@
 from typing import cast
 
-from math_rag.application.base.embedants import BaseConcurrentEmbedant, BaseEmbedantProtocol
+from math_rag.application.base.embedders import BaseConcurrentEmbedder, BaseEmbedderProtocol
 from math_rag.application.base.inference import BaseConcurrentManagedEM
 from math_rag.application.models.inference import EMConcurrentRequest
-from math_rag.application.types.embedants import EmbedantInputType, EmbedantOutputType
+from math_rag.application.types.embedders import EmbedderInputType, EmbedderOutputType
 from math_rag.shared.utils import TypeUtil
 
 
-class PartialConcurrentEmbedant(
-    BaseConcurrentEmbedant[EmbedantInputType, EmbedantOutputType],
-    BaseEmbedantProtocol[EmbedantInputType, EmbedantOutputType],
+class PartialConcurrentEmbedder(
+    BaseConcurrentEmbedder[EmbedderInputType, EmbedderOutputType],
+    BaseEmbedderProtocol[EmbedderInputType, EmbedderOutputType],
 ):
     def __init__(self, em: BaseConcurrentManagedEM):
         self._em = em
 
         args = TypeUtil.get_type_args(self.__class__)
-        self._response_type = cast(type[EmbedantOutputType], args[0][1])
+        self._response_type = cast(type[EmbedderOutputType], args[0][1])
 
     async def concurrent_embed(
         self,
-        inputs: list[EmbedantInputType],
-    ) -> list[EmbedantOutputType]:
+        inputs: list[EmbedderInputType],
+    ) -> list[EmbedderOutputType]:
         concurrent_request = EMConcurrentRequest(
             requests=[self.encode_to_request(input) for input in inputs]
         )

@@ -1,17 +1,17 @@
 from uuid import UUID
 
-from math_rag.application.base.embedants import BaseBatchEmbedant, BaseEmbedantProtocol
+from math_rag.application.base.embedders import BaseBatchEmbedder, BaseEmbedderProtocol
 from math_rag.application.base.inference import (
     BaseBatchEMRequestManagedScheduler,
     BaseBatchManagedEM,
 )
 from math_rag.application.models.inference import EMBatchRequest, EMBatchResult
-from math_rag.application.types.embedants import EmbedantInputType, EmbedantOutputType
+from math_rag.application.types.embedders import EmbedderInputType, EmbedderOutputType
 
 
-class PartialBatchEmbedant(
-    BaseBatchEmbedant[EmbedantInputType, EmbedantOutputType],
-    BaseEmbedantProtocol[EmbedantInputType, EmbedantOutputType],
+class PartialBatchEmbedder(
+    BaseBatchEmbedder[EmbedderInputType, EmbedderOutputType],
+    BaseEmbedderProtocol[EmbedderInputType, EmbedderOutputType],
 ):
     def __init__(
         self,
@@ -21,18 +21,18 @@ class PartialBatchEmbedant(
         self._em = em
         self._scheduler = scheduler
 
-    def _inputs_to_batch_request(self, inputs: list[EmbedantInputType]) -> EMBatchRequest:
+    def _inputs_to_batch_request(self, inputs: list[EmbedderInputType]) -> EMBatchRequest:
         return EMBatchRequest(requests=[self.encode_to_request(input) for input in inputs])
 
-    def _batch_result_to_outputs(self, batch_result: EMBatchResult) -> list[EmbedantOutputType]:
+    def _batch_result_to_outputs(self, batch_result: EMBatchResult) -> list[EmbedderOutputType]:
         return [
             self.decode_from_response_list(response_list)
             for response_list in batch_result.response_lists
         ]
 
     async def batch_embed(
-        self, inputs: list[EmbedantInputType], *, use_scheduler: bool
-    ) -> list[EmbedantOutputType]:
+        self, inputs: list[EmbedderInputType], *, use_scheduler: bool
+    ) -> list[EmbedderOutputType]:
         batch_request = self._inputs_to_batch_request(inputs)
 
         if use_scheduler:
@@ -51,7 +51,7 @@ class PartialBatchEmbedant(
 
         return outputs
 
-    async def batch_embed_init(self, inputs: list[EmbedantInputType]) -> str:
+    async def batch_embed_init(self, inputs: list[EmbedderInputType]) -> str:
         batch_request = self._inputs_to_batch_request(inputs)
         batch_id = await self._em.batch_embed_init(batch_request)
 
@@ -59,7 +59,7 @@ class PartialBatchEmbedant(
 
     async def batch_embed_result(
         self, batch_id: str, batch_request_id: UUID
-    ) -> list[EmbedantOutputType] | None:
+    ) -> list[EmbedderOutputType] | None:
         batch_result = await self._em.batch_embed_result(batch_id, batch_request_id)
 
         if batch_result is None:

@@ -54,7 +54,7 @@ from math_rag.application.base.services import (
     BasePrometheusSnapshotLoaderService,
 )
 from math_rag.application.base.services.backgrounds import BaseBackgroundService
-from math_rag.application.embedants import MathExpressionDescriptionEmbedant
+from math_rag.application.embedders import MathExpressionDescriptionEmbedder
 from math_rag.application.services import (
     EMSettingsLoaderService,
     IndexBuilderService,
@@ -164,9 +164,9 @@ class ApplicationContainer(DeclarativeContainer):
         scheduler=managed_llm_scheduler,
     )
 
-    # embedants
-    math_expression_description_embedant = Factory(
-        MathExpressionDescriptionEmbedant,
+    # embedders
+    math_expression_description_embedder = Factory(
+        MathExpressionDescriptionEmbedder,
         em=managed_em,
         scheduler=managed_em_scheduler,
     )
