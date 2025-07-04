@@ -65,6 +65,4 @@ class PartialBatchEmbedder(
         if batch_result is None:
             return
 
-        outputs = self._batch_result_to_outputs(batch_result)
-
-        return outputs
+        return self._batch_result_to_outputs(batch_result)

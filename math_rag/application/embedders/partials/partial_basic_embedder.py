@@ -17,6 +17,4 @@ class PartialBasicEmbedder(
         if result.failed_request:
             return None
 
-        output = self.decode_from_response_list(result.response_list)
-
-        return output
+        return self.decode_from_response_list(result.response_list)
