@@ -5,7 +5,7 @@ from logging import getLogger
 from uuid import UUID
 
 from openai import AsyncOpenAI, BadRequestError
-from openai.types.create_embedding_response import CreateEmbeddingResponse
+from openai.types import CreateEmbeddingResponse
 
 from math_rag.application.models.inference import (
     EMBatchRequest,

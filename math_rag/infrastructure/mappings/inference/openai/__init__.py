@@ -7,6 +7,10 @@ from .llm_message_mapping import LLMMessageMapping
 from .llm_request_mapping import LLMRequestMapping
 from .llm_response_list_mapping import LLMResponseListMapping
 from .llm_response_mapping import LLMResponseMapping
+from .mm_error_mapping import MMErrorMapping
+from .mm_request_mapping import MMRequestMapping
+from .mm_response_list_mapping import MMResponseListMapping
+from .mm_response_mapping import MMResponseMapping
 
 
 __all__ = [
@@ -19,4 +23,8 @@ __all__ = [
     'LLMRequestMapping',
     'LLMResponseMapping',
     'LLMResponseListMapping',
+    'MMErrorMapping',
+    'MMRequestMapping',
+    'MMResponseListMapping',
+    'MMResponseMapping',
 ]

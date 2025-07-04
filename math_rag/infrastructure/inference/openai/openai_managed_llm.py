@@ -1,6 +1,4 @@
-from math_rag.application.base.repositories.documents import (
-    BaseLLMFailedRequestRepository,
-)
+from math_rag.application.base.repositories.documents import BaseLLMFailedRequestRepository
 from math_rag.application.base.services import BaseLLMSettingsLoaderService
 
 from .openai_basic_managed_llm import OpenAIBasicManagedLLM

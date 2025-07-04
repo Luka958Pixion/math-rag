@@ -32,6 +32,6 @@ class OpenAIBatchManagedLLM {
 BaseBatchLLMRequestScheduler <|-- OpenAIBatchLLMRequestScheduler
 BaseBatchLLMRequestManagedScheduler <|-- OpenAIBatchLLMRequestManagedScheduler
 
-OpenAIBatchLLMRequestScheduler o-- OpenAIBatchManagedLLM
-OpenAIBatchLLMRequestManagedScheduler o-- OpenAIBatchLLMRequestScheduler
+OpenAIBatchLLMRequestScheduler <-- OpenAIBatchManagedLLM
+OpenAIBatchLLMRequestManagedScheduler <-- OpenAIBatchLLMRequestScheduler
 ```

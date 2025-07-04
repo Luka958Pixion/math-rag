@@ -69,6 +69,8 @@ from math_rag.infrastructure.inference.openai import (
     OpenAILLM,
     OpenAIManagedEM,
     OpenAIManagedLLM,
+    OpenAIManagedMM,
+    OpenAIMM,
 )
 from math_rag.infrastructure.inference.routers import ManagedEMRouter, ManagedLLMRouter
 from math_rag.infrastructure.repositories.documents import (
@@ -84,6 +86,7 @@ from math_rag.infrastructure.repositories.documents import (
     MathExpressionRepository,
     MathExpressionSampleRepository,
     MathProblemRepository,
+    MMFailedRequestRepository,
     ObjectMetadataRepository,
     TaskRepository,
 )
@@ -105,6 +108,7 @@ from math_rag.infrastructure.seeders.documents import (
     MathExpressionSampleSeeder,
     MathExpressionSeeder,
     MathProblemSeeder,
+    MMFailedRequestSeeder,
     ObjectMetadataSeeder,
     TaskSeeder,
 )
@@ -162,6 +166,7 @@ class InfrastructureContainer(DeclarativeContainer):
     math_expression_label_repository = Factory(MathExpressionLabelRepository, **mongo_kwargs)
     math_expression_sample_repository = Factory(MathExpressionSampleRepository, **mongo_kwargs)
     math_problem_repository = Factory(MathProblemRepository, **mongo_kwargs)
+    mm_failed_request_repository = Factory(MMFailedRequestRepository, **mongo_kwargs)
     object_metadata_repository = Factory(ObjectMetadataRepository, **mongo_kwargs)
     task_repository = Factory(TaskRepository, **mongo_kwargs)
 
@@ -179,6 +184,7 @@ class InfrastructureContainer(DeclarativeContainer):
     math_expression_seeder = Factory(MathExpressionSeeder, **mongo_kwargs)
     math_expression_sample_seeder = Factory(MathExpressionSampleSeeder, **mongo_kwargs)
     math_problem_seeder = Factory(MathProblemSeeder, **mongo_kwargs)
+    mm_failed_request_seeder = Factory(MMFailedRequestSeeder, **mongo_kwargs)
     object_metadata_seeder = Factory(ObjectMetadataSeeder, **mongo_kwargs)
     task_seeder = Factory(TaskSeeder, **mongo_kwargs)
 
@@ -195,6 +201,7 @@ class InfrastructureContainer(DeclarativeContainer):
         math_expression_seeder,
         math_expression_sample_seeder,
         math_problem_seeder,
+        mm_failed_request_seeder,
         object_metadata_seeder,
         task_seeder,
     )
@@ -297,6 +304,7 @@ class InfrastructureContainer(DeclarativeContainer):
 
     openai_em = Factory(OpenAIEM, client=async_openai_client)
     openai_llm = Factory(OpenAILLM, client=async_openai_client)
+    openai_mm = Factory(OpenAIMM, client=async_openai_client)
 
     openai_managed_em = Factory(
         OpenAIManagedEM,
@@ -309,6 +317,12 @@ class InfrastructureContainer(DeclarativeContainer):
         llm=openai_llm,
         llm_settings_loader_service=ApplicationContainer.llm_settings_loader_service,
         llm_failed_request_repository=llm_failed_request_repository,
+    )
+    openai_managed_mm = Factory(
+        OpenAIManagedMM,
+        mm=openai_mm,
+        mm_settings_loader_service=ApplicationContainer.mm_settings_loader_service,
+        mm_failed_request_repository=mm_failed_request_repository,
     )
 
     openai_batch_em_request_scheduler = Factory(

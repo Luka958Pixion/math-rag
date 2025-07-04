@@ -19,5 +19,5 @@ classDiagram
     }
 
     BaseBatchLLM <|.. PartialBatchLLM
-    PartialBatchLLM <|.. TGIBatchLLM
+    PartialBatchLLM <|-- TGIBatchLLM
 ```

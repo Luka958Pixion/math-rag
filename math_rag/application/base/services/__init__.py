@@ -22,6 +22,7 @@ from .base_math_expression_label_task_importer_service import (
 )
 from .base_math_expression_loader_service import BaseMathExpressionLoaderService
 from .base_math_expression_sample_loader_service import BaseMathExpressionSampleLoaderService
+from .base_mm_settings_loader_service import BaseMMSettingsLoaderService
 from .base_pbs_pro_resources_used_pusher_service import BasePBSProResoucesUsedPusherService
 from .base_prometheus_snapshot_loader_service import BasePrometheusSnapshotLoaderService
 
@@ -47,6 +48,7 @@ __all__ = [
     'BaseMathExpressionLabelTaskImporterService',
     'BaseMathExpressionLoaderService',
     'BaseMathExpressionSampleLoaderService',
+    'BaseMMSettingsLoaderService',
     'BasePBSProResoucesUsedPusherService',
     'BasePrometheusSnapshotLoaderService',
 ]

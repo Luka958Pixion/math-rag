@@ -20,6 +20,10 @@ from .math_expression_label_mapping import MathExpressionLabelMapping
 from .math_expression_mapping import MathExpressionMapping
 from .math_expression_sample_mapping import MathExpressionSampleMapping
 from .math_problem_mapping import MathProblemMapping
+from .mm_failed_request_mapping import MMFailedRequestMapping
+from .mm_params_mapping import MMParamsMapping
+from .mm_request_mapping import MMRequestMapping
+from .mm_router_params_mapping import MMRouterParamsMapping
 from .task_mapping import TaskMapping
 
 
@@ -46,5 +50,9 @@ __all__ = [
     'MathExpressionMapping',
     'MathExpressionSampleMapping',
     'MathProblemMapping',
+    'MMFailedRequestMapping',
+    'MMParamsMapping',
+    'MMRequestMapping',
+    'MMRouterParamsMapping',
     'TaskMapping',
 ]

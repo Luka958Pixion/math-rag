@@ -69,6 +69,7 @@ from math_rag.application.services import (
     MathExpressionLabelTaskImporterService,
     MathExpressionLoaderService,
     MathExpressionSampleLoaderService,
+    MMSettingsLoaderService,
 )
 from math_rag.application.services.backgrounds import (
     FineTuneJobBackgroundService,
@@ -173,6 +174,8 @@ class ApplicationContainer(DeclarativeContainer):
     # services
     em_settings_loader_service = Factory(EMSettingsLoaderService)
     llm_settings_loader_service = Factory(LLMSettingsLoaderService)
+    mm_settings_loader_service = Factory(MMSettingsLoaderService)
+
     math_article_loader_service = Factory(
         MathArticleLoaderService,
         arxiv_client=arxiv_client,

@@ -2,6 +2,8 @@ from .base_basic_em import BaseBasicEM
 from .base_basic_llm import BaseBasicLLM
 from .base_basic_managed_em import BaseBasicManagedEM
 from .base_basic_managed_llm import BaseBasicManagedLLM
+from .base_basic_managed_mm import BaseBasicManagedMM
+from .base_basic_mm import BaseBasicMM
 from .base_batch_em import BaseBatchEM
 from .base_batch_em_request_managed_scheduler import BaseBatchEMRequestManagedScheduler
 from .base_batch_em_request_scheduler import BaseBatchEMRequestScheduler
@@ -18,6 +20,7 @@ from .base_em import BaseEM
 from .base_llm import BaseLLM
 from .base_managed_em import BaseManagedEM
 from .base_managed_llm import BaseManagedLLM
+from .base_managed_mm import BaseManagedMM
 
 
 __all__ = [
@@ -29,16 +32,19 @@ __all__ = [
     'BaseBasicLLM',
     'BaseLLM',
     'BaseBatchEMRequestScheduler',
+    'BaseBasicMM',
     'BaseBatchEM',
     'BaseBatchEMRequestManagedScheduler',
     'BaseConcurrentEM',
     'BaseEM',
     'BaseBasicManagedEM',
     'BaseBasicManagedLLM',
+    'BaseBasicManagedMM',
     'BaseBatchManagedEM',
     'BaseBatchManagedLLM',
     'BaseConcurrentManagedEM',
     'BaseConcurrentManagedLLM',
     'BaseManagedEM',
     'BaseManagedLLM',
+    'BaseManagedMM',
 ]

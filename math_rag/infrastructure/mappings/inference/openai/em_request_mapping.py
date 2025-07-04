@@ -10,7 +10,10 @@ class EMRequestMapping(BaseMapping[EMRequest, dict[str, Any]]):
         request_id = kwargs['request_id']
 
         return EMRequest(
-            id=request_id, text=target['input'], params=EMParams(model=target['model'])
+            id=request_id,
+            text=target['input'],
+            params=EMParams(model=target['model']),
+            router_params=None,
         )
 
     @staticmethod

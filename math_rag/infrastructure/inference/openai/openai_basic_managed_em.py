@@ -1,12 +1,7 @@
 from math_rag.application.base.inference import BaseBasicManagedEM
-from math_rag.application.base.repositories.documents import (
-    BaseEMFailedRequestRepository,
-)
+from math_rag.application.base.repositories.documents import BaseEMFailedRequestRepository
 from math_rag.application.base.services import BaseEMSettingsLoaderService
-from math_rag.application.models.inference import (
-    EMRequest,
-    EMResult,
-)
+from math_rag.application.models.inference import EMRequest, EMResult
 from math_rag.infrastructure.validators.inference.openai import OpenAIModelNameValidator
 
 from .openai_basic_em import OpenAIBasicEM

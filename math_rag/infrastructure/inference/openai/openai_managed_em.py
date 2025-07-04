@@ -1,6 +1,4 @@
-from math_rag.application.base.repositories.documents import (
-    BaseEMFailedRequestRepository,
-)
+from math_rag.application.base.repositories.documents import BaseEMFailedRequestRepository
 from math_rag.application.base.services import BaseEMSettingsLoaderService
 
 from .openai_basic_managed_em import OpenAIBasicManagedEM

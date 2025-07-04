@@ -20,6 +20,11 @@ from .math_expression_document import MathExpressionDocument
 from .math_expression_label_document import MathExpressionLabelDocument
 from .math_expression_sample_document import MathExpressionSampleDocument
 from .math_problem_document import MathProblemDocument
+from .mm_error_document import MMErrorDocument
+from .mm_failed_request_document import MMFailedRequestDocument
+from .mm_params_document import MMParamsDocument
+from .mm_request_document import MMRequestDocument
+from .mm_router_params_document import MMRouterParamsDocument
 from .object_metadata_document import ObjectMetadataDocument
 from .task_document import TaskDocument
 
@@ -47,6 +52,11 @@ __all__ = [
     'MathExpressionDocument',
     'MathExpressionSampleDocument',
     'MathProblemDocument',
+    'MMErrorDocument',
+    'MMFailedRequestDocument',
+    'MMParamsDocument',
+    'MMRequestDocument',
+    'MMRouterParamsDocument',
     'ObjectMetadataDocument',
     'TaskDocument',
 ]

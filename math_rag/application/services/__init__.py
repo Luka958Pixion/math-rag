@@ -11,6 +11,7 @@ from .math_expression_label_loader_service import MathExpressionLabelLoaderServi
 from .math_expression_label_task_importer_service import MathExpressionLabelTaskImporterService
 from .math_expression_loader_service import MathExpressionLoaderService
 from .math_expression_sample_loader_service import MathExpressionSampleLoaderService
+from .mm_settings_loader_service import MMSettingsLoaderService
 
 
 __all__ = [
@@ -27,4 +28,5 @@ __all__ = [
     'MathExpressionLabelTaskImporterService',
     'MathExpressionLoaderService',
     'MathExpressionSampleLoaderService',
+    'MMSettingsLoaderService',
 ]

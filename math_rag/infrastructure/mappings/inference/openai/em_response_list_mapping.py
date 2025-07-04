@@ -1,6 +1,6 @@
 from math_rag.application.models.inference import EMResponseList
 from math_rag.infrastructure.base import BaseMapping
-from openai.types.create_embedding_response import CreateEmbeddingResponse
+from openai.types import CreateEmbeddingResponse
 
 from .em_response_mapping import EMResponseMapping
 
