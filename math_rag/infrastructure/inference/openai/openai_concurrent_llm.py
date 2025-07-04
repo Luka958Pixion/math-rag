@@ -245,10 +245,8 @@ class OpenAIConcurrentLLM(BaseConcurrentLLM):
         if status_tracker.num_rate_limit_errors > 0:
             logger.warning(f'{status_tracker.num_rate_limit_errors} rate limit errors received')
 
-        concurrent_result = LLMConcurrentResult(
+        return LLMConcurrentResult(
             concurrent_request_id=concurrent_request.id,
             response_lists=response_lists,
             failed_requests=failed_requests,
         )
-
-        return concurrent_result

@@ -38,9 +38,7 @@ class PartialConcurrentAssistant(
                 content_dict = response.content.model_dump(exclude_unset=True)
                 response.content = self._response_type(**content_dict)
 
-        outputs = [
+        return [
             self.decode_from_response_list(response_list)
             for response_list in concurrent_result.response_lists
         ]
-
-        return outputs

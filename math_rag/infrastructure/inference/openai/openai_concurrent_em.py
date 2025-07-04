@@ -228,10 +228,8 @@ class OpenAIConcurrentEM(BaseConcurrentEM):
         if status_tracker.num_rate_limit_errors > 0:
             logger.warning(f'{status_tracker.num_rate_limit_errors} rate limit errors received')
 
-        concurrent_result = EMConcurrentResult(
+        return EMConcurrentResult(
             concurrent_request_id=concurrent_request.id,
             response_lists=response_lists,
             failed_requests=failed_requests,
         )
-
-        return concurrent_result
