@@ -28,6 +28,7 @@ from math_rag.application.base.inference import (
     BaseBatchLLMRequestManagedScheduler,
     BaseManagedEM,
     BaseManagedLLM,
+    BaseManagedMM,
 )
 from math_rag.application.base.repositories.documents import (
     BaseFineTuneJobRepository,
@@ -54,7 +55,8 @@ from math_rag.application.base.services import (
     BasePrometheusSnapshotLoaderService,
 )
 from math_rag.application.base.services.backgrounds import BaseBackgroundService
-from math_rag.application.embedders import MathExpressionDescriptionEmbedder
+from math_rag.application.embedders import DefaultEmbedder
+from math_rag.application.moderators import DefaultModerator
 from math_rag.application.services import (
     EMSettingsLoaderService,
     IndexBuilderService,
@@ -92,6 +94,7 @@ class ApplicationContainer(DeclarativeContainer):
 
     managed_em = Dependency(instance_of=BaseManagedEM)
     managed_llm = Dependency(instance_of=BaseManagedLLM)
+    managed_mm = Dependency(instance_of=BaseManagedMM)
 
     managed_em_scheduler = Dependency(instance_of=BaseBatchEMRequestManagedScheduler)
     managed_llm_scheduler = Dependency(instance_of=BaseBatchLLMRequestManagedScheduler)
@@ -165,10 +168,16 @@ class ApplicationContainer(DeclarativeContainer):
     )
 
     # embedders
-    math_expression_description_embedder = Factory(
-        MathExpressionDescriptionEmbedder,
+    default_embedder = Factory(
+        DefaultEmbedder,
         em=managed_em,
         scheduler=managed_em_scheduler,
+    )
+
+    # moderators
+    default_moderator = Factory(
+        DefaultModerator,
+        mm=managed_mm,
     )
 
     # services

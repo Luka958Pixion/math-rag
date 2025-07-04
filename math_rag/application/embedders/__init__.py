@@ -1,4 +1,4 @@
-from .math_expression_description_embedder import MathExpressionDescriptionEmbedder
+from .default_embedder import DefaultEmbedder
 
 
-__all__ = ['MathExpressionDescriptionEmbedder']
+__all__ = ['DefaultEmbedder']

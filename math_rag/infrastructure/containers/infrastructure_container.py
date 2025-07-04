@@ -24,7 +24,11 @@ from math_rag.application.base.seeders.documents import BaseDocumentSeeder
 from math_rag.application.base.seeders.embeddings import BaseEmbeddingSeeder
 from math_rag.application.base.seeders.objects import BaseObjectSeeder
 from math_rag.application.containers import ApplicationContainer
-from math_rag.application.enums.inference import EMInferenceProvider, LLMInferenceProvider
+from math_rag.application.enums.inference import (
+    EMInferenceProvider,
+    LLMInferenceProvider,
+    MMInferenceProvider,
+)
 from math_rag.infrastructure.base import BaseInitializer
 from math_rag.infrastructure.clients import (
     ApptainerClient,
@@ -72,7 +76,11 @@ from math_rag.infrastructure.inference.openai import (
     OpenAIManagedMM,
     OpenAIMM,
 )
-from math_rag.infrastructure.inference.routers import ManagedEMRouter, ManagedLLMRouter
+from math_rag.infrastructure.inference.routers import (
+    ManagedEMRouter,
+    ManagedLLMRouter,
+    ManagedMMRouter,
+)
 from math_rag.infrastructure.repositories.documents import (
     EMFailedRequestRepository,
     FineTuneJobRepository,
@@ -278,7 +286,7 @@ class InfrastructureContainer(DeclarativeContainer):
         math_expression_description_optimized_seeder
     )
 
-    math_expression_description_repository = Factory(
+    math_expression_description_optimized_repository = Factory(
         MathExpressionDescriptionOptimizedRepository,
         client=async_qdrant_client,
     )
@@ -547,6 +555,11 @@ class InfrastructureContainer(DeclarativeContainer):
             LLMInferenceProvider.HUGGING_FACE: tgi_batch_managed_llm,
         }
     )
+    inference_provider_to_managed_mm = Dict(
+        {
+            MMInferenceProvider.OPEN_AI: openai_managed_llm,
+        }
+    )
 
     managed_em_router = Factory(
         ManagedEMRouter,
@@ -555,6 +568,10 @@ class InfrastructureContainer(DeclarativeContainer):
     managed_llm_router = Factory(
         ManagedLLMRouter,
         inference_provider_to_managed_llm=inference_provider_to_managed_llm,
+    )
+    managed_mm_router = Factory(
+        ManagedMMRouter,
+        inference_provider_to_managed_llm=inference_provider_to_managed_mm,
     )
 
     # ApplicationContainer
@@ -565,6 +582,7 @@ class InfrastructureContainer(DeclarativeContainer):
         latex_converter_client=mathpix_client,
         managed_em=managed_em_router,
         managed_llm=managed_llm_router,
+        managed_mm=managed_mm_router,
         managed_em_scheduler=openai_batch_em_request_managed_scheduler,
         managed_llm_scheduler=openai_batch_llm_request_managed_scheduler,
         dataset_loader_service=dataset_loader_service,

@@ -13,7 +13,7 @@ from math_rag.application.models.inference import (
 from .partials import PartialEmbedder
 
 
-class MathExpressionDescriptionEmbedder(PartialEmbedder[EmbedderInput, EmbedderOutput]):
+class DefaultEmbedder(PartialEmbedder[EmbedderInput, EmbedderOutput]):
     def __init__(self, em: BaseManagedEM, scheduler: BaseBatchEMRequestManagedScheduler | None):
         super().__init__(em, scheduler)
 
