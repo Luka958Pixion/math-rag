@@ -28,7 +28,7 @@ class OpenAIConcurrentManagedLLM(BaseConcurrentManagedLLM):
         self, concurrent_request: LLMConcurrentRequest[LLMResponseType]
     ) -> LLMConcurrentResult[LLMResponseType]:
         if not concurrent_request.requests:
-            raise ValueError(f'Batch request {concurrent_request.id} is empty')
+            raise ValueError(f'Concurrent request {concurrent_request.id} is empty')
 
         model = concurrent_request.requests[0].params.model
         OpenAIModelNameValidator.validate(model)

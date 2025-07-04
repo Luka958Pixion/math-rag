@@ -4,6 +4,7 @@ from typing import Callable, TypeVar
 from math_rag.application.base.services import BaseMMSettingsLoaderService
 from math_rag.application.models.inference.settings import (
     BasicMMSettings,
+    ConcurrentMMSettings,
     MMProviderSettings,
     MMSettings,
 )
@@ -52,4 +53,12 @@ class MMSettingsLoaderService(BaseMMSettingsLoaderService):
             model,
             lambda x: x.basic,
             BasicMMSettings,
+        )
+
+    def load_concurrent_settings(self, provider: str, model: str) -> ConcurrentMMSettings:
+        return self._load_settings(
+            provider,
+            model,
+            lambda x: x.concurrent,
+            ConcurrentMMSettings,
         )

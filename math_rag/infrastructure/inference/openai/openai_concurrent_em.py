@@ -15,7 +15,7 @@ from math_rag.application.models.inference import (
     EMRequest,
     EMRequestTracker,
     EMResponseList,
-    EMStatusTracker,
+    StatusTracker,
 )
 from math_rag.infrastructure.constants.inference.openai import (
     CONCURRENT_WAIT_AFTER_RATE_LIMIT_ERROR,
@@ -43,7 +43,7 @@ class OpenAIConcurrentEM(BaseConcurrentEM):
         self,
         request_tracker: EMRequestTracker,
         retry_queue: Queue[EMRequestTracker],
-        status_tracker: EMStatusTracker,
+        status_tracker: StatusTracker,
         response_lists: list[EMResponseList],
         failed_requests: list[EMFailedRequest],
     ):
@@ -122,13 +122,13 @@ class OpenAIConcurrentEM(BaseConcurrentEM):
         max_num_retries: int,
     ) -> EMConcurrentResult:
         if not concurrent_request.requests:
-            raise ValueError(f'Batch request {concurrent_request.id} is empty')
+            raise ValueError(f'Concurrent request {concurrent_request.id} is empty')
 
         model = concurrent_request.requests[0].params.model
         OpenAIModelNameValidator.validate(model)
 
         retry_queue: Queue[EMRequestTracker] = Queue()
-        status_tracker = EMStatusTracker()
+        status_tracker = StatusTracker()
         next_request: EMRequestTracker | None = None
 
         available_request_capacity = max_requests_per_minute

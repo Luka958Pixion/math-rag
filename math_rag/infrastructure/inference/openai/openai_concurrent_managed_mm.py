@@ -1,36 +1,33 @@
-from math_rag.application.base.inference import BaseConcurrentManagedEM
-from math_rag.application.base.repositories.documents import (
-    BaseEMFailedRequestRepository,
-)
-from math_rag.application.base.services import BaseEMSettingsLoaderService
-from math_rag.application.models.inference import (
-    EMConcurrentRequest,
-    EMConcurrentResult,
-)
+from math_rag.application.base.inference import BaseConcurrentManagedMM
+from math_rag.application.base.repositories.documents import BaseMMFailedRequestRepository
+from math_rag.application.base.services import BaseMMSettingsLoaderService
+from math_rag.application.models.inference import MMConcurrentRequest, MMConcurrentResult
 from math_rag.infrastructure.validators.inference.openai import OpenAIModelNameValidator
 
-from .openai_concurrent_em import OpenAIConcurrentEM
+from .openai_concurrent_mm import OpenAIConcurrentMM
 
 
-class OpenAIConcurrentManagedEM(BaseConcurrentManagedEM):
+class OpenAIConcurrentManagedMM(BaseConcurrentManagedMM):
     def __init__(
         self,
-        em: OpenAIConcurrentEM,
-        em_settings_loader_service: BaseEMSettingsLoaderService,
-        em_failed_request_repository: BaseEMFailedRequestRepository,
+        mm: OpenAIConcurrentMM,
+        mm_settings_loader_service: BaseMMSettingsLoaderService,
+        mm_failed_request_repository: BaseMMFailedRequestRepository,
     ):
-        self._em = em
-        self._em_settings_loader_service = em_settings_loader_service
-        self._em_failed_request_repository = em_failed_request_repository
+        self._mm = mm
+        self._mm_settings_loader_service = mm_settings_loader_service
+        self._mm_failed_request_repository = mm_failed_request_repository
 
-    async def concurrent_embed(self, concurrent_request: EMConcurrentRequest) -> EMConcurrentResult:
+    async def concurrent_moderate(
+        self, concurrent_request: MMConcurrentRequest
+    ) -> MMConcurrentResult:
         if not concurrent_request.requests:
             raise ValueError(f'Concurrent request {concurrent_request.id} is empty')
 
         model = concurrent_request.requests[0].params.model
         OpenAIModelNameValidator.validate(model)
 
-        concurrent_settings = self._em_settings_loader_service.load_concurrent_settings(
+        concurrent_settings = self._mm_settings_loader_service.load_concurrent_settings(
             'openai', model
         )
 
@@ -43,7 +40,7 @@ class OpenAIConcurrentManagedEM(BaseConcurrentManagedEM):
         elif concurrent_settings.max_num_retries is None:
             raise ValueError('max_num_retries can not be None')
 
-        concurrent_result = await self._em.concurrent_embed(
+        concurrent_result = await self._mm.concurrent_moderate(
             concurrent_request,
             max_requests_per_minute=concurrent_settings.max_requests_per_minute,
             max_tokens_per_minute=concurrent_settings.max_tokens_per_minute,
@@ -51,6 +48,6 @@ class OpenAIConcurrentManagedEM(BaseConcurrentManagedEM):
         )
 
         if concurrent_result.failed_requests:
-            await self._em_failed_request_repository.insert_many(concurrent_result.failed_requests)
+            await self._mm_failed_request_repository.insert_many(concurrent_result.failed_requests)
 
         return concurrent_result

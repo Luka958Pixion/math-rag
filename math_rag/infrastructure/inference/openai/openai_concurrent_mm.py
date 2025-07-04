@@ -5,67 +5,58 @@ from time import ctime, time
 
 from openai import AsyncOpenAI, RateLimitError
 
-from math_rag.application.base.inference import BaseConcurrentLLM
-from math_rag.application.enums.inference import LLMErrorRetryPolicy
+from math_rag.application.base.inference import BaseConcurrentMM
+from math_rag.application.enums.inference import MMErrorRetryPolicy
 from math_rag.application.models.inference import (
-    LLMConcurrentRequest,
-    LLMConcurrentResult,
-    LLMError,
-    LLMFailedRequest,
-    LLMRequest,
-    LLMRequestTracker,
-    LLMResponseList,
-    LLMTextResponse,
+    MMConcurrentRequest,
+    MMConcurrentResult,
+    MMError,
+    MMFailedRequest,
+    MMRequest,
+    MMRequestTracker,
+    MMResponseList,
     StatusTracker,
 )
-from math_rag.application.types.inference import LLMResponseType
 from math_rag.infrastructure.constants.inference.openai import (
     CONCURRENT_WAIT_AFTER_RATE_LIMIT_ERROR,
     CONCURRENT_WAIT_IDLE,
     OPENAI_API_ERRORS_TO_NOT_RETRY,
     OPENAI_API_ERRORS_TO_RAISE,
     OPENAI_API_ERRORS_TO_RETRY_NO_RATE_LIMIT,
-    OPENAI_ERRORS_TO_NOT_RETRY,
 )
 from math_rag.infrastructure.mappings.inference.openai import (
-    LLMRequestMapping,
-    LLMResponseListMapping,
+    MMRequestMapping,
+    MMResponseListMapping,
 )
-from math_rag.infrastructure.utils import LLMTokenCounterUtil
+from math_rag.infrastructure.utils import MMTokenCounterUtil
 from math_rag.infrastructure.validators.inference.openai import OpenAIModelNameValidator
 
 
 logger = getLogger(__name__)
 
 
-class OpenAIConcurrentLLM(BaseConcurrentLLM):
+class OpenAIConcurrentMM(BaseConcurrentMM):
     def __init__(self, client: AsyncOpenAI):
         self.client = client
 
-    async def _generate(
+    async def _moderate(
         self,
-        request_tracker: LLMRequestTracker[LLMResponseType],
-        retry_queue: Queue[LLMRequestTracker[LLMResponseType]],
+        request_tracker: MMRequestTracker,
+        retry_queue: Queue[MMRequestTracker],
         status_tracker: StatusTracker,
-        response_lists: list[LLMResponseList[LLMResponseType]],
-        failed_requests: list[LLMFailedRequest[LLMResponseType]],
+        response_lists: list[MMResponseList],
+        failed_requests: list[MMFailedRequest],
     ):
         request = request_tracker.request
         exception = None
         no_retry_exception = None
 
         try:
-            request_dict = LLMRequestMapping[LLMResponseType].to_target(request)
-            chat_completion_callback = (
-                self.client.chat.completions.create
-                if request.params.response_type is LLMTextResponse
-                else self.client.beta.chat.completions.parse
-            )
-            chat_completion = await chat_completion_callback(**request_dict)
-            response_list = LLMResponseListMapping[LLMResponseType].to_source(
-                chat_completion,
+            request_dict = MMRequestMapping.to_target(request)
+            create_moderate_response = await self.client.moderations.create(**request_dict)
+            response_list = MMResponseListMapping.to_source(
+                create_moderate_response,
                 request_id=request.id,
-                response_type=request.params.response_type,
             )
 
         except RateLimitError as e:
@@ -81,10 +72,6 @@ class OpenAIConcurrentLLM(BaseConcurrentLLM):
             exception = no_retry_exception = e
             status_tracker.num_api_errors += 1
 
-        except OPENAI_ERRORS_TO_NOT_RETRY as e:
-            exception = no_retry_exception = e
-            status_tracker.num_non_api_errors += 1
-
         except OPENAI_API_ERRORS_TO_RAISE as e:
             raise
 
@@ -93,24 +80,24 @@ class OpenAIConcurrentLLM(BaseConcurrentLLM):
             raise
 
         if exception:
-            error = LLMError(
+            error = MMError(
                 message=exception.message if hasattr(exception, 'message') else str(exception),
                 code=exception.code if hasattr(exception, 'code') else None,
                 body=exception.message if hasattr(exception, 'message') else None,
-                retry_policy=LLMErrorRetryPolicy.NO_RETRY
+                retry_policy=MMErrorRetryPolicy.NO_RETRY
                 if no_retry_exception
-                else LLMErrorRetryPolicy.RETRY,
+                else MMErrorRetryPolicy.RETRY,
             )
             request_tracker.errors.append(error)
             request_tracker.retries_left = (
                 0 if no_retry_exception else request_tracker.retries_left - 1
             )
 
-            if request_tracker.retries_left > 0:
+            if request_tracker.retries_left:
                 retry_queue.put_nowait(request_tracker)
 
             else:
-                failed_request = LLMFailedRequest(
+                failed_request = MMFailedRequest(
                     request=request_tracker.request, errors=request_tracker.errors
                 )
                 failed_requests.append(failed_request)
@@ -119,29 +106,30 @@ class OpenAIConcurrentLLM(BaseConcurrentLLM):
                 status_tracker.num_tasks_failed += 1
 
                 logger.error(f'Request {request_tracker.request.id} failed after all retries')
+
         else:
             response_lists.append(response_list)
 
             status_tracker.num_tasks_in_progress -= 1
             status_tracker.num_tasks_succeeded += 1
 
-    async def concurrent_generate(
+    async def concurrent_moderate(
         self,
-        concurrent_request: LLMConcurrentRequest[LLMResponseType],
+        concurrent_request: MMConcurrentRequest,
         *,
         max_requests_per_minute: float,
         max_tokens_per_minute: float,
         max_num_retries: int,
-    ) -> LLMConcurrentResult[LLMResponseType]:
+    ) -> MMConcurrentResult:
         if not concurrent_request.requests:
             raise ValueError(f'Concurrent request {concurrent_request.id} is empty')
 
         model = concurrent_request.requests[0].params.model
         OpenAIModelNameValidator.validate(model)
 
-        retry_queue: Queue[LLMRequestTracker] = Queue()
+        retry_queue: Queue[MMRequestTracker] = Queue()
         status_tracker = StatusTracker()
-        next_request: LLMRequestTracker | None = None
+        next_request: MMRequestTracker | None = None
 
         available_request_capacity = max_requests_per_minute
         available_token_capacity = max_tokens_per_minute
@@ -149,9 +137,9 @@ class OpenAIConcurrentLLM(BaseConcurrentLLM):
 
         requests_not_empty = True
 
-        requests: deque[LLMRequest[LLMResponseType]] = deque(concurrent_request.requests)
-        response_lists: list[LLMResponseList[LLMResponseType]] = []
-        failed_requests: list[LLMFailedRequest[LLMResponseType]] = []
+        requests: deque[MMRequest] = deque(concurrent_request.requests)
+        response_lists: list[MMResponseList] = []
+        failed_requests: list[MMFailedRequest] = []
 
         async with TaskGroup() as task_group:
             while True:
@@ -163,14 +151,8 @@ class OpenAIConcurrentLLM(BaseConcurrentLLM):
                     elif requests_not_empty:
                         if requests:
                             request = requests.popleft()
-                            token_consumption = LLMTokenCounterUtil.count(request, model_name=model)
-
-                            if token_consumption > max_tokens_per_minute:
-                                raise ValueError(
-                                    f'Request {request.id} needs {token_consumption} tokens, but max_tokens_per_minute is {max_tokens_per_minute}'
-                                )
-
-                            next_request = LLMRequestTracker(
+                            token_consumption = MMTokenCounterUtil.count(request, model_name=model)
+                            next_request = MMRequestTracker(
                                 request=request,
                                 token_consumption=token_consumption,
                                 retries_left=max_num_retries,
@@ -203,9 +185,10 @@ class OpenAIConcurrentLLM(BaseConcurrentLLM):
                     ):
                         available_request_capacity -= 1
                         available_token_capacity -= next_request_tokens
+                        next_request.retries_left -= 1
 
                         task_group.create_task(
-                            self._generate(
+                            self._moderate(
                                 request_tracker=next_request,
                                 retry_queue=retry_queue,
                                 status_tracker=status_tracker,
@@ -245,7 +228,7 @@ class OpenAIConcurrentLLM(BaseConcurrentLLM):
         if status_tracker.num_rate_limit_errors > 0:
             logger.warning(f'{status_tracker.num_rate_limit_errors} rate limit errors received')
 
-        concurrent_result = LLMConcurrentResult(
+        concurrent_result = MMConcurrentResult(
             concurrent_request_id=concurrent_request.id,
             response_lists=response_lists,
             failed_requests=failed_requests,

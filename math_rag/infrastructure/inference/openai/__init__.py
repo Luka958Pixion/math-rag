@@ -14,6 +14,8 @@ from .openai_concurrent_em import OpenAIConcurrentEM
 from .openai_concurrent_llm import OpenAIConcurrentLLM
 from .openai_concurrent_managed_em import OpenAIConcurrentManagedEM
 from .openai_concurrent_managed_llm import OpenAIConcurrentManagedLLM
+from .openai_concurrent_managed_mm import OpenAIConcurrentManagedMM
+from .openai_concurrent_mm import OpenAIConcurrentMM
 from .openai_em import OpenAIEM
 from .openai_llm import OpenAILLM
 from .openai_managed_em import OpenAIManagedEM
@@ -38,6 +40,8 @@ __all__ = [
     'OpenAIBatchManagedLLM',
     'OpenAIConcurrentManagedEM',
     'OpenAIConcurrentManagedLLM',
+    'OpenAIConcurrentManagedMM',
+    'OpenAIConcurrentMM',
     'OpenAIBasicManagedEM',
     'OpenAIBasicManagedLLM',
     'OpenAIBasicMM',
