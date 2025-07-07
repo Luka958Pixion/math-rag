@@ -35,13 +35,7 @@ classDiagram
         concurrent_generate()
     }
 
-    class OpenAILLM {
-        generate()
-        batch_generate()
-        batch_generate_init()
-        batch_generate_result()
-        concurrent_generate()
-    }
+    class OpenAILLM 
 
     BaseBasicLLM <|.. OpenAIBasicLLM
     BaseBatchLLM <|.. PartialBatchLLM

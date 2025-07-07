@@ -140,12 +140,13 @@ class TGIBatchLLM(BaseInitializer, PartialBatchLLM):
         cli_def_path = hf_path / 'cli.def'
         requirements_txt_path = tgi_path / 'requirements.txt'
         server_def_path = tgi_path / 'server.def'
+        server_startscript_path = tgi_path / 'server_startscript.sh'
         client_def_path = tgi_path / 'client.def'
 
         build_local_paths_dict: dict[Path, Path | None] = {
             cli_def_path: None,
             client_def_path: requirements_txt_path,
-            server_def_path: None,
+            server_def_path: server_startscript_path,
         }
 
         # runtime paths
@@ -189,6 +190,9 @@ class TGIBatchLLM(BaseInitializer, PartialBatchLLM):
                 is_build_required_additional = await self._upload_file(
                     additional_local_path, additional_remote_path
                 )
+
+                if additional_local_path.suffix == '.sh':
+                    is_build_required_additional = False
 
             # upload definition file
             def_remote_path = REMOTE_ROOT_PATH / def_local_path.name
@@ -240,6 +244,10 @@ class TGIBatchLLM(BaseInitializer, PartialBatchLLM):
             }
             for request in batch_request.requests
         ]
+
+        # NOTE: work in progress (adapters)
+        # for request_dict in request_dicts:
+        #     request_dict['request']['extra_body']['parameters'] = {'adapter_id': 'adapter_0'}
 
         # create in-memory input file
         lines = [json.dumps(request_dict, separators=(',', ':')) for request_dict in request_dicts]
@@ -394,6 +402,9 @@ class TGIBatchLLM(BaseInitializer, PartialBatchLLM):
         requests_dict: dict[UUID, LLMRequest[LLMResponseType]] = {}
 
         async for data in input_stream:
+            # NOTE: work in progress (adapters)
+            # data['request']['extra_body'].pop('parameters')
+
             request_id = UUID(data['request_id'])
             request = LLMRequestMapping[LLMResponseType].to_source(
                 data['request'],

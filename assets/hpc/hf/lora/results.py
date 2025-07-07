@@ -9,5 +9,11 @@ class TrialResult(BaseModel):
     validate_duration: float
 
 
+class TestResult(BaseModel):
+    metric_to_score: dict[str, float | str | list[list[int]]]
+    test_duration: float
+
+
 class Result(BaseModel):
     trial_results: list[TrialResult]
+    test_results: list[TestResult]

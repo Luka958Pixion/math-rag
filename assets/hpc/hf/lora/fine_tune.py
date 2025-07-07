@@ -22,12 +22,21 @@ from datasets.download import DownloadConfig
 from decouple import config
 from fine_tune_settings import FineTuneSettings, OptunaTrialSettings
 from optuna import Trial, load_study
+from outlines.generate.api import SequenceGeneratorAdapter
 from outlines.generate.json import json as outlines_json
 from outlines.models.transformers import Transformers
 from peft import LoraConfig, PeftModel, get_peft_model, prepare_model_for_kbit_training
 from pydantic import BaseModel, create_model
-from results import Result, TrialResult
-from sklearn.metrics import accuracy_score, f1_score, precision_score, recall_score
+from results import Result, TestResult, TrialResult
+from sklearn.metrics import (
+    accuracy_score,
+    balanced_accuracy_score,
+    classification_report,
+    confusion_matrix,
+    f1_score,
+    precision_score,
+    recall_score,
+)
 from stubs import ModelSpec
 from transformers import (
     AutoModelForCausalLM,
@@ -46,6 +55,8 @@ from transformers.trainer_utils import get_last_checkpoint
 from trl import SFTConfig, SFTTrainer
 from utils import JSONReaderUtil, JSONWriterUtil
 
+
+DEBUG = False
 
 # huggingface
 HF_HOME = Path('home')
@@ -164,7 +175,7 @@ def train(
     gpu_indexes: list[int],
     model_spec: ModelSpec,
     trial: Trial,
-) -> tuple[PeftModel, PreTrainedTokenizerBase, dict, Dataset, float]:
+) -> tuple[PeftModel, PreTrainedTokenizerBase, dict, Dataset, Dataset, float]:
     model_name = fine_tune_settings.model_settings.model_name
 
     # initialize tokenizer
@@ -191,8 +202,8 @@ def train(
         trust_remote_code=True,
     )
 
-    # NOTE: for debugging
-    # dataset_dict = subset_dataset_splits(dataset_dict, dict(train=100, validate=1111, test=100))
+    if DEBUG:
+        dataset_dict = subset_dataset_splits(dataset_dict, dict(train=100, validate=1111, test=100))
 
     download_kwargs = dict(
         repo_id=repo_id,
@@ -220,6 +231,7 @@ def train(
     dataset_dict = dataset_dict.remove_columns(list(columns_to_remove))
 
     validate_dataset = dataset_dict['validate']
+    test_dataset = dataset_dict['test']
 
     dataset_dict = dataset_dict.map(
         lambda x: model_spec.format_prompt(x, prompt_collection),
@@ -370,7 +382,7 @@ def train(
             save_embedding_layers=True,
         )
 
-    return model, tokenizer, prompt_collection, validate_dataset, train_duration
+    return model, tokenizer, prompt_collection, validate_dataset, test_dataset, train_duration
 
 
 def validate(
@@ -382,7 +394,7 @@ def validate(
     tokenizer: PreTrainedTokenizerBase,
     prompt_collection: dict,
     validate_dataset: Dataset,
-) -> tuple[float, float]:
+) -> tuple[float, float, SequenceGeneratorAdapter]:
     class_label = cast(ClassLabel, validate_dataset.features['label'])
 
     if TYPE_CHECKING:
@@ -470,7 +482,115 @@ def validate(
         case _:
             raise ValueError()
 
-    return score, validate_duration
+    return score, validate_duration, sequence_generator_adapter
+
+
+def test(
+    accelerator: Accelerator | None,
+    fine_tune_settings: FineTuneSettings,
+    sequence_generator_adapter: SequenceGeneratorAdapter,
+    model_spec: ModelSpec,
+    tokenizer: PreTrainedTokenizerBase,
+    prompt_collection: dict,
+    test_dataset: Dataset,
+) -> TestResult:
+    class_label = cast(ClassLabel, test_dataset.features['label'])
+
+    if TYPE_CHECKING:
+
+        class LabelEnum(str, Enum):
+            pass
+
+        class Label(BaseModel):
+            label: LabelEnum
+
+    else:
+        LabelEnum = Enum('LabelEnum', {name: name for name in class_label.names}, type=str)
+        Label = create_model('Label', label=(LabelEnum, ...))
+
+    true_labels = [class_label.names[int(x['label'])] for x in test_dataset]
+
+    if accelerator:
+        test_dataset = test_dataset.shard(
+            num_shards=accelerator.num_processes,
+            index=accelerator.process_index,
+            contiguous=True,
+        )
+
+    predictions_shard = []
+    test_start = perf_counter()
+
+    with torch.no_grad():
+        for sample in test_dataset:
+            messages = model_spec.format_prompt(sample, prompt_collection)['messages']
+            input_token_ids = tokenizer.apply_chat_template(
+                # NOTE: removes the assistant message (answer)
+                messages[:2],
+                tokenize=False,
+                add_generation_prompt=False,
+            )
+            result: Label = sequence_generator_adapter(
+                input_token_ids,
+                max_tokens=fine_tune_settings.model_settings.max_tokens,
+                stop_at='}',
+            )
+            predictions_shard.append(result.label.value)
+
+    if accelerator:
+        all_preds_per_rank: list[list[str]] = [None] * accelerator.num_processes
+        torch.distributed.all_gather_object(all_preds_per_rank, predictions_shard)
+        predictions = [label for shard in all_preds_per_rank for label in shard]
+
+    else:
+        predictions = predictions_shard
+
+    local_test_duration = perf_counter() - test_start
+
+    if accelerator:
+        # make a 1-element tensor and all-gather it across ranks
+        tensor = torch.tensor(local_test_duration, device=accelerator.device)
+        locals = accelerator.gather(tensor)
+        # every rank picks the max
+        test_duration = locals.max().item()
+
+    else:
+        test_duration = local_test_duration
+
+    # metrics
+    accuracy = accuracy_score(true_labels, predictions)
+    precision = precision_score(true_labels, predictions, average='macro')
+    recall = recall_score(true_labels, predictions, average='macro')
+    f1 = f1_score(true_labels, predictions, average='macro')
+
+    # additional metrics
+    balanced_accuracy = balanced_accuracy_score(true_labels, predictions)
+
+    label_names = [name for name in class_label.names]
+    report = classification_report(
+        true_labels,
+        predictions,
+        labels=label_names,
+        target_names=label_names,
+        zero_division=0,
+    )
+    matrix = confusion_matrix(
+        true_labels,
+        predictions,
+        labels=label_names,
+    )
+
+    return TestResult(
+        metric_to_score=dict(
+            accuracy=float(accuracy),
+            precision=float(precision),
+            recall=float(recall),
+            f1=float(f1),
+            balanced_accuracy=float(balanced_accuracy),
+            report=str(report),
+            matrix=matrix.tolist(),
+        ),
+        test_duration=test_duration,
+    )
 
 
 def parse_gpu_indexes(value: str) -> list[int]:
@@ -561,7 +681,7 @@ def main():
         frozen_trial = next(trial for trial in study.trials if trial.number == args.trial_number)
 
         # fine tune
-        model, tokenizer, prompt_collection, validate_dataset, train_duration = train(
+        model, tokenizer, prompt_collection, validate_dataset, test_dataset, train_duration = train(
             accelerator=accelerator,
             fine_tune_job_id=args.fine_tune_job_id,
             fine_tune_settings=fine_tune_settings,
@@ -571,7 +691,7 @@ def main():
         )
 
         # evaluate
-        score, validate_duration = validate(
+        score, validate_duration, sequence_generator_adapter = validate(
             accelerator=accelerator,
             fine_tune_settings=fine_tune_settings,
             metric=metric,
@@ -582,10 +702,21 @@ def main():
             validate_dataset=validate_dataset,
         )
 
+        # test
+        test_result = test(
+            accelerator=accelerator,
+            fine_tune_settings=fine_tune_settings,
+            sequence_generator_adapter=sequence_generator_adapter,
+            model_spec=model_spec,
+            tokenizer=tokenizer,
+            prompt_collection=prompt_collection,
+            test_dataset=test_dataset,
+        )
+
         # create or update result
         if accelerator is None or accelerator.is_main_process:
             result = (
-                Result(trial_results=[])
+                Result(trial_results=[], test_results=[])
                 if frozen_trial.number == 0
                 else JSONReaderUtil.read(args.fine_tune_result_path, model=Result)
             )
@@ -597,6 +728,7 @@ def main():
                 validate_duration=validate_duration,
             )
             result.trial_results.append(trial_result)
+            result.test_results.append(test_result)
 
             JSONWriterUtil.write(args.fine_tune_result_path, model=result)
 

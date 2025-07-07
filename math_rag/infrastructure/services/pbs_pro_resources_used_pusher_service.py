@@ -58,6 +58,9 @@ class PBSProResoucesUsedPusherService(BasePBSProResoucesUsedPusherService):
         pbs_pro_job_full = await self.pbs_pro_client.queue_status_full(job_id)
         resources_used = pbs_pro_job_full.resources_used
 
+        if not resources_used:
+            return
+
         self.cpu_percent_gauge.labels(job_id=job_id).set(resources_used.cpu_percent)
         self.cpu_time_gauge.labels(job_id=job_id).set(resources_used.cpu_time.total_seconds())
         self.num_cpus_gauge.labels(job_id=job_id).set(resources_used.num_cpus)

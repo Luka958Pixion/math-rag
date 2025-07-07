@@ -27,8 +27,9 @@ class SSHClient:
         return await connect(self.host, username=self.user, client_keys=[self._private_key])
 
     async def connect_retry(self) -> SSHClientConnection:
+        # NOTE: max_tries=None sets unlimited retries
         return await on_exception(
-            expo, (ConnectionLost, DisconnectError, ChannelOpenError), max_tries=10
+            expo, (ConnectionLost, DisconnectError, ChannelOpenError), max_tries=None, max_value=60
         )(self.connect)()
 
     async def _get_connection(self) -> SSHClientConnection:
