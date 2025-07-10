@@ -2,7 +2,7 @@ import asyncio
 
 from datetime import datetime
 from pathlib import Path
-from typing import Generic, Protocol, cast
+from typing import Generic, cast
 from uuid import UUID
 
 from httpx import AsyncClient
@@ -16,6 +16,7 @@ from qdrant_client.http.models import (
 )
 
 from math_rag.application.base.repositories.embeddings import BaseEmbeddingRepository
+from math_rag.application.types.repositories.embeddings import ClusterCallback
 from math_rag.infrastructure.types.repositories.embeddings import (
     MappingType,
     SourceType,
@@ -25,17 +26,6 @@ from math_rag.shared.utils import StrUtil, TypeUtil
 
 
 BACKUP_PATH = Path(__file__).parents[4] / '.tmp' / 'backups' / 'qdrant'
-
-
-class ClusterCallable(Protocol):
-    def __call__(
-        self,
-        ids: list[UUID],
-        embeddings: list[list[float]],
-        *,
-        max_num_clusters: int,
-    ) -> list[list[UUID]]:
-        pass
 
 
 class EmbeddingRepository(
@@ -114,9 +104,9 @@ class EmbeddingRepository(
 
         return points
 
-    async def cluster(self, callback: ClusterCallable) -> list[SourceType]:
+    async def cluster(self, callback: ClusterCallback) -> list[list[UUID]]:
         records = await self._find_all()
-        ids, embeddings = unzip((UUID(r.id), r.vector) for r in records)
+        ids, embeddings = unzip((UUID(record.id), record.vector) for record in records)
         ids, embeddings = list(ids), list(embeddings)
 
         return await asyncio.to_thread(callback, ids, embeddings)
