@@ -41,6 +41,7 @@ neomodel = "^5.4.5"
 label-studio-sdk = "^1.0.17"
 openai-agents = "^0.1.0"
 more-itertools = "^10.7.0"
+hdbscan = "^0.8.40"
 
 
 [tool.poetry.group.dev.dependencies]
@@ -79,9 +80,9 @@ wandb = "^0.19.9"
 huggingface-hub = "^0.30.2"
 python-decouple = "^3.8"
 optuna = "^4.3.0"
-scikit-learn = "^1.6.1"
 outlines = "^0.2.3"
 accelerate = "^1.8.1"
+scikit-learn = "^1.7.0"
 
 
 [tool.pytest.ini_options]

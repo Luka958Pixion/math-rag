@@ -1,5 +1,6 @@
 from .awk_cmd_builder_util import AwkCmdBuilderUtil
 from .bytes_streamer_util import BytesStreamerUtil
+from .clusterer_util import ClustererUtil
 from .dataset_feature_extractor_util import DatasetFeatureExtractorUtil
 from .dataset_splitter_util import DatasetSplitterUtil
 from .em_token_counter_util import EMTokenCounterUtil
@@ -23,6 +24,7 @@ from .uuid_encoder_util import UUIDEncoderUtil
 __all__ = [
     'AwkCmdBuilderUtil',
     'BytesStreamerUtil',
+    'ClustererUtil',
     'DatasetFeatureExtractorUtil',
     'DatasetSplitterUtil',
     'EMTokenCounterUtil',

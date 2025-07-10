@@ -1,11 +1,19 @@
+import asyncio
+
 from datetime import datetime
 from pathlib import Path
-from typing import Generic, cast
+from typing import Generic, Protocol, cast
 from uuid import UUID
 
 from httpx import AsyncClient
+from more_itertools import unzip
 from qdrant_client import AsyncQdrantClient
-from qdrant_client.http.models import Filter, PointStruct, SnapshotPriority
+from qdrant_client.http.models import (
+    Filter,
+    PointStruct,
+    Record,
+    SnapshotPriority,
+)
 
 from math_rag.application.base.repositories.embeddings import BaseEmbeddingRepository
 from math_rag.infrastructure.types.repositories.embeddings import (
@@ -17,6 +25,17 @@ from math_rag.shared.utils import StrUtil, TypeUtil
 
 
 BACKUP_PATH = Path(__file__).parents[4] / '.tmp' / 'backups' / 'qdrant'
+
+
+class ClusterCallable(Protocol):
+    def __call__(
+        self,
+        ids: list[UUID],
+        embeddings: list[list[float]],
+        *,
+        max_num_clusters: int,
+    ) -> list[list[UUID]]:
+        pass
 
 
 class EmbeddingRepository(
@@ -75,6 +94,32 @@ class EmbeddingRepository(
             self.mapping_cls.to_source(self.target_cls(**scored_point.model_dump()))
             for scored_point in scored_points
         ]
+
+    async def _find_all(self) -> list[Record]:
+        points: list[Record] = []
+        next_offset = None
+
+        while True:
+            next_points, next_offset = await self.client.scroll(
+                collection_name=self.collection_name,
+                limit=50,
+                offset=next_offset,
+                with_payload=False,
+                with_vectors=True,
+            )
+            points.extend(next_points)
+
+            if next_offset is None:
+                break
+
+        return points
+
+    async def cluster(self, callback: ClusterCallable) -> list[SourceType]:
+        records = await self._find_all()
+        ids, embeddings = unzip((UUID(r.id), r.vector) for r in records)
+        ids, embeddings = list(ids), list(embeddings)
+
+        return await asyncio.to_thread(callback, ids, embeddings)
 
     async def clear(self):
         await self.client.delete(
