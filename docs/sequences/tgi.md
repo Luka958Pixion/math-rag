@@ -15,6 +15,7 @@ sequenceDiagram
         end
         alt time_inactive >= INACTIVE_THRESHOLD
             ProcessorThread-->>WallTimeTrackerThread: inactive_stop_event.set()
+            ProcessorThread-->>ReaderThread: inactive_stop_event.set()
         end
     end
 

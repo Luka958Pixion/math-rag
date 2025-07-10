@@ -1,11 +1,14 @@
 import re
 
-from math_rag.infrastructure.constants.services import MATH_PLACEHOLDER_PATTERN
+from math_rag.infrastructure.constants.services import (
+    MATH_PLACEHOLDER_INDEX_PATTERN,
+    MATH_PLACEHOLDER_PATTERN,
+)
 
 
 class TemplateContextChunkerUtil:
     @staticmethod
-    def chunk(text: str, *, max_context_size: int) -> list[str]:
+    def chunk(text: str, *, max_context_size: int) -> list[tuple[str, list[int]]]:
         """
         For each math-placeholder in text, return a context substring of up to
         max_context_size characters total (including the placeholder itself),
@@ -49,4 +52,21 @@ class TemplateContextChunkerUtil:
 
             contexts.append(text[context_start:context_end])
 
-        return contexts
+        # find indexes within each context
+        results = []
+
+        for context in contexts:
+            matches = re.finditer(MATH_PLACEHOLDER_INDEX_PATTERN, context)
+            indexes = []
+
+            for match in matches:
+                index = match.group(1)
+
+                if index is None:
+                    raise ValueError(f'Match {match} does not have an index')
+
+                indexes.append(int(index))
+
+            results.append((context, indexes))
+
+        return results

@@ -8,6 +8,7 @@ class MathExpressionDocument(BaseDocument):
     id: UUID
     math_article_id: UUID
     math_expression_dataset_id: UUID | None
+    math_expression_group_id: UUID | None
     index_id: UUID | None
     timestamp: datetime
     latex: str

@@ -17,6 +17,7 @@ from .math_expression_dataset_test_document import MathExpressionDatasetTestDocu
 from .math_expression_dataset_test_result_document import MathExpressionDatasetTestResultDocument
 from .math_expression_description_document import MathExpressionDescriptionDocument
 from .math_expression_document import MathExpressionDocument
+from .math_expression_group_document import MathExpressionGroupDocument
 from .math_expression_label_document import MathExpressionLabelDocument
 from .math_expression_sample_document import MathExpressionSampleDocument
 from .math_problem_document import MathProblemDocument
@@ -47,6 +48,7 @@ __all__ = [
     'MathExpressionDatasetDocument',
     'MathExpressionDatasetTestDocument',
     'MathExpressionDatasetTestResultDocument',
+    'MathExpressionGroupDocument',
     'MathExpressionLabelDocument',
     'MathExpressionDescriptionDocument',
     'MathExpressionDocument',

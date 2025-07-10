@@ -1,18 +1,15 @@
 from pymongo import AsyncMongoClient
 
-from math_rag.infrastructure.models.documents import MathExpressionDocument
+from math_rag.infrastructure.models.documents import MathExpressionGroupDocument
 
 from .document_indexer import DocumentIndexer
 
 
 FIELDS = [
-    'math_article_id',
-    'math_expression_dataset_id',
-    'math_expression_group_id',
     'index_id',
 ]
 
 
-class MathExpressionIndexer(DocumentIndexer[MathExpressionDocument]):
+class MathExpressionGroupIndexer(DocumentIndexer[MathExpressionGroupDocument]):
     def __init__(self, client: AsyncMongoClient, deployment: str):
         super().__init__(client, deployment, FIELDS)

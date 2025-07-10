@@ -9,6 +9,7 @@ from .math_expression_dataset_test_result_repository import (
     MathExpressionDatasetTestResultRepository,
 )
 from .math_expression_description_repository import MathExpressionDescriptionRepository
+from .math_expression_group_repository import MathExpressionGroupRepository
 from .math_expression_label_repository import MathExpressionLabelRepository
 from .math_expression_repository import MathExpressionRepository
 from .math_expression_sample_repository import MathExpressionSampleRepository
@@ -28,6 +29,7 @@ __all__ = [
     'MathExpressionDatasetTestRepository',
     'MathExpressionDatasetTestResultRepository',
     'MathExpressionDescriptionRepository',
+    'MathExpressionGroupRepository',
     'MathExpressionLabelRepository',
     'MathExpressionRepository',
     'MathExpressionSampleRepository',

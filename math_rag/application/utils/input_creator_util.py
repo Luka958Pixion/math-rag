@@ -1,15 +1,15 @@
-from typing import Callable, Iterable, TypeAlias, TypeVar
+from typing import Callable, Iterable, TypeVar
 from uuid import UUID
 
 from pydantic import BaseModel
 
-from math_rag.application.types.assistants import AssistantInputType
-from math_rag.application.types.embedders import EmbedderInputType
-from math_rag.application.types.moderators import ModeratorInputType
+from math_rag.application.models.assistants.base import BaseAssistantInput
+from math_rag.application.models.embedders.base import BaseEmbedderInput
+from math_rag.application.models.moderators.base import BaseModeratorInput
 
 
 T = TypeVar('T', bound=BaseModel)
-R: TypeAlias = AssistantInputType | EmbedderInputType | ModeratorInputType
+R = TypeVar('R', bound=BaseAssistantInput | BaseEmbedderInput | BaseModeratorInput)
 
 
 class InputCreatorUtil:

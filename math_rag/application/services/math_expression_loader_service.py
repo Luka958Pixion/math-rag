@@ -139,6 +139,7 @@ class MathExpressionLoaderService(BaseMathExpressionLoaderService):
                 MathExpression(
                     math_article_id=math_article.id,
                     math_expression_dataset_id=dataset_id,
+                    math_expression_group_id=None,
                     index_id=None,
                     latex=node.latex,
                     katex=katex,
@@ -180,6 +181,7 @@ class MathExpressionLoaderService(BaseMathExpressionLoaderService):
             MathExpression(
                 math_article_id=math_article.id,
                 math_expression_dataset_id=None,
+                math_expression_group_id=None,
                 index_id=index.id,
                 latex=node.latex,
                 katex=katex,
