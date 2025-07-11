@@ -2,7 +2,7 @@ default:
   mem: 68719476736  # 64 * 1024 * 1024 * 1024
   num_cpus: 8
   num_gpus: 4
-  num_nodes: 1
-  place: pack
+  num_nodes: 2
+  place: scatter
   select: ""
   wall_time: 604800    # 7 * 24 * 60 * 60

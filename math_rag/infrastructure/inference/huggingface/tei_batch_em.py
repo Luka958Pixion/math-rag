@@ -267,10 +267,11 @@ class TEIBatchEM(BaseInitializer, PartialBatchEM):
                 job_id = await self.pbs_pro_client.queue_submit(
                     REMOTE_ROOT_PATH,
                     PBS_JOB_NAME,
-                    num_nodes=resources.num_nodes,
+                    num_chunks=resources.num_nodes,
                     num_cpus=resources.num_cpus,
                     num_gpus=resources.num_gpus,
                     mem=resources.mem,
+                    place=resources.place,
                     wall_time=resources.wall_time,
                     depend_job_id=job_id,
                     queue=HPCQueue.GPU,
@@ -281,10 +282,11 @@ class TEIBatchEM(BaseInitializer, PartialBatchEM):
             job_id = await self.pbs_pro_client.queue_submit(
                 REMOTE_ROOT_PATH,
                 PBS_JOB_NAME,
-                num_nodes=resources.num_nodes,
+                num_chunks=resources.num_nodes,
                 num_cpus=resources.num_cpus,
                 num_gpus=resources.num_gpus,
                 mem=resources.mem,
+                place=resources.place,
                 wall_time=resources.wall_time,
             )
 
