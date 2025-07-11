@@ -15,6 +15,7 @@ from .math_expression_dataset_mapping import MathExpressionDatasetMapping
 from .math_expression_dataset_test_mapping import MathExpressionDatasetTestMapping
 from .math_expression_dataset_test_result_mapping import MathExpressionDatasetTestResultMapping
 from .math_expression_description_mapping import MathExpressionDescriptionMapping
+from .math_expression_description_opt_mapping import MathExpressionDescriptionOptMapping
 from .math_expression_group_mapping import MathExpressionGroupMapping
 from .math_expression_index_mapping import MathExpressionIndexMapping
 from .math_expression_label_mapping import MathExpressionLabelMapping
@@ -47,6 +48,7 @@ __all__ = [
     'MathExpressionDatasetTestMapping',
     'MathExpressionDatasetTestResultMapping',
     'MathExpressionDescriptionMapping',
+    'MathExpressionDescriptionOptMapping',
     'MathExpressionGroupMapping',
     'MathExpressionLabelMapping',
     'MathExpressionMapping',

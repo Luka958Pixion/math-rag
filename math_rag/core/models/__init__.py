@@ -8,7 +8,7 @@ from .math_expression_dataset_build_details import MathExpressionDatasetBuildDet
 from .math_expression_dataset_test import MathExpressionDatasetTest
 from .math_expression_dataset_test_result import MathExpressionDatasetTestResult
 from .math_expression_description import MathExpressionDescription
-from .math_expression_description_optimized import MathExpressionDescriptionOptimized
+from .math_expression_description_opt import MathExpressionDescriptionOpt
 from .math_expression_group import MathExpressionGroup
 from .math_expression_index import MathExpressionIndex
 from .math_expression_label import MathExpressionLabel
@@ -32,7 +32,7 @@ __all__ = [
     'MathExpressionDatasetTest',
     'MathExpressionDatasetTestResult',
     'MathExpressionDescription',
-    'MathExpressionDescriptionOptimized',
+    'MathExpressionDescriptionOpt',
     'MathExpressionGroup',
     'MathExpressionLabel',
     'MathExpressionLabelTask',

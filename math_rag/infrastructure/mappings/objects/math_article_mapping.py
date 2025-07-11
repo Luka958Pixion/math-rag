@@ -12,7 +12,7 @@ class MathArticleMapping(BaseMapping[MathArticle, MathArticleObject]):
     def to_source(target: MathArticleObject) -> MathArticle:
         id = target.metadata.get('X-Amz-Meta-id')
         math_expression_dataset_id = target.metadata.get('X-Amz-Meta-math_expression_dataset_id')
-        index_id = target.metadata.get('X-Amz-Meta-index_id')
+        math_expression_index_id = target.metadata.get('X-Amz-Meta-math_expression_index_id')
         timestamp = target.metadata.get('X-Amz-Meta-timestamp')
 
         if id is None:
@@ -26,7 +26,9 @@ class MathArticleMapping(BaseMapping[MathArticle, MathArticleObject]):
             math_expression_dataset_id=UUID(math_expression_dataset_id)
             if math_expression_dataset_id
             else None,
-            index_id=UUID(index_id) if index_id else None,
+            math_expression_index_id=UUID(math_expression_index_id)
+            if math_expression_index_id
+            else None,
             timestamp=datetime.fromisoformat(timestamp),
             name=target.object_name,
             bytes=target.data.read(),
@@ -45,8 +47,8 @@ class MathArticleMapping(BaseMapping[MathArticle, MathArticleObject]):
                 source.math_expression_dataset_id
             )
 
-        if source.index_id:
-            metadata['X-Amz-Meta-index_id'] = str(source.index_id)
+        if source.math_expression_index_id:
+            metadata['X-Amz-Meta-math_expression_index_id'] = str(source.math_expression_index_id)
 
         return MathArticleObject(
             object_name=source.name,

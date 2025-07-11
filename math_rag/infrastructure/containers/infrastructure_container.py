@@ -102,7 +102,7 @@ from math_rag.infrastructure.repositories.documents import (
     TaskRepository,
 )
 from math_rag.infrastructure.repositories.embeddings import (
-    MathExpressionDescriptionOptimizedRepository,
+    MathExpressionDescriptionOptRepository,
 )
 from math_rag.infrastructure.repositories.files import GoogleDriveRepository
 from math_rag.infrastructure.repositories.objects import MathArticleRepository
@@ -124,7 +124,7 @@ from math_rag.infrastructure.seeders.documents import (
     ObjectMetadataSeeder,
     TaskSeeder,
 )
-from math_rag.infrastructure.seeders.embeddings import MathExpressionDescriptionOptimizedSeeder
+from math_rag.infrastructure.seeders.embeddings import MathExpressionDescriptionOptSeeder
 from math_rag.infrastructure.seeders.objects import MathArticleSeeder
 from math_rag.infrastructure.services import (
     DatasetLoaderService,
@@ -289,17 +289,17 @@ class InfrastructureContainer(DeclarativeContainer):
         url=config.qdrant.url,
     )
 
-    math_expression_description_optimized_seeder = Factory(
-        MathExpressionDescriptionOptimizedSeeder,
+    math_expression_description_opt_seeder = Factory(
+        MathExpressionDescriptionOptSeeder,
         client=async_qdrant_client,
     )
 
     embedding_seeders: Provider[list[BaseEmbeddingSeeder]] = List(
-        math_expression_description_optimized_seeder
+        math_expression_description_opt_seeder
     )
 
-    math_expression_description_optimized_repository = Factory(
-        MathExpressionDescriptionOptimizedRepository,
+    math_expression_description_opt_repository = Factory(
+        MathExpressionDescriptionOptRepository,
         client=async_qdrant_client,
     )
 

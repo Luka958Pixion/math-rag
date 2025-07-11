@@ -145,7 +145,7 @@ class MathExpressionLoaderService(BaseMathExpressionLoaderService):
                     math_article_id=math_article.id,
                     math_expression_dataset_id=dataset_id,
                     math_expression_group_id=None,
-                    index_id=None,
+                    math_expression_index_id=None,
                     latex=node.latex,
                     katex=katex,
                     position=node.position,
@@ -159,7 +159,9 @@ class MathExpressionLoaderService(BaseMathExpressionLoaderService):
 
     async def load_for_index(self, index: MathExpressionIndex):
         # load and parse math articles
-        math_articles = await self.math_article_repository.find_many_by_index_id(index.id)
+        math_articles = await self.math_article_repository.find_many_by_math_expression_index_id(
+            index.id
+        )
 
         if not math_articles:
             raise ValueError(f'Math articles with index id {index.id} not found')
@@ -187,7 +189,7 @@ class MathExpressionLoaderService(BaseMathExpressionLoaderService):
                 math_article_id=math_article.id,
                 math_expression_dataset_id=None,
                 math_expression_group_id=None,
-                index_id=index.id,
+                math_expression_index_id=index.id,
                 latex=node.latex,
                 katex=katex,
                 position=node.position,

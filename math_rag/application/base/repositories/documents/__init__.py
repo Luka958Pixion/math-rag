@@ -7,6 +7,9 @@ from .base_math_expression_dataset_test_repository import BaseMathExpressionData
 from .base_math_expression_dataset_test_result_repository import (
     BaseMathExpressionDatasetTestResultRepository,
 )
+from .base_math_expression_description_opt_repository import (
+    BaseMathExpressionDescriptionOptRepository,
+)
 from .base_math_expression_description_repository import BaseMathExpressionDescriptionRepository
 from .base_math_expression_group_repository import BaseMathExpressionGroupRepository
 from .base_math_expression_index_repository import BaseMathExpressionIndexRepository
@@ -31,6 +34,7 @@ __all__ = [
     'BaseMathExpressionDatasetRepository',
     'BaseMathExpressionDatasetTestRepository',
     'BaseMathExpressionDatasetTestResultRepository',
+    'BaseMathExpressionDescriptionOptRepository',
     'BaseMathExpressionDescriptionRepository',
     'BaseMathExpressionGroupRepository',
     'BaseMathExpressionLabelRepository',

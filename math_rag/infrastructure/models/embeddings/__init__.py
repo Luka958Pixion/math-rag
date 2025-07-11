@@ -1,6 +1,6 @@
-from .math_expression_description_optimized_embedding import (
-    MathExpressionDescriptionOptimizedEmbedding,
+from .math_expression_description_opt_embedding import (
+    MathExpressionDescriptionOptEmbedding,
 )
 
 
-__all__ = ['MathExpressionDescriptionOptimizedEmbedding']
+__all__ = ['MathExpressionDescriptionOptEmbedding']

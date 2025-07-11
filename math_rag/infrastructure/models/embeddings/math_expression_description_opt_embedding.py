@@ -1,5 +1,5 @@
 from math_rag.infrastructure.base import BaseEmbedding
 
 
-class MathExpressionDescriptionOptimizedEmbedding(BaseEmbedding):
+class MathExpressionDescriptionOptEmbedding(BaseEmbedding):
     pass

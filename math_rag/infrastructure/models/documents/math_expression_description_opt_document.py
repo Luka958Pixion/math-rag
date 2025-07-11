@@ -4,10 +4,10 @@ from uuid import UUID
 from math_rag.infrastructure.base import BaseDocument
 
 
-class MathExpressionLabelDocument(BaseDocument):
+class MathExpressionDescriptionOptDocument(BaseDocument):
     id: UUID
     math_expression_id: UUID
-    math_expression_dataset_id: UUID | None
-    math_expression_index_id: UUID | None
+    math_expression_description_id: UUID
+    math_expression_index_id: UUID
     timestamp: datetime
-    value: str
+    description: str

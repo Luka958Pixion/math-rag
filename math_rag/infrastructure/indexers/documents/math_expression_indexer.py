@@ -9,7 +9,7 @@ FIELDS = [
     'math_article_id',
     'math_expression_dataset_id',
     'math_expression_group_id',
-    'index_id',
+    'math_expression_index_id',
 ]
 
 

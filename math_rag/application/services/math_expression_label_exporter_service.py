@@ -20,7 +20,7 @@ class MathExpressionLabelExporterService(BaseMathExpressionLabelExporterService)
                 id=label_task.id,
                 math_expression_id=label_task.math_expression_id,
                 math_expression_dataset_id=label_task.math_expression_dataset_id,
-                index_id=None,
+                math_expression_index_id=None,
                 timestamp=label_task.timestamp,
                 value=MathExpressionLabelEnum(label_value),
             )

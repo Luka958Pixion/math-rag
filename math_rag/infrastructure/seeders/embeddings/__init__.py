@@ -1,5 +1,5 @@
 from .embedding_seeder import EmbeddingSeeder
-from .math_expression_description_optimized_seeder import MathExpressionDescriptionOptimizedSeeder
+from .math_expression_description_opt_seeder import MathExpressionDescriptionOptSeeder
 
 
-__all__ = ['EmbeddingSeeder', 'MathExpressionDescriptionOptimizedSeeder']
+__all__ = ['EmbeddingSeeder', 'MathExpressionDescriptionOptSeeder']

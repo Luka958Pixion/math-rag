@@ -12,7 +12,7 @@ class MathExpressionLabelMapping(BaseMapping[MathExpressionLabel, MathExpression
             id=target.id,
             math_expression_id=target.math_expression_id,
             math_expression_dataset_id=target.math_expression_dataset_id,
-            index_id=target.index_id,
+            math_expression_index_id=target.math_expression_index_id,
             timestamp=target.timestamp,
             value=target.value,
         )
@@ -25,7 +25,7 @@ class MathExpressionLabelMapping(BaseMapping[MathExpressionLabel, MathExpression
             id=source.id,
             math_expression_id=source.math_expression_id,
             math_expression_dataset_id=source.math_expression_dataset_id,
-            index_id=source.index_id,
+            math_expression_index_id=source.math_expression_index_id,
             timestamp=source.timestamp,
             value=source.value,
         )

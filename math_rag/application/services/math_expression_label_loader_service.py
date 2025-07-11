@@ -59,7 +59,7 @@ class MathExpressionLabelLoaderService(BaseMathExpressionLabelLoaderService):
             MathExpressionLabel(
                 math_expression_id=input_id_to_math_expression_id[output.input_id],
                 math_expression_dataset_id=dataset.id,
-                index_id=None,
+                math_expression_index_id=None,
                 value=output.label,
             )
             for output in outputs
@@ -78,7 +78,7 @@ class MathExpressionLabelLoaderService(BaseMathExpressionLabelLoaderService):
 
         async for math_expressions in self.math_expression_repository.batch_find_many(
             batch_size=1000,
-            filter={'index_id': index.id},
+            filter={'math_expression_index_id': index.id},
         ):
             for math_expression in math_expressions:
                 input = AssistantInput(katex=math_expression.latex)
@@ -90,7 +90,7 @@ class MathExpressionLabelLoaderService(BaseMathExpressionLabelLoaderService):
             MathExpressionLabel(
                 math_expression_id=input_id_to_math_expression_id[output.input_id],
                 math_expression_dataset_id=None,
-                index_id=index.id,
+                math_expression_index_id=index.id,
                 value=output.label,
             )
             for output in outputs

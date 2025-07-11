@@ -82,7 +82,7 @@ class MathExpressionDatasetTesterService(BaseMathExpressionDatasetTesterService)
             MathExpressionLabel(
                 math_expression_id=input_id_to_math_expression_id[output.input_id],
                 math_expression_dataset_id=test.math_expression_dataset_id,
-                index_id=None,
+                math_expression_index_id=None,
                 value=output.label,
             )
             for output in outputs

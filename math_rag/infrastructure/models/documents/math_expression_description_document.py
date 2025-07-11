@@ -7,6 +7,6 @@ from math_rag.infrastructure.base import BaseDocument
 class MathExpressionDescriptionDocument(BaseDocument):
     id: UUID
     math_expression_id: UUID
-    index_id: UUID | None
+    math_expression_index_id: UUID
     timestamp: datetime
     description: str

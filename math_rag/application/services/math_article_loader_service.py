@@ -48,7 +48,10 @@ class MathArticleLoaderService(BaseMathArticleLoaderService):
         files = await self._search(category, category_limit, max_num_retries=10)
         math_articles = [
             MathArticle(
-                math_expression_dataset_id=dataset_id, index_id=None, name=name, bytes=bytes
+                math_expression_dataset_id=dataset_id,
+                math_expression_index_id=None,
+                name=name,
+                bytes=bytes,
             )
             for file in files
             for name, bytes in file.items()

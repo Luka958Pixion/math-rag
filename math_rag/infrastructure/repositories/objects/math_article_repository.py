@@ -23,7 +23,12 @@ class MathArticleRepository(
     ObjectRepository[MathArticle, MathArticleObject, MathArticleMapping],
 ):
     def __init__(self, client: Minio, object_metadata_repository: ObjectMetadataRepository):
-        metadata_keys = ['id', 'math_expression_dataset_id', 'index_id', 'timestamp']
+        metadata_keys = [
+            'id',
+            'math_expression_dataset_id',
+            'math_expression_index_id',
+            'timestamp',
+        ]
 
         for key in metadata_keys:
             if key not in MathArticle.model_fields:
@@ -39,9 +44,9 @@ class MathArticleRepository(
 
         return self.find_by_name(doc.object_name)
 
-    async def find_many_by_index_id(self, id: UUID) -> list[MathArticle]:
+    async def find_many_by_math_expression_index_id(self, id: UUID) -> list[MathArticle]:
         docs = await self.object_metadata_repository.find_many(
-            filter={'metadata.index_id': str(id)}
+            filter={'metadata.math_expression_index_id': str(id)}
         )
 
         if not docs:
