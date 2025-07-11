@@ -32,10 +32,10 @@ from math_rag.application.base.inference import (
 )
 from math_rag.application.base.repositories.documents import (
     BaseFineTuneJobRepository,
-    BaseIndexRepository,
     BaseMathExpressionDatasetRepository,
     BaseMathExpressionDatasetTestRepository,
     BaseMathExpressionDatasetTestResultRepository,
+    BaseMathExpressionIndexRepository,
     BaseMathExpressionLabelRepository,
     BaseMathExpressionRepository,
     BaseMathExpressionSampleRepository,
@@ -60,13 +60,13 @@ from math_rag.application.embedders import DefaultEmbedder
 from math_rag.application.moderators import DefaultModerator
 from math_rag.application.services import (
     EMSettingsLoaderService,
-    IndexBuilderService,
     KatexCorrectorService,
     LLMSettingsLoaderService,
     MathArticleLoaderService,
     MathExpressionDatasetBuilderService,
     MathExpressionDatasetPublisherService,
     MathExpressionDatasetTesterService,
+    MathExpressionIndexBuilderService,
     MathExpressionLabelExporterService,
     MathExpressionLabelLoaderService,
     MathExpressionLabelTaskImporterService,
@@ -77,9 +77,9 @@ from math_rag.application.services import (
 from math_rag.application.services.backgrounds import (
     FineTuneJobBackgroundService,
     GPUStatsBackgroundService,
-    IndexBackgroundService,
     MathExpressionDatasetBackgroundService,
     MathExpressionDatasetTestBackgroundService,
+    MathExpressionIndexBackgroundService,
     PBSProResourcesUsedBackgroundService,
     PrometheusSnapshotBackgroundService,
 )
@@ -101,7 +101,7 @@ class ApplicationContainer(DeclarativeContainer):
     managed_llm_scheduler = Dependency(instance_of=BaseBatchLLMRequestManagedScheduler)
 
     fine_tune_job_repository = Dependency(instance_of=BaseFineTuneJobRepository)
-    index_repository = Dependency(instance_of=BaseIndexRepository)
+    math_expression_index_repository = Dependency(instance_of=BaseMathExpressionIndexRepository)
     math_expression_dataset_repository = Dependency(instance_of=BaseMathExpressionDatasetRepository)
     math_expression_dataset_test_repository = Dependency(
         instance_of=BaseMathExpressionDatasetTestRepository
@@ -238,12 +238,12 @@ class ApplicationContainer(DeclarativeContainer):
         math_expression_dataset_publisher_service=math_expression_dataset_publisher_service,
         math_expression_dataset_repository=math_expression_dataset_repository,
     )
-    index_builder_service = Factory(
-        IndexBuilderService,
+    math_expression_index_builder_service = Factory(
+        MathExpressionIndexBuilderService,
         math_article_loader_service=math_article_loader_service,
         math_expression_loader_service=math_expression_loader_service,
         math_expression_label_loader_service=math_expression_label_loader_service,
-        index_repository=index_repository,
+        math_expression_index_repository=math_expression_index_repository,
     )
 
     math_expression_label_exporter_service = Factory(
@@ -268,10 +268,10 @@ class ApplicationContainer(DeclarativeContainer):
     gpu_stats_background_service = Singleton(
         GPUStatsBackgroundService, gpu_stats_pusher_service=gpu_stats_pusher_service
     )
-    index_background_service = Singleton(
-        IndexBackgroundService,
-        index_builder_service=index_builder_service,
-        index_repository=index_repository,
+    math_expression_index_background_service = Singleton(
+        MathExpressionIndexBackgroundService,
+        math_expression_index_builder_service=math_expression_index_builder_service,
+        math_expression_index_repository=math_expression_index_repository,
         task_repository=task_repository,
     )
     math_expression_dataset_background_service = Singleton(
@@ -299,7 +299,7 @@ class ApplicationContainer(DeclarativeContainer):
     background_services: Provider[list[BaseBackgroundService]] = List(
         fine_tune_job_background_service,
         gpu_stats_background_service,
-        index_background_service,
+        math_expression_index_background_service,
         math_expression_dataset_background_service,
         math_expression_dataset_test_background_service,
         pbs_pro_resources_used_background_service,

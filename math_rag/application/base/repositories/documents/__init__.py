@@ -1,7 +1,6 @@
 from .base_document_repository import BaseDocumentRepository
 from .base_em_failed_request_repository import BaseEMFailedRequestRepository
 from .base_fine_tune_job_repository import BaseFineTuneJobRepository
-from .base_index_repository import BaseIndexRepository
 from .base_llm_failed_request_repository import BaseLLMFailedRequestRepository
 from .base_math_expression_dataset_repository import BaseMathExpressionDatasetRepository
 from .base_math_expression_dataset_test_repository import BaseMathExpressionDatasetTestRepository
@@ -10,6 +9,7 @@ from .base_math_expression_dataset_test_result_repository import (
 )
 from .base_math_expression_description_repository import BaseMathExpressionDescriptionRepository
 from .base_math_expression_group_repository import BaseMathExpressionGroupRepository
+from .base_math_expression_index_repository import BaseMathExpressionIndexRepository
 from .base_math_expression_label_repository import BaseMathExpressionLabelRepository
 from .base_math_expression_repository import BaseMathExpressionRepository
 from .base_math_expression_sample_repository import BaseMathExpressionSampleRepository
@@ -22,7 +22,7 @@ __all__ = [
     'BaseDocumentRepository',
     'BaseEMFailedRequestRepository',
     'BaseFineTuneJobRepository',
-    'BaseIndexRepository',
+    'BaseMathExpressionIndexRepository',
     'BaseLLMFailedRequestRepository',
     'BaseMathExpressionDatasetRepository',
     'BaseMathExpressionDatasetTestRepository',

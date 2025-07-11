@@ -1,11 +1,11 @@
 from .document_indexer import DocumentIndexer
 from .fine_tune_job_indexer import FineTuneJobIndexer
-from .index_indexer import IndexIndexer
 from .math_expression_dataset_indexer import MathExpressionDatasetIndexer
 from .math_expression_dataset_test_indexer import MathExpressionDatasetTestIndexer
 from .math_expression_dataset_test_result_indexer import MathExpressionDatasetTestResultIndexer
 from .math_expression_description_indexer import MathExpressionDescriptionIndexer
 from .math_expression_group_indexer import MathExpressionGroupIndexer
+from .math_expression_index_indexer import MathExpressionIndexIndexer
 from .math_expression_indexer import MathExpressionIndexer
 from .math_expression_label_indexer import MathExpressionLabelIndexer
 from .math_expression_sample_indexer import MathExpressionSampleIndexer
@@ -17,7 +17,7 @@ from .task_indexer import TaskIndexer
 __all__ = [
     'DocumentIndexer',
     'FineTuneJobIndexer',
-    'IndexIndexer',
+    'MathExpressionIndexIndexer',
     'MathExpressionDatasetIndexer',
     'MathExpressionDatasetTestIndexer',
     'MathExpressionDatasetTestResultIndexer',

@@ -14,7 +14,12 @@ from math_rag.application.base.services import (
 from math_rag.application.models.assistants.inputs import KatexCorrector as AssistantInput
 from math_rag.application.models.clients import KatexValidateResult
 from math_rag.core.enums import MathExpressionDatasetBuildPriority
-from math_rag.core.models import Index, LatexMathNode, MathExpression, MathExpressionDataset
+from math_rag.core.models import (
+    LatexMathNode,
+    MathExpression,
+    MathExpressionDataset,
+    MathExpressionIndex,
+)
 
 
 logger = getLogger(__name__)
@@ -69,9 +74,9 @@ class MathExpressionLoaderService(BaseMathExpressionLoaderService):
             if not math_article.name.endswith('.tex'):
                 continue
 
-            math_nodes_ = self.math_article_parser_service.parse_for_dataset(math_article)
-            math_nodes.extend(math_nodes_)
-            logger.info(f'Parsed {len(math_nodes_)} math nodes from {math_article.id}')
+            next_math_nodes = self.math_article_parser_service.parse_for_dataset(math_article)
+            math_nodes.extend(next_math_nodes)
+            logger.info(f'Parsed {len(next_math_nodes)} math nodes from {math_article.id}')
 
         # extract and validate KaTeX
         katexes = [node.latex.strip('$') for node in math_nodes]
@@ -152,7 +157,7 @@ class MathExpressionLoaderService(BaseMathExpressionLoaderService):
         await self.math_expression_repository.backup()
         logger.info(f'{self.__class__.__name__} loaded {len(math_expressions)} math expressions')
 
-    async def load_for_index(self, index: Index):
+    async def load_for_index(self, index: MathExpressionIndex):
         # load and parse math articles
         math_articles = await self.math_article_repository.find_many_by_index_id(index.id)
 
@@ -166,11 +171,11 @@ class MathExpressionLoaderService(BaseMathExpressionLoaderService):
                 continue
 
             # TODO
-            math_nodes_, positions, template = self.math_article_parser_service.parse_for_index(
+            next_math_nodes, positions, template = self.math_article_parser_service.parse_for_index(
                 math_article
             )
-            math_nodes.extend(math_nodes_)
-            logger.info(f'Parsed {len(math_nodes_)} math nodes from {math_article.id}')
+            math_nodes.extend(next_math_nodes)
+            logger.info(f'Parsed {len(next_math_nodes)} math nodes from {math_article.id}')
 
         # extract, validate and correct KaTeX
         katexes = [node.latex.strip('$') for node in math_nodes]

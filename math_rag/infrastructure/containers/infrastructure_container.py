@@ -46,13 +46,13 @@ from math_rag.infrastructure.clients import (
 from math_rag.infrastructure.fine_tune.huggingface import FineTuneJobRunnerService
 from math_rag.infrastructure.indexers.documents import (
     FineTuneJobIndexer,
-    IndexIndexer,
     MathExpressionDatasetIndexer,
     MathExpressionDatasetTestIndexer,
     MathExpressionDatasetTestResultIndexer,
     MathExpressionDescriptionIndexer,
     MathExpressionGroupIndexer,
     MathExpressionIndexer,
+    MathExpressionIndexIndexer,
     MathExpressionLabelIndexer,
     MathExpressionSampleIndexer,
     MathProblemIndexer,
@@ -86,13 +86,13 @@ from math_rag.infrastructure.migrations.documents import MathExpressionMigration
 from math_rag.infrastructure.repositories.documents import (
     EMFailedRequestRepository,
     FineTuneJobRepository,
-    IndexRepository,
     LLMFailedRequestRepository,
     MathExpressionDatasetRepository,
     MathExpressionDatasetTestRepository,
     MathExpressionDatasetTestResultRepository,
     MathExpressionDescriptionRepository,
     MathExpressionGroupRepository,
+    MathExpressionIndexRepository,
     MathExpressionLabelRepository,
     MathExpressionRepository,
     MathExpressionSampleRepository,
@@ -109,13 +109,13 @@ from math_rag.infrastructure.repositories.objects import MathArticleRepository
 from math_rag.infrastructure.seeders.documents import (
     EMFailedRequestSeeder,
     FineTuneJobSeeder,
-    IndexSeeder,
     LLMFailedRequestSeeder,
     MathExpressionDatasetSeeder,
     MathExpressionDatasetTestResultSeeder,
     MathExpressionDatasetTestSeeder,
     MathExpressionDescriptionSeeder,
     MathExpressionGroupSeeder,
+    MathExpressionIndexSeeder,
     MathExpressionLabelSeeder,
     MathExpressionSampleSeeder,
     MathExpressionSeeder,
@@ -163,8 +163,8 @@ class InfrastructureContainer(DeclarativeContainer):
 
     em_failed_request_repository = Factory(EMFailedRequestRepository, **mongo_kwargs)
     fine_tune_job_repository = Factory(FineTuneJobRepository, **mongo_kwargs)
-    index_repository = Factory(IndexRepository, **mongo_kwargs)
     llm_failed_request_repository = Factory(LLMFailedRequestRepository, **mongo_kwargs)
+    math_expression_index_repository = Factory(MathExpressionIndexRepository, **mongo_kwargs)
     math_expression_dataset_repository = Factory(MathExpressionDatasetRepository, **mongo_kwargs)
     math_expression_dataset_test_repository = Factory(
         MathExpressionDatasetTestRepository, **mongo_kwargs
@@ -186,8 +186,8 @@ class InfrastructureContainer(DeclarativeContainer):
 
     em_failed_request_seeder = Factory(EMFailedRequestSeeder, **mongo_kwargs)
     fine_tune_job_seeder = Factory(FineTuneJobSeeder, **mongo_kwargs)
-    index_seeder = Factory(IndexSeeder, **mongo_kwargs)
     llm_failed_request_seeder = Factory(LLMFailedRequestSeeder, **mongo_kwargs)
+    math_expression_index_seeder = Factory(MathExpressionIndexSeeder, **mongo_kwargs)
     math_expression_dataset_seeder = Factory(MathExpressionDatasetSeeder, **mongo_kwargs)
     math_expression_dataset_test_seeder = Factory(MathExpressionDatasetTestSeeder, **mongo_kwargs)
     math_expression_description_seeder = Factory(MathExpressionDescriptionSeeder, **mongo_kwargs)
@@ -206,8 +206,8 @@ class InfrastructureContainer(DeclarativeContainer):
     document_seeders: Provider[list[BaseDocumentSeeder]] = List(
         em_failed_request_seeder,
         fine_tune_job_seeder,
-        index_seeder,
         llm_failed_request_seeder,
+        math_expression_index_seeder,
         math_expression_dataset_seeder,
         math_expression_dataset_test_seeder,
         math_expression_description_seeder,
@@ -223,7 +223,7 @@ class InfrastructureContainer(DeclarativeContainer):
     )
 
     fine_tune_job_indexer = Factory(FineTuneJobIndexer, **mongo_kwargs)
-    index_indexer = Factory(IndexIndexer, **mongo_kwargs)
+    math_expression_index_indexer = Factory(MathExpressionIndexIndexer, **mongo_kwargs)
     math_expression_dataset_indexer = Factory(MathExpressionDatasetIndexer, **mongo_kwargs)
     math_expression_dataset_test_indexer = Factory(MathExpressionDatasetTestIndexer, **mongo_kwargs)
     math_expression_dataset_test_result_indexer = Factory(
@@ -240,7 +240,7 @@ class InfrastructureContainer(DeclarativeContainer):
 
     document_indexers: Provider[list[BaseDocumentIndexer]] = List(
         fine_tune_job_indexer,
-        index_indexer,
+        math_expression_index_indexer,
         math_expression_dataset_indexer,
         math_expression_dataset_test_indexer,
         math_expression_dataset_test_result_indexer,
@@ -612,7 +612,7 @@ class InfrastructureContainer(DeclarativeContainer):
         prometheus_snapshot_loader_service=prometheus_snapshot_loader_service,
         pbs_pro_resources_used_pusher_service=pbs_pro_resources_used_pusher_service,
         fine_tune_job_repository=fine_tune_job_repository,
-        index_repository=index_repository,
+        math_expression_index_repository=math_expression_index_repository,
         math_expression_dataset_repository=math_expression_dataset_repository,
         math_expression_dataset_test_repository=math_expression_dataset_test_repository,
         math_expression_dataset_test_result_repository=math_expression_dataset_test_result_repository,

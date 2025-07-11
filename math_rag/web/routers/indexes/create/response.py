@@ -1,8 +1,8 @@
 from pydantic import BaseModel
 
-from math_rag.core.models import Index, Task
+from math_rag.core.models import MathExpressionIndex, Task
 
 
 class Response(BaseModel):
-    index: Index
+    index: MathExpressionIndex
     task: Task

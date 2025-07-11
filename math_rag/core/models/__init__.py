@@ -1,6 +1,5 @@
 from .dataset_split import DatasetSplit
 from .fine_tune_job import FineTuneJob
-from .index import Index
 from .latex_math_node import LatexMathNode
 from .math_article import MathArticle
 from .math_expression import MathExpression
@@ -11,6 +10,7 @@ from .math_expression_dataset_test_result import MathExpressionDatasetTestResult
 from .math_expression_description import MathExpressionDescription
 from .math_expression_description_optimized import MathExpressionDescriptionOptimized
 from .math_expression_group import MathExpressionGroup
+from .math_expression_index import MathExpressionIndex
 from .math_expression_label import MathExpressionLabel
 from .math_expression_label_task import MathExpressionLabelTask
 from .math_expression_sample import MathExpressionSample
@@ -21,7 +21,7 @@ from .task import Task
 __all__ = [
     'DatasetSplit',
     'FineTuneJob',
-    'Index',
+    'MathExpressionIndex',
     'LatexMathNode',
     'MathArticle',
     'MathExpression',

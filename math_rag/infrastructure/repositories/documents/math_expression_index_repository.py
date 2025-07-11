@@ -2,23 +2,27 @@ from uuid import UUID
 
 from pymongo import AsyncMongoClient, ReturnDocument
 
-from math_rag.application.base.repositories.documents import BaseIndexRepository
-from math_rag.core.enums import IndexBuildStage
-from math_rag.core.models import Index
-from math_rag.infrastructure.mappings.documents import IndexMapping
-from math_rag.infrastructure.models.documents import IndexDocument
+from math_rag.application.base.repositories.documents import BaseMathExpressionIndexRepository
+from math_rag.core.enums import MathExpressionIndexBuildStage
+from math_rag.core.models import MathExpressionIndex
+from math_rag.infrastructure.mappings.documents import MathExpressionIndexMapping
+from math_rag.infrastructure.models.documents import MathExpressionIndexDocument
 
 from .document_repository import DocumentRepository
 
 
-class IndexRepository(
-    BaseIndexRepository,
-    DocumentRepository[Index, IndexDocument, IndexMapping],
+class MathExpressionIndexRepository(
+    BaseMathExpressionIndexRepository,
+    DocumentRepository[
+        MathExpressionIndex, MathExpressionIndexDocument, MathExpressionIndexMapping
+    ],
 ):
     def __init__(self, client: AsyncMongoClient, deployment: str):
         super().__init__(client, deployment)
 
-    async def update_build_stage(self, id: UUID, build_stage: IndexBuildStage) -> Index:
+    async def update_build_stage(
+        self, id: UUID, build_stage: MathExpressionIndexBuildStage
+    ) -> MathExpressionIndex:
         field = 'build_stage'
 
         if field not in self.target_cls.model_fields:

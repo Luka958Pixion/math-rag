@@ -4,7 +4,6 @@ from .em_params_mapping import EMParamsMapping
 from .em_request_mapping import EMRequestMapping
 from .em_router_params_mapping import EMRouterParamsMapping
 from .fine_tune_job_mapping import FineTuneJobMapping
-from .index_mapping import IndexMapping
 from .llm_conversation_mapping import LLMConversationMapping
 from .llm_error_mapping import LLMErrorMapping
 from .llm_failed_request_mapping import LLMFailedRequestMapping
@@ -17,6 +16,7 @@ from .math_expression_dataset_test_mapping import MathExpressionDatasetTestMappi
 from .math_expression_dataset_test_result_mapping import MathExpressionDatasetTestResultMapping
 from .math_expression_description_mapping import MathExpressionDescriptionMapping
 from .math_expression_group_mapping import MathExpressionGroupMapping
+from .math_expression_index_mapping import MathExpressionIndexMapping
 from .math_expression_label_mapping import MathExpressionLabelMapping
 from .math_expression_mapping import MathExpressionMapping
 from .math_expression_sample_mapping import MathExpressionSampleMapping
@@ -35,7 +35,7 @@ __all__ = [
     'EMRequestMapping',
     'EMRouterParamsMapping',
     'FineTuneJobMapping',
-    'IndexMapping',
+    'MathExpressionIndexMapping',
     'LLMConversationMapping',
     'LLMErrorMapping',
     'LLMFailedRequestMapping',

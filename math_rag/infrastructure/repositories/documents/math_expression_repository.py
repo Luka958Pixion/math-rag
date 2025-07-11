@@ -1,3 +1,5 @@
+from uuid import UUID
+
 from pymongo import AsyncMongoClient
 
 from math_rag.application.base.repositories.documents import BaseMathExpressionRepository
@@ -14,3 +16,9 @@ class MathExpressionRepository(
 ):
     def __init__(self, client: AsyncMongoClient, deployment: str):
         super().__init__(client, deployment)
+
+    async def update_group_id(self, ids: list[UUID], group_id: UUID):
+        await self.update_many(
+            filter={'id': {'$in': ids}},
+            update={'math_expression_group_id': group_id},
+        )

@@ -9,7 +9,7 @@ from math_rag.application.base.repositories.documents import (
 from math_rag.application.base.services import BaseMathExpressionLabelLoaderService
 from math_rag.application.models.assistants.inputs import MathExpressionLabeler as AssistantInput
 from math_rag.core.enums import MathExpressionDatasetBuildPriority
-from math_rag.core.models import Index, MathExpressionDataset, MathExpressionLabel
+from math_rag.core.models import MathExpressionDataset, MathExpressionIndex, MathExpressionLabel
 
 
 logger = getLogger(__name__)
@@ -72,7 +72,7 @@ class MathExpressionLabelLoaderService(BaseMathExpressionLabelLoaderService):
             f'{self.__class__.__name__} loaded {len(math_expression_labels)} math expression labels'
         )
 
-    async def load_for_index(self, index: Index):
+    async def load_for_index(self, index: MathExpressionIndex):
         inputs: list[AssistantInput] = []
         input_id_to_math_expression_id: dict[UUID, UUID] = {}
 

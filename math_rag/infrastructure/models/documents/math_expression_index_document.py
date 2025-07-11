@@ -4,7 +4,7 @@ from uuid import UUID
 from math_rag.infrastructure.base import BaseDocument
 
 
-class IndexDocument(BaseDocument):
+class MathExpressionIndexDocument(BaseDocument):
     id: UUID
     timestamp: datetime
     build_stage: str
