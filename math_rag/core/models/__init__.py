@@ -13,6 +13,8 @@ from .math_expression_group import MathExpressionGroup
 from .math_expression_index import MathExpressionIndex
 from .math_expression_label import MathExpressionLabel
 from .math_expression_label_task import MathExpressionLabelTask
+from .math_expression_relationship import MathExpressionRelationship
+from .math_expression_relationship_description import MathExpressionRelationshipDescription
 from .math_expression_sample import MathExpressionSample
 from .math_problem import MathProblem
 from .task import Task
@@ -34,6 +36,8 @@ __all__ = [
     'MathExpressionGroup',
     'MathExpressionLabel',
     'MathExpressionLabelTask',
+    'MathExpressionRelationship',
+    'MathExpressionRelationshipDescription',
     'MathExpressionSample',
     'MathProblem',
     'Task',

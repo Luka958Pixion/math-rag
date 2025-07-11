@@ -253,10 +253,11 @@ class LoRA:
         num_gpus = Qstat.ngpus()
         gpu_indexes = NvidiaSMI.gpu_indexes()
 
-        if num_gpus != len(gpu_indexes):
-            raise ValueError(
-                f'Qstat found {num_gpus} GPUs, while nvidia SMI found {len(gpu_indexes)} GPUs'
-            )
+        # NOTE: commented code does not support running on the multiple nodes
+        # if num_gpus != len(gpu_indexes):
+        #     raise ValueError(
+        #         f'Qstat found {num_gpus} GPUs, while nvidia SMI found {len(gpu_indexes)} GPUs'
+        #     )
 
         bind = f'{WORKDIR}/home:/home'
         gpu_indexes_str = ','.join(str(i) for i in gpu_indexes)

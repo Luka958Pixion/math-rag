@@ -11,6 +11,10 @@ from .base_math_expression_description_repository import BaseMathExpressionDescr
 from .base_math_expression_group_repository import BaseMathExpressionGroupRepository
 from .base_math_expression_index_repository import BaseMathExpressionIndexRepository
 from .base_math_expression_label_repository import BaseMathExpressionLabelRepository
+from .base_math_expression_relationship_description_repository import (
+    BaseMathExpressionRelationshipDescriptionRepository,
+)
+from .base_math_expression_relationship_repository import BaseMathExpressionRelationshipRepository
 from .base_math_expression_repository import BaseMathExpressionRepository
 from .base_math_expression_sample_repository import BaseMathExpressionSampleRepository
 from .base_math_problem_repository import BaseMathProblemRepository
@@ -30,6 +34,8 @@ __all__ = [
     'BaseMathExpressionDescriptionRepository',
     'BaseMathExpressionGroupRepository',
     'BaseMathExpressionLabelRepository',
+    'BaseMathExpressionRelationshipDescriptionRepository',
+    'BaseMathExpressionRelationshipRepository',
     'BaseMathExpressionRepository',
     'BaseMathExpressionSampleRepository',
     'BaseMathProblemRepository',

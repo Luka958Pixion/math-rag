@@ -29,7 +29,7 @@ class MathExpressionRelationshipDescriptionWriterAssistant(PartialAssistant[Inpu
     def encode_to_request(self, input: Input) -> LLMRequest[Output]:
         system_message_content = PROMPTS.system.format()
         user_message_content = PROMPTS.user.format(
-            context=input.context, source=input.source, target=input.target
+            chunk=input.chunk, source=input.source, target=input.target
         )
 
         return LLMRequest(

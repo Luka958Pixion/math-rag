@@ -19,7 +19,7 @@ Your task is to write a concise, precise description of the relationship between
 
 _USER_PROMPT_TEMPLATE = """
 ### Context:
-{context}
+{chunk}
 
 ### Source index:
 {source}
@@ -37,7 +37,7 @@ _SYSTEM_PROMPT = LLMPrompt(
 
 _USER_PROMPT = LLMPrompt(
     template=_USER_PROMPT_TEMPLATE.strip(),
-    input_keys=['context', 'source', 'target'],
+    input_keys=['chunk', 'source', 'target'],
 )
 
 MATH_EXPRESSION_RELATIONSHIP_DESCRIPTION_WRITER_PROMPTS = LLMPromptCollection(

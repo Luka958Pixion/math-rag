@@ -17,6 +17,7 @@ from .tar_file_extractor_util import TarFileExtractorUtil
 from .template_chunker_util import TemplateChunkerUtil
 from .template_context_chunker_util import TemplateContextChunkerUtil
 from .template_formatter_util import TemplateFormatterUtil
+from .template_index_finder_util import TemplateIndexFinderUtil
 from .uuid_encoder_util import UUIDEncoderUtil
 
 
@@ -40,5 +41,6 @@ __all__ = [
     'TemplateChunkerUtil',
     'TemplateContextChunkerUtil',
     'TemplateFormatterUtil',
+    'TemplateIndexFinderUtil',
     'UUIDEncoderUtil',
 ]
