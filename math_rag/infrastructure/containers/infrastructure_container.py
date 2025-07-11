@@ -129,6 +129,7 @@ from math_rag.infrastructure.services import (
     DatasetLoaderService,
     DatasetPublisherService,
     GPUStatsPusherService,
+    HDBSCANClustererService,
     LabelStudioConfigBuilderService,
     LabelStudioTaskExporterService,
     LabelStudioTaskImporterService,
@@ -550,6 +551,9 @@ class InfrastructureContainer(DeclarativeContainer):
         pushgateway_base_url=config.pushgateway.base_url,
     )
 
+    # clustering
+    hdbscan_clusterer_service = Factory(HDBSCANClustererService)
+
     # routers
     inference_provider_to_managed_em = Dict(
         {
@@ -593,6 +597,7 @@ class InfrastructureContainer(DeclarativeContainer):
         managed_mm=managed_mm_router,
         managed_em_scheduler=openai_batch_em_request_managed_scheduler,
         managed_llm_scheduler=openai_batch_llm_request_managed_scheduler,
+        clusterer_service=hdbscan_clusterer_service,
         dataset_loader_service=dataset_loader_service,
         dataset_publisher_service=dataset_publisher_service,
         gpu_stats_pusher_service=gpu_stats_pusher_service,

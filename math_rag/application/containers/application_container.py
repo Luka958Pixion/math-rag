@@ -44,6 +44,7 @@ from math_rag.application.base.repositories.documents import (
 )
 from math_rag.application.base.repositories.objects import BaseMathArticleRepository
 from math_rag.application.base.services import (
+    BaseClustererService,
     BaseDatasetLoaderService,
     BaseDatasetPublisherService,
     BaseGPUStatsPusherService,
@@ -115,6 +116,7 @@ class ApplicationContainer(DeclarativeContainer):
     math_problem_repository = Dependency(instance_of=BaseMathProblemRepository)
     task_repository = Dependency(instance_of=BaseTaskRepository)
 
+    clusterer_service = Dependency(instance_of=BaseClustererService)
     dataset_loader_service = Dependency(instance_of=BaseDatasetLoaderService)
     dataset_publisher_service = Dependency(instance_of=BaseDatasetPublisherService)
     gpu_stats_pusher_service = Dependency(instance_of=BaseGPUStatsPusherService)

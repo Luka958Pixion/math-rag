@@ -42,6 +42,9 @@ label-studio-sdk = "^1.0.17"
 openai-agents = "^0.1.0"
 more-itertools = "^10.7.0"
 hdbscan = "^0.8.40"
+matplotlib = "^3.10.3"
+umap-learn = "^0.5.9.post2"
+plotly = "^6.2.0"
 
 
 [tool.poetry.group.dev.dependencies]

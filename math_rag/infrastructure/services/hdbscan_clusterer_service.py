@@ -2,8 +2,10 @@ from uuid import UUID
 
 from hdbscan import HDBSCAN
 
+from math_rag.application.base.services import BaseClustererService
 
-class ClustererUtil:
+
+class HDBSCANClustererService(BaseClustererService):
     def cluster(self, ids: list[UUID], embeddings: list[list[float]]) -> list[list[UUID]]:
         if not embeddings:
             return []

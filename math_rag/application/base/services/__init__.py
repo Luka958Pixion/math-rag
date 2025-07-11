@@ -1,3 +1,4 @@
+from .base_clusterer_service import BaseClustererService
 from .base_dataset_loader_service import BaseDatasetLoaderService
 from .base_dataset_publisher_service import BaseDatasetPublisherService
 from .base_em_settings_loader_service import BaseEMSettingsLoaderService
@@ -28,6 +29,7 @@ from .base_prometheus_snapshot_loader_service import BasePrometheusSnapshotLoade
 
 
 __all__ = [
+    'BaseClustererService',
     'BaseDatasetLoaderService',
     'BaseDatasetPublisherService',
     'BaseEMSettingsLoaderService',
