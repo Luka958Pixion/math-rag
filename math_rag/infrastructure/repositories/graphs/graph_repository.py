@@ -11,6 +11,7 @@ from math_rag.infrastructure.types.repositories.graphs.nodes import (
 )
 
 
+# TODO update with node and rel types?
 class GraphRepository(
     BaseGraphRepository[SourceType], Generic[SourceType, TargetType, MappingType]
 ):
