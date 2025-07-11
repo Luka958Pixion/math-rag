@@ -54,6 +54,8 @@ from math_rag.infrastructure.indexers.documents import (
     MathExpressionIndexer,
     MathExpressionIndexIndexer,
     MathExpressionLabelIndexer,
+    MathExpressionRelationshipDescriptionIndexer,
+    MathExpressionRelationshipIndexer,
     MathExpressionSampleIndexer,
     MathProblemIndexer,
     ObjectMetadataIndexer,
@@ -94,6 +96,8 @@ from math_rag.infrastructure.repositories.documents import (
     MathExpressionGroupRepository,
     MathExpressionIndexRepository,
     MathExpressionLabelRepository,
+    MathExpressionRelationshipDescriptionRepository,
+    MathExpressionRelationshipRepository,
     MathExpressionRepository,
     MathExpressionSampleRepository,
     MathProblemRepository,
@@ -117,6 +121,8 @@ from math_rag.infrastructure.seeders.documents import (
     MathExpressionGroupSeeder,
     MathExpressionIndexSeeder,
     MathExpressionLabelSeeder,
+    MathExpressionRelationshipDescriptionSeeder,
+    MathExpressionRelationshipSeeder,
     MathExpressionSampleSeeder,
     MathExpressionSeeder,
     MathProblemSeeder,
@@ -178,6 +184,12 @@ class InfrastructureContainer(DeclarativeContainer):
     math_expression_repository = Factory(MathExpressionRepository, **mongo_kwargs)
     math_expression_group_repository = Factory(MathExpressionGroupRepository, **mongo_kwargs)
     math_expression_label_repository = Factory(MathExpressionLabelRepository, **mongo_kwargs)
+    math_expression_relationship_description_repository = Factory(
+        MathExpressionRelationshipDescriptionRepository, **mongo_kwargs
+    )
+    math_expression_relationship_repository = Factory(
+        MathExpressionRelationshipRepository, **mongo_kwargs
+    )
     math_expression_sample_repository = Factory(MathExpressionSampleRepository, **mongo_kwargs)
     math_problem_repository = Factory(MathProblemRepository, **mongo_kwargs)
     mm_failed_request_repository = Factory(MMFailedRequestRepository, **mongo_kwargs)
@@ -196,6 +208,10 @@ class InfrastructureContainer(DeclarativeContainer):
     )
     math_expression_group_seeder = Factory(MathExpressionGroupSeeder, **mongo_kwargs)
     math_expression_label_seeder = Factory(MathExpressionLabelSeeder, **mongo_kwargs)
+    math_expression_relationship_description_seeder = Factory(
+        MathExpressionRelationshipDescriptionSeeder, **mongo_kwargs
+    )
+    math_expression_relationship_seeder = Factory(MathExpressionRelationshipSeeder, **mongo_kwargs)
     math_expression_seeder = Factory(MathExpressionSeeder, **mongo_kwargs)
     math_expression_sample_seeder = Factory(MathExpressionSampleSeeder, **mongo_kwargs)
     math_problem_seeder = Factory(MathProblemSeeder, **mongo_kwargs)
@@ -214,6 +230,8 @@ class InfrastructureContainer(DeclarativeContainer):
         math_expression_dataset_test_result_seeder,
         math_expression_group_seeder,
         math_expression_label_seeder,
+        math_expression_relationship_description_seeder,
+        math_expression_relationship_seeder,
         math_expression_seeder,
         math_expression_sample_seeder,
         math_problem_seeder,
@@ -232,6 +250,12 @@ class InfrastructureContainer(DeclarativeContainer):
     math_expression_description_indexer = Factory(MathExpressionDescriptionIndexer, **mongo_kwargs)
     math_expression_group_indexer = Factory(MathExpressionGroupIndexer, **mongo_kwargs)
     math_expression_label_indexer = Factory(MathExpressionLabelIndexer, **mongo_kwargs)
+    math_expression_relationship_description_indexer = Factory(
+        MathExpressionRelationshipDescriptionIndexer, **mongo_kwargs
+    )
+    math_expression_relationship_indexer = Factory(
+        MathExpressionRelationshipIndexer, **mongo_kwargs
+    )
     math_expression_indexer = Factory(MathExpressionIndexer, **mongo_kwargs)
     math_expression_sample_indexer = Factory(MathExpressionSampleIndexer, **mongo_kwargs)
     math_problem_indexer = Factory(MathProblemIndexer, **mongo_kwargs)
@@ -247,6 +271,8 @@ class InfrastructureContainer(DeclarativeContainer):
         math_expression_description_indexer,
         math_expression_group_indexer,
         math_expression_label_indexer,
+        math_expression_relationship_description_indexer,
+        math_expression_relationship_indexer,
         math_expression_indexer,
         math_expression_sample_indexer,
         math_problem_indexer,

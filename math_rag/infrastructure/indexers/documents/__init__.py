@@ -9,6 +9,10 @@ from .math_expression_group_indexer import MathExpressionGroupIndexer
 from .math_expression_index_indexer import MathExpressionIndexIndexer
 from .math_expression_indexer import MathExpressionIndexer
 from .math_expression_label_indexer import MathExpressionLabelIndexer
+from .math_expression_relationship_description_indexer import (
+    MathExpressionRelationshipDescriptionIndexer,
+)
+from .math_expression_relationship_indexer import MathExpressionRelationshipIndexer
 from .math_expression_sample_indexer import MathExpressionSampleIndexer
 from .math_problem_indexer import MathProblemIndexer
 from .object_metadata_indexer import ObjectMetadataIndexer
@@ -27,6 +31,8 @@ __all__ = [
     'MathExpressionGroupIndexer',
     'MathExpressionIndexer',
     'MathExpressionLabelIndexer',
+    'MathExpressionRelationshipDescriptionIndexer',
+    'MathExpressionRelationshipIndexer',
     'MathExpressionSampleIndexer',
     'MathProblemIndexer',
     'ObjectMetadataIndexer',

@@ -20,6 +20,10 @@ from .math_expression_group_mapping import MathExpressionGroupMapping
 from .math_expression_index_mapping import MathExpressionIndexMapping
 from .math_expression_label_mapping import MathExpressionLabelMapping
 from .math_expression_mapping import MathExpressionMapping
+from .math_expression_relationship_description_mapping import (
+    MathExpressionRelationshipDescriptionMapping,
+)
+from .math_expression_relationship_mapping import MathExpressionRelationshipMapping
 from .math_expression_sample_mapping import MathExpressionSampleMapping
 from .math_problem_mapping import MathProblemMapping
 from .mm_failed_request_mapping import MMFailedRequestMapping
@@ -52,6 +56,8 @@ __all__ = [
     'MathExpressionGroupMapping',
     'MathExpressionLabelMapping',
     'MathExpressionMapping',
+    'MathExpressionRelationshipDescriptionMapping',
+    'MathExpressionRelationshipMapping',
     'MathExpressionSampleMapping',
     'MathProblemMapping',
     'MMFailedRequestMapping',

@@ -20,6 +20,10 @@ from .math_expression_document import MathExpressionDocument
 from .math_expression_group_document import MathExpressionGroupDocument
 from .math_expression_index_document import MathExpressionIndexDocument
 from .math_expression_label_document import MathExpressionLabelDocument
+from .math_expression_relationship_description_document import (
+    MathExpressionRelationshipDescriptionDocument,
+)
+from .math_expression_relationship_document import MathExpressionRelationshipDocument
 from .math_expression_sample_document import MathExpressionSampleDocument
 from .math_problem_document import MathProblemDocument
 from .mm_error_document import MMErrorDocument
@@ -51,6 +55,8 @@ __all__ = [
     'MathExpressionDatasetTestResultDocument',
     'MathExpressionGroupDocument',
     'MathExpressionLabelDocument',
+    'MathExpressionRelationshipDescriptionDocument',
+    'MathExpressionRelationshipDocument',
     'MathExpressionDescriptionDocument',
     'MathExpressionDescriptionOptDocument',
     'MathExpressionDocument',

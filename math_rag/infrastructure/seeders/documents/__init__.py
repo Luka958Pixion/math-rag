@@ -9,6 +9,10 @@ from .math_expression_description_seeder import MathExpressionDescriptionSeeder
 from .math_expression_group_seeder import MathExpressionGroupSeeder
 from .math_expression_index_seeder import MathExpressionIndexSeeder
 from .math_expression_label_seeder import MathExpressionLabelSeeder
+from .math_expression_relationship_description_seeder import (
+    MathExpressionRelationshipDescriptionSeeder,
+)
+from .math_expression_relationship_seeder import MathExpressionRelationshipSeeder
 from .math_expression_sample_seeder import MathExpressionSampleSeeder
 from .math_expression_seeder import MathExpressionSeeder
 from .math_problem_seeder import MathProblemSeeder
@@ -29,6 +33,8 @@ __all__ = [
     'MathExpressionDescriptionSeeder',
     'MathExpressionGroupSeeder',
     'MathExpressionLabelSeeder',
+    'MathExpressionRelationshipDescriptionSeeder',
+    'MathExpressionRelationshipSeeder',
     'MathExpressionSampleSeeder',
     'MathExpressionSeeder',
     'MathProblemSeeder',
