@@ -82,6 +82,7 @@ from math_rag.infrastructure.inference.routers import (
     ManagedLLMRouter,
     ManagedMMRouter,
 )
+from math_rag.infrastructure.migrations.documents import MathExpressionMigration
 from math_rag.infrastructure.repositories.documents import (
     EMFailedRequestRepository,
     FineTuneJobRepository,
@@ -252,6 +253,8 @@ class InfrastructureContainer(DeclarativeContainer):
         object_metadata_indexer,
         task_indexer,
     )
+
+    math_expression_migration = Factory(MathExpressionMigration, **mongo_kwargs)
 
     # Minio
     config.minio.endpoint.from_env('MINIO_ENDPOINT')
