@@ -1,7 +1,12 @@
 from typing import Any, Generic, cast
 
 from neo4j import AsyncGraphDatabase
-from neomodel import AsyncNodeSet, AsyncRelationshipTo, AsyncStructuredNode, adb
+from neomodel import (
+    AsyncNodeSet,
+    AsyncRelationshipManager,
+    AsyncStructuredNode,
+    adb,
+)
 
 from math_rag.application.base.repositories.graphs import BaseGraphRepository
 from math_rag.infrastructure.types.repositories.graphs.nodes import (
@@ -57,11 +62,11 @@ class GraphRepository(
 
         return repo
 
-    async def close(self) -> None:
+    async def close(self):
         await adb.close_connection()
 
     async def insert_one_node(self, item: SourceNodeType):
-        node: AsyncStructuredNode = self.mapping_node_cls.to_target(item)
+        node = self.mapping_node_cls.to_target(item)
 
         async with adb.transaction:
             await node.save()
@@ -77,8 +82,10 @@ class GraphRepository(
         if 'id' in filter:
             filter['uid'] = filter.pop('id')
 
-        node = await self.target_node_cls.nodes.get_or_none(**filter)
-        if node is None:
+        node_set = cast(AsyncNodeSet, self.target_node_cls.nodes)
+        node = await node_set.get_or_none(**filter)
+
+        if not node:
             return None
 
         return self.mapping_node_cls.to_source(node)
@@ -89,7 +96,9 @@ class GraphRepository(
         for key, value in list(filter.items()):
             if isinstance(value, list):
                 filter[f'{key}__in'] = filter.pop(key)
-        nodes = await self.target_node_cls.nodes.filter(**filter).all()
+
+        node_set = cast(AsyncNodeSet, self.target_node_cls.nodes)
+        nodes = await node_set.filter(**filter).all()
         return [self.mapping_node_cls.to_source(n) for n in nodes]
 
     async def update_one_node(
@@ -97,25 +106,27 @@ class GraphRepository(
         *,
         filter: dict[str, Any],
         update: dict[str, Any],
-    ) -> None:
+    ):
         if 'id' in filter:
             filter['uid'] = filter.pop('id')
-        node = await self.target_node_cls.nodes.get_or_none(**filter)
-        if node is None:
+
+        node_set = cast(AsyncNodeSet, self.target_node_cls.nodes)
+        node = await node_set.get_or_none(**filter)
+
+        if not node:
             raise ValueError(f'Node with filter {filter} not found')
+
         for key, value in update.items():
             setattr(node, key, value)
+
         async with adb.transaction:
+            node = cast(AsyncStructuredNode, node)
             await node.save()
 
-    async def insert_one_rel(
-        self,
-        rel: SourceRelType,
-    ) -> None:
+    async def insert_one_rel(self, rel: SourceRelType):
         rel_obj = self.mapping_rel_cls.to_target(rel)
-
-        source_id = getattr(rel_obj, self.source_node_id_field)
-        target_id = getattr(rel_obj, self.target_node_id_field)
+        source_node_id = getattr(rel_obj, self.source_node_id_field)
+        target_node_id = getattr(rel_obj, self.target_node_id_field)
 
         props = {
             key: value
@@ -123,41 +134,52 @@ class GraphRepository(
             if key != 'uid' and value is not None
         }
 
-        source_node = await self.target_node_cls.nodes.get(uid=source_id)
-        target_node = await self.target_node_cls.nodes.get(uid=target_id)
+        node_set = cast(AsyncNodeSet, self.target_node_cls.nodes)
+        source_node = await node_set.get(uid=source_node_id)
+        node_set = cast(AsyncNodeSet, self.target_node_cls.nodes)
+        target_node = await node_set.get(uid=target_node_id)
 
         async with adb.transaction:
-            await getattr(source_node, self.rel_field).connect(target_node, properties=props)
+            rel_manager = cast(AsyncRelationshipManager, getattr(source_node, self.rel_field))
+            await rel_manager.connect(target_node, properties=props)
 
-    async def insert_many_rels(
-        self,
-        rels: list[SourceRelType],
-    ) -> None:
+    async def insert_many_rels(self, rels: list[SourceRelType]):
         if not rels:
             return
 
         async with adb.transaction:
             for rel in rels:
                 rel_obj = self.mapping_rel_cls.to_target(rel)
-                src = getattr(rel_obj, self.source_node_id_field)
-                tgt = getattr(rel_obj, self.target_node_id_field)
-
-                props = {
-                    k: v for k, v in rel_obj.__properties__.items() if k != 'uid' and v is not None
+                properties = {
+                    key: value
+                    for key, value in rel_obj.__properties__.items()
+                    if key != 'uid' and value is not None
                 }
 
-                source_node = await self.target_node_cls.nodes.get(uid=src)
-                target_node = await self.target_node_cls.nodes.get(uid=tgt)
-                await getattr(source_node, self.rel_field).connect(target_node, properties=props)
+                node_set = cast(AsyncNodeSet, self.target_node_cls.nodes)
+                source_node_id = getattr(rel_obj, self.source_node_id_field)
+                source_node = await node_set.get(uid=source_node_id)
 
-    async def find_many_rels(self, *, anchor_filter: dict[str, Any]) -> list[SourceRelType]:
-        if 'id' in anchor_filter:
-            anchor_filter['uid'] = anchor_filter.pop('id')
-        anchor = await self.target_node_cls.nodes.get_or_none(**anchor_filter)
-        if not anchor:
+                node_set = cast(AsyncNodeSet, self.target_node_cls.nodes)
+                target_node_id = getattr(rel_obj, self.target_node_id_field)
+                target_node = await node_set.get(uid=target_node_id)
+
+                rel_manager = cast(AsyncRelationshipManager, getattr(source_node, self.rel_field))
+                await rel_manager.connect(target_node, properties=properties)
+
+    async def find_many_rels(self, *, filter: dict[str, Any]) -> list[SourceRelType]:
+        if 'id' in filter:
+            filter['uid'] = filter.pop('id')
+
+        node_set = cast(AsyncNodeSet, self.target_node_cls.nodes)
+        node = await node_set.get_or_none(**filter)
+
+        if not node:
             return []
-        rel_objs = await getattr(anchor, self.rel_field).all_relationships(anchor)
-        return [self.mapping_rel_cls.to_source(r) for r in rel_objs]
 
-    async def clear(self) -> None:
+        rel_manager = cast(AsyncRelationshipManager, getattr(node, self.rel_field))
+        rels = await rel_manager.all_relationships(node)
+        return [self.mapping_rel_cls.to_source(rel) for rel in rels]
+
+    async def clear(self):
         await adb.clear_neo4j_database(clear_constraints=True, clear_indexes=True)
