@@ -89,6 +89,7 @@ class TemplateChunkerUtil:
 
         return chunks
 
+    @staticmethod
     def chunk(text: str, *, max_window_size: int, max_padding: int) -> list[str]:
         """
         Break text into chunks that each include a sliding window of

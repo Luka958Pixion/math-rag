@@ -33,6 +33,7 @@ from math_rag.application.base.inference import (
 )
 from math_rag.application.base.repositories.documents import (
     BaseFineTuneJobRepository,
+    BaseMathArticleChunkRepository,
     BaseMathExpressionContextRepository,
     BaseMathExpressionDatasetRepository,
     BaseMathExpressionDatasetTestRepository,
@@ -106,6 +107,7 @@ class ApplicationContainer(DeclarativeContainer):
     managed_llm_scheduler = Dependency(instance_of=BaseBatchLLMRequestManagedScheduler)
 
     fine_tune_job_repository = Dependency(instance_of=BaseFineTuneJobRepository)
+    math_article_chunk_repository = Dependency(instance_of=BaseMathArticleChunkRepository)
     math_expression_index_repository = Dependency(instance_of=BaseMathExpressionIndexRepository)
     math_expression_context_repository = Dependency(instance_of=BaseMathExpressionContextRepository)
     math_expression_dataset_repository = Dependency(instance_of=BaseMathExpressionDatasetRepository)

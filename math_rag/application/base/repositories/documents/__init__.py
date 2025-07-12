@@ -2,6 +2,7 @@ from .base_document_repository import BaseDocumentRepository
 from .base_em_failed_request_repository import BaseEMFailedRequestRepository
 from .base_fine_tune_job_repository import BaseFineTuneJobRepository
 from .base_llm_failed_request_repository import BaseLLMFailedRequestRepository
+from .base_math_article_chunk_repository import BaseMathArticleChunkRepository
 from .base_math_expression_context_repository import BaseMathExpressionContextRepository
 from .base_math_expression_dataset_repository import BaseMathExpressionDatasetRepository
 from .base_math_expression_dataset_test_repository import BaseMathExpressionDatasetTestRepository
@@ -32,6 +33,7 @@ __all__ = [
     'BaseFineTuneJobRepository',
     'BaseMathExpressionIndexRepository',
     'BaseLLMFailedRequestRepository',
+    'BaseMathArticleChunkRepository',
     'BaseMathExpressionContextRepository',
     'BaseMathExpressionDatasetRepository',
     'BaseMathExpressionDatasetTestRepository',

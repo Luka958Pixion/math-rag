@@ -46,6 +46,7 @@ from math_rag.infrastructure.clients import (
 from math_rag.infrastructure.fine_tune.huggingface import FineTuneJobRunnerService
 from math_rag.infrastructure.indexers.documents import (
     FineTuneJobIndexer,
+    MathArticleChunkIndexer,
     MathExpressionContextIndexer,
     MathExpressionDatasetIndexer,
     MathExpressionDatasetTestIndexer,
@@ -91,6 +92,7 @@ from math_rag.infrastructure.repositories.documents import (
     EMFailedRequestRepository,
     FineTuneJobRepository,
     LLMFailedRequestRepository,
+    MathArticleChunkRepository,
     MathExpressionContextRepository,
     MathExpressionDatasetRepository,
     MathExpressionDatasetTestRepository,
@@ -121,6 +123,7 @@ from math_rag.infrastructure.seeders.documents import (
     EMFailedRequestSeeder,
     FineTuneJobSeeder,
     LLMFailedRequestSeeder,
+    MathArticleChunkSeeder,
     MathExpressionContextSeeder,
     MathExpressionDatasetSeeder,
     MathExpressionDatasetTestResultSeeder,
@@ -178,6 +181,7 @@ class InfrastructureContainer(DeclarativeContainer):
     em_failed_request_repository = Factory(EMFailedRequestRepository, **mongo_kwargs)
     fine_tune_job_repository = Factory(FineTuneJobRepository, **mongo_kwargs)
     llm_failed_request_repository = Factory(LLMFailedRequestRepository, **mongo_kwargs)
+    math_article_chunk_repository = Factory(MathArticleChunkRepository, **mongo_kwargs)
     math_expression_index_repository = Factory(MathExpressionIndexRepository, **mongo_kwargs)
     math_expression_context_repository = Factory(MathExpressionContextRepository, **mongo_kwargs)
     math_expression_dataset_repository = Factory(MathExpressionDatasetRepository, **mongo_kwargs)
@@ -211,6 +215,7 @@ class InfrastructureContainer(DeclarativeContainer):
     em_failed_request_seeder = Factory(EMFailedRequestSeeder, **mongo_kwargs)
     fine_tune_job_seeder = Factory(FineTuneJobSeeder, **mongo_kwargs)
     llm_failed_request_seeder = Factory(LLMFailedRequestSeeder, **mongo_kwargs)
+    math_article_chunk_seeder = Factory(MathArticleChunkSeeder, **mongo_kwargs)
     math_expression_index_seeder = Factory(MathExpressionIndexSeeder, **mongo_kwargs)
     math_expression_context_seeder = Factory(MathExpressionContextSeeder, **mongo_kwargs)
     math_expression_dataset_seeder = Factory(MathExpressionDatasetSeeder, **mongo_kwargs)
@@ -236,6 +241,7 @@ class InfrastructureContainer(DeclarativeContainer):
         em_failed_request_seeder,
         fine_tune_job_seeder,
         llm_failed_request_seeder,
+        math_article_chunk_seeder,
         math_expression_index_seeder,
         math_expression_context_seeder,
         math_expression_dataset_seeder,
@@ -255,6 +261,7 @@ class InfrastructureContainer(DeclarativeContainer):
     )
 
     fine_tune_job_indexer = Factory(FineTuneJobIndexer, **mongo_kwargs)
+    math_article_chunk_indexer = Factory(MathArticleChunkIndexer, **mongo_kwargs)
     math_expression_index_indexer = Factory(MathExpressionIndexIndexer, **mongo_kwargs)
     math_expression_context_indexer = Factory(MathExpressionContextIndexer, **mongo_kwargs)
     math_expression_dataset_indexer = Factory(MathExpressionDatasetIndexer, **mongo_kwargs)
@@ -282,6 +289,7 @@ class InfrastructureContainer(DeclarativeContainer):
 
     document_indexers: Provider[list[BaseDocumentIndexer]] = List(
         fine_tune_job_indexer,
+        math_article_chunk_indexer,
         math_expression_index_indexer,
         math_expression_context_indexer,
         math_expression_dataset_indexer,
@@ -669,6 +677,7 @@ class InfrastructureContainer(DeclarativeContainer):
         prometheus_snapshot_loader_service=prometheus_snapshot_loader_service,
         pbs_pro_resources_used_pusher_service=pbs_pro_resources_used_pusher_service,
         fine_tune_job_repository=fine_tune_job_repository,
+        math_article_chunk_repository=math_article_chunk_repository,
         math_expression_index_repository=math_expression_index_repository,
         math_expression_context_repository=math_expression_context_repository,
         math_expression_dataset_repository=math_expression_dataset_repository,

@@ -2,6 +2,7 @@ from .document_seeder import DocumentSeeder
 from .em_failed_request_seeder import EMFailedRequestSeeder
 from .fine_tune_job_seeder import FineTuneJobSeeder
 from .llm_failed_request_seeder import LLMFailedRequestSeeder
+from .math_article_chunk_seeder import MathArticleChunkSeeder
 from .math_expression_context_seeder import MathExpressionContextSeeder
 from .math_expression_dataset_seeder import MathExpressionDatasetSeeder
 from .math_expression_dataset_test_result_seeder import MathExpressionDatasetTestResultSeeder
@@ -28,6 +29,7 @@ __all__ = [
     'FineTuneJobSeeder',
     'MathExpressionIndexSeeder',
     'LLMFailedRequestSeeder',
+    'MathArticleChunkSeeder',
     'MathExpressionContextSeeder',
     'MathExpressionDatasetSeeder',
     'MathExpressionDatasetTestResultSeeder',

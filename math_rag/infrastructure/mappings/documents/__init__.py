@@ -11,6 +11,7 @@ from .llm_message_mapping import LLMMessageMapping
 from .llm_params_mapping import LLMParamsMapping
 from .llm_request_mapping import LLMRequestMapping
 from .llm_router_params_mapping import LLMRouterParamsMapping
+from .math_article_chunk_mapping import MathArticleChunkMapping
 from .math_expression_context_mapping import MathExpressionContextMapping
 from .math_expression_dataset_mapping import MathExpressionDatasetMapping
 from .math_expression_dataset_test_mapping import MathExpressionDatasetTestMapping
@@ -49,6 +50,7 @@ __all__ = [
     'LLMParamsMapping',
     'LLMRequestMapping',
     'LLMRouterParamsMapping',
+    'MathArticleChunkMapping',
     'MathExpressionContextMapping',
     'MathExpressionDatasetMapping',
     'MathExpressionDatasetTestMapping',

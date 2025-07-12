@@ -2,6 +2,7 @@ from .dataset_split import DatasetSplit
 from .fine_tune_job import FineTuneJob
 from .latex_math_node import LatexMathNode
 from .math_article import MathArticle
+from .math_article_chunk import MathArticleChunk
 from .math_expression import MathExpression
 from .math_expression_context import MathExpressionContext
 from .math_expression_dataset import MathExpressionDataset
@@ -27,6 +28,7 @@ __all__ = [
     'MathExpressionIndex',
     'LatexMathNode',
     'MathArticle',
+    'MathArticleChunk',
     'MathExpression',
     'MathExpressionContext',
     'MathExpressionDataset',
