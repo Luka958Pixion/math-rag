@@ -109,6 +109,9 @@ from math_rag.infrastructure.repositories.embeddings import (
     MathExpressionDescriptionOptRepository,
 )
 from math_rag.infrastructure.repositories.files import GoogleDriveRepository
+from math_rag.infrastructure.repositories.graphs import (
+    MathExpressionRepository as MathExpressionGraphRepository,
+)
 from math_rag.infrastructure.repositories.objects import MathArticleRepository
 from math_rag.infrastructure.seeders.documents import (
     EMFailedRequestSeeder,
@@ -306,6 +309,17 @@ class InfrastructureContainer(DeclarativeContainer):
     )
 
     # Neo4j
+    # TODO move connection outside repo and convert to factory
+    config.neo4j.uri.from_env('NEO4J_URI')
+    config.neo4j.username.from_env('NEO4J_USERNAME')
+    config.neo4j.password.from_env('NEO4J_PASSWORD')
+
+    math_expression_graph_repository = Singleton(
+        MathExpressionGraphRepository,
+        uri=config.neo4j.uri,
+        username=config.neo4j.username,
+        password=config.neo4j.password,
+    )
 
     # Qdrant
     config.qdrant.url.from_env('QDRANT_URL')
@@ -648,4 +662,5 @@ class InfrastructureContainer(DeclarativeContainer):
         math_expression_label_repository=math_expression_label_repository,
         math_problem_repository=math_problem_repository,
         task_repository=task_repository,
+        math_expression_graph_repository=math_expression_graph_repository,
     )

@@ -42,6 +42,9 @@ from math_rag.application.base.repositories.documents import (
     BaseMathProblemRepository,
     BaseTaskRepository,
 )
+from math_rag.application.base.repositories.graphs import (
+    BaseMathExpressionRepository as BaseMathExpressionGraphRepository,
+)
 from math_rag.application.base.repositories.objects import BaseMathArticleRepository
 from math_rag.application.base.services import (
     BaseClustererService,
@@ -115,6 +118,8 @@ class ApplicationContainer(DeclarativeContainer):
     math_expression_sample_repository = Dependency(instance_of=BaseMathExpressionSampleRepository)
     math_problem_repository = Dependency(instance_of=BaseMathProblemRepository)
     task_repository = Dependency(instance_of=BaseTaskRepository)
+
+    math_expression_graph_repository = Dependency(instance_of=BaseMathExpressionGraphRepository)
 
     clusterer_service = Dependency(instance_of=BaseClustererService)
     dataset_loader_service = Dependency(instance_of=BaseDatasetLoaderService)
