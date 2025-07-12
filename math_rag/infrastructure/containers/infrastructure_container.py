@@ -50,6 +50,7 @@ from math_rag.infrastructure.indexers.documents import (
     MathExpressionDatasetTestIndexer,
     MathExpressionDatasetTestResultIndexer,
     MathExpressionDescriptionIndexer,
+    MathExpressionDescriptionOptIndexer,
     MathExpressionGroupIndexer,
     MathExpressionIndexer,
     MathExpressionIndexIndexer,
@@ -92,6 +93,7 @@ from math_rag.infrastructure.repositories.documents import (
     MathExpressionDatasetRepository,
     MathExpressionDatasetTestRepository,
     MathExpressionDatasetTestResultRepository,
+    MathExpressionDescriptionOptRepository,
     MathExpressionDescriptionRepository,
     MathExpressionGroupRepository,
     MathExpressionIndexRepository,
@@ -106,7 +108,7 @@ from math_rag.infrastructure.repositories.documents import (
     TaskRepository,
 )
 from math_rag.infrastructure.repositories.embeddings import (
-    MathExpressionDescriptionOptRepository,
+    MathExpressionDescriptionOptRepository as MathExpressionDescriptionOptEmbeddingRepository,
 )
 from math_rag.infrastructure.repositories.files import GoogleDriveRepository
 from math_rag.infrastructure.repositories.graphs import (
@@ -181,6 +183,9 @@ class InfrastructureContainer(DeclarativeContainer):
     math_expression_dataset_test_result_repository = Factory(
         MathExpressionDatasetTestResultRepository, **mongo_kwargs
     )
+    math_expression_description_opt_repository = Factory(
+        MathExpressionDescriptionOptRepository, **mongo_kwargs
+    )
     math_expression_description_repository = Factory(
         MathExpressionDescriptionRepository, **mongo_kwargs
     )
@@ -251,6 +256,9 @@ class InfrastructureContainer(DeclarativeContainer):
         MathExpressionDatasetTestResultIndexer, **mongo_kwargs
     )
     math_expression_description_indexer = Factory(MathExpressionDescriptionIndexer, **mongo_kwargs)
+    math_expression_description_opt_indexer = Factory(
+        MathExpressionDescriptionOptIndexer, **mongo_kwargs
+    )
     math_expression_group_indexer = Factory(MathExpressionGroupIndexer, **mongo_kwargs)
     math_expression_label_indexer = Factory(MathExpressionLabelIndexer, **mongo_kwargs)
     math_expression_relationship_description_indexer = Factory(
@@ -272,6 +280,7 @@ class InfrastructureContainer(DeclarativeContainer):
         math_expression_dataset_test_indexer,
         math_expression_dataset_test_result_indexer,
         math_expression_description_indexer,
+        math_expression_description_opt_indexer,
         math_expression_group_indexer,
         math_expression_label_indexer,
         math_expression_relationship_description_indexer,
@@ -338,8 +347,8 @@ class InfrastructureContainer(DeclarativeContainer):
         math_expression_description_opt_seeder
     )
 
-    math_expression_description_opt_repository = Factory(
-        MathExpressionDescriptionOptRepository,
+    math_expression_description_opt_embedding_repository = Factory(
+        MathExpressionDescriptionOptEmbeddingRepository,
         client=async_qdrant_client,
     )
 

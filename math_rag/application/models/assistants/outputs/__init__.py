@@ -7,6 +7,7 @@ from .math_expression_labeler import MathExpressionLabeler
 from .math_expression_relationship_description_writer import (
     MathExpressionRelationshipDescriptionWriter,
 )
+from .math_expression_relationship_detector import MathExpressionRelationshipDetector
 
 
 __all__ = [
@@ -17,4 +18,5 @@ __all__ = [
     'MathExpressionDescriptionWriter',
     'MathExpressionLabeler',
     'MathExpressionRelationshipDescriptionWriter',
+    'MathExpressionRelationshipDetector',
 ]

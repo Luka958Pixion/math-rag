@@ -11,6 +11,9 @@ from .math_expression_labeler_assistant import MathExpressionLabelerAssistant
 from .math_expression_relationship_description_writer_assistant import (
     MathExpressionRelationshipDescriptionWriterAssistant,
 )
+from .math_expression_relationship_detector_assistant import (
+    MathExpressionRelationshipDetectorAssistant,
+)
 
 
 __all__ = [
@@ -21,4 +24,5 @@ __all__ = [
     'MathExpressionDescriptionWriterAssistant',
     'MathExpressionLabelerAssistant',
     'MathExpressionRelationshipDescriptionWriterAssistant',
+    'MathExpressionRelationshipDetectorAssistant',
 ]

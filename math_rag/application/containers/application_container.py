@@ -16,6 +16,7 @@ from math_rag.application.assistants import (
     MathExpressionDescriptionWriterAssistant,
     MathExpressionLabelerAssistant,
     MathExpressionRelationshipDescriptionWriterAssistant,
+    MathExpressionRelationshipDetectorAssistant,
 )
 from math_rag.application.base.clients import (
     BaseArxivClient,
@@ -170,6 +171,11 @@ class ApplicationContainer(DeclarativeContainer):
     )
     math_expression_relationship_description_writer_assistant = Factory(
         MathExpressionRelationshipDescriptionWriterAssistant,
+        llm=managed_llm,
+        scheduler=managed_llm_scheduler,
+    )
+    math_expression_relationship_detector_assistant = Factory(
+        MathExpressionRelationshipDetectorAssistant,
         llm=managed_llm,
         scheduler=managed_llm_scheduler,
     )

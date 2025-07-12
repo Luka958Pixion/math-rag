@@ -9,6 +9,9 @@ from .math_expression_labeler_prompt import MATH_EXPRESSION_LABELER_PROMPTS
 from .math_expression_relationship_description_writer_prompt import (
     MATH_EXPRESSION_RELATIONSHIP_DESCRIPTION_WRITER_PROMPTS,
 )
+from .math_expression_relationship_detector_prompt import (
+    MATH_EXPRESSION_RELATIONSHIP_DETECTOR_PROMPTS,
+)
 
 
 __all__ = [
@@ -19,4 +22,5 @@ __all__ = [
     'MATH_EXPRESSION_DESCRIPTION_WRITER_PROMPTS',
     'MATH_EXPRESSION_LABELER_PROMPTS',
     'MATH_EXPRESSION_RELATIONSHIP_DESCRIPTION_WRITER_PROMPTS',
+    'MATH_EXPRESSION_RELATIONSHIP_DETECTOR_PROMPTS',
 ]
