@@ -101,12 +101,7 @@ class GraphRepository(
         nodes = await node_set.filter(**filter).all()
         return [self.mapping_node_cls.to_source(n) for n in nodes]
 
-    async def update_one_node(
-        self,
-        *,
-        filter: dict[str, Any],
-        update: dict[str, Any],
-    ):
+    async def update_one_node(self, *, filter: dict[str, Any], update: dict[str, Any]):
         if 'id' in filter:
             filter['uid'] = filter.pop('id')
 
