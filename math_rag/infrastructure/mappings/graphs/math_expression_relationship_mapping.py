@@ -9,7 +9,7 @@ class MathExpressionRelationshipMapping(BaseMapping[MathExpressionRelationship, 
     @staticmethod
     def to_source(target: MathExpressionRel) -> MathExpressionRelationship:
         return MathExpressionRelationship(
-            id=UUID(target.id),
+            id=UUID(target.uid),
             math_expression_index_id=UUID(target.math_expression_index_id),
             math_expression_source_id=UUID(target.math_expression_source_id),
             math_expression_target_id=UUID(target.math_expression_target_id),
@@ -19,7 +19,7 @@ class MathExpressionRelationshipMapping(BaseMapping[MathExpressionRelationship, 
     @staticmethod
     def to_target(source: MathExpressionRelationship) -> MathExpressionRel:
         return MathExpressionRel(
-            id=str(source.id),
+            uid=str(source.id),
             math_expression_index_id=str(source.math_expression_index_id)
             if source.math_expression_index_id
             else None,

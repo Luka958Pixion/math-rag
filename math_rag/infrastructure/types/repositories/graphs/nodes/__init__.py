@@ -1,6 +1,13 @@
-from .mapping_type import MappingType
-from .source_type import SourceType
-from .target_type import TargetType
+from .mapping_type import MappingNodeType, MappingRelType
+from .source_types import SourceNodeType, SourceRelType
+from .target_types import TargetNodeType, TargetRelType
 
 
-__all__ = ['MappingType', 'SourceType', 'TargetType']
+__all__ = [
+    'MappingNodeType',
+    'MappingRelType',
+    'SourceNodeType',
+    'SourceRelType',
+    'TargetNodeType',
+    'TargetRelType',
+]

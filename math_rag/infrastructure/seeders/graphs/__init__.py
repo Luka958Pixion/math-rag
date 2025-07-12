@@ -1,4 +1,4 @@
-from .neo4j_graph_seeder import Neo4jGraphSeeder
+from .graph_seeder import GraphSeeder
 
 
-__all__ = ['Neo4jGraphSeeder']
+__all__ = ['GraphSeeder']

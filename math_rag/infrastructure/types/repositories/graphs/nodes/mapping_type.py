@@ -2,8 +2,9 @@ from typing import TypeVar
 
 from math_rag.infrastructure.base import BaseMapping
 
-from .source_type import SourceType
-from .target_type import TargetType
+from .source_types import SourceNodeType, SourceRelType
+from .target_types import TargetNodeType, TargetRelType
 
 
-MappingType = TypeVar('MappingType', bound=BaseMapping[SourceType, TargetType])
+MappingNodeType = TypeVar('MappingNodeType', bound=BaseMapping[SourceNodeType, TargetNodeType])
+MappingRelType = TypeVar('MappingRelType', bound=BaseMapping[SourceRelType, TargetRelType])

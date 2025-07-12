@@ -37,7 +37,7 @@ uvicorn = "^0.34.2"
 scalar-fastapi = "^1.0.3"
 mpxpy = "^0.0.8"
 mcp = {extras = ["cli"], version = "^1.9.1"}
-neomodel = "^5.4.5"
+neomodel = "^5.5.0"
 label-studio-sdk = "^1.0.17"
 openai-agents = "^0.1.0"
 more-itertools = "^10.7.0"

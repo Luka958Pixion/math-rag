@@ -2,7 +2,7 @@ from neomodel import AsyncStructuredRel, DateTimeProperty, StringProperty, Uniqu
 
 
 class MathExpressionRel(AsyncStructuredRel):
-    id = UniqueIdProperty(property_name='id')
+    uid = UniqueIdProperty()
     math_expression_index_id = StringProperty(required=True)
     math_expression_source_id = StringProperty(required=True)
     math_expression_target_id = StringProperty(required=True)

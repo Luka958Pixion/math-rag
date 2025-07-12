@@ -4087,14 +4087,14 @@ pyarrow = ["pyarrow (>=1.0.0)"]
 
 [[package]]
 name = "neomodel"
-version = "5.4.5"
+version = "5.5.0"
 description = "An object mapper for the neo4j graph database."
 optional = false
 python-versions = ">=3.9"
 groups = ["main"]
 files = [
-    {file = "neomodel-5.4.5-py3-none-any.whl", hash = "sha256:872cd0ec79a98483f46ad8904e5fd3b9fb36671d1d0f2f1ec9dc78056d02db90"},
-    {file = "neomodel-5.4.5.tar.gz", hash = "sha256:9bf314e7e8e36ebfa773ef9eae5fb6c07b304de802394acacae157d15457cc8c"},
+    {file = "neomodel-5.5.0-py3-none-any.whl", hash = "sha256:47eadac6767c1db826bd3a3674e56e203c70142a70907239a56ee141a1bd42b6"},
+    {file = "neomodel-5.5.0.tar.gz", hash = "sha256:b324b9ff46140d1efcff488584a87ddf3d9f2e991cb0b1e5810d6223a3f5b09e"},
 ]
 
 [package.dependencies]
@@ -8412,4 +8412,4 @@ propcache = ">=0.2.0"
 [metadata]
 lock-version = "2.1"
 python-versions = ">=3.12,<3.13"
-content-hash = "752dbba51a6d46ee65be59e3bf88a3fd997a14066e2db25ac56d1f66e8ac2227"
+content-hash = "6d4520b81e469c476ab659cd99f41997129b3c8add7f29d4c9417b423ce2c728"

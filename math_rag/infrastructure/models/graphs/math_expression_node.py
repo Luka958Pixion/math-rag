@@ -13,7 +13,7 @@ from .math_expression_rel import MathExpressionRel
 
 
 class MathExpressionNode(AsyncStructuredNode):
-    id = UniqueIdProperty(property_name='id')
+    uid = UniqueIdProperty()
     math_article_id = StringProperty(required=True)
     math_expression_group_id = StringProperty(required=False)
     math_expression_index_id = StringProperty(required=False)
