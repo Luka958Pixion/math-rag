@@ -6,9 +6,12 @@ from .document_indexer import DocumentIndexer
 
 
 FIELDS = [
+    'math_article_chunk_id',
     'math_expression_index_id',
     'math_expression_source_id',
     'math_expression_target_id',
+    'math_expression_source_index',
+    'math_expression_target_index',
 ]
 
 

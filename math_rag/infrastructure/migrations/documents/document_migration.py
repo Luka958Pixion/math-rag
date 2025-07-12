@@ -18,19 +18,24 @@ class DocumentMigration(Generic[TargetType]):
         self.collection = self.db[self.collection_name]
 
     async def add_field(
-        self, field: str, *, create_index: bool, id_to_field_value: dict[UUID, Any] | None = None
+        self,
+        field: str,
+        *,
+        create_index: bool,
+        id_to_value: dict[UUID, Any] | None = None,
+        default_value: Any | None = None,
     ):
-        if id_to_field_value:
+        if id_to_value:
             write_operations = [
-                UpdateOne({'_id': id}, {'$set': {field: filed_value}})
-                for id, filed_value in id_to_field_value.items()
+                UpdateOne({'_id': id}, {'$set': {field: value}})
+                for id, value in id_to_value.items()
             ]
 
             if write_operations:
                 await self.collection.bulk_write(write_operations)
 
         else:
-            await self.collection.update_many({}, {'$set': {field: None}})
+            await self.collection.update_many({}, {'$set': {field: default_value}})
 
         if create_index:
             await self.collection.create_index([(field, ASCENDING)])

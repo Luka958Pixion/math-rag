@@ -10,9 +10,12 @@ class MathExpressionRelationshipMapping(BaseMapping[MathExpressionRelationship, 
     def to_source(target: MathExpressionRel) -> MathExpressionRelationship:
         return MathExpressionRelationship(
             id=UUID(target.uid),
+            math_article_chunk_id=UUID(target.math_article_chunk_id),
             math_expression_index_id=UUID(target.math_expression_index_id),
             math_expression_source_id=UUID(target.math_expression_source_id),
             math_expression_target_id=UUID(target.math_expression_target_id),
+            math_expression_source_index=target.math_expression_source_index,
+            math_expression_target_index=target.math_expression_target_index,
             timestamp=target.timestamp,
         )
 
@@ -20,14 +23,10 @@ class MathExpressionRelationshipMapping(BaseMapping[MathExpressionRelationship, 
     def to_target(source: MathExpressionRelationship) -> MathExpressionRel:
         return MathExpressionRel(
             uid=str(source.id),
-            math_expression_index_id=str(source.math_expression_index_id)
-            if source.math_expression_index_id
-            else None,
-            math_expression_source_id=str(source.math_expression_source_id)
-            if source.math_expression_source_id
-            else None,
-            math_expression_target_id=str(source.math_expression_target_id)
-            if source.math_expression_target_id
-            else None,
+            math_expression_index_id=str(source.math_expression_index_id),
+            math_expression_source_id=str(source.math_expression_source_id),
+            math_expression_target_id=str(source.math_expression_target_id),
+            math_expression_source_index=source.math_expression_source_index,
+            math_expression_target_index=source.math_expression_target_index,
             timestamp=source.timestamp,
         )
