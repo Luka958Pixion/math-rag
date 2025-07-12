@@ -2,6 +2,7 @@ from .document_repository import DocumentRepository
 from .em_failed_request_repository import EMFailedRequestRepository
 from .fine_tune_job_repository import FineTuneJobRepository
 from .llm_failed_request_repository import LLMFailedRequestRepository
+from .math_expression_context_repository import MathExpressionContextRepository
 from .math_expression_dataset_repository import MathExpressionDatasetRepository
 from .math_expression_dataset_test_repository import MathExpressionDatasetTestRepository
 from .math_expression_dataset_test_result_repository import (
@@ -30,6 +31,7 @@ __all__ = [
     'FineTuneJobRepository',
     'MathExpressionIndexRepository',
     'LLMFailedRequestRepository',
+    'MathExpressionContextRepository',
     'MathExpressionDatasetRepository',
     'MathExpressionDatasetTestRepository',
     'MathExpressionDatasetTestResultRepository',

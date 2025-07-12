@@ -13,5 +13,6 @@ class MathExpressionDocument(BaseDocument):
     timestamp: datetime
     latex: str
     katex: str | None
+    index: int
     position: int
     is_inline: bool

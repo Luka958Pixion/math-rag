@@ -46,6 +46,7 @@ from math_rag.infrastructure.clients import (
 from math_rag.infrastructure.fine_tune.huggingface import FineTuneJobRunnerService
 from math_rag.infrastructure.indexers.documents import (
     FineTuneJobIndexer,
+    MathExpressionContextIndexer,
     MathExpressionDatasetIndexer,
     MathExpressionDatasetTestIndexer,
     MathExpressionDatasetTestResultIndexer,
@@ -90,6 +91,7 @@ from math_rag.infrastructure.repositories.documents import (
     EMFailedRequestRepository,
     FineTuneJobRepository,
     LLMFailedRequestRepository,
+    MathExpressionContextRepository,
     MathExpressionDatasetRepository,
     MathExpressionDatasetTestRepository,
     MathExpressionDatasetTestResultRepository,
@@ -119,6 +121,7 @@ from math_rag.infrastructure.seeders.documents import (
     EMFailedRequestSeeder,
     FineTuneJobSeeder,
     LLMFailedRequestSeeder,
+    MathExpressionContextSeeder,
     MathExpressionDatasetSeeder,
     MathExpressionDatasetTestResultSeeder,
     MathExpressionDatasetTestSeeder,
@@ -141,7 +144,7 @@ from math_rag.infrastructure.services import (
     DatasetLoaderService,
     DatasetPublisherService,
     GPUStatsPusherService,
-    HDBSCANClustererService,
+    HDBSCANGrouperService,
     LabelStudioConfigBuilderService,
     LabelStudioTaskExporterService,
     LabelStudioTaskImporterService,
@@ -176,6 +179,7 @@ class InfrastructureContainer(DeclarativeContainer):
     fine_tune_job_repository = Factory(FineTuneJobRepository, **mongo_kwargs)
     llm_failed_request_repository = Factory(LLMFailedRequestRepository, **mongo_kwargs)
     math_expression_index_repository = Factory(MathExpressionIndexRepository, **mongo_kwargs)
+    math_expression_context_repository = Factory(MathExpressionContextRepository, **mongo_kwargs)
     math_expression_dataset_repository = Factory(MathExpressionDatasetRepository, **mongo_kwargs)
     math_expression_dataset_test_repository = Factory(
         MathExpressionDatasetTestRepository, **mongo_kwargs
@@ -208,6 +212,7 @@ class InfrastructureContainer(DeclarativeContainer):
     fine_tune_job_seeder = Factory(FineTuneJobSeeder, **mongo_kwargs)
     llm_failed_request_seeder = Factory(LLMFailedRequestSeeder, **mongo_kwargs)
     math_expression_index_seeder = Factory(MathExpressionIndexSeeder, **mongo_kwargs)
+    math_expression_context_seeder = Factory(MathExpressionContextSeeder, **mongo_kwargs)
     math_expression_dataset_seeder = Factory(MathExpressionDatasetSeeder, **mongo_kwargs)
     math_expression_dataset_test_seeder = Factory(MathExpressionDatasetTestSeeder, **mongo_kwargs)
     math_expression_description_seeder = Factory(MathExpressionDescriptionSeeder, **mongo_kwargs)
@@ -232,6 +237,7 @@ class InfrastructureContainer(DeclarativeContainer):
         fine_tune_job_seeder,
         llm_failed_request_seeder,
         math_expression_index_seeder,
+        math_expression_context_seeder,
         math_expression_dataset_seeder,
         math_expression_dataset_test_seeder,
         math_expression_description_seeder,
@@ -250,6 +256,7 @@ class InfrastructureContainer(DeclarativeContainer):
 
     fine_tune_job_indexer = Factory(FineTuneJobIndexer, **mongo_kwargs)
     math_expression_index_indexer = Factory(MathExpressionIndexIndexer, **mongo_kwargs)
+    math_expression_context_indexer = Factory(MathExpressionContextIndexer, **mongo_kwargs)
     math_expression_dataset_indexer = Factory(MathExpressionDatasetIndexer, **mongo_kwargs)
     math_expression_dataset_test_indexer = Factory(MathExpressionDatasetTestIndexer, **mongo_kwargs)
     math_expression_dataset_test_result_indexer = Factory(
@@ -276,6 +283,7 @@ class InfrastructureContainer(DeclarativeContainer):
     document_indexers: Provider[list[BaseDocumentIndexer]] = List(
         fine_tune_job_indexer,
         math_expression_index_indexer,
+        math_expression_context_indexer,
         math_expression_dataset_indexer,
         math_expression_dataset_test_indexer,
         math_expression_dataset_test_result_indexer,
@@ -604,7 +612,7 @@ class InfrastructureContainer(DeclarativeContainer):
     )
 
     # clustering
-    hdbscan_clusterer_service = Factory(HDBSCANClustererService)
+    hdbscan_clusterer_service = Factory(HDBSCANGrouperService)
 
     # routers
     inference_provider_to_managed_em = Dict(
@@ -649,7 +657,7 @@ class InfrastructureContainer(DeclarativeContainer):
         managed_mm=managed_mm_router,
         managed_em_scheduler=openai_batch_em_request_managed_scheduler,
         managed_llm_scheduler=openai_batch_llm_request_managed_scheduler,
-        clusterer_service=hdbscan_clusterer_service,
+        grouper_service=hdbscan_clusterer_service,
         dataset_loader_service=dataset_loader_service,
         dataset_publisher_service=dataset_publisher_service,
         gpu_stats_pusher_service=gpu_stats_pusher_service,
@@ -662,6 +670,7 @@ class InfrastructureContainer(DeclarativeContainer):
         pbs_pro_resources_used_pusher_service=pbs_pro_resources_used_pusher_service,
         fine_tune_job_repository=fine_tune_job_repository,
         math_expression_index_repository=math_expression_index_repository,
+        math_expression_context_repository=math_expression_context_repository,
         math_expression_dataset_repository=math_expression_dataset_repository,
         math_expression_dataset_test_repository=math_expression_dataset_test_repository,
         math_expression_dataset_test_result_repository=math_expression_dataset_test_result_repository,

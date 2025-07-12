@@ -1,5 +1,6 @@
 from .document_indexer import DocumentIndexer
 from .fine_tune_job_indexer import FineTuneJobIndexer
+from .math_expression_context_indexer import MathExpressionContextIndexer
 from .math_expression_dataset_indexer import MathExpressionDatasetIndexer
 from .math_expression_dataset_test_indexer import MathExpressionDatasetTestIndexer
 from .math_expression_dataset_test_result_indexer import MathExpressionDatasetTestResultIndexer
@@ -23,6 +24,7 @@ __all__ = [
     'DocumentIndexer',
     'FineTuneJobIndexer',
     'MathExpressionIndexIndexer',
+    'MathExpressionContextIndexer',
     'MathExpressionDatasetIndexer',
     'MathExpressionDatasetTestIndexer',
     'MathExpressionDatasetTestResultIndexer',

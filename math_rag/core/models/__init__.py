@@ -3,6 +3,7 @@ from .fine_tune_job import FineTuneJob
 from .latex_math_node import LatexMathNode
 from .math_article import MathArticle
 from .math_expression import MathExpression
+from .math_expression_context import MathExpressionContext
 from .math_expression_dataset import MathExpressionDataset
 from .math_expression_dataset_build_details import MathExpressionDatasetBuildDetails
 from .math_expression_dataset_test import MathExpressionDatasetTest
@@ -27,6 +28,7 @@ __all__ = [
     'LatexMathNode',
     'MathArticle',
     'MathExpression',
+    'MathExpressionContext',
     'MathExpressionDataset',
     'MathExpressionDatasetBuildDetails',
     'MathExpressionDatasetTest',

@@ -3,7 +3,7 @@ from pathlib import Path
 from typing import Generic, TypeVar
 from uuid import UUID
 
-from math_rag.application.types.repositories.embeddings import ClusterCallback
+from math_rag.application.types.repositories.embeddings import GroupCallback
 
 
 T = TypeVar('T')
@@ -31,7 +31,7 @@ class BaseEmbeddingRepository(ABC, Generic[T]):
         pass
 
     @abstractmethod
-    async def cluster(self, callback: ClusterCallback) -> list[list[UUID]]:
+    async def group(self, callback: GroupCallback) -> list[list[T]]:
         pass
 
     @abstractmethod

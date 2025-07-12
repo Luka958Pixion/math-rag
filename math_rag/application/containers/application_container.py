@@ -33,6 +33,7 @@ from math_rag.application.base.inference import (
 )
 from math_rag.application.base.repositories.documents import (
     BaseFineTuneJobRepository,
+    BaseMathExpressionContextRepository,
     BaseMathExpressionDatasetRepository,
     BaseMathExpressionDatasetTestRepository,
     BaseMathExpressionDatasetTestResultRepository,
@@ -48,10 +49,10 @@ from math_rag.application.base.repositories.graphs import (
 )
 from math_rag.application.base.repositories.objects import BaseMathArticleRepository
 from math_rag.application.base.services import (
-    BaseClustererService,
     BaseDatasetLoaderService,
     BaseDatasetPublisherService,
     BaseGPUStatsPusherService,
+    BaseGrouperService,
     BaseLabelConfigBuilderService,
     BaseLabelTaskExporterService,
     BaseLabelTaskImporterService,
@@ -106,6 +107,7 @@ class ApplicationContainer(DeclarativeContainer):
 
     fine_tune_job_repository = Dependency(instance_of=BaseFineTuneJobRepository)
     math_expression_index_repository = Dependency(instance_of=BaseMathExpressionIndexRepository)
+    math_expression_context_repository = Dependency(instance_of=BaseMathExpressionContextRepository)
     math_expression_dataset_repository = Dependency(instance_of=BaseMathExpressionDatasetRepository)
     math_expression_dataset_test_repository = Dependency(
         instance_of=BaseMathExpressionDatasetTestRepository
@@ -122,7 +124,7 @@ class ApplicationContainer(DeclarativeContainer):
 
     math_expression_graph_repository = Dependency(instance_of=BaseMathExpressionGraphRepository)
 
-    clusterer_service = Dependency(instance_of=BaseClustererService)
+    grouper_service = Dependency(instance_of=BaseGrouperService)
     dataset_loader_service = Dependency(instance_of=BaseDatasetLoaderService)
     dataset_publisher_service = Dependency(instance_of=BaseDatasetPublisherService)
     gpu_stats_pusher_service = Dependency(instance_of=BaseGPUStatsPusherService)

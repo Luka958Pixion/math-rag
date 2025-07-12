@@ -21,6 +21,7 @@ class MathExpressionNode(AsyncStructuredNode):
     timestamp = DateTimeProperty(required=True)
     latex = StringProperty(required=True)
     katex = StringProperty(required=False)
+    index = IntegerProperty(required=True)
     position = IntegerProperty(required=True)
     is_inline = BooleanProperty(required=True)
     related_to = AsyncRelationshipTo(

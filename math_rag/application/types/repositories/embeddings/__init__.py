@@ -1,4 +1,4 @@
-from .cluster_callback import ClusterCallback
+from .group_callback import GroupCallback
 
 
-__all__ = ['ClusterCallback']
+__all__ = ['GroupCallback']

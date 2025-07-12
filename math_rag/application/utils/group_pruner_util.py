@@ -3,6 +3,7 @@ from uuid import UUID
 
 
 class GroupPrunerUtil:
+    @staticmethod
     def prune(
         candidates: list[UUID], candidate_pair_to_is_connected: dict[tuple[UUID, UUID], bool]
     ) -> list[UUID]:

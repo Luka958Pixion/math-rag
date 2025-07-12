@@ -1,7 +1,7 @@
 from .dataset_loader_service import DatasetLoaderService
 from .dataset_publisher_service import DatasetPublisherService
 from .gpu_stats_pusher_service import GPUStatsPusherService
-from .hdbscan_clusterer_service import HDBSCANClustererService
+from .hdbscan_grouper_service import HDBSCANGrouperService
 from .label_studio_config_builder_service import LabelStudioConfigBuilderService
 from .label_studio_task_exporter_service import LabelStudioTaskExporterService
 from .label_studio_task_importer_service import LabelStudioTaskImporterService
@@ -17,7 +17,7 @@ __all__ = [
     'DatasetLoaderService',
     'DatasetPublisherService',
     'GPUStatsPusherService',
-    'HDBSCANClustererService',
+    'HDBSCANGrouperService',
     'LabelStudioConfigBuilderService',
     'LabelStudioTaskExporterService',
     'LabelStudioTaskImporterService',

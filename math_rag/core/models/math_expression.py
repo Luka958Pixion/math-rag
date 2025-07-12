@@ -13,5 +13,6 @@ class MathExpression(BaseModel):
     timestamp: datetime = Field(default_factory=datetime.now)
     latex: str
     katex: str | None
+    index: int
     position: int
     is_inline: bool

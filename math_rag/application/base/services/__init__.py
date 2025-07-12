@@ -1,8 +1,8 @@
-from .base_clusterer_service import BaseClustererService
 from .base_dataset_loader_service import BaseDatasetLoaderService
 from .base_dataset_publisher_service import BaseDatasetPublisherService
 from .base_em_settings_loader_service import BaseEMSettingsLoaderService
 from .base_gpu_stats_pusher_service import BaseGPUStatsPusherService
+from .base_grouper_service import BaseGrouperService
 from .base_katex_corrector_service import BaseKatexCorrectorService
 from .base_label_config_builder_service import BaseLabelConfigBuilderService
 from .base_label_task_exporter_service import BaseLabelTaskExporterService
@@ -29,11 +29,11 @@ from .base_prometheus_snapshot_loader_service import BasePrometheusSnapshotLoade
 
 
 __all__ = [
-    'BaseClustererService',
     'BaseDatasetLoaderService',
     'BaseDatasetPublisherService',
     'BaseEMSettingsLoaderService',
     'BaseGPUStatsPusherService',
+    'BaseGrouperService',
     'BaseMathExpressionIndexBuilderService',
     'BaseKatexCorrectorService',
     'BaseLabelConfigBuilderService',

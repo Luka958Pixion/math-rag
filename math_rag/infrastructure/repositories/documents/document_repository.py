@@ -83,11 +83,14 @@ class DocumentRepository(
         elif 'id' in filter:
             filter['_id'] = filter.pop('id')
 
+        filter_lists: dict[str, list[Any]] = {}
+
         for key in list(filter.keys()):
             value = filter[key]
 
             if isinstance(value, list):
                 filter[key] = {'$in': value}
+                filter_lists[key] = value
 
         cursor = self.collection.find(filter)
 
@@ -98,6 +101,12 @@ class DocumentRepository(
 
         docs = [self.target_cls.model_validate(bson_doc) for bson_doc in bson_docs]
         items = [self.mapping_cls.to_source(doc) for doc in docs]
+
+        # preserve order of elements in the filter list
+        if filter_lists:
+            for key, values in filter_lists.items():
+                key_to_item = {getattr(item, key): item for item in items}
+                items = [key_to_item[value] for value in values if value in key_to_item]
 
         return items
 

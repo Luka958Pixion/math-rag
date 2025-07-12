@@ -11,6 +11,7 @@ from .llm_message_mapping import LLMMessageMapping
 from .llm_params_mapping import LLMParamsMapping
 from .llm_request_mapping import LLMRequestMapping
 from .llm_router_params_mapping import LLMRouterParamsMapping
+from .math_expression_context_mapping import MathExpressionContextMapping
 from .math_expression_dataset_mapping import MathExpressionDatasetMapping
 from .math_expression_dataset_test_mapping import MathExpressionDatasetTestMapping
 from .math_expression_dataset_test_result_mapping import MathExpressionDatasetTestResultMapping
@@ -48,6 +49,7 @@ __all__ = [
     'LLMParamsMapping',
     'LLMRequestMapping',
     'LLMRouterParamsMapping',
+    'MathExpressionContextMapping',
     'MathExpressionDatasetMapping',
     'MathExpressionDatasetTestMapping',
     'MathExpressionDatasetTestResultMapping',

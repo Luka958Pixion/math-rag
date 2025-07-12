@@ -16,7 +16,7 @@ from qdrant_client.http.models import (
 )
 
 from math_rag.application.base.repositories.embeddings import BaseEmbeddingRepository
-from math_rag.application.types.repositories.embeddings import ClusterCallback
+from math_rag.application.types.repositories.embeddings import GroupCallback
 from math_rag.infrastructure.types.repositories.embeddings import (
     MappingType,
     SourceType,
@@ -104,12 +104,13 @@ class EmbeddingRepository(
 
         return points
 
-    async def cluster(self, callback: ClusterCallback) -> list[list[UUID]]:
+    async def group(self, callback: GroupCallback) -> list[list[SourceType]]:
         records = await self._find_all()
         ids, embeddings = unzip((UUID(record.id), record.vector) for record in records)
         ids, embeddings = list(ids), list(embeddings)
+        grouped_ids = await asyncio.to_thread(callback, ids, embeddings)
 
-        return await asyncio.to_thread(callback, ids, embeddings)
+        return [await self.find_many(ids) for ids in grouped_ids]
 
     async def clear(self):
         await self.client.delete(

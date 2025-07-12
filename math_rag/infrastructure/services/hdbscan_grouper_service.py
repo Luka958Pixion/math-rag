@@ -2,11 +2,11 @@ from uuid import UUID
 
 from hdbscan import HDBSCAN
 
-from math_rag.application.base.services import BaseClustererService
+from math_rag.application.base.services import BaseGrouperService
 
 
-class HDBSCANClustererService(BaseClustererService):
-    def cluster(self, ids: list[UUID], embeddings: list[list[float]]) -> list[list[UUID]]:
+class HDBSCANGrouperService(BaseGrouperService):
+    def group(self, ids: list[UUID], embeddings: list[list[float]]) -> list[list[UUID]]:
         if not embeddings:
             return []
 

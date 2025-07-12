@@ -78,6 +78,8 @@ class MathExpressionLoaderService(BaseMathExpressionLoaderService):
             math_nodes.extend(next_math_nodes)
             logger.info(f'Parsed {len(next_math_nodes)} math nodes from {math_article.id}')
 
+        math_nodes.sort(key=lambda x: x.position)
+
         # extract and validate KaTeX
         katexes = [node.latex.strip('$') for node in math_nodes]
         results = await self.katex_client.batch_validate_many(katexes, batch_size=50)
@@ -137,22 +139,20 @@ class MathExpressionLoaderService(BaseMathExpressionLoaderService):
             )
 
         # create and insert math expressions
-        math_expressions: list[MathExpression] = []
-
-        for node, katex in zip(math_nodes, final_katexes):
-            math_expressions.append(
-                MathExpression(
-                    math_article_id=math_article.id,
-                    math_expression_dataset_id=dataset_id,
-                    math_expression_group_id=None,
-                    math_expression_index_id=None,
-                    latex=node.latex,
-                    katex=katex,
-                    position=node.position,
-                    is_inline=node.is_inline,
-                )
+        math_expressions = [
+            MathExpression(
+                math_article_id=math_article.id,
+                math_expression_dataset_id=dataset_id,
+                math_expression_group_id=None,
+                math_expression_index_id=None,
+                latex=node.latex,
+                katex=katex,
+                index=i,
+                position=node.position,
+                is_inline=node.is_inline,
             )
-
+            for i, (node, katex) in enumerate(zip(math_nodes, final_katexes))
+        ]
         await self.math_expression_repository.batch_insert_many(math_expressions, batch_size=1000)
         await self.math_expression_repository.backup()
         logger.info(f'{self.__class__.__name__} loaded {len(math_expressions)} math expressions')
@@ -179,6 +179,8 @@ class MathExpressionLoaderService(BaseMathExpressionLoaderService):
             math_nodes.extend(next_math_nodes)
             logger.info(f'Parsed {len(next_math_nodes)} math nodes from {math_article.id}')
 
+        math_nodes.sort(key=lambda x: x.position)
+
         # extract, validate and correct KaTeX
         katexes = [node.latex.strip('$') for node in math_nodes]
         valid_katexes = await self.katex_corrector_service.correct(katexes, max_num_retries=10)
@@ -192,10 +194,11 @@ class MathExpressionLoaderService(BaseMathExpressionLoaderService):
                 math_expression_index_id=index.id,
                 latex=node.latex,
                 katex=katex,
+                index=i,
                 position=node.position,
                 is_inline=node.is_inline,
             )
-            for node, katex in zip(math_nodes, valid_katexes)
+            for i, (node, katex) in enumerate(zip(math_nodes, valid_katexes))
         ]
         await self.math_expression_repository.batch_insert_many(math_expressions, batch_size=1000)
         await self.math_expression_repository.backup()
