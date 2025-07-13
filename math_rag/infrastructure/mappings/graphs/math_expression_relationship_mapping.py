@@ -23,6 +23,7 @@ class MathExpressionRelationshipMapping(BaseMapping[MathExpressionRelationship, 
     def to_target(source: MathExpressionRelationship) -> MathExpressionRel:
         return MathExpressionRel(
             uid=str(source.id),
+            math_article_chunk_id=str(source.math_article_chunk_id),
             math_expression_index_id=str(source.math_expression_index_id),
             math_expression_source_id=str(source.math_expression_source_id),
             math_expression_target_id=str(source.math_expression_target_id),

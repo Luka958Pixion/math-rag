@@ -1,4 +1,5 @@
 from typing import Any, Generic, Self, cast
+from uuid import UUID
 
 from neo4j import AsyncDriver
 from neomodel import (
@@ -110,7 +111,8 @@ class GraphRepository(
             raise ValueError(f'Node with filter {filter} not found')
 
         for key, value in update.items():
-            setattr(node, key, value)
+            safe = str(value) if isinstance(value, UUID) else value
+            setattr(node, key, safe)
 
         async with adb.transaction:
             node = cast(AsyncStructuredNode, node)
@@ -137,7 +139,8 @@ class GraphRepository(
         async with adb.transaction:
             for node in nodes:
                 for key, value in update.items():
-                    setattr(node, key, value)
+                    safe = str(value) if isinstance(value, UUID) else value
+                    setattr(node, key, safe)
 
                 node = cast(AsyncStructuredNode, node)
                 await node.save()
