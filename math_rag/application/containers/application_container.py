@@ -77,6 +77,7 @@ from math_rag.application.services import (
     EMSettingsLoaderService,
     KatexCorrectorService,
     LLMSettingsLoaderService,
+    MathArticleChunkLoaderService,
     MathArticleLoaderService,
     MathExpressionContextLoaderService,
     MathExpressionDatasetBuilderService,
@@ -238,6 +239,13 @@ class ApplicationContainer(DeclarativeContainer):
     llm_settings_loader_service = Factory(LLMSettingsLoaderService)
     mm_settings_loader_service = Factory(MMSettingsLoaderService)
 
+    math_article_chunk_loader_service = Factory(
+        MathArticleChunkLoaderService,
+        math_article_parser_service=math_article_parser_service,
+        math_article_repository=math_article_repository,
+        math_article_chunk_repository=math_article_chunk_repository,
+        math_expression_repository=math_expression_repository,
+    )
     math_article_loader_service = Factory(
         MathArticleLoaderService,
         arxiv_client=arxiv_client,
@@ -338,17 +346,25 @@ class ApplicationContainer(DeclarativeContainer):
     math_expression_dataset_builder_service = Factory(
         MathExpressionDatasetBuilderService,
         math_article_loader_service=math_article_loader_service,
-        math_expression_loader_service=math_expression_loader_service,
-        math_expression_label_loader_service=math_expression_label_loader_service,
-        math_expression_sample_loader_service=math_expression_sample_loader_service,
         math_expression_dataset_publisher_service=math_expression_dataset_publisher_service,
         math_expression_dataset_repository=math_expression_dataset_repository,
+        math_expression_label_loader_service=math_expression_label_loader_service,
+        math_expression_loader_service=math_expression_loader_service,
+        math_expression_sample_loader_service=math_expression_sample_loader_service,
     )
     math_expression_index_builder_service = Factory(
         MathExpressionIndexBuilderService,
+        math_article_chunk_loader_service=math_article_chunk_loader_service,
         math_article_loader_service=math_article_loader_service,
-        math_expression_loader_service=math_expression_loader_service,
+        math_expression_context_loader_service=math_expression_context_loader_service,
+        math_expression_description_loader_service=math_expression_description_loader_service,
+        math_expression_description_opt_loader_service=math_expression_description_opt_loader_service,
+        math_expression_group_loader_service=math_expression_group_loader_service,
+        math_expression_group_relationship_loader_service=math_expression_group_relationship_loader_service,
         math_expression_label_loader_service=math_expression_label_loader_service,
+        math_expression_loader_service=math_expression_loader_service,
+        math_expression_relationship_description_loader_service=math_expression_relationship_description_loader_service,
+        math_expression_relationship_loader_service=math_expression_relationship_loader_service,
         math_expression_index_repository=math_expression_index_repository,
     )
 

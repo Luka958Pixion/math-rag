@@ -20,18 +20,18 @@ class MathExpressionDatasetBuilderService(BaseMathExpressionDatasetBuilderServic
     def __init__(
         self,
         math_article_loader_service: BaseMathArticleLoaderService,
-        math_expression_loader_service: BaseMathExpressionLoaderService,
-        math_expression_label_loader_service: BaseMathExpressionLabelLoaderService,
-        math_expression_sample_loader_service: BaseMathExpressionSampleLoaderService,
         math_expression_dataset_publisher_service: BaseMathExpressionDatasetPublisherService,
         math_expression_dataset_repository: BaseMathExpressionDatasetRepository,
+        math_expression_label_loader_service: BaseMathExpressionLabelLoaderService,
+        math_expression_loader_service: BaseMathExpressionLoaderService,
+        math_expression_sample_loader_service: BaseMathExpressionSampleLoaderService,
     ):
-        self.math_article_loader_service = math_article_loader_service
-        self.math_expression_loader_service = math_expression_loader_service
-        self.math_expression_label_loader_service = math_expression_label_loader_service
-        self.math_expression_sample_loader_service = math_expression_sample_loader_service
         self.math_expression_dataset_publisher_service = math_expression_dataset_publisher_service
         self.math_expression_dataset_repository = math_expression_dataset_repository
+        self.math_article_loader_service = math_article_loader_service
+        self.math_expression_label_loader_service = math_expression_label_loader_service
+        self.math_expression_loader_service = math_expression_loader_service
+        self.math_expression_sample_loader_service = math_expression_sample_loader_service
 
     async def _stage_0(self, dataset: MathExpressionDataset):
         logger.info(f'Dataset {dataset.id} build loading math articles...')
