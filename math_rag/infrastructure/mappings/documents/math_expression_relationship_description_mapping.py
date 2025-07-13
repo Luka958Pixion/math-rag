@@ -12,10 +12,22 @@ class MathExpressionRelationshipDescriptionMapping(
     def to_source(
         target: MathExpressionRelationshipDescriptionDocument,
     ) -> MathExpressionRelationshipDescription:
-        return MathExpressionRelationshipDescription.model_validate(target.model_dump())
+        return MathExpressionRelationshipDescription(
+            id=target.id,
+            math_expression_index_id=target.math_expression_index_id,
+            math_expression_relationship_id=target.math_expression_relationship_id,
+            timestamp=target.timestamp,
+            text=target.text,
+        )
 
     @staticmethod
     def to_target(
         source: MathExpressionRelationshipDescription,
     ) -> MathExpressionRelationshipDescriptionDocument:
-        return MathExpressionRelationshipDescriptionDocument.model_validate(source.model_dump())
+        return MathExpressionRelationshipDescriptionDocument(
+            id=source.id,
+            math_expression_index_id=source.math_expression_index_id,
+            math_expression_relationship_id=source.math_expression_relationship_id,
+            timestamp=source.timestamp,
+            text=source.text,
+        )

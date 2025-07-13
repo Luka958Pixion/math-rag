@@ -10,8 +10,16 @@ class OptunaTrialStartSettingsMapping(
 ):
     @staticmethod
     def to_source(target: OptunaTrialStartSettingsDocument) -> OptunaTrialStartSettings:
-        return OptunaTrialStartSettings.model_validate(target.model_dump())
+        return OptunaTrialStartSettings(
+            r=target.r,
+            lora_alpha=target.lora_alpha,
+            lora_dropout=target.lora_dropout,
+        )
 
     @staticmethod
     def to_target(source: OptunaTrialStartSettings) -> OptunaTrialStartSettingsDocument:
-        return OptunaTrialStartSettingsDocument.model_validate(source.model_dump())
+        return OptunaTrialStartSettingsDocument(
+            r=source.r,
+            lora_alpha=source.lora_alpha,
+            lora_dropout=source.lora_dropout,
+        )

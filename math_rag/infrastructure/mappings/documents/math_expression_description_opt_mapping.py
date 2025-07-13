@@ -7,9 +7,27 @@ class MathExpressionDescriptionOptMapping(
     BaseMapping[MathExpressionDescriptionOpt, MathExpressionDescriptionOptDocument]
 ):
     @staticmethod
-    def to_source(target: MathExpressionDescriptionOptDocument) -> MathExpressionDescriptionOpt:
-        return MathExpressionDescriptionOpt.model_validate(target.model_dump())
+    def to_source(
+        target: MathExpressionDescriptionOptDocument,
+    ) -> MathExpressionDescriptionOpt:
+        return MathExpressionDescriptionOpt(
+            id=target.id,
+            math_expression_id=target.math_expression_id,
+            math_expression_description_id=target.math_expression_description_id,
+            math_expression_index_id=target.math_expression_index_id,
+            timestamp=target.timestamp,
+            text=target.text,
+        )
 
     @staticmethod
-    def to_target(source: MathExpressionDescriptionOpt) -> MathExpressionDescriptionOptDocument:
-        return MathExpressionDescriptionOptDocument.model_validate(source.model_dump())
+    def to_target(
+        source: MathExpressionDescriptionOpt,
+    ) -> MathExpressionDescriptionOptDocument:
+        return MathExpressionDescriptionOptDocument(
+            id=source.id,
+            math_expression_id=source.math_expression_id,
+            math_expression_description_id=source.math_expression_description_id,
+            math_expression_index_id=source.math_expression_index_id,
+            timestamp=source.timestamp,
+            text=source.text,
+        )

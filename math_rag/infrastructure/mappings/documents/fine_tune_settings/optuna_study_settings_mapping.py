@@ -6,8 +6,18 @@ from math_rag.infrastructure.models.documents.fine_tune_settings import OptunaSt
 class OptunaStudySettingsMapping(BaseMapping[OptunaStudySettings, OptunaStudySettingsDocument]):
     @staticmethod
     def to_source(target: OptunaStudySettingsDocument) -> OptunaStudySettings:
-        return OptunaStudySettings.model_validate(target.model_dump())
+        return OptunaStudySettings(
+            storage=target.storage,
+            study_name=target.study_name,
+            direction=target.direction,
+            load_if_exists=target.load_if_exists,
+        )
 
     @staticmethod
     def to_target(source: OptunaStudySettings) -> OptunaStudySettingsDocument:
-        return OptunaStudySettingsDocument.model_validate(source.model_dump())
+        return OptunaStudySettingsDocument(
+            storage=source.storage,
+            study_name=source.study_name,
+            direction=source.direction,
+            load_if_exists=source.load_if_exists,
+        )

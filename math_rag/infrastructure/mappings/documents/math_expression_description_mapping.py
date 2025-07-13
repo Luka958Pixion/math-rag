@@ -8,8 +8,20 @@ class MathExpressionDescriptionMapping(
 ):
     @staticmethod
     def to_source(target: MathExpressionDescriptionDocument) -> MathExpressionDescription:
-        return MathExpressionDescription.model_validate(target.model_dump())
+        return MathExpressionDescription(
+            id=target.id,
+            math_expression_id=target.math_expression_id,
+            math_expression_index_id=target.math_expression_index_id,
+            timestamp=target.timestamp,
+            text=target.text,
+        )
 
     @staticmethod
     def to_target(source: MathExpressionDescription) -> MathExpressionDescriptionDocument:
-        return MathExpressionDescriptionDocument.model_validate(source.model_dump())
+        return MathExpressionDescriptionDocument(
+            id=source.id,
+            math_expression_id=source.math_expression_id,
+            math_expression_index_id=source.math_expression_index_id,
+            timestamp=source.timestamp,
+            text=source.text,
+        )

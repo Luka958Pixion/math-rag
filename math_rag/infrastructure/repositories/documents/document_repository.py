@@ -74,6 +74,7 @@ class DocumentRepository(
         if not bson_doc:
             return None
 
+        bson_doc['id'] = bson_doc.pop('_id')
         doc = self.target_cls.model_validate(bson_doc)
 
         return self.mapping_cls.to_source(doc)
@@ -81,35 +82,32 @@ class DocumentRepository(
     async def find_many(self, *, filter: dict[str, Any] | None = None) -> list[SourceType]:
         if not filter:
             filter = {}
+        filter_lists: dict[str, list[Any]] = {}
 
-        elif 'id' in filter:
+        if 'id' in filter:
             id_value = filter.pop('id')
             filter['_id'] = id_value
-            filter_lists: dict[str, list[Any]] = {
-                'id': id_value if isinstance(id_value, list) else [id_value]
-            }
+            filter_lists['id'] = id_value if isinstance(id_value, list) else [id_value]
 
-        else:
-            filter_lists: dict[str, list[Any]] = {}
-
-        # catch all other list-filters, but never add '_id' as a key
         for key in list(filter.keys()):
             value = filter[key]
 
             if isinstance(value, list):
                 filter[key] = {'$in': value}
-
-                # if Mongo key is '_id', map it back to your model-attr 'id'
                 list_key = 'id' if key == '_id' else key
                 filter_lists[list_key] = value
 
         cursor = self.collection.find(filter)
-
         if 'timestamp' in self.target_cls.model_fields:
             cursor = cursor.sort('timestamp', ASCENDING)
 
         bson_docs = await cursor.to_list()
-        docs = [self.target_cls.model_validate(doc) for doc in bson_docs]
+        docs: list[TargetType] = []
+
+        for raw in bson_docs:
+            raw['id'] = raw.pop('_id')
+            docs.append(self.target_cls.model_validate(raw))
+
         items = [self.mapping_cls.to_source(doc) for doc in docs]
 
         if filter_lists:
@@ -119,21 +117,26 @@ class DocumentRepository(
 
         return items
 
-    # TODO update to support $in
     async def batch_find_many(
         self, *, batch_size: int, filter: dict[str, Any] | None = None
     ) -> AsyncGenerator[list[SourceType], None]:
         if not filter:
             filter = {}
 
-        elif 'id' in filter:
-            filter['_id'] = filter.pop('id')
+        filter_lists: dict[str, list[Any]] = {}
+
+        if 'id' in filter:
+            id_value = filter.pop('id')
+            filter['_id'] = id_value
+            filter_lists['id'] = id_value if isinstance(id_value, list) else [id_value]
 
         for key in list(filter.keys()):
             value = filter[key]
 
             if isinstance(value, list):
                 filter[key] = {'$in': value}
+                list_key = 'id' if key == '_id' else key
+                filter_lists[list_key] = value
 
         cursor = self.collection.find(filter)
 
@@ -143,13 +146,14 @@ class DocumentRepository(
         cursor = cursor.batch_size(batch_size)
         batch: list[SourceType] = []
 
-        async for bson_doc in cursor:
-            doc = self.target_cls.model_validate(bson_doc)
-            batch.append(self.mapping_cls.to_source(doc))
+        async for raw in cursor:
+            raw['id'] = raw.pop('_id')
+            doc = self.target_cls.model_validate(raw)
+            item = self.mapping_cls.to_source(doc)
+            batch.append(item)
 
             if len(batch) >= batch_size:
                 yield batch
-
                 batch = []
 
         if batch:

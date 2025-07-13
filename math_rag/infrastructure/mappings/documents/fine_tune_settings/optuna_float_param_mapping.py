@@ -6,8 +6,12 @@ from math_rag.infrastructure.models.documents.fine_tune_settings import OptunaFl
 class OptunaFloatParamMapping(BaseMapping[OptunaFloatParam, OptunaFloatParamDocument]):
     @staticmethod
     def to_source(target: OptunaFloatParamDocument) -> OptunaFloatParam:
-        return OptunaFloatParam.model_validate(target.model_dump())
+        return OptunaFloatParam(
+            name=target.name, low=target.low, high=target.high, step=target.step
+        )
 
     @staticmethod
     def to_target(source: OptunaFloatParam) -> OptunaFloatParamDocument:
-        return OptunaFloatParamDocument.model_validate(source.model_dump())
+        return OptunaFloatParamDocument(
+            name=source.name, low=source.low, high=source.high, step=source.step
+        )

@@ -6,8 +6,8 @@ from math_rag.infrastructure.models.documents.fine_tune_settings import Optimize
 class OptimizerSettingsMapping(BaseMapping[OptimizerSettings, OptimizerSettingsDocument]):
     @staticmethod
     def to_source(target: OptimizerSettingsDocument) -> OptimizerSettings:
-        return OptimizerSettings.model_validate(target.model_dump())
+        return OptimizerSettings(lr=target.lr, weight_decay=target.weight_decay)
 
     @staticmethod
     def to_target(source: OptimizerSettings) -> OptimizerSettingsDocument:
-        return OptimizerSettingsDocument.model_validate(source.model_dump())
+        return OptimizerSettingsDocument(lr=source.lr, weight_decay=source.weight_decay)
