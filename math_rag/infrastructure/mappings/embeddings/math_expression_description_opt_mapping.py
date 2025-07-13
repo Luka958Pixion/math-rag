@@ -21,7 +21,7 @@ class MathExpressionDescriptionOptMapping(
             math_expression_description_id=UUID(target.payload['math_expression_description_id']),
             math_expression_index_id=target.payload['math_expression_index_id'],
             timestamp=datetime.fromisoformat(target.payload['timestamp']),
-            description=target.payload['description'],
+            text=target.payload['description'],
         )
 
     @staticmethod
@@ -36,6 +36,6 @@ class MathExpressionDescriptionOptMapping(
                 'math_expression_description_id': str(source.math_expression_description_id),
                 'math_expression_index_id': source.math_expression_index_id,
                 'timestamp': source.timestamp.isoformat(),
-                'description': source.description,
+                'description': source.text,
             },
         )

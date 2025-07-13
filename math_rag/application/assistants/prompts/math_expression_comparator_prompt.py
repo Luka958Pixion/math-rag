@@ -29,10 +29,10 @@ _USER_PROMPT_TEMPLATE = """
 {other_context}
 
 ### Decision:
-{
+{{
   "is_identical": ...,
   "reason": "..."
-}
+}}
 """
 
 _SYSTEM_PROMPT = LLMPrompt(

@@ -15,6 +15,7 @@ class MathExpressionMapping(BaseMapping[MathExpression, MathExpressionDocument])
             timestamp=target.timestamp,
             latex=target.latex,
             katex=target.katex,
+            index=target.index,
             position=target.position,
             is_inline=target.is_inline,
         )
@@ -30,6 +31,7 @@ class MathExpressionMapping(BaseMapping[MathExpression, MathExpressionDocument])
             timestamp=source.timestamp,
             latex=source.latex,
             katex=source.katex,
+            index=source.index,
             position=source.position,
             is_inline=source.is_inline,
         )

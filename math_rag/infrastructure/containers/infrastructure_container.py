@@ -340,7 +340,7 @@ class InfrastructureContainer(DeclarativeContainer):
     config.neo4j.password.from_env('NEO4J_PASSWORD')
 
     math_expression_graph_repository = Singleton(
-        MathExpressionGraphRepository,
+        MathExpressionGraphRepository.create,
         uri=config.neo4j.uri,
         username=config.neo4j.username,
         password=config.neo4j.password,

@@ -10,4 +10,4 @@ class MathExpressionDescriptionOpt(BaseModel):
     math_expression_description_id: UUID
     math_expression_index_id: UUID
     timestamp: datetime = Field(default_factory=datetime.now)
-    description: str
+    text: str

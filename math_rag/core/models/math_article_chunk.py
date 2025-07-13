@@ -9,6 +9,6 @@ class MathArticleChunk(BaseModel):
     math_article_id: UUID
     math_expression_index_id: UUID
     timestamp: datetime = Field(default_factory=datetime.now)
-    index: str
+    index: int
     indexes: list[int]
     text: str

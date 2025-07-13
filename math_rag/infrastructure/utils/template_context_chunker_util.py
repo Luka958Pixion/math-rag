@@ -1,7 +1,7 @@
 import re
 
 from math_rag.infrastructure.constants.services import (
-    MATH_PLACEHOLDER_INDEX_PATTERN,
+    IMAGE_PLACEHOLDER_PATTERN,
     MATH_PLACEHOLDER_PATTERN,
 )
 
@@ -12,14 +12,20 @@ class TemplateContextChunkerUtil:
         """
         For each math-placeholder in text, return a context substring of up to
         max_context_size characters total (including the placeholder itself),
-        without cutting words or placeholders.
+        without cutting word, image or math placeholders.
         """
-        matches = list(re.finditer(MATH_PLACEHOLDER_PATTERN, text))
-        placeholder_spans = [(match.start(), match.end()) for match in matches]
+        image_matches = list(re.finditer(IMAGE_PLACEHOLDER_PATTERN, text))
+        image_placeholder_spans = [(match.start(), match.end()) for match in image_matches]
+
+        math_matches = list(re.finditer(MATH_PLACEHOLDER_PATTERN, text))
+        math_placeholder_spans = [(match.start(), match.end()) for match in math_matches]
+
+        all_placeholder_spans = image_placeholder_spans + math_placeholder_spans
+
         text_length = len(text)
         contexts: list[str] = []
 
-        for start_index, end_index in placeholder_spans:
+        for start_index, end_index in math_placeholder_spans:
             placeholder_length = end_index - start_index
             available_context = max_context_size - placeholder_length
 
@@ -40,10 +46,10 @@ class TemplateContextChunkerUtil:
                 boundary = text.find(' ', raw_end)
                 raw_end = text_length if boundary == -1 else boundary
 
-            # ensure no placeholder is cut
+            # ensure no image or math placeholder is cut
             context_start, context_end = raw_start, raw_end
 
-            for span_start, span_end in placeholder_spans:
+            for span_start, span_end in all_placeholder_spans:
                 if span_start < context_start < span_end:
                     context_start = span_start
 

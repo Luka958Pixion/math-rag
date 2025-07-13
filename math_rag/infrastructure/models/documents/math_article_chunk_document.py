@@ -9,6 +9,6 @@ class MathArticleChunkDocument(BaseDocument):
     math_article_id: UUID
     math_expression_index_id: UUID
     timestamp: datetime
-    index: str
+    index: int
     indexes: list[int]
     text: str

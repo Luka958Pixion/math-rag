@@ -9,4 +9,4 @@ class MathExpressionRelationshipDescription(BaseModel):
     math_expression_index_id: UUID
     math_expression_relationship_id: UUID
     timestamp: datetime = Field(default_factory=datetime.now)
-    description: str
+    text: str

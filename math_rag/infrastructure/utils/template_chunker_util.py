@@ -52,12 +52,12 @@ class TemplateChunkerUtil:
         relative_positions: list[int],
         relative_lengths: list[int],
         max_window_size: int,
-    ) -> list[str]:
+    ) -> list[tuple[int, int]]:
         """
         Apply the sliding-window chunking logic to a single text block
         with entities at relative positions and lengths.
         """
-        chunks: list[str] = []
+        chunks: list[tuple[int, int]] = []
         i = 0
         j = 0
         n = len(relative_positions)
@@ -67,7 +67,7 @@ class TemplateChunkerUtil:
             j += 1
 
         first_chunk_end = relative_positions[j - 1] + relative_lengths[j - 1]
-        chunks.append(block_text[:first_chunk_end])
+        chunks.append((0, first_chunk_end))
 
         # slide the window over remaining entities
         for k in range(j, n):
@@ -85,11 +85,10 @@ class TemplateChunkerUtil:
 
             window_origin = relative_positions[i]
             chunk_end = start_position + length
-            chunks.append(block_text[window_origin:chunk_end])
+            chunks.append((window_origin, chunk_end))
 
         return chunks
 
-    @staticmethod
     def chunk(text: str, *, max_window_size: int, max_padding: int) -> list[str]:
         """
         Break text into chunks that each include a sliding window of

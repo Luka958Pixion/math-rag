@@ -9,4 +9,4 @@ class MathExpressionDescriptionDocument(BaseDocument):
     math_expression_id: UUID
     math_expression_index_id: UUID
     timestamp: datetime
-    description: str
+    text: str

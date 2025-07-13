@@ -8,6 +8,7 @@ from .document_indexer import DocumentIndexer
 FIELDS = [
     'math_article_id',
     'math_expression_index_id',
+    'index',
 ]
 
 

@@ -54,7 +54,12 @@ class EmbeddingRepository(
         await self.client.upsert(collection_name=self.collection_name, points=points)
 
     async def find_one(self, id: UUID) -> SourceType | None:
-        records = await self.client.retrieve(collection_name=self.collection_name, ids=[str(id)])
+        records = await self.client.retrieve(
+            collection_name=self.collection_name,
+            ids=[str(id)],
+            with_payload=True,
+            with_vectors=True,
+        )
 
         if not records:
             return None
@@ -63,12 +68,21 @@ class EmbeddingRepository(
 
     async def find_many(self, ids: list[UUID]) -> list[SourceType]:
         records = await self.client.retrieve(
-            collection_name=self.collection_name, ids=[str(id) for id in ids]
+            collection_name=self.collection_name,
+            ids=[str(id) for id in ids],
+            with_payload=True,
+            with_vectors=True,
         )
 
         return [
             self.mapping_cls.to_source(self.target_cls(**record.model_dump())) for record in records
         ]
+
+    # async def delete_one(self, id: UUID):
+    #     from qdrant_client.models import PointIdsList
+
+    #     points_selector = PointIdsList(points=str(id))
+    #     await self.client.delete(self.collection_name, points_selector)
 
     async def search(self, embedding: list[float], *, limit: int) -> list[SourceType]:
         scored_points = await self.client.search(
