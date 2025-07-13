@@ -106,6 +106,7 @@ select = ["I"]
 [tool.ruff.lint.isort]
 lines-after-imports = 2
 lines-between-types = 1
+combine-as-imports = true
 
 [tool.ruff.format]
 quote-style = "single"

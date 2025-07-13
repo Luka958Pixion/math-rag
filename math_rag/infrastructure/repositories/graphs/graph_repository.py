@@ -1,6 +1,6 @@
 from typing import Any, Generic, cast
 
-from neo4j import AsyncGraphDatabase
+from neo4j import AsyncDriver
 from neomodel import (
     AsyncNodeSet,
     AsyncRelationshipManager,
@@ -51,15 +51,9 @@ class GraphRepository(
         self.target_node_id_field = target_node_id_field
 
     @classmethod
-    async def create(
-        cls,
-        uri: str,
-        username: str,
-        password: str,
-    ) -> 'GraphRepository':
+    async def create(cls, async_driver: AsyncDriver) -> 'GraphRepository':
         repo = cls()
-        driver = AsyncGraphDatabase.driver(uri=uri, auth=(username, password))
-        await adb.set_connection(driver=driver)
+        await adb.set_connection(driver=async_driver)
 
         return repo
 

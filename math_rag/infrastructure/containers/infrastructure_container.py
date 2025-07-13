@@ -3,6 +3,7 @@ from pathlib import Path
 from arxiv import Client as _ArxivClient
 from dependency_injector.containers import DeclarativeContainer
 from dependency_injector.providers import (
+    Callable,
     Configuration,
     Container,
     Dict,
@@ -15,6 +16,7 @@ from huggingface_hub import HfApi
 from label_studio_sdk.client import AsyncLabelStudio
 from minio import Minio
 from mpxpy.mathpix_client import MathpixClient as _MathpixClient
+from neo4j import AsyncGraphDatabase
 from openai import AsyncOpenAI
 from pymongo import AsyncMongoClient
 from qdrant_client import AsyncQdrantClient
@@ -116,6 +118,7 @@ from math_rag.infrastructure.repositories.embeddings import (
 )
 from math_rag.infrastructure.repositories.files import GoogleDriveRepository
 from math_rag.infrastructure.repositories.graphs import (
+    MathExpressionGroupRepository as MathExpressionGroupGraphRepository,
     MathExpressionRepository as MathExpressionGraphRepository,
 )
 from math_rag.infrastructure.repositories.objects import MathArticleRepository
@@ -334,16 +337,25 @@ class InfrastructureContainer(DeclarativeContainer):
     )
 
     # Neo4j
-    # TODO move connection outside repo and convert to factory
     config.neo4j.uri.from_env('NEO4J_URI')
     config.neo4j.username.from_env('NEO4J_USERNAME')
     config.neo4j.password.from_env('NEO4J_PASSWORD')
 
-    math_expression_graph_repository = Singleton(
-        MathExpressionGraphRepository.create,
+    async_neo4j_driver = Singleton(
+        AsyncGraphDatabase.driver,
         uri=config.neo4j.uri,
-        username=config.neo4j.username,
-        password=config.neo4j.password,
+        auth=Callable(
+            lambda username, password: (username, password),
+            config.neo4j.username,
+            config.neo4j.password,
+        ),
+    )
+
+    math_expression_group_graph_repository = Singleton(
+        MathExpressionGroupGraphRepository.create, async_driver=async_neo4j_driver
+    )
+    math_expression_graph_repository = Singleton(
+        MathExpressionGraphRepository.create, async_driver=async_neo4j_driver
     )
 
     # Qdrant
