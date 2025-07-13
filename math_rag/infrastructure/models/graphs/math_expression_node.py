@@ -2,6 +2,7 @@ from neomodel import (
     AsyncRelationshipTo,
     AsyncStructuredNode,
     AsyncZeroOrMore,
+    AsyncZeroOrOne,
     BooleanProperty,
     DateTimeProperty,
     IntegerProperty,
@@ -9,6 +10,7 @@ from neomodel import (
     UniqueIdProperty,
 )
 
+from .math_expression_group_rel import MathExpressionGroupRel
 from .math_expression_rel import MathExpressionRel
 
 
@@ -29,4 +31,10 @@ class MathExpressionNode(AsyncStructuredNode):
         relation_type='RELATED_TO',
         cardinality=AsyncZeroOrMore,
         model=MathExpressionRel,
+    )
+    member_of = AsyncRelationshipTo(
+        cls_name='MathExpressionGroupNode',
+        relation_type='MEMBER_OF',
+        cardinality=AsyncZeroOrOne,
+        model=MathExpressionGroupRel,
     )

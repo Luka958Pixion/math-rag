@@ -120,19 +120,21 @@ class GraphRepository(
 
     async def insert_one_rel(self, rel: SourceRelType):
         rel_obj = self.mapping_rel_cls.to_target(rel)
-        source_node_id = getattr(rel_obj, self.source_node_id_field)
-        target_node_id = getattr(rel_obj, self.target_node_id_field)
-
         props = {
             key: value
             for key, value in rel_obj.__properties__.items()
             if key != 'uid' and value is not None
         }
 
-        node_set = cast(AsyncNodeSet, self.target_node_cls.nodes)
-        source_node = await node_set.get(uid=source_node_id)
-        node_set = cast(AsyncNodeSet, self.target_node_cls.nodes)
-        target_node = await node_set.get(uid=target_node_id)
+        source_node_set = cast(
+            AsyncNodeSet, self.target_node_cls.nodes
+        )  # TODO different node types!
+        source_node_id = getattr(rel_obj, self.source_node_id_field)
+        source_node = await source_node_set.get(uid=source_node_id)
+
+        target_node_set = cast(AsyncNodeSet, self.target_node_cls.nodes)
+        target_node_id = getattr(rel_obj, self.target_node_id_field)
+        target_node = await target_node_set.get(uid=target_node_id)
 
         async with adb.transaction:
             rel_manager = cast(AsyncRelationshipManager, getattr(source_node, self.rel_field))
@@ -151,13 +153,13 @@ class GraphRepository(
                     if key != 'uid' and value is not None
                 }
 
-                node_set = cast(AsyncNodeSet, self.target_node_cls.nodes)
+                source_node_set = cast(AsyncNodeSet, self.target_node_cls.nodes)  # TODO
                 source_node_id = getattr(rel_obj, self.source_node_id_field)
-                source_node = await node_set.get(uid=source_node_id)
+                source_node = await source_node_set.get(uid=source_node_id)
 
-                node_set = cast(AsyncNodeSet, self.target_node_cls.nodes)
+                target_node_set = cast(AsyncNodeSet, self.target_node_cls.nodes)
                 target_node_id = getattr(rel_obj, self.target_node_id_field)
-                target_node = await node_set.get(uid=target_node_id)
+                target_node = await target_node_set.get(uid=target_node_id)
 
                 rel_manager = cast(AsyncRelationshipManager, getattr(source_node, self.rel_field))
                 await rel_manager.connect(target_node, properties=properties)

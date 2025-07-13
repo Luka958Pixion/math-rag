@@ -12,6 +12,7 @@ from .file_writer_util import FileWriterUtil
 from .format_parser_util import FormatParserUtil
 from .label_instruction_builder_util import LabelInstructionBuilderUtil
 from .llm_token_counter_util import LLMTokenCounterUtil
+from .mapping_type_resolver_util import MappingTypeResolverUtil
 from .mm_token_counter_util import MMTokenCounterUtil
 from .tar_file_extractor_util import TarFileExtractorUtil
 from .template_chunker_util import TemplateChunkerUtil
@@ -36,6 +37,7 @@ __all__ = [
     'FormatParserUtil',
     'LabelInstructionBuilderUtil',
     'LLMTokenCounterUtil',
+    'MappingTypeResolverUtil',
     'MMTokenCounterUtil',
     'TarFileExtractorUtil',
     'TemplateChunkerUtil',
