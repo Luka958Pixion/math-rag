@@ -17,6 +17,7 @@ from math_rag.infrastructure.types.repositories.graphs.nodes import (
     TargetNodeType,
     TargetRelType,
 )
+from math_rag.infrastructure.utils import TargetTypeResolverUtil
 from math_rag.shared.utils import TypeUtil
 
 
@@ -118,7 +119,7 @@ class GraphRepository(
             node = cast(AsyncStructuredNode, node)
             await node.save()
 
-    async def insert_one_rel(self, rel: SourceRelType):
+    async def insert_one_rel(self, rel: SourceRelType, *, rel_to_cls: type[SourceNodeType] | None):
         rel_obj = self.mapping_rel_cls.to_target(rel)
         props = {
             key: value
@@ -126,13 +127,16 @@ class GraphRepository(
             if key != 'uid' and value is not None
         }
 
-        source_node_set = cast(
-            AsyncNodeSet, self.target_node_cls.nodes
-        )  # TODO different node types!
+        source_node_set = cast(AsyncNodeSet, self.target_node_cls.nodes)
         source_node_id = getattr(rel_obj, self.source_node_id_field)
         source_node = await source_node_set.get(uid=source_node_id)
 
-        target_node_set = cast(AsyncNodeSet, self.target_node_cls.nodes)
+        target_node_cls = (
+            TargetTypeResolverUtil.resolve(source_cls=rel_to_cls)
+            if rel_to_cls
+            else self.target_node_cls
+        )
+        target_node_set = cast(AsyncNodeSet, target_node_cls)
         target_node_id = getattr(rel_obj, self.target_node_id_field)
         target_node = await target_node_set.get(uid=target_node_id)
 
@@ -140,7 +144,9 @@ class GraphRepository(
             rel_manager = cast(AsyncRelationshipManager, getattr(source_node, self.rel_field))
             await rel_manager.connect(target_node, properties=props)
 
-    async def insert_many_rels(self, rels: list[SourceRelType]):
+    async def insert_many_rels(
+        self, rels: list[SourceRelType], *, rel_to_cls: type[SourceNodeType] | None
+    ):
         if not rels:
             return
 
@@ -153,11 +159,16 @@ class GraphRepository(
                     if key != 'uid' and value is not None
                 }
 
-                source_node_set = cast(AsyncNodeSet, self.target_node_cls.nodes)  # TODO
+                source_node_set = cast(AsyncNodeSet, self.target_node_cls.nodes)
                 source_node_id = getattr(rel_obj, self.source_node_id_field)
                 source_node = await source_node_set.get(uid=source_node_id)
 
-                target_node_set = cast(AsyncNodeSet, self.target_node_cls.nodes)
+                target_node_cls = (
+                    TargetTypeResolverUtil.resolve(source_cls=rel_to_cls)
+                    if rel_to_cls
+                    else self.target_node_cls
+                )
+                target_node_set = cast(AsyncNodeSet, target_node_cls)
                 target_node_id = getattr(rel_obj, self.target_node_id_field)
                 target_node = await target_node_set.get(uid=target_node_id)
 

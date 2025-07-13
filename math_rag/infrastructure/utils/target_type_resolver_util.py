@@ -10,7 +10,7 @@ from math_rag.shared.utils import TypeUtil
 MODULE_NAME = 'math_rag.infrastructure.mappings'
 
 
-class MappingTypeResolverUtil:
+class TargetTypeResolverUtil:
     @staticmethod
     @functools.lru_cache
     def _type_cache(module_name: str) -> dict[type, type]:
@@ -33,4 +33,4 @@ class MappingTypeResolverUtil:
 
     @staticmethod
     def resolve(*, source_cls: type) -> type:
-        return MappingTypeResolverUtil._type_cache(MODULE_NAME)[source_cls]
+        return TargetTypeResolverUtil._type_cache(MODULE_NAME)[source_cls]

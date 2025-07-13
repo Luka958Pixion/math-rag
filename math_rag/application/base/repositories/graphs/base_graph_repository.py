@@ -28,11 +28,11 @@ class BaseGraphRepository(ABC, Generic[T, U]):
         pass
 
     @abstractmethod
-    async def insert_one_rel(self, rel: U):
+    async def insert_one_rel(self, rel: U, *, rel_to_cls: type | None):
         pass
 
     @abstractmethod
-    async def insert_many_rels(self, rels: list[U]):
+    async def insert_many_rels(self, rels: list[U], *, rel_to_cls: type | None):
         pass
 
     @abstractmethod
