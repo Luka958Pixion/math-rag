@@ -23,6 +23,6 @@ class MathExpressionGroupRepository(
     def __init__(self):
         super().__init__(
             rel_field='member_of',
-            source_node_id_field='math_expression_id',
-            target_node_id_field='math_expression_group_id',
+            source_node_id_field='math_expression_group_id',
+            target_node_id_field='math_expression_id',
         )

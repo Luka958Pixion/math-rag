@@ -98,15 +98,16 @@ class DocumentRepository(
                 filter_lists[list_key] = value
 
         cursor = self.collection.find(filter)
+
         if 'timestamp' in self.target_cls.model_fields:
             cursor = cursor.sort('timestamp', ASCENDING)
 
         bson_docs = await cursor.to_list()
         docs: list[TargetType] = []
 
-        for raw in bson_docs:
-            raw['id'] = raw.pop('_id')
-            docs.append(self.target_cls.model_validate(raw))
+        for bson_doc in bson_docs:
+            bson_doc['id'] = bson_doc.pop('_id')
+            docs.append(self.target_cls.model_validate(bson_doc))
 
         items = [self.mapping_cls.to_source(doc) for doc in docs]
 
@@ -146,9 +147,9 @@ class DocumentRepository(
         cursor = cursor.batch_size(batch_size)
         batch: list[SourceType] = []
 
-        async for raw in cursor:
-            raw['id'] = raw.pop('_id')
-            doc = self.target_cls.model_validate(raw)
+        async for bson_doc in cursor:
+            bson_doc['id'] = bson_doc.pop('_id')
+            doc = self.target_cls.model_validate(bson_doc)
             item = self.mapping_cls.to_source(doc)
             batch.append(item)
 

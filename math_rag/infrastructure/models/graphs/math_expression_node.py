@@ -33,7 +33,7 @@ class MathExpressionNode(AsyncStructuredNode):
         model=MathExpressionRel,
     )
     member_of = AsyncRelationshipTo(
-        cls_name='MathExpressionGroupNode',
+        cls_name='.math_expression_group_node.MathExpressionGroupNode',
         relation_type='MEMBER_OF',
         cardinality=AsyncZeroOrOne,
         model=MathExpressionGroupRel,

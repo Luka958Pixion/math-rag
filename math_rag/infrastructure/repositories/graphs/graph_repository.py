@@ -1,4 +1,4 @@
-from typing import Any, Generic, cast
+from typing import Any, Generic, Self, cast
 
 from neo4j import AsyncDriver
 from neomodel import (
@@ -51,7 +51,7 @@ class GraphRepository(
         self.target_node_id_field = target_node_id_field
 
     @classmethod
-    async def create(cls, async_driver: AsyncDriver) -> 'GraphRepository':
+    async def create(cls, async_driver: AsyncDriver) -> Self:
         await adb.set_connection(driver=async_driver)
 
         return cls()
@@ -87,15 +87,19 @@ class GraphRepository(
     async def find_many_nodes(self, *, filter: dict[str, Any]) -> list[SourceNodeType]:
         if 'id' in filter:
             filter['uid'] = filter.pop('id')
+
         for key, value in list(filter.items()):
             if isinstance(value, list):
                 filter[f'{key}__in'] = filter.pop(key)
 
         node_set = cast(AsyncNodeSet, self.target_node_cls.nodes)
         nodes = await node_set.filter(**filter).all()
+
         return [self.mapping_node_cls.to_source(n) for n in nodes]
 
-    async def update_one_node(self, *, filter: dict[str, Any], update: dict[str, Any]):
+    async def update_one_node(
+        self, *, filter: dict[str, Any], update: dict[str, Any]
+    ) -> SourceNodeType:
         if 'id' in filter:
             filter['uid'] = filter.pop('id')
 
@@ -111,6 +115,34 @@ class GraphRepository(
         async with adb.transaction:
             node = cast(AsyncStructuredNode, node)
             await node.save()
+
+        return self.mapping_node_cls.to_source(node)
+
+    async def update_many_nodes(
+        self, *, filter: dict[str, Any], update: dict[str, Any]
+    ) -> list[SourceNodeType]:
+        if 'id' in filter:
+            filter['uid'] = filter.pop('id')
+
+        for key, value in list(filter.items()):
+            if isinstance(value, list):
+                filter[f'{key}__in'] = filter.pop(key)
+
+        node_set = cast(AsyncNodeSet, self.target_node_cls.nodes)
+        nodes = await node_set.filter(**filter).all()
+
+        if not nodes:
+            return []
+
+        async with adb.transaction:
+            for node in nodes:
+                for key, value in update.items():
+                    setattr(node, key, value)
+
+                node = cast(AsyncStructuredNode, node)
+                await node.save()
+
+        return [self.mapping_node_cls.to_source(node) for node in nodes]
 
     async def insert_one_rel(self, rel: SourceRelType, *, rel_to_cls: type[SourceNodeType] | None):
         rel_obj = self.mapping_rel_cls.to_target(rel)
@@ -129,7 +161,7 @@ class GraphRepository(
             if rel_to_cls
             else self.target_node_cls
         )
-        target_node_set = cast(AsyncNodeSet, target_node_cls)
+        target_node_set = cast(AsyncNodeSet, target_node_cls.nodes)
         target_node_id = getattr(rel_obj, self.target_node_id_field)
         target_node = await target_node_set.get(uid=target_node_id)
 
@@ -161,7 +193,7 @@ class GraphRepository(
                     if rel_to_cls
                     else self.target_node_cls
                 )
-                target_node_set = cast(AsyncNodeSet, target_node_cls)
+                target_node_set = cast(AsyncNodeSet, target_node_cls.nodes)
                 target_node_id = getattr(rel_obj, self.target_node_id_field)
                 target_node = await target_node_set.get(uid=target_node_id)
 

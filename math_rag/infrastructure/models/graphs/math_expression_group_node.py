@@ -15,7 +15,7 @@ class MathExpressionGroupNode(AsyncStructuredNode):
     math_expression_index_id = StringProperty(required=False)
     timestamp = DateTimeProperty(required=True)
     member_of = AsyncRelationshipFrom(
-        cls_name='MathExpressionNode',
+        cls_name='.math_expression_node.MathExpressionNode',
         relation_type='MEMBER_OF',
         cardinality=AsyncZeroOrMore,
         model=MathExpressionGroupRel,

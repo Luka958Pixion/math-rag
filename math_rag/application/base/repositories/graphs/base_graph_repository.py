@@ -24,7 +24,11 @@ class BaseGraphRepository(ABC, Generic[T, U]):
         pass
 
     @abstractmethod
-    async def update_one_node(self, *, filter: dict[str, Any], update: dict[str, Any]):
+    async def update_one_node(self, *, filter: dict[str, Any], update: dict[str, Any]) -> T:
+        pass
+
+    @abstractmethod
+    async def update_many_nodes(self, *, filter: dict[str, Any], update: dict[str, Any]) -> list[T]:
         pass
 
     @abstractmethod
