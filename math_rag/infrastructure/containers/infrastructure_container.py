@@ -701,5 +701,6 @@ class InfrastructureContainer(DeclarativeContainer):
         math_expression_label_repository=math_expression_label_repository,
         math_problem_repository=math_problem_repository,
         task_repository=task_repository,
+        math_expression_group_graph_repository=math_expression_group_graph_repository,
         math_expression_graph_repository=math_expression_graph_repository,
     )

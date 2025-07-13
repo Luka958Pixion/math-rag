@@ -52,10 +52,9 @@ class GraphRepository(
 
     @classmethod
     async def create(cls, async_driver: AsyncDriver) -> 'GraphRepository':
-        repo = cls()
         await adb.set_connection(driver=async_driver)
 
-        return repo
+        return cls()
 
     async def close(self):
         await adb.close_connection()

@@ -46,6 +46,7 @@ from math_rag.application.base.repositories.documents import (
     BaseTaskRepository,
 )
 from math_rag.application.base.repositories.graphs import (
+    BaseMathExpressionGroupRepository as BaseMathExpressionGroupGraphRepository,
     BaseMathExpressionRepository as BaseMathExpressionGraphRepository,
 )
 from math_rag.application.base.repositories.objects import BaseMathArticleRepository
@@ -124,6 +125,9 @@ class ApplicationContainer(DeclarativeContainer):
     math_problem_repository = Dependency(instance_of=BaseMathProblemRepository)
     task_repository = Dependency(instance_of=BaseTaskRepository)
 
+    math_expression_group_graph_repository = Dependency(
+        instance_of=BaseMathExpressionGroupGraphRepository
+    )
     math_expression_graph_repository = Dependency(instance_of=BaseMathExpressionGraphRepository)
 
     grouper_service = Dependency(instance_of=BaseGrouperService)
