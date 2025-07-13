@@ -5,6 +5,9 @@ from uuid import UUID
 from math_rag.application.assistants import KatexCorrectorAssistant
 from math_rag.application.base.clients import BaseKatexClient
 from math_rag.application.base.repositories.documents import BaseMathExpressionRepository
+from math_rag.application.base.repositories.graphs import (
+    BaseMathExpressionRepository as BaseMathExpressionGraphRepository,
+)
 from math_rag.application.base.repositories.objects import BaseMathArticleRepository
 from math_rag.application.base.services import (
     BaseKatexCorrectorService,
@@ -36,6 +39,7 @@ class MathExpressionLoaderService(BaseMathExpressionLoaderService):
         katex_corrector_service: BaseKatexCorrectorService,
         math_article_parser_service: BaseMathArticleParserService,
         math_article_repository: BaseMathArticleRepository,
+        math_expression_graph_repository: BaseMathExpressionGraphRepository,
         math_expression_repository: BaseMathExpressionRepository,
     ):
         self.katex_client = katex_client
@@ -43,6 +47,7 @@ class MathExpressionLoaderService(BaseMathExpressionLoaderService):
         self.katex_corrector_service = katex_corrector_service
         self.math_article_parser_service = math_article_parser_service
         self.math_article_repository = math_article_repository
+        self.math_expression_graph_repository = math_expression_graph_repository
         self.math_expression_repository = math_expression_repository
 
     def _split_by_validity(
@@ -158,34 +163,18 @@ class MathExpressionLoaderService(BaseMathExpressionLoaderService):
         logger.info(f'{self.__class__.__name__} loaded {len(math_expressions)} math expressions')
 
     async def load_for_index(self, index: MathExpressionIndex):
-        # load and parse math articles
-        math_articles = await self.math_article_repository.find_many_by_math_expression_index_id(
-            index.id
-        )
+        # math article
+        math_article = await self.math_article_repository.find_by_math_expression_index_id(index.id)
 
-        if not math_articles:
-            raise ValueError(f'Math articles with index id {index.id} not found')
+        if not math_article:
+            raise ValueError(f'Math article with index id {index.id} does not exist')
 
-        math_nodes: list[LatexMathNode] = []
-
-        for math_article in math_articles:
-            if not math_article.name.endswith('.tex'):
-                continue
-
-            # TODO
-            next_math_nodes, positions, template = self.math_article_parser_service.parse_for_index(
-                math_article
-            )
-            math_nodes.extend(next_math_nodes)
-            logger.info(f'Parsed {len(next_math_nodes)} math nodes from {math_article.id}')
-
+        math_nodes, _, _ = self.math_article_parser_service.parse_for_index(math_article)
         math_nodes.sort(key=lambda x: x.position)
 
-        # extract, validate and correct KaTeX
-        katexes = [node.latex.strip('$') for node in math_nodes]
-        valid_katexes = await self.katex_corrector_service.correct(katexes, max_num_retries=10)
-
-        # create and insert math expressions
+        # math expressions
+        katexes = [math_node.latex.strip('$') for math_node in math_nodes]
+        valid_katexes = await self.katex_corrector_service.correct(katexes, max_num_retries=3)
         math_expressions = [
             MathExpression(
                 math_article_id=math_article.id,
@@ -193,13 +182,13 @@ class MathExpressionLoaderService(BaseMathExpressionLoaderService):
                 math_expression_group_id=None,
                 math_expression_index_id=index.id,
                 latex=node.latex,
-                katex=katex,
+                katex=katex.strip(),
                 index=i,
                 position=node.position,
                 is_inline=node.is_inline,
             )
             for i, (node, katex) in enumerate(zip(math_nodes, valid_katexes))
         ]
-        await self.math_expression_repository.batch_insert_many(math_expressions, batch_size=1000)
-        await self.math_expression_repository.backup()
+        await self.math_expression_repository.insert_many(math_expressions)
+        await self.math_expression_graph_repository.insert_many_nodes(math_expressions)
         logger.info(f'{self.__class__.__name__} loaded {len(math_expressions)} math expressions')

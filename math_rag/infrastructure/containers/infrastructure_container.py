@@ -349,6 +349,7 @@ class InfrastructureContainer(DeclarativeContainer):
             config.neo4j.username,
             config.neo4j.password,
         ),
+        notifications_min_severity='WARNING',
     )
 
     math_expression_group_graph_repository = Singleton(
@@ -695,12 +696,18 @@ class InfrastructureContainer(DeclarativeContainer):
         math_expression_dataset_repository=math_expression_dataset_repository,
         math_expression_dataset_test_repository=math_expression_dataset_test_repository,
         math_expression_dataset_test_result_repository=math_expression_dataset_test_result_repository,
+        math_expression_relationship_description_repository=math_expression_relationship_description_repository,
+        math_expression_relationship_repository=math_expression_relationship_repository,
         math_expression_sample_repository=math_expression_sample_repository,
         math_article_repository=math_article_repository,
         math_expression_repository=math_expression_repository,
+        math_expression_description_opt_repository=math_expression_description_opt_repository,
+        math_expression_description_repository=math_expression_description_repository,
+        math_expression_group_repository=math_expression_group_repository,
         math_expression_label_repository=math_expression_label_repository,
         math_problem_repository=math_problem_repository,
         task_repository=task_repository,
+        math_expression_description_opt_embedding_repository=math_expression_description_opt_embedding_repository,
         math_expression_group_graph_repository=math_expression_group_graph_repository,
         math_expression_graph_repository=math_expression_graph_repository,
     )

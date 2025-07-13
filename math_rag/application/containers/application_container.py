@@ -38,12 +38,20 @@ from math_rag.application.base.repositories.documents import (
     BaseMathExpressionDatasetRepository,
     BaseMathExpressionDatasetTestRepository,
     BaseMathExpressionDatasetTestResultRepository,
+    BaseMathExpressionDescriptionOptRepository,
+    BaseMathExpressionDescriptionRepository,
+    BaseMathExpressionGroupRepository,
     BaseMathExpressionIndexRepository,
     BaseMathExpressionLabelRepository,
+    BaseMathExpressionRelationshipDescriptionRepository,
+    BaseMathExpressionRelationshipRepository,
     BaseMathExpressionRepository,
     BaseMathExpressionSampleRepository,
     BaseMathProblemRepository,
     BaseTaskRepository,
+)
+from math_rag.application.base.repositories.embeddings import (
+    BaseMathExpressionDescriptionOptRepository as BaseMathExpressionDescriptionOptEmbeddingRepository,
 )
 from math_rag.application.base.repositories.graphs import (
     BaseMathExpressionGroupRepository as BaseMathExpressionGroupGraphRepository,
@@ -70,14 +78,21 @@ from math_rag.application.services import (
     KatexCorrectorService,
     LLMSettingsLoaderService,
     MathArticleLoaderService,
+    MathExpressionContextLoaderService,
     MathExpressionDatasetBuilderService,
     MathExpressionDatasetPublisherService,
     MathExpressionDatasetTesterService,
+    MathExpressionDescriptionLoaderService,
+    MathExpressionDescriptionOptLoaderService,
+    MathExpressionGroupLoaderService,
+    MathExpressionGroupRelationshipLoaderService,
     MathExpressionIndexBuilderService,
     MathExpressionLabelExporterService,
     MathExpressionLabelLoaderService,
     MathExpressionLabelTaskImporterService,
     MathExpressionLoaderService,
+    MathExpressionRelationshipDescriptionLoaderService,
+    MathExpressionRelationshipLoaderService,
     MathExpressionSampleLoaderService,
     MMSettingsLoaderService,
 )
@@ -118,12 +133,29 @@ class ApplicationContainer(DeclarativeContainer):
     math_expression_dataset_test_result_repository = Dependency(
         instance_of=BaseMathExpressionDatasetTestResultRepository
     )
+    math_expression_description_opt_repository = Dependency(
+        instance_of=BaseMathExpressionDescriptionOptRepository
+    )
+    math_expression_description_repository = Dependency(
+        instance_of=BaseMathExpressionDescriptionRepository
+    )
+    math_expression_group_repository = Dependency(instance_of=BaseMathExpressionGroupRepository)
     math_article_repository = Dependency(instance_of=BaseMathArticleRepository)
+    math_expression_relationship_description_repository = Dependency(
+        instance_of=BaseMathExpressionRelationshipDescriptionRepository
+    )
+    math_expression_relationship_repository = Dependency(
+        instance_of=BaseMathExpressionRelationshipRepository
+    )
     math_expression_repository = Dependency(instance_of=BaseMathExpressionRepository)
     math_expression_label_repository = Dependency(instance_of=BaseMathExpressionLabelRepository)
     math_expression_sample_repository = Dependency(instance_of=BaseMathExpressionSampleRepository)
     math_problem_repository = Dependency(instance_of=BaseMathProblemRepository)
     task_repository = Dependency(instance_of=BaseTaskRepository)
+
+    math_expression_description_opt_embedding_repository = Dependency(
+        instance_of=BaseMathExpressionDescriptionOptEmbeddingRepository
+    )
 
     math_expression_group_graph_repository = Dependency(
         instance_of=BaseMathExpressionGroupGraphRepository
@@ -225,12 +257,61 @@ class ApplicationContainer(DeclarativeContainer):
         katex_corrector_service=katex_corrector_service,
         math_article_parser_service=math_article_parser_service,
         math_article_repository=math_article_repository,
+        math_expression_graph_repository=math_expression_graph_repository,
+        math_expression_repository=math_expression_repository,
+    )
+    math_expression_relationship_description_loader_service = Factory(
+        MathExpressionRelationshipDescriptionLoaderService,
+        math_expression_relationship_description_writer_assistant=math_expression_relationship_description_writer_assistant,
+        math_article_chunk_repository=math_article_chunk_repository,
+        math_expression_relationship_description_repository=math_expression_relationship_description_repository,
+        math_expression_relationship_repository=math_expression_relationship_repository,
+    )
+    math_expression_relationship_loader_service = Factory(
+        MathExpressionRelationshipLoaderService,
+        math_expression_relationship_detector_assistant=math_expression_relationship_detector_assistant,
+        math_article_chunk_repository=math_article_chunk_repository,
+        math_expression_graph_repository=math_expression_graph_repository,
+        math_expression_relationship_repository=math_expression_relationship_repository,
         math_expression_repository=math_expression_repository,
     )
     math_expression_dataset_tester_service = Factory(
         MathExpressionDatasetTesterService,
         dataset_loader_service=dataset_loader_service,
         math_expression_labeler_assistant=math_expression_labeler_assistant,
+    )
+    math_expression_description_loader_service = Factory(
+        MathExpressionDescriptionLoaderService,
+        math_expression_description_writer_assistant=math_expression_description_writer_assistant,
+        math_article_parser_service=math_article_parser_service,
+        math_expression_repository=math_expression_repository,
+        math_expression_context_repository=math_expression_context_repository,
+        math_expression_description_repository=math_expression_description_repository,
+    )
+    math_expression_description_opt_loader_service = Factory(
+        MathExpressionDescriptionOptLoaderService,
+        default_embedder=default_embedder,
+        math_expression_description_optimizer_assistant=math_expression_description_optimizer_assistant,
+        math_expression_description_repository=math_expression_description_repository,
+        math_expression_description_opt_repository=math_expression_description_opt_repository,
+        math_expression_description_opt_embedding_repository=math_expression_description_opt_embedding_repository,
+    )
+    math_expression_group_relationship_loader_service = Factory(
+        MathExpressionGroupRelationshipLoaderService,
+        math_expression_comparator_assistant=math_expression_comparator_assistant,
+        math_expression_context_repository=math_expression_context_repository,
+        math_expression_group_graph_repository=math_expression_group_graph_repository,
+        math_expression_group_repository=math_expression_group_repository,
+        math_expression_graph_repository=math_expression_graph_repository,
+        math_expression_repository=math_expression_repository,
+    )
+    math_expression_group_loader_service = Factory(
+        MathExpressionGroupLoaderService,
+        math_expression_description_opt_embedding_repository=math_expression_description_opt_embedding_repository,
+        math_expression_group_graph_repository=math_expression_group_graph_repository,
+        math_expression_group_repository=math_expression_group_repository,
+        math_expression_graph_repository=math_expression_graph_repository,
+        math_expression_repository=math_expression_repository,
     )
     math_expression_label_loader_service = Factory(
         MathExpressionLabelLoaderService,
@@ -247,7 +328,13 @@ class ApplicationContainer(DeclarativeContainer):
         MathExpressionSampleLoaderService,
         math_expression_sample_repository=math_expression_sample_repository,
     )
-
+    math_expression_context_loader_service = Factory(
+        MathExpressionContextLoaderService,
+        math_article_parser_service=math_article_parser_service,
+        math_article_repository=math_article_repository,
+        math_expression_repository=math_expression_repository,
+        math_expression_context_repository=math_expression_context_repository,
+    )
     math_expression_dataset_builder_service = Factory(
         MathExpressionDatasetBuilderService,
         math_article_loader_service=math_article_loader_service,

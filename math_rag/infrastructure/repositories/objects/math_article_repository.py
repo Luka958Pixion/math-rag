@@ -44,6 +44,16 @@ class MathArticleRepository(
 
         return self.find_by_name(doc.object_name)
 
+    async def find_by_math_expression_index_id(self, id: UUID) -> MathArticle | None:
+        doc = await self.object_metadata_repository.find_one(
+            filter={'metadata.math_expression_index_id': str(id)}
+        )
+
+        if not doc:
+            return None
+
+        return self.find_by_name(doc.object_name)
+
     async def find_many_by_math_expression_index_id(self, id: UUID) -> list[MathArticle]:
         docs = await self.object_metadata_repository.find_many(
             filter={'metadata.math_expression_index_id': str(id)}

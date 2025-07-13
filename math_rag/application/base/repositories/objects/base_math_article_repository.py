@@ -12,6 +12,10 @@ class BaseMathArticleRepository(BaseObjectRepository[MathArticle]):
         pass
 
     @abstractmethod
+    async def find_by_math_expression_index_id(self, id: UUID) -> MathArticle | None:
+        pass
+
+    @abstractmethod
     async def find_many_by_math_expression_index_id(self, id: UUID) -> list[MathArticle]:
         pass
 
