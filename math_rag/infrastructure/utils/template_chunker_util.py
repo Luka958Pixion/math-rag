@@ -48,7 +48,6 @@ class TemplateChunkerUtil:
 
     @staticmethod
     def _chunk_block(
-        block_text: str,
         relative_positions: list[int],
         relative_lengths: list[int],
         max_window_size: int,
@@ -105,11 +104,10 @@ class TemplateChunkerUtil:
 
         for i, j in block_ranges:
             block_start = positions[i]
-            block_end = positions[j - 1] + lengths[j - 1]
             rel_positions = [pos - block_start for pos in positions[i:j]]
             rel_lengths = lengths[i:j]
             rel_spans = TemplateChunkerUtil._chunk_block(
-                text[block_start:block_end], rel_positions, rel_lengths, max_window_size
+                rel_positions, rel_lengths, max_window_size
             )
 
             for start_rel, end_rel in rel_spans:
