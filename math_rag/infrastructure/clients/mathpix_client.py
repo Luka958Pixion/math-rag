@@ -5,7 +5,7 @@ from mpxpy.mathpix_client import MathpixClient as _MathpixClient
 from math_rag.application.base.clients import BaseLatexConverterClient
 
 
-ALLOWED_IMAGE_TYPES = {
+ALLOWED_IMAGE_TYPES = (
     'jpeg',
     'jpg',
     'jpe',
@@ -27,7 +27,7 @@ ALLOWED_IMAGE_TYPES = {
     'exr',
     'hdr',
     'pic',
-}
+)
 
 
 class MathpixClient(BaseLatexConverterClient):

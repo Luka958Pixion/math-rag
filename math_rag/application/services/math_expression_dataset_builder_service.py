@@ -43,7 +43,7 @@ class MathExpressionDatasetBuilderService(BaseMathExpressionDatasetBuilderServic
         )
         logger.info(f'Dataset {dataset.id} build stage updated to {build_stage}')
 
-        await self.math_article_loader_service.load(
+        await self.math_article_loader_service.load_for_dataset(
             dataset,
             categories=dataset.build_details.categories,
             category_limit=dataset.build_details.category_limit,

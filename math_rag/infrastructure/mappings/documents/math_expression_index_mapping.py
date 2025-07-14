@@ -1,5 +1,5 @@
 from math_rag.core.enums import MathExpressionIndexBuildStage
-from math_rag.core.models import MathExpressionIndex
+from math_rag.core.models import MathExpressionIndex, MathExpressionIndexBuildDetails
 from math_rag.infrastructure.base import BaseMapping
 from math_rag.infrastructure.models.documents import MathExpressionIndexDocument
 
@@ -11,6 +11,7 @@ class MathExpressionIndexMapping(BaseMapping[MathExpressionIndex, MathExpression
             id=target.id,
             timestamp=target.timestamp,
             build_stage=MathExpressionIndexBuildStage(target.build_stage),
+            build_details=MathExpressionIndexBuildDetails(file_path=target.file_path),
         )
 
     @staticmethod
@@ -19,4 +20,5 @@ class MathExpressionIndexMapping(BaseMapping[MathExpressionIndex, MathExpression
             id=source.id,
             timestamp=source.timestamp,
             build_stage=source.build_stage.value,
+            file_path=source.build_details.file_path,
         )

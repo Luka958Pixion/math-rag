@@ -64,6 +64,11 @@ class MathExpressionIndexBuilderService(BaseMathExpressionIndexBuilderService):
         # (build stage, loader service, description)
         self._stages = [
             (
+                MathExpressionIndexBuildStage.LOAD_MATH_ARTICLES,
+                self.math_article_loader_service.load_for_index,
+                'math articles',
+            ),
+            (
                 MathExpressionIndexBuildStage.LOAD_MATH_EXPRESSIONS,
                 self.math_expression_loader_service.load_for_index,
                 'math expressions',

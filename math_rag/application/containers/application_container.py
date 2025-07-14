@@ -249,6 +249,7 @@ class ApplicationContainer(DeclarativeContainer):
     math_article_loader_service = Factory(
         MathArticleLoaderService,
         arxiv_client=arxiv_client,
+        latex_converter_client=latex_converter_client,
         math_article_repository=math_article_repository,
     )
 

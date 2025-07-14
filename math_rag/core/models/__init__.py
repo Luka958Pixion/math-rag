@@ -14,6 +14,7 @@ from .math_expression_description_opt import MathExpressionDescriptionOpt
 from .math_expression_group import MathExpressionGroup
 from .math_expression_group_relationship import MathExpressionGroupRelationship
 from .math_expression_index import MathExpressionIndex
+from .math_expression_index_build_details import MathExpressionIndexBuildDetails
 from .math_expression_label import MathExpressionLabel
 from .math_expression_label_task import MathExpressionLabelTask
 from .math_expression_relationship import MathExpressionRelationship
@@ -27,6 +28,7 @@ __all__ = [
     'DatasetSplit',
     'FineTuneJob',
     'MathExpressionIndex',
+    'MathExpressionIndexBuildDetails',
     'LatexMathNode',
     'MathArticle',
     'MathArticleChunk',

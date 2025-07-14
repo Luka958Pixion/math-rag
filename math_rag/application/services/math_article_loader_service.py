@@ -1,13 +1,16 @@
 from asyncio import gather
+from io import BytesIO
 from logging import getLogger
+from pathlib import Path
 from uuid import UUID
+from zipfile import ZipFile
 
 from arxiv import Result
 
-from math_rag.application.base.clients import BaseArxivClient
+from math_rag.application.base.clients import BaseArxivClient, BaseLatexConverterClient
 from math_rag.application.base.repositories.objects import BaseMathArticleRepository
 from math_rag.application.base.services import BaseMathArticleLoaderService
-from math_rag.core.models import MathArticle, MathExpressionDataset
+from math_rag.core.models import MathArticle, MathExpressionDataset, MathExpressionIndex
 from math_rag.core.types import ArxivCategoryType
 from math_rag.shared.utils import GzipExtractorUtil
 
@@ -20,12 +23,14 @@ class MathArticleLoaderService(BaseMathArticleLoaderService):
     def __init__(
         self,
         arxiv_client: BaseArxivClient,
+        latex_converter_client: BaseLatexConverterClient,
         math_article_repository: BaseMathArticleRepository,
     ):
         self.arxiv_client = arxiv_client
+        self.latex_converter_client = latex_converter_client
         self.math_article_repository = math_article_repository
 
-    async def load(
+    async def load_for_dataset(
         self,
         dataset: MathExpressionDataset,
         *,
@@ -40,7 +45,7 @@ class MathArticleLoaderService(BaseMathArticleLoaderService):
             )
 
         self.math_article_repository.backup()
-        logger.info(f'{self.__class__.__name__} {num_math_articles} math articles in total')
+        logger.info(f'{self.__class__.__name__} loaded {num_math_articles} math articles in total')
 
     async def _process_arxiv_category(
         self, dataset_id: UUID, category: ArxivCategoryType, category_limit: int
@@ -113,3 +118,40 @@ class MathArticleLoaderService(BaseMathArticleLoaderService):
             return {f'{arxiv_id}.tex': extracted_bytes}
 
         raise ValueError(f'Unexpected file extension {src_name}')
+
+    async def load_for_index(self, index: MathExpressionIndex):
+        path = index.build_details.file_path
+
+        if path.suffix == '.pdf':
+            tex_zip_bytes = self.latex_converter_client.convert_pdf(file_path=path, url=None)
+            tex_zip = self._extract_tex_zip(tex_zip_bytes, path)
+            tex_file_name, tex_file_bytes = self._read_tex_file(tex_zip)
+
+        else:
+            text = self.latex_converter_client.convert_image(file_path=path, url=None)
+            tex_file_name = f'{path.stem}.tex'
+            tex_file_bytes = text.encode('utf-8')
+
+        math_article = MathArticle(
+            math_expression_dataset_id=None,
+            math_expression_index_id=index.id,
+            name=tex_file_name,
+            bytes=tex_file_bytes,
+        )
+        await self.math_article_repository.insert_one(math_article)
+        logger.info(f'{self.__class__.__name__} loaded a math article from {path}')
+
+    def _extract_tex_zip(self, zip_bytes: bytes, file_path: Path) -> Path:
+        dir_path = file_path.parent / file_path.stem
+        dir_path.mkdir(parents=True, exist_ok=True)
+
+        with ZipFile(BytesIO(zip_bytes)) as zip_file:
+            zip_file.extractall(dir_path)
+
+        return dir_path
+
+    def _read_tex_file(self, dir_path: Path) -> tuple[str, bytes]:
+        nested_dir = next(path for path in dir_path.iterdir() if path.is_dir())
+        tex_file = next(path for path in nested_dir.iterdir() if path.suffix == '.tex')
+
+        return tex_file.name, tex_file.read_bytes()
