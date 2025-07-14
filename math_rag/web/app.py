@@ -39,9 +39,11 @@ def on_exception(task: asyncio.Task):
 @asynccontextmanager
 async def lifespan(api: FastAPI):
     application_container: ApplicationContainer = api.state.application_container
+    # NOTE: was for service in application_container.background_services()
+    # before addition of graph repositories
     tasks = [
         asyncio.create_task(service.start(), name=service.__class__.__name__)
-        for service in application_container.background_services()
+        for service in await application_container.background_services()
     ]
 
     for task in tasks:

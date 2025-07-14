@@ -4,7 +4,8 @@ from uuid import UUID, uuid4
 from pydantic import BaseModel, Field
 
 from math_rag.core.enums import MathExpressionIndexBuildStage
-from math_rag.core.models import MathExpressionIndexBuildDetails
+
+from .math_expression_index_build_details import MathExpressionIndexBuildDetails
 
 
 class MathExpressionIndex(BaseModel):

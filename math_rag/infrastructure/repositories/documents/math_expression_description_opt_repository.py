@@ -1,7 +1,7 @@
 from pymongo import AsyncMongoClient
 
 from math_rag.application.base.repositories.documents import (
-    BaseMathExpressionDescriptionRepository,
+    BaseMathExpressionDescriptionOptRepository,
 )
 from math_rag.core.models import MathExpressionDescriptionOpt
 from math_rag.infrastructure.mappings.documents import MathExpressionDescriptionOptMapping
@@ -11,7 +11,7 @@ from .document_repository import DocumentRepository
 
 
 class MathExpressionDescriptionOptRepository(
-    BaseMathExpressionDescriptionRepository,
+    BaseMathExpressionDescriptionOptRepository,
     DocumentRepository[
         MathExpressionDescriptionOpt,
         MathExpressionDescriptionOptDocument,

@@ -1,4 +1,7 @@
+import asyncio
+
 from pathlib import Path
+from typing import Any
 
 from arxiv import Client as _ArxivClient
 from dependency_injector.containers import DeclarativeContainer
@@ -10,6 +13,7 @@ from dependency_injector.providers import (
     Factory,
     List,
     Provider,
+    Resource,
     Singleton,
 )
 from huggingface_hub import HfApi
@@ -352,10 +356,10 @@ class InfrastructureContainer(DeclarativeContainer):
         notifications_min_severity='WARNING',
     )
 
-    math_expression_group_graph_repository = Singleton(
+    math_expression_group_graph_repository = Resource(
         MathExpressionGroupGraphRepository.create, async_driver=async_neo4j_driver
     )
-    math_expression_graph_repository = Singleton(
+    math_expression_graph_repository = Resource(
         MathExpressionGraphRepository.create, async_driver=async_neo4j_driver
     )
 

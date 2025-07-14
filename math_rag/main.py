@@ -57,8 +57,8 @@ async def main():
         await document_indexer.index()
 
     # initialize
-    for initializer in infrastructure_container.initializers():
-        await initializer.initialize()
+    # for initializer in infrastructure_container.initializers():
+    #     await initializer.initialize()
 
     # serve
     api = create_api(application_container)

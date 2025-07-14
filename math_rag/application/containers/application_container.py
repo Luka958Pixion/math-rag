@@ -316,6 +316,7 @@ class ApplicationContainer(DeclarativeContainer):
     )
     math_expression_group_loader_service = Factory(
         MathExpressionGroupLoaderService,
+        grouper_service=grouper_service,
         math_expression_description_opt_embedding_repository=math_expression_description_opt_embedding_repository,
         math_expression_group_graph_repository=math_expression_group_graph_repository,
         math_expression_group_repository=math_expression_group_repository,
@@ -350,7 +351,7 @@ class ApplicationContainer(DeclarativeContainer):
         math_expression_dataset_publisher_service=math_expression_dataset_publisher_service,
         math_expression_dataset_repository=math_expression_dataset_repository,
         math_expression_label_loader_service=math_expression_label_loader_service,
-        math_expression_loader_service=math_expression_loader_service,
+        math_expression_loader_service=math_expression_loader_service,  # TODO
         math_expression_sample_loader_service=math_expression_sample_loader_service,
     )
     math_expression_index_builder_service = Factory(
@@ -422,8 +423,8 @@ class ApplicationContainer(DeclarativeContainer):
     background_services: Provider[list[BaseBackgroundService]] = List(
         fine_tune_job_background_service,
         gpu_stats_background_service,
-        math_expression_index_background_service,
-        math_expression_dataset_background_service,
+        # math_expression_index_background_service, # TODO bug
+        math_expression_dataset_background_service,  # TODO bug
         math_expression_dataset_test_background_service,
         pbs_pro_resources_used_background_service,
         # prometheus_snapshot_background_service,   # NOTE: not needed at the moment
