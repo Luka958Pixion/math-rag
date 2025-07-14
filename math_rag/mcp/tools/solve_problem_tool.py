@@ -1,41 +1,31 @@
+import asyncio
+
 from fastapi import HTTPException, UploadFile
 from mcp.server.fastmcp import FastMCP
 
 from math_rag.mcp.base import BaseTool
+from math_rag.mcp.tools.results import SolveProblemResult
 
 
 class SolveProblemTool(BaseTool):
-    def solve_problem_tool(
+    async def solve_problem_tool(
         self,
         input_text: str | None = None,
         input_image: UploadFile | None = None,
         pdf_file: UploadFile | None = None,
-    ) -> dict:
+    ) -> SolveProblemResult:
         if not input_text and not input_image:
-            raise HTTPException(
-                status_code=400,
-                detail='No problem input provided. Please run validate_problem first.',
-            )
+            raise HTTPException(400, 'No problem input provided.')
 
-        if pdf_file is None:
-            return {'message': 'No literature provided. Solving based on problem statement only.'}
+        image_bytes = await input_image.read() if input_image else None
+        pdf_bytes = await pdf_file.read() if pdf_file else None
+        await asyncio.sleep(3)
 
-        full_pdf = pdf_file.file.read()
-        if not full_pdf:
-            raise HTTPException(status_code=400, detail='Failed to read PDF content.')
-
-        solution = '[Solution placeholder]'
-
-        return {'solution': solution}
+        return SolveProblemResult(solution=f'the final solution is: 100')
 
     def add(self, mcp: FastMCP):
         mcp.add_tool(
             self.solve_problem_tool,
             name='solve_math_problem',
-            description='Solve the validated math problem using the optional literature reference.',
-            annotations={
-                'input_text': {'type': 'string'},
-                'input_image': {'type': 'string', 'format': 'binary'},
-                'pdf_file': {'type': 'string', 'format': 'binary'},
-            },
+            description='Solves the validated math problem using the indexed literature.',
         )

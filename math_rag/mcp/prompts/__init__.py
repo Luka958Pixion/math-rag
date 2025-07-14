@@ -1,4 +1,5 @@
-from .summarize_text_prompt import SummarizeTextPrompt
+from .ask_problem_prompt import AskProblemPrompt
+from .offer_solve_prompt import OfferSolvePrompt
 
 
-__all__ = ['SummarizeTextPrompt']
+__all__ = ['AskProblemPrompt', 'OfferSolvePrompt']

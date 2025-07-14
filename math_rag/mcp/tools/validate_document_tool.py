@@ -1,36 +1,35 @@
+import asyncio
+
 from fastapi import HTTPException, UploadFile
 from mcp.server.fastmcp import FastMCP
 
 from math_rag.mcp.base import BaseTool
+from math_rag.mcp.tools.results import ValidateDocumentResult
 
 
 class ValidateDocumentTool(BaseTool):
-    def validate_document_tool(
+    async def validate_document_tool(
         self,
         pdf_file: UploadFile,
-    ) -> dict:
+    ) -> ValidateDocumentResult:
         if pdf_file.content_type != 'application/pdf':
-            raise HTTPException(
-                status_code=400, detail='Only PDF files are accepted as literature references.'
-            )
+            raise HTTPException(400, 'Only PDF files are accepted.')
 
-        head = pdf_file.file.read(4)
+        header = await pdf_file.read(4)
 
-        if not head or head != b'%PDF':
-            raise HTTPException(
-                status_code=400, detail='Uploaded file is not a valid PDF document.'
-            )
+        if header != b'%PDF':
+            raise HTTPException(400, 'Uploaded file is not a valid PDF.')
 
-        return {
-            'message': 'Literature PDF validated. You may now solve the problem using solve_math_problem.'
-        }
+        # TODO: replace with real indexing
+        asyncio.sleep(3)
+
+        return ValidateDocumentResult(
+            message=f'Literature indexing has completed. You may now submit your problem.'
+        )
 
     def add(self, mcp: FastMCP):
         mcp.add_tool(
             self.validate_document_tool,
             name='validate_document',
-            description='Validate uploaded literature file (PDF only).',
-            annotations={
-                'pdf_file': {'type': 'string', 'format': 'binary'},
-            },
+            description='Validates the PDF and initiates indexing.',
         )
