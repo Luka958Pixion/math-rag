@@ -3,12 +3,11 @@ from mcp.server.fastmcp import FastMCP
 
 from math_rag.mcp.base import BasePrompt, BaseResource, BaseTool
 from math_rag.mcp.constants import OPENAPI_URL, TITLE
-from math_rag.mcp.prompts import AskProblemPrompt, OfferSolvePrompt
+from math_rag.mcp.prompts import OfferSolvePrompt
 from math_rag.mcp.resources import ConfigResource
 from math_rag.mcp.tools import (
-    SolveProblemTool,
-    ValidateDocumentTool,
-    ValidateProblemTool,
+    MathLiteratureIndexerTool,
+    MathProblemSolverTool,
 )
 
 
@@ -19,7 +18,7 @@ def create_mcp() -> FastAPI:
         enable_discovery_routes=True,
     )
 
-    prompts: list[BasePrompt] = [AskProblemPrompt(), OfferSolvePrompt()]
+    prompts: list[BasePrompt] = [OfferSolvePrompt()]
 
     for prompt in prompts:
         prompt.add(mcp)
@@ -29,11 +28,7 @@ def create_mcp() -> FastAPI:
     for resource in resources:
         resource.add(mcp)
 
-    tools: list[BaseTool] = [
-        SolveProblemTool(),
-        ValidateDocumentTool(),
-        ValidateProblemTool(),
-    ]
+    tools: list[BaseTool] = [MathLiteratureIndexerTool(), MathProblemSolverTool()]
 
     for tool in tools:
         tool.add(mcp)

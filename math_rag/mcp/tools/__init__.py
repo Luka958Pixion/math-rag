@@ -1,6 +1,5 @@
-from .solve_problem_tool import SolveProblemTool
-from .validate_document_tool import ValidateDocumentTool
-from .validate_problem_tool import ValidateProblemTool
+from .math_literature_indexer_tool import MathLiteratureIndexerTool
+from .math_problem_solver_tool import MathProblemSolverTool
 
 
-__all__ = ['SolveProblemTool', 'ValidateDocumentTool', 'ValidateProblemTool']
+__all__ = ['MathLiteratureIndexerTool', 'MathProblemSolverTool']
