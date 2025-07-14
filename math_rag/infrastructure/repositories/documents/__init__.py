@@ -21,6 +21,7 @@ from .math_expression_relationship_repository import MathExpressionRelationshipR
 from .math_expression_repository import MathExpressionRepository
 from .math_expression_sample_repository import MathExpressionSampleRepository
 from .math_problem_repository import MathProblemRepository
+from .math_problem_solution_repository import MathProblemSolutionRepository
 from .mm_failed_request_repository import MMFailedRequestRepository
 from .object_metadata_repository import ObjectMetadataRepository
 from .task_repository import TaskRepository
@@ -46,6 +47,7 @@ __all__ = [
     'MathExpressionRepository',
     'MathExpressionSampleRepository',
     'MathProblemRepository',
+    'MathProblemSolutionRepository',
     'MMFailedRequestRepository',
     'ObjectMetadataRepository',
     'TaskRepository',

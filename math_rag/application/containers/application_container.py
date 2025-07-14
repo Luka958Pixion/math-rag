@@ -48,6 +48,7 @@ from math_rag.application.base.repositories.documents import (
     BaseMathExpressionRepository,
     BaseMathExpressionSampleRepository,
     BaseMathProblemRepository,
+    BaseMathProblemSolutionRepository,
     BaseTaskRepository,
 )
 from math_rag.application.base.repositories.embeddings import (
@@ -152,6 +153,7 @@ class ApplicationContainer(DeclarativeContainer):
     math_expression_label_repository = Dependency(instance_of=BaseMathExpressionLabelRepository)
     math_expression_sample_repository = Dependency(instance_of=BaseMathExpressionSampleRepository)
     math_problem_repository = Dependency(instance_of=BaseMathProblemRepository)
+    math_problem_solution_repository = Dependency(instance_of=BaseMathProblemSolutionRepository)
     task_repository = Dependency(instance_of=BaseTaskRepository)
 
     math_expression_description_opt_embedding_repository = Dependency(

@@ -10,8 +10,6 @@ class MathProblemMapping(BaseMapping[MathProblem, MathProblemDocument]):
             id=target.id,
             timestamp=target.timestamp,
             latex=target.latex,
-            katex=target.katex,
-            is_inline=target.is_inline,
         )
 
     @staticmethod
@@ -20,6 +18,4 @@ class MathProblemMapping(BaseMapping[MathProblem, MathProblemDocument]):
             id=source.id,
             timestamp=source.timestamp,
             latex=source.latex,
-            katex=source.katex,
-            is_inline=source.is_inline,
         )

@@ -21,6 +21,7 @@ from .math_expression_relationship import MathExpressionRelationship
 from .math_expression_relationship_description import MathExpressionRelationshipDescription
 from .math_expression_sample import MathExpressionSample
 from .math_problem import MathProblem
+from .math_problem_solution import MathProblemSolution
 from .task import Task
 
 
@@ -48,5 +49,6 @@ __all__ = [
     'MathExpressionRelationshipDescription',
     'MathExpressionSample',
     'MathProblem',
+    'MathProblemSolution',
     'Task',
 ]

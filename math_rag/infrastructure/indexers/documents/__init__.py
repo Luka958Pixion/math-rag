@@ -17,6 +17,7 @@ from .math_expression_relationship_description_indexer import (
 from .math_expression_relationship_indexer import MathExpressionRelationshipIndexer
 from .math_expression_sample_indexer import MathExpressionSampleIndexer
 from .math_problem_indexer import MathProblemIndexer
+from .math_problem_solution_indexer import MathProblemSolutionIndexer
 from .object_metadata_indexer import ObjectMetadataIndexer
 from .task_indexer import TaskIndexer
 
@@ -39,6 +40,7 @@ __all__ = [
     'MathExpressionRelationshipIndexer',
     'MathExpressionSampleIndexer',
     'MathProblemIndexer',
+    'MathProblemSolutionIndexer',
     'ObjectMetadataIndexer',
     'TaskIndexer',
 ]

@@ -20,7 +20,7 @@ logger = getLogger(__name__)
 router = APIRouter()
 
 
-@router.post('/indexes', response_model=Response)
+@router.post('/indexes/math-expressions', response_model=Response)
 @inject
 async def create_index(
     request: Request = Body(...),

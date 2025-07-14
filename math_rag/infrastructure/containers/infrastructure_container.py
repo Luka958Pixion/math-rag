@@ -67,6 +67,7 @@ from math_rag.infrastructure.indexers.documents import (
     MathExpressionRelationshipIndexer,
     MathExpressionSampleIndexer,
     MathProblemIndexer,
+    MathProblemSolutionIndexer,
     ObjectMetadataIndexer,
     TaskIndexer,
 )
@@ -113,6 +114,7 @@ from math_rag.infrastructure.repositories.documents import (
     MathExpressionRepository,
     MathExpressionSampleRepository,
     MathProblemRepository,
+    MathProblemSolutionRepository,
     MMFailedRequestRepository,
     ObjectMetadataRepository,
     TaskRepository,
@@ -144,6 +146,7 @@ from math_rag.infrastructure.seeders.documents import (
     MathExpressionSampleSeeder,
     MathExpressionSeeder,
     MathProblemSeeder,
+    MathProblemSolutionSeeder,
     MMFailedRequestSeeder,
     ObjectMetadataSeeder,
     TaskSeeder,
@@ -215,6 +218,7 @@ class InfrastructureContainer(DeclarativeContainer):
     )
     math_expression_sample_repository = Factory(MathExpressionSampleRepository, **mongo_kwargs)
     math_problem_repository = Factory(MathProblemRepository, **mongo_kwargs)
+    math_problem_solution_repository = Factory(MathProblemSolutionRepository, **mongo_kwargs)
     mm_failed_request_repository = Factory(MMFailedRequestRepository, **mongo_kwargs)
     object_metadata_repository = Factory(ObjectMetadataRepository, **mongo_kwargs)
     task_repository = Factory(TaskRepository, **mongo_kwargs)
@@ -240,6 +244,7 @@ class InfrastructureContainer(DeclarativeContainer):
     math_expression_seeder = Factory(MathExpressionSeeder, **mongo_kwargs)
     math_expression_sample_seeder = Factory(MathExpressionSampleSeeder, **mongo_kwargs)
     math_problem_seeder = Factory(MathProblemSeeder, **mongo_kwargs)
+    math_problem_solution_seeder = Factory(MathProblemSolutionSeeder, **mongo_kwargs)
     mm_failed_request_seeder = Factory(MMFailedRequestSeeder, **mongo_kwargs)
     object_metadata_seeder = Factory(ObjectMetadataSeeder, **mongo_kwargs)
     task_seeder = Factory(TaskSeeder, **mongo_kwargs)
@@ -262,6 +267,7 @@ class InfrastructureContainer(DeclarativeContainer):
         math_expression_seeder,
         math_expression_sample_seeder,
         math_problem_seeder,
+        math_problem_solution_seeder,
         mm_failed_request_seeder,
         object_metadata_seeder,
         task_seeder,
@@ -291,6 +297,7 @@ class InfrastructureContainer(DeclarativeContainer):
     math_expression_indexer = Factory(MathExpressionIndexer, **mongo_kwargs)
     math_expression_sample_indexer = Factory(MathExpressionSampleIndexer, **mongo_kwargs)
     math_problem_indexer = Factory(MathProblemIndexer, **mongo_kwargs)
+    math_problem_solution_indexer = Factory(MathProblemSolutionIndexer, **mongo_kwargs)
     object_metadata_indexer = Factory(ObjectMetadataIndexer, **mongo_kwargs)
     task_indexer = Factory(TaskIndexer, **mongo_kwargs)
 
@@ -311,6 +318,7 @@ class InfrastructureContainer(DeclarativeContainer):
         math_expression_indexer,
         math_expression_sample_indexer,
         math_problem_indexer,
+        math_problem_solution_indexer,
         object_metadata_indexer,
         task_indexer,
     )
@@ -710,6 +718,7 @@ class InfrastructureContainer(DeclarativeContainer):
         math_expression_group_repository=math_expression_group_repository,
         math_expression_label_repository=math_expression_label_repository,
         math_problem_repository=math_problem_repository,
+        math_problem_solution_repository=math_problem_solution_repository,
         task_repository=task_repository,
         math_expression_description_opt_embedding_repository=math_expression_description_opt_embedding_repository,
         math_expression_group_graph_repository=math_expression_group_graph_repository,

@@ -18,6 +18,7 @@ from .math_expression_relationship_seeder import MathExpressionRelationshipSeede
 from .math_expression_sample_seeder import MathExpressionSampleSeeder
 from .math_expression_seeder import MathExpressionSeeder
 from .math_problem_seeder import MathProblemSeeder
+from .math_problem_solution_seeder import MathProblemSolutionSeeder
 from .mm_failed_request_seeder import MMFailedRequestSeeder
 from .object_metadata_seeder import ObjectMetadataSeeder
 from .task_seeder import TaskSeeder
@@ -42,6 +43,7 @@ __all__ = [
     'MathExpressionSampleSeeder',
     'MathExpressionSeeder',
     'MathProblemSeeder',
+    'MathProblemSolutionSeeder',
     'MMFailedRequestSeeder',
     'ObjectMetadataSeeder',
     'TaskSeeder',

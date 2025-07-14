@@ -28,6 +28,7 @@ from .math_expression_relationship_description_mapping import (
 from .math_expression_relationship_mapping import MathExpressionRelationshipMapping
 from .math_expression_sample_mapping import MathExpressionSampleMapping
 from .math_problem_mapping import MathProblemMapping
+from .math_problem_solution_mapping import MathProblemSolutionMapping
 from .mm_failed_request_mapping import MMFailedRequestMapping
 from .mm_params_mapping import MMParamsMapping
 from .mm_request_mapping import MMRequestMapping
@@ -64,6 +65,7 @@ __all__ = [
     'MathExpressionRelationshipMapping',
     'MathExpressionSampleMapping',
     'MathProblemMapping',
+    'MathProblemSolutionMapping',
     'MMFailedRequestMapping',
     'MMParamsMapping',
     'MMRequestMapping',

@@ -23,6 +23,7 @@ from .base_math_expression_relationship_repository import BaseMathExpressionRela
 from .base_math_expression_repository import BaseMathExpressionRepository
 from .base_math_expression_sample_repository import BaseMathExpressionSampleRepository
 from .base_math_problem_repository import BaseMathProblemRepository
+from .base_math_problem_solution_repository import BaseMathProblemSolutionRepository
 from .base_mm_failed_request_repository import BaseMMFailedRequestRepository
 from .base_task_repository import BaseTaskRepository
 
@@ -47,6 +48,7 @@ __all__ = [
     'BaseMathExpressionRepository',
     'BaseMathExpressionSampleRepository',
     'BaseMathProblemRepository',
+    'BaseMathProblemSolutionRepository',
     'BaseMMFailedRequestRepository',
     'BaseTaskRepository',
 ]

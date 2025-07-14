@@ -28,6 +28,7 @@ from .math_expression_relationship_description_document import (
 from .math_expression_relationship_document import MathExpressionRelationshipDocument
 from .math_expression_sample_document import MathExpressionSampleDocument
 from .math_problem_document import MathProblemDocument
+from .math_problem_solution_document import MathProblemSolutionDocument
 from .mm_error_document import MMErrorDocument
 from .mm_failed_request_document import MMFailedRequestDocument
 from .mm_params_document import MMParamsDocument
@@ -66,6 +67,7 @@ __all__ = [
     'MathExpressionDocument',
     'MathExpressionSampleDocument',
     'MathProblemDocument',
+    'MathProblemSolutionDocument',
     'MMErrorDocument',
     'MMFailedRequestDocument',
     'MMParamsDocument',

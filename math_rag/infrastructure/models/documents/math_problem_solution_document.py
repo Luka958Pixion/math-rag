@@ -4,7 +4,6 @@ from uuid import UUID
 from math_rag.infrastructure.base import BaseDocument
 
 
-class MathProblemDocument(BaseDocument):
+class MathProblemSolutionDocument(BaseDocument):
     id: UUID
     timestamp: datetime
-    latex: str
