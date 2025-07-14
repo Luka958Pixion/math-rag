@@ -22,14 +22,16 @@ class MathProblemSolverTool(BaseTool):
 
         await asyncio.sleep(2)
 
-        return ToolResult(
-            message='Problem validated. Next, please upload your literature PDF for indexing.'
-        )
+        return ToolResult(message='The final soulution is: 100')
 
     def add(self, mcp: FastMCP):
         mcp.add_tool(
             self.solve,
             name=self.__class__.__name__,
-            description='Validates the math problem input before any indexing.',
-            annotations=ToolAnnotations(title='Validate problem'),
+            description=(
+                'Solves the math problem from given URL by using '
+                'index built from the math literature. '
+                'Can not be called before the indexer tool.'
+            ),
+            annotations=ToolAnnotations(title='Math Problem Solver'),
         )

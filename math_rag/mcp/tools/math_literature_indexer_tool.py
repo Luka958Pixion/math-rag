@@ -19,14 +19,15 @@ class MathLiteratureIndexerTool(BaseTool):
 
         await asyncio.sleep(2)
 
-        return ToolResult(
-            message='Literature indexing completed. You may now ask for the solution.'
-        )
+        return ToolResult(message='Index built successfully')
 
     def add(self, mcp: FastMCP):
         mcp.add_tool(
             self.index,
-            name='validate_literature',
-            description='Validates the PDF and initiates indexing after problem validation.',
-            annotations=ToolAnnotations(title='Validate literature'),
+            name=self.__class__.__name__,
+            description=(
+                'Builds an index of math literature from the provided URL. '
+                'A required step before solving any math problems.'
+            ),
+            annotations=ToolAnnotations(title='Math Literature Indexer'),
         )
