@@ -20,6 +20,7 @@ from math_rag.application.assistants import (
 )
 from math_rag.application.base.clients import (
     BaseArxivClient,
+    BaseJupyterClient,
     BaseKatexClient,
     BaseLatexConverterClient,
 )
@@ -114,6 +115,7 @@ class ApplicationContainer(DeclarativeContainer):
 
     # dependencies
     arxiv_client = Dependency(instance_of=BaseArxivClient)
+    jupyter_client = Dependency(instance_of=BaseJupyterClient)
     katex_client = Dependency(instance_of=BaseKatexClient)
     latex_converter_client = Dependency(instance_of=BaseLatexConverterClient)
 

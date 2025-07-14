@@ -41,6 +41,7 @@ from math_rag.infrastructure.clients import (
     ArxivClient,
     FileSystemClient,
     HPCClient,
+    JupyterClient,
     KatexClient,
     MathpixClient,
     PBSProClient,
@@ -490,6 +491,14 @@ class InfrastructureContainer(DeclarativeContainer):
         base_url=config.katex.base_url,
     )
 
+    # Jupyter
+    config.jupyter.base_url.from_env('JUPYTER_BASE_URL')
+
+    jupyter_client = Factory(
+        JupyterClient,
+        base_url=config.jupyter.base_url,
+    )
+
     ## SSH
     config.hpc.user.from_env('HPC_USER')
     config.hpc.host.from_env('HPC_HOST')
@@ -684,6 +693,7 @@ class InfrastructureContainer(DeclarativeContainer):
         ApplicationContainer,
         arxiv_client=arxiv_client,
         katex_client=katex_client,
+        jupyter_client=jupyter_client,
         latex_converter_client=mathpix_client,
         managed_em=managed_em_router,
         managed_llm=managed_llm_router,
