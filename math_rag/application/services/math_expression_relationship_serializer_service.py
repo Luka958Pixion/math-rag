@@ -6,10 +6,10 @@ from math_rag.application.base.repositories.documents import (
     BaseMathExpressionRelationshipRepository,
     BaseMathExpressionRepository,
 )
-from math_rag.application.base.services import BaseMathExpressionIndexSerializerService
+from math_rag.application.base.services import BaseMathExpressionRelationshipSerializerService
 
 
-class MathExpressionIndexSerializerService(BaseMathExpressionIndexSerializerService):
+class MathExpressionRelationshipSerializerService(BaseMathExpressionRelationshipSerializerService):
     def __init__(
         self,
         math_expression_description_repository: BaseMathExpressionDescriptionRepository,
@@ -24,7 +24,7 @@ class MathExpressionIndexSerializerService(BaseMathExpressionIndexSerializerServ
         self.math_expression_relationship_repository = math_expression_relationship_repository
         self.math_expression_repository = math_expression_repository
 
-    async def serialize(self, index_id: UUID, math_expression_relationship_ids: list[UUID]) -> dict:
+    async def serialize(self, math_expression_relationship_ids: list[UUID]) -> dict:
         relationships = await self.math_expression_relationship_repository.find_many(
             filter=dict(id=math_expression_relationship_ids)
         )

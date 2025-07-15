@@ -29,7 +29,6 @@ from .base_math_expression_group_relationship_loader_service import (
 )
 from .base_math_expression_index_builder_service import BaseMathExpressionIndexBuilderService
 from .base_math_expression_index_searcher_service import BaseMathExpressionIndexSearcherService
-from .base_math_expression_index_serializer_service import BaseMathExpressionIndexSerializerService
 from .base_math_expression_label_exporter_service import BaseMathExpressionLabelExporterService
 from .base_math_expression_label_loader_service import BaseMathExpressionLabelLoaderService
 from .base_math_expression_label_task_importer_service import (
@@ -41,6 +40,9 @@ from .base_math_expression_relationship_description_loader_service import (
 )
 from .base_math_expression_relationship_loader_service import (
     BaseMathExpressionRelationshipLoaderService,
+)
+from .base_math_expression_relationship_serializer_service import (
+    BaseMathExpressionRelationshipSerializerService,
 )
 from .base_math_expression_sample_loader_service import BaseMathExpressionSampleLoaderService
 from .base_math_problem_solver_service import BaseMathProblemSolverService
@@ -59,7 +61,7 @@ __all__ = [
     'BaseMathExpressionGroupRelationshipLoaderService',
     'BaseMathExpressionIndexBuilderService',
     'BaseMathExpressionIndexSearcherService',
-    'BaseMathExpressionIndexSerializerService',
+    'BaseMathExpressionRelationshipSerializerService',
     'BaseKatexCorrectorService',
     'BaseLabelConfigBuilderService',
     'BaseLabelTaskExporterService',
