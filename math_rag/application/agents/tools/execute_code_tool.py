@@ -10,7 +10,8 @@ from math_rag.application.containers import ApplicationContainer
 
 class ExecuteCodeParams(BaseModel):
     code: str = Field(
-        ..., description='The Python code to execute in an isolated Jupyter environment.'
+        ...,
+        description='The Python code to execute in an isolated Jupyter environment.',
     )
 
     model_config = ConfigDict(extra='forbid')
