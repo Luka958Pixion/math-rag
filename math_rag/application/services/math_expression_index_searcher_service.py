@@ -1,55 +1,113 @@
-from logging import getLogger
-from typing import Awaitable, Callable
+from collections import Counter
 from uuid import UUID
 
-from math_rag.application.base.repositories.documents import BaseMathExpressionIndexRepository
-from math_rag.application.base.services import (
-    BaseMathExpressionIndexBuilderService,
+from math_rag.application.base.repositories.documents import (
+    BaseMathExpressionIndexRepository,
+    BaseMathExpressionRepository,
 )
-from math_rag.core.models import MathExpressionIndex
+from math_rag.application.base.repositories.embeddings import (
+    BaseMathExpressionDescriptionOptRepository as BaseMathExpressionDescriptionOptEmbeddingRepository,
+)
+from math_rag.application.base.repositories.graphs import (
+    BaseMathExpressionRepository as BaseMathExpressionGraphRepository,
+)
+from math_rag.application.base.services import BaseMathExpressionIndexSearcherService
+from math_rag.application.embedders import DefaultEmbedder
+from math_rag.application.models.embedders import EmbedderInput
 
 
-logger = getLogger(__name__)
-
-
-class MathExpressionIndexBuilderService(BaseMathExpressionIndexBuilderService):
+class MathExpressionIndexSearcherService(BaseMathExpressionIndexSearcherService):
     def __init__(
         self,
-        math_article_chunk_loader_service: BaseMathArticleChunkLoaderService,
-        math_article_loader_service: BaseMathArticleLoaderService,
-        math_expression_context_loader_service: BaseMathExpressionContextLoaderService,
-        math_expression_description_loader_service: BaseMathExpressionDescriptionLoaderService,
-        math_expression_description_opt_loader_service: BaseMathExpressionDescriptionOptLoaderService,
-        math_expression_group_loader_service: BaseMathExpressionGroupLoaderService,
-        math_expression_group_relationship_loader_service: BaseMathExpressionGroupRelationshipLoaderService,
-        math_expression_label_loader_service: BaseMathExpressionLabelLoaderService,
-        math_expression_loader_service: BaseMathExpressionLoaderService,
-        math_expression_relationship_description_loader_service: BaseMathExpressionRelationshipDescriptionLoaderService,
-        math_expression_relationship_loader_service: BaseMathExpressionRelationshipLoaderService,
+        default_embedder: DefaultEmbedder,
+        math_expression_description_opt_embedding_repository: BaseMathExpressionDescriptionOptEmbeddingRepository,
+        math_expression_graph_repository: BaseMathExpressionGraphRepository,
         math_expression_index_repository: BaseMathExpressionIndexRepository,
+        math_expression_repository: BaseMathExpressionRepository,
     ):
-        self.math_article_chunk_loader_service = math_article_chunk_loader_service
-        self.math_article_loader_service = math_article_loader_service
-        self.math_expression_context_loader_service = math_expression_context_loader_service
-        self.math_expression_description_loader_service = math_expression_description_loader_service
-        self.math_expression_description_opt_loader_service = (
-            math_expression_description_opt_loader_service
-        )
-        self.math_expression_group_loader_service = math_expression_group_loader_service
-        self.math_expression_group_relationship_loader_service = (
-            math_expression_group_relationship_loader_service
-        )
-        self.math_expression_label_loader_service = math_expression_label_loader_service
-        self.math_expression_loader_service = math_expression_loader_service
-        self.math_expression_relationship_description_loader_service = (
-            math_expression_relationship_description_loader_service
-        )
-        self.math_expression_relationship_loader_service = (
-            math_expression_relationship_loader_service
-        )
+        self.default_embedder = default_embedder
+        self.embedding_repository = math_expression_description_opt_embedding_repository
+        self.math_expression_graph_repository = math_expression_graph_repository
         self.math_expression_index_repository = math_expression_index_repository
+        self.math_expression_repository = math_expression_repository
 
-    async def search(self, index_id: UUID, query: str, *, limit: int) -> list[UUID]:
-        logger.info(f'Index {index_id} search started')
+    def _has_duplicates(self, triples: list[tuple[UUID, UUID, UUID]]) -> bool:
+        visited_triples: set[tuple[UUID, frozenset[UUID]]] = set()
 
-        logger.info(f'Index {index_id} search finished')
+        for src, rel, tgt in triples:
+            key = (rel, frozenset({src, tgt}))
+            if key in visited_triples:
+                return True
+
+            visited_triples.add(key)
+
+        return False
+
+    async def search(
+        self, index_id: UUID, query: str, *, query_limit: int, limit: int
+    ) -> list[UUID]:
+        # search optimized math expression descriptions
+        input = EmbedderInput(text=query)
+        output = await self.default_embedder.embed(input)
+
+        if not output:
+            raise ValueError()
+
+        descriptions = await self.embedding_repository.search(
+            output.embedding, filter=dict(math_expression_index_id=index_id), limit=query_limit
+        )
+
+        # math expressions
+        math_expression_ids = [description.math_expression_id for description in descriptions]
+        math_expressions = await self.math_expression_repository.find_many(
+            filter=dict(id=math_expression_ids)
+        )
+
+        # math expression groups
+        group_ids = [
+            math_expression.math_expression_group_id for math_expression in math_expressions
+        ]
+
+        # (expression, relationship, expression)
+        triples: list[tuple[UUID, UUID, UUID]] = []
+
+        for group_id in group_ids:
+            if not group_id:
+                continue
+
+            # groups are distinct, and so are the expanded math expressions
+            math_expressions_expanded = await self.math_expression_repository.find_many(
+                filter=dict(math_expression_group_id=group_id)
+            )
+
+            for math_expression in math_expressions_expanded:
+                next_triples = await self.math_expression_graph_repository.breadth_first_search(
+                    start_id=math_expression.id, max_depth=2, filter_cb=None
+                )
+
+                # skip duplicates, e.g. (0, x, 1) and (1, x, 0)
+                for src, rel, tgt in next_triples:
+                    is_duplicate = any(
+                        rel == existing_rel and {src, tgt} == {existing_src, existing_dst}
+                        for existing_src, existing_rel, existing_dst in triples
+                    )
+
+                    if not is_duplicate:
+                        triples.append((src, rel, tgt))
+
+        # count different math expression ids
+        counter: Counter[UUID] = Counter()
+
+        for source_id, _, target_id in triples:
+            counter[source_id] += 1
+            counter[target_id] += 1
+
+        # relationship (triple) with the nodes of higher degree are ranked higher
+        triples_sorted = sorted(
+            triples,
+            key=lambda triple: counter[triple[0]] + counter[triple[2]],
+            reverse=True,
+        )
+        triples_sorted = triples_sorted[:limit]
+
+        # TODO get expressions and rels, update method signature
