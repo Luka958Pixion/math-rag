@@ -27,6 +27,9 @@ class MathExpressionRelationshipSerializerService(BaseMathExpressionRelationship
         self.math_expression_repository = math_expression_repository
 
     async def serialize(self, math_expression_relationship_ids: list[UUID]) -> str:
+        if not math_expression_relationship_ids:
+            return str()
+
         relationships = await self.math_expression_relationship_repository.find_many(
             filter=dict(id=math_expression_relationship_ids)
         )
@@ -73,4 +76,4 @@ class MathExpressionRelationshipSerializerService(BaseMathExpressionRelationship
             )
         ]
 
-        return json.dumps(results, indent=2)
+        return json.dumps(results)

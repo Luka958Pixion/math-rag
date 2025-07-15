@@ -16,7 +16,7 @@ from math_rag.application.containers import ApplicationContainer
 
 class SearchGraphParams(BaseModel):
     query: str = Field(..., description='Precise query for searching the knowledge graph.')
-    query_limit: Annotated[int, Field(ge=1, le=4)] = Field(
+    query_limit: Annotated[int, Field(ge=8, le=16)] = Field(
         ..., description='Number of starting nodes from which to search.'
     )
     limit: Annotated[int, Field(ge=1, le=8)] = Field(

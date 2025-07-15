@@ -85,7 +85,7 @@ class MathExpressionIndexSearcherService(BaseMathExpressionIndexSearcherService)
                     start_id=math_expression.id, max_depth=2, filter_cb=None
                 )
 
-                if self._has_duplicates(next_triples):
+                if next_triples and self._has_duplicates(next_triples):
                     raise ValueError()
 
                 # skip duplicates, e.g. (0, x, 1) and (1, x, 0)
@@ -97,6 +97,9 @@ class MathExpressionIndexSearcherService(BaseMathExpressionIndexSearcherService)
 
                     if not is_duplicate:
                         triples.append((src, rel, tgt))
+
+        if not triples:
+            return []
 
         if self._has_duplicates(triples):
             raise ValueError()
