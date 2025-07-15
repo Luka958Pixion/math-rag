@@ -45,7 +45,7 @@ class MathExpressionIndexSearcherService(BaseMathExpressionIndexSearcherService)
         *,
         query_limit: int,
         limit: int,
-    ) -> list[tuple[UUID, UUID, UUID]]:
+    ) -> list[UUID]:
         # search optimized math expression descriptions
         input = EmbedderInput(text=query)
         output = await self.default_embedder.embed(input)
@@ -85,6 +85,9 @@ class MathExpressionIndexSearcherService(BaseMathExpressionIndexSearcherService)
                     start_id=math_expression.id, max_depth=2, filter_cb=None
                 )
 
+                if self._has_duplicates(next_triples):
+                    raise ValueError()
+
                 # skip duplicates, e.g. (0, x, 1) and (1, x, 0)
                 for src, rel, tgt in next_triples:
                     is_duplicate = any(
@@ -94,6 +97,9 @@ class MathExpressionIndexSearcherService(BaseMathExpressionIndexSearcherService)
 
                     if not is_duplicate:
                         triples.append((src, rel, tgt))
+
+        if self._has_duplicates(triples):
+            raise ValueError()
 
         # count different math expression ids
         counter: Counter[UUID] = Counter()

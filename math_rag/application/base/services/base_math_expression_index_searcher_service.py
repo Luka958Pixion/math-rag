@@ -11,5 +11,5 @@ class BaseMathExpressionIndexSearcherService(ABC):
         *,
         query_limit: int,
         limit: int,
-    ) -> list[tuple[UUID, UUID, UUID]]:
+    ) -> list[UUID]:
         pass

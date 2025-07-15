@@ -382,7 +382,7 @@ class ApplicationContainer(DeclarativeContainer):
         math_expression_relationship_loader_service=math_expression_relationship_loader_service,
         math_expression_index_repository=math_expression_index_repository,
     )
-    math_expression_index_builder_service = Factory(
+    math_expression_index_searcher_service = Factory(
         MathExpressionIndexSearcherService,
         default_embedder=default_embedder,
         math_expression_description_opt_embedding_repository=math_expression_description_opt_embedding_repository,
