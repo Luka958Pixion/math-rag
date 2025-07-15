@@ -34,7 +34,7 @@ class MathExpressionRepository(
         )
 
     async def breadth_first_search(
-        self, start_id: UUID, max_depth: int, filter_fn: Callable[[MathExpression], bool] | None
+        self, start_id: UUID, *, max_depth: int, filter_cb: Callable[[MathExpression], bool] | None
     ) -> list[tuple[UUID, UUID, UUID]]:
         node_set = cast(AsyncNodeSet, self.target_node_cls.nodes)
         start_node = cast(MathExpressionNode, await node_set.get_or_none(uid=start_id))
@@ -44,6 +44,7 @@ class MathExpressionRepository(
 
         visited: set[str] = {start_node.uid}
         triples: list[tuple[UUID, UUID, UUID]] = []
+        seen_pairs: set[tuple[UUID, UUID, UUID]] = set()
         queue: deque[tuple[MathExpressionNode, int]] = deque([(start_node, 0)])
 
         while queue:
@@ -56,7 +57,6 @@ class MathExpressionRepository(
 
             out_neighbors = cast(list[MathExpressionNode], await out_mgr.match())
             in_neighbors = cast(list[MathExpressionNode], await in_mgr.match())
-
             neighbors = out_neighbors + in_neighbors
 
             for nbr_node in neighbors:
@@ -80,7 +80,14 @@ class MathExpressionRepository(
                 for rel in rels:
                     rel_expr = self.mapping_rel_cls.to_source(rel)
 
-                    if filter_fn is None or filter_fn(nbr_expr):
+                    if filter_cb is None or filter_cb(nbr_expr):
+                        key = (rel_expr.id, min(expr.id, nbr_expr.id), max(expr.id, nbr_expr.id))
+
+                        # skip duplicates, e.g. (0, x, 1) and (1, x, 0)
+                        if key in seen_pairs:
+                            continue
+
+                        seen_pairs.add(key)
                         triples.append((expr.id, rel_expr.id, nbr_expr.id))
 
         return triples

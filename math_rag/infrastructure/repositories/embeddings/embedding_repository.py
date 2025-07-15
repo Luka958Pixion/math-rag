@@ -9,9 +9,9 @@ from httpx import AsyncClient
 from more_itertools import unzip
 from qdrant_client import AsyncQdrantClient
 from qdrant_client.http.models import (
-    Condition,
+    FieldCondition,
     Filter,
-    Match,
+    MatchValue,
     PointStruct,
     Record,
     SnapshotPriority,
@@ -101,8 +101,6 @@ class EmbeddingRepository(
     async def search(
         self, embedding: list[float], *, filter: dict[str, Any] | None, limit: int
     ) -> list[SourceType]:
-        from qdrant_client.models import FieldCondition, Filter, MatchValue
-
         if filter:
             filter_sanitized = self._sanitize_query_filter(filter)
             conditions = [
