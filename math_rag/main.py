@@ -28,6 +28,7 @@ logging.getLogger('pylatexenc.latexwalker').setLevel(logging.ERROR)
 logging.getLogger('httpx').setLevel(logging.WARNING)
 logging.getLogger('openai').setLevel(logging.WARNING)
 logging.getLogger('asyncssh').setLevel(logging.WARNING)
+logging.getLogger('mathpix').setLevel(logging.WARNING)
 
 logger = logging.getLogger(__name__)
 

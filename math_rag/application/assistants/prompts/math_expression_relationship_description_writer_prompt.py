@@ -15,16 +15,34 @@ Your task is to write a concise, precise description of the relationship between
 - Describe the relationship between the source expression and the target expression, based strictly on the context.
 - Be precise and unambiguous.
 - Do not introduce any external assumptions or definitions.
+- When referring to the mathematical expression, use <LaTeX> pattern, not [<LaTeX> | index].
+- Never refer to the mathematical expression `source` index or `target` index.
+
+### Example:
+
+#### Context:
+In the context of Euclidean geometry, the Pythagorean theorem states that 
+[c = \\sqrt{{a^{{2}}+b^{{2}}}} | 4] for a right triangle with legs [a | 5] and [b | 6], and hypotenuse [c | 7]. 
+It can be rewritten as [a^{{2}}+b^{{2}}=c^{{2}} | 8].
+
+#### Source mathematical expression index:
+4
+
+#### Target mathematical expression index:
+8
+
+#### Relationship description:
+c = \\sqrt{{a^{{2}}+b^{{2}}}} is an algebraic rearrangement of a^{{2}}+b^{{2}}=c^{{2}}, solving for c.
 """
 
 _USER_PROMPT_TEMPLATE = """
 ### Context:
 {chunk}
 
-### Source index:
+### Source mathematical expression index:
 {source}
 
-### Target index:
+### Target mathematical expression index:
 {target}
 
 ### Relationship description:

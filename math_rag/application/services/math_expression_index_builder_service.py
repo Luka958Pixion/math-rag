@@ -124,7 +124,7 @@ class MathExpressionIndexBuilderService(BaseMathExpressionIndexBuilderService):
         self,
         index: MathExpressionIndex,
         stage_enum: MathExpressionIndexBuildStage,
-        load_method: Callable[[UUID], Awaitable],
+        load_method: Callable[[MathExpressionIndex], Awaitable],
         description: str,
     ):
         logger.info(f'Index {index.id} build loading {description}...')
@@ -134,7 +134,7 @@ class MathExpressionIndexBuilderService(BaseMathExpressionIndexBuilderService):
         logger.info(f'Index {index.id} build stage updated to {stage_enum}')
 
         # load
-        await load_method(index.id)
+        await load_method(index)
         logger.info(f'Index {index.id} build loaded {description}')
 
     async def build(self, index: MathExpressionIndex):

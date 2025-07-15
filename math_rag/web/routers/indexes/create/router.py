@@ -22,7 +22,7 @@ router = APIRouter()
 
 @router.post('/indexes/math-expressions', response_model=Response)
 @inject
-async def create_index(
+async def create_math_expression_index(
     request: Request = Body(...),
     index_repository: BaseMathExpressionIndexRepository = Depends(
         Provide[ApplicationContainer.math_expression_index_repository]

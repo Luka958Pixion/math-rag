@@ -427,8 +427,8 @@ class ApplicationContainer(DeclarativeContainer):
     background_services: Provider[list[BaseBackgroundService]] = List(
         fine_tune_job_background_service,
         gpu_stats_background_service,
-        # math_expression_index_background_service, # TODO bug
-        math_expression_dataset_background_service,  # TODO bug
+        math_expression_index_background_service,
+        math_expression_dataset_background_service,
         math_expression_dataset_test_background_service,
         pbs_pro_resources_used_background_service,
         # prometheus_snapshot_background_service,   # NOTE: not needed at the moment
