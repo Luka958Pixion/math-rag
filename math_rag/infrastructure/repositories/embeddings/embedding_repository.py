@@ -2,14 +2,16 @@ import asyncio
 
 from datetime import datetime
 from pathlib import Path
-from typing import Generic, cast
+from typing import Any, Generic, cast
 from uuid import UUID
 
 from httpx import AsyncClient
 from more_itertools import unzip
 from qdrant_client import AsyncQdrantClient
 from qdrant_client.http.models import (
+    Condition,
     Filter,
+    Match,
     PointStruct,
     Record,
     SnapshotPriority,
@@ -84,14 +86,41 @@ class EmbeddingRepository(
     #     points_selector = PointIdsList(points=str(id))
     #     await self.client.delete(self.collection_name, points_selector)
 
-    async def search(self, embedding: list[float], *, limit: int) -> list[SourceType]:
+    def _sanitize_query_filter(self, filter: dict[str, Any]) -> dict[str, Any]:
+        if isinstance(filter, UUID):
+            return str(filter)
+
+        if isinstance(filter, dict):
+            return {key: self._sanitize_query_filter(value) for key, value in filter.items()}
+
+        if isinstance(filter, list):
+            return [self._sanitize_query_filter(value) for value in filter]
+
+        return filter
+
+    async def search(
+        self, embedding: list[float], *, filter: dict[str, Any] | None, limit: int
+    ) -> list[SourceType]:
+        from qdrant_client.models import FieldCondition, Filter, MatchValue
+
+        if filter:
+            filter_sanitized = self._sanitize_query_filter(filter)
+            conditions = [
+                FieldCondition(key=key, match=MatchValue(value=value))
+                for key, value in filter_sanitized.items()
+            ]
+            query_filter = Filter(must=conditions)
+
+        else:
+            query_filter = None
+
         scored_points = await self.client.search(
             collection_name=self.collection_name,
+            query_filter=query_filter,
             query_vector=embedding,
             limit=limit,
             with_payload=True,
-            with_vectors=False,
-            filter=None,
+            with_vectors=True,
         )
 
         return [

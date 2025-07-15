@@ -1,6 +1,6 @@
 from abc import ABC, abstractmethod
 from pathlib import Path
-from typing import Generic, TypeVar
+from typing import Any, Generic, TypeVar
 from uuid import UUID
 
 from math_rag.application.types.repositories.embeddings import GroupCallback
@@ -27,7 +27,9 @@ class BaseEmbeddingRepository(ABC, Generic[T]):
         pass
 
     @abstractmethod
-    async def search(self, embedding: list[float], *, limit: int) -> list[T]:
+    async def search(
+        self, embedding: list[float], *, filter: dict[str, Any] | None, limit: int
+    ) -> list[T]:
         pass
 
     @abstractmethod

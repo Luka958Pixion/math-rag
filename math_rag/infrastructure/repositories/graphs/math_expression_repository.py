@@ -33,9 +33,9 @@ class MathExpressionRepository(
             target_node_id_field='math_expression_target_id',
         )
 
-    async def bfs(
+    async def breadth_first_search(
         self, start_id: UUID, max_depth: int, filter_fn: Callable[[MathExpression], bool] | None
-    ) -> list[tuple[MathExpression, MathExpressionRelationship, MathExpression]]:
+    ) -> list[tuple[UUID, UUID, UUID]]:
         node_set = cast(AsyncNodeSet, self.target_node_cls.nodes)
         start_node = cast(MathExpressionNode, await node_set.get_or_none(uid=start_id))
 
@@ -43,7 +43,7 @@ class MathExpressionRepository(
             return []
 
         visited: set[str] = {start_node.uid}
-        triples: list[tuple[MathExpression, MathExpressionRelationship, MathExpression]] = []
+        triples: list[tuple[UUID, UUID, UUID]] = []
         queue: deque[tuple[MathExpressionNode, int]] = deque([(start_node, 0)])
 
         while queue:
@@ -59,28 +59,28 @@ class MathExpressionRepository(
 
             neighbors = out_neighbors + in_neighbors
 
-            for nbr in neighbors:
-                if nbr.uid in visited:
+            for nbr_node in neighbors:
+                if nbr_node.uid in visited:
                     continue
 
                 rels: list[MathExpressionRel] = []
 
-                if nbr in out_neighbors:
-                    rels.extend(await out_mgr.all_relationships(nbr))
+                if nbr_node in out_neighbors:
+                    rels.extend(await out_mgr.all_relationships(nbr_node))
 
-                if nbr in in_neighbors:
-                    rels.extend(await in_mgr.all_relationships(nbr))
+                if nbr_node in in_neighbors:
+                    rels.extend(await in_mgr.all_relationships(nbr_node))
 
-                visited.add(nbr.uid)
-                queue.append((nbr, depth + 1))
+                visited.add(nbr_node.uid)
+                queue.append((nbr_node, depth + 1))
 
-                src_expr = self.mapping_node_cls.to_source(node)
-                tgt_expr = self.mapping_node_cls.to_source(nbr)
+                expr = self.mapping_node_cls.to_source(node)
+                nbr_expr = self.mapping_node_cls.to_source(nbr_node)
 
                 for rel in rels:
                     rel_expr = self.mapping_rel_cls.to_source(rel)
 
-                    if filter_fn is None or filter_fn(tgt_expr):
-                        triples.append((src_expr, rel_expr, tgt_expr))
+                    if filter_fn is None or filter_fn(nbr_expr):
+                        triples.append((expr.id, rel_expr.id, nbr_expr.id))
 
         return triples
