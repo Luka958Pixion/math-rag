@@ -6,6 +6,7 @@ from .document_indexer import DocumentIndexer
 
 
 FIELDS = [
+    'math_expression_index_id',
     'timestamp',
 ]
 

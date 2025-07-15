@@ -8,6 +8,7 @@ class MathProblemMapping(BaseMapping[MathProblem, MathProblemDocument]):
     def to_source(target: MathProblemDocument) -> MathProblem:
         return MathProblem(
             id=target.id,
+            math_expression_index_id=target.math_expression_index_id,
             timestamp=target.timestamp,
             latex=target.latex,
         )
@@ -16,6 +17,7 @@ class MathProblemMapping(BaseMapping[MathProblem, MathProblemDocument]):
     def to_target(source: MathProblem) -> MathProblemDocument:
         return MathProblemDocument(
             id=source.id,
+            math_expression_index_id=source.math_expression_index_id,
             timestamp=source.timestamp,
             latex=source.latex,
         )
