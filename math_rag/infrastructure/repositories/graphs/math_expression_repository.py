@@ -43,9 +43,9 @@ class MathExpressionRepository(
             return []
 
         visited: set[str] = {start_node.uid}
-        triples: list[tuple[UUID, UUID, UUID]] = []
-        seen_pairs: set[tuple[UUID, UUID, UUID]] = set()
+        visited_pairs: set[tuple[UUID, UUID, UUID]] = set()
         queue: deque[tuple[MathExpressionNode, int]] = deque([(start_node, 0)])
+        triples: list[tuple[UUID, UUID, UUID]] = []
 
         while queue:
             node, depth = queue.popleft()
@@ -84,10 +84,10 @@ class MathExpressionRepository(
                         key = (rel_expr.id, min(expr.id, nbr_expr.id), max(expr.id, nbr_expr.id))
 
                         # skip duplicates, e.g. (0, x, 1) and (1, x, 0)
-                        if key in seen_pairs:
+                        if key in visited_pairs:
                             continue
 
-                        seen_pairs.add(key)
+                        visited_pairs.add(key)
                         triples.append((expr.id, rel_expr.id, nbr_expr.id))
 
         return triples

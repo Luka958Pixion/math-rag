@@ -1,10 +1,7 @@
 from collections import Counter
 from uuid import UUID
 
-from math_rag.application.base.repositories.documents import (
-    BaseMathExpressionIndexRepository,
-    BaseMathExpressionRepository,
-)
+from math_rag.application.base.repositories.documents import BaseMathExpressionRepository
 from math_rag.application.base.repositories.embeddings import (
     BaseMathExpressionDescriptionOptRepository as BaseMathExpressionDescriptionOptEmbeddingRepository,
 )
@@ -22,13 +19,11 @@ class MathExpressionIndexSearcherService(BaseMathExpressionIndexSearcherService)
         default_embedder: DefaultEmbedder,
         math_expression_description_opt_embedding_repository: BaseMathExpressionDescriptionOptEmbeddingRepository,
         math_expression_graph_repository: BaseMathExpressionGraphRepository,
-        math_expression_index_repository: BaseMathExpressionIndexRepository,
         math_expression_repository: BaseMathExpressionRepository,
     ):
         self.default_embedder = default_embedder
         self.embedding_repository = math_expression_description_opt_embedding_repository
         self.math_expression_graph_repository = math_expression_graph_repository
-        self.math_expression_index_repository = math_expression_index_repository
         self.math_expression_repository = math_expression_repository
 
     def _has_duplicates(self, triples: list[tuple[UUID, UUID, UUID]]) -> bool:
@@ -44,8 +39,13 @@ class MathExpressionIndexSearcherService(BaseMathExpressionIndexSearcherService)
         return False
 
     async def search(
-        self, index_id: UUID, query: str, *, query_limit: int, limit: int
-    ) -> list[UUID]:
+        self,
+        index_id: UUID,
+        query: str,
+        *,
+        query_limit: int,
+        limit: int,
+    ) -> list[tuple[UUID, UUID, UUID]]:
         # search optimized math expression descriptions
         input = EmbedderInput(text=query)
         output = await self.default_embedder.embed(input)
@@ -108,6 +108,7 @@ class MathExpressionIndexSearcherService(BaseMathExpressionIndexSearcherService)
             key=lambda triple: counter[triple[0]] + counter[triple[2]],
             reverse=True,
         )
-        triples_sorted = triples_sorted[:limit]
 
-        # TODO get expressions and rels, update method signature
+        _, math_expression_relationship_ids, _ = map(list, zip(*triples_sorted[:limit]))
+
+        return math_expression_relationship_ids

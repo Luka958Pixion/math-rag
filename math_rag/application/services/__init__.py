@@ -16,6 +16,8 @@ from .math_expression_group_relationship_loader_service import (
     MathExpressionGroupRelationshipLoaderService,
 )
 from .math_expression_index_builder_service import MathExpressionIndexBuilderService
+from .math_expression_index_searcher_service import MathExpressionIndexSearcherService
+from .math_expression_index_serializer_service import MathExpressionIndexSerializerService
 from .math_expression_label_exporter_service import MathExpressionLabelExporterService
 from .math_expression_label_loader_service import MathExpressionLabelLoaderService
 from .math_expression_label_task_importer_service import MathExpressionLabelTaskImporterService
@@ -37,13 +39,15 @@ __all__ = [
     'MathArticleLoaderService',
     'MathExpressionContextLoaderService',
     'MathExpressionDatasetBuilderService',
-    'MathExpressionGroupLoaderService',
-    'MathExpressionGroupRelationshipLoaderService',
-    'MathExpressionIndexBuilderService',
     'MathExpressionDatasetPublisherService',
     'MathExpressionDatasetTesterService',
     'MathExpressionDescriptionLoaderService',
     'MathExpressionDescriptionOptLoaderService',
+    'MathExpressionGroupLoaderService',
+    'MathExpressionGroupRelationshipLoaderService',
+    'MathExpressionIndexBuilderService',
+    'MathExpressionIndexSearcherService',
+    'MathExpressionIndexSerializerService',
     'MathExpressionLabelExporterService',
     'MathExpressionLabelLoaderService',
     'MathExpressionLabelTaskImporterService',

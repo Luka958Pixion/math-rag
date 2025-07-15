@@ -43,4 +43,7 @@ async def create_math_expression_index(
     await index_repository.insert_one(index)
     await task_repository.insert_one(task)
 
+    # the filesystem is hidden for security reasons
+    index.build_details.file_path = Path('hidden')
+
     return Response(index=index, task=task)

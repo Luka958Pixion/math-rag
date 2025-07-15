@@ -184,7 +184,7 @@ class GraphRepository(
                 properties = {
                     key: value
                     for key, value in rel_obj.__properties__.items()
-                    if key != 'uid' and value is not None
+                    # if key != 'uid' and value is not None
                 }
 
                 source_node_set = cast(AsyncNodeSet, self.target_node_cls.nodes)
