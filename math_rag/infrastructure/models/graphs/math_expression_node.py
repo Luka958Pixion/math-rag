@@ -1,4 +1,5 @@
 from neomodel import (
+    AsyncRelationshipFrom,
     AsyncRelationshipTo,
     AsyncStructuredNode,
     AsyncZeroOrMore,
@@ -27,6 +28,12 @@ class MathExpressionNode(AsyncStructuredNode):
     position = IntegerProperty(required=True)
     is_inline = BooleanProperty(required=True)
     related_to = AsyncRelationshipTo(
+        cls_name='MathExpressionNode',
+        relation_type='RELATED_TO',
+        cardinality=AsyncZeroOrMore,
+        model=MathExpressionRel,
+    )
+    related_from = AsyncRelationshipFrom(
         cls_name='MathExpressionNode',
         relation_type='RELATED_TO',
         cardinality=AsyncZeroOrMore,
