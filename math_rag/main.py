@@ -1,6 +1,7 @@
 import asyncio
 import logging
 
+import urllib3
 import uvicorn
 
 from decouple import config
@@ -19,6 +20,7 @@ HOST = config('HOST')
 API_PORT = config('API_PORT', cast=int)
 MCP_PORT = config('MCP_PORT', cast=int)
 
+urllib3.disable_warnings(urllib3.exceptions.InsecureRequestWarning)
 
 logging.basicConfig(
     level=logging.INFO,

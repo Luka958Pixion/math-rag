@@ -15,8 +15,9 @@ Your task is to write a concise, precise description of the relationship between
 - Describe the relationship between the source expression and the target expression, based strictly on the context.
 - Be precise and unambiguous.
 - Do not introduce any external assumptions or definitions.
-- When referring to the mathematical expression, use <LaTeX> pattern, not [<LaTeX> | index].
-- Never refer to the mathematical expression `source` index or `target` index.
+- When referring to the mathematical expression, use <LaTeX> pattern or words, not [<LaTeX> | index].
+- Never refer to the mathematical expression `source` or `target` index.
+- Use `source` or `target` index for understanding, but you must not mention them in the result.
 
 ### Example:
 
@@ -33,6 +34,8 @@ It can be rewritten as [a^{{2}}+b^{{2}}=c^{{2}} | 8].
 
 #### Relationship description:
 c = \\sqrt{{a^{{2}}+b^{{2}}}} is an algebraic rearrangement of a^{{2}}+b^{{2}}=c^{{2}}, solving for c.
+
+THE MOST IMPORTANT RULE: DO NOT USE [<LaTeX> | index] FORMAT IN THE RESPONSE, USE <LaTeX> instead!
 """
 
 _USER_PROMPT_TEMPLATE = """
