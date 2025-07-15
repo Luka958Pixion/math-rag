@@ -49,6 +49,8 @@ class NotebookHook:
 
     def _init_containers(self) -> None:
         # import after path adjustment
+        import math_rag.application.agents.tools as agents_tools
+
         from math_rag.infrastructure.containers import InfrastructureContainer
 
         # initialize DI containers
@@ -59,6 +61,7 @@ class NotebookHook:
         self.application_container = self.infrastructure_container.application_container()
         self.application_container.init_resources()
         self.application_container.wire(modules=[__name__])
+        self.application_container.wire(packages=[agents_tools])
 
         # inject container into user namespace
         self.ip.user_ns['infrastructure_container'] = self.infrastructure_container

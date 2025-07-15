@@ -5,9 +5,10 @@ import uvicorn
 
 from decouple import config
 
-import math_rag.mcp.resources as resources
-import math_rag.mcp.tools as tools
-import math_rag.web.routers as routers
+import math_rag.application.agents.tools as agents_tools
+import math_rag.mcp.resources as mcp_resources
+import math_rag.mcp.tools as mcp_tools
+import math_rag.web.routers as mcp_routers
 
 from math_rag.infrastructure.containers import InfrastructureContainer
 from math_rag.mcp import create_mcp
@@ -40,7 +41,7 @@ async def main():
     application_container = infrastructure_container.application_container()
     application_container.init_resources()
     application_container.wire(modules=[__name__])
-    application_container.wire(packages=[routers, tools, resources])
+    application_container.wire(packages=[agents_tools, mcp_routers, mcp_tools, mcp_resources])
 
     # seed
     for object_seeder in infrastructure_container.object_seeders():
