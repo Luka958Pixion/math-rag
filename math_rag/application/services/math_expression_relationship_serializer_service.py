@@ -1,3 +1,5 @@
+import json
+
 from uuid import UUID
 
 from math_rag.application.base.repositories.documents import (
@@ -24,7 +26,7 @@ class MathExpressionRelationshipSerializerService(BaseMathExpressionRelationship
         self.math_expression_relationship_repository = math_expression_relationship_repository
         self.math_expression_repository = math_expression_repository
 
-    async def serialize(self, math_expression_relationship_ids: list[UUID]) -> dict:
+    async def serialize(self, math_expression_relationship_ids: list[UUID]) -> str:
         relationships = await self.math_expression_relationship_repository.find_many(
             filter=dict(id=math_expression_relationship_ids)
         )
@@ -56,7 +58,7 @@ class MathExpressionRelationshipSerializerService(BaseMathExpressionRelationship
             )
         )
 
-        return [
+        results = [
             dict(
                 source_entity=dict(katex=src_expr.katex, description=src_desc.text),
                 target_entity=dict(katex=tgt_expr.katex, description=tgt_desc.text),
@@ -70,3 +72,5 @@ class MathExpressionRelationshipSerializerService(BaseMathExpressionRelationship
                 relationship_descriptions,
             )
         ]
+
+        return json.dumps(results, indent=2)
