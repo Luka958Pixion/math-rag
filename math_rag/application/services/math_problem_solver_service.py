@@ -1,5 +1,4 @@
 from logging import getLogger
-from pathlib import Path
 
 from agents import Runner
 from httpx import AsyncClient
@@ -12,11 +11,10 @@ from math_rag.application.agents import (
 )
 from math_rag.application.base.clients import BaseJupyterClient, BaseLatexConverterClient
 from math_rag.application.base.services import BaseMathProblemSolverService
+from math_rag.application.constants import DOWNLOADS_DIR_PATH
 from math_rag.application.utils import MagicBytesWriterUtil
 from math_rag.core.models import MathProblem, MathProblemSolution
 
-
-DOWNLOADS_DIR_PATH = Path(__file__).parents[3] / '.tmp' / 'downloads'
 
 logger = getLogger(__name__)
 

@@ -11,6 +11,7 @@ from httpx import AsyncClient
 from math_rag.application.base.clients import BaseArxivClient, BaseLatexConverterClient
 from math_rag.application.base.repositories.objects import BaseMathArticleRepository
 from math_rag.application.base.services import BaseMathArticleLoaderService
+from math_rag.application.constants import DOWNLOADS_DIR_PATH
 from math_rag.application.utils import MagicBytesWriterUtil
 from math_rag.core.models import MathArticle, MathExpressionDataset, MathExpressionIndex
 from math_rag.core.types import ArxivCategoryType
@@ -18,7 +19,6 @@ from math_rag.shared.utils import GzipExtractorUtil
 
 
 BATCH_SIZE = 5
-DOWNLOADS_DIR_PATH = Path(__file__).parents[3] / '.tmp' / 'downloads'
 
 logger = getLogger(__name__)
 

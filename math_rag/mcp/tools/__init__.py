@@ -1,5 +1,5 @@
-from .math_literature_indexer_tool import MathLiteratureIndexerTool
-from .math_problem_solver_tool import MathProblemSolverTool
+from .indexer_tool import IndexerTool
+from .solver_tool import SolverTool
 
 
-__all__ = ['MathLiteratureIndexerTool', 'MathProblemSolverTool']
+__all__ = ['IndexerTool', 'SolverTool']

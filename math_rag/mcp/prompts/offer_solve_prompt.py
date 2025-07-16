@@ -9,15 +9,13 @@ from math_rag.mcp.base import BasePrompt
 
 class OfferSolvePrompt(BasePrompt):
     def offer_solve(self, _: Context) -> list[Message]:
-        session = _.session
-        if session.get('intro_shown'):
-            return []
-        session['intro_shown'] = True
+        # session = _.session
+        # session['intro_shown'] = True
         return [
             Message(
                 role='assistant',
                 content=[
-                    TextContent(text='Welcome! I can help you solve a math problem—let’s begin.')
+                    TextContent(text='Welcome! I can help you solve a math problem, lets begin.')
                 ],
             )
         ]

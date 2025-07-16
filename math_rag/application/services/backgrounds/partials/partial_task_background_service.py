@@ -7,7 +7,7 @@ from math_rag.core.enums import TaskStatus
 
 
 logger = getLogger(__name__)
-POLL_INTERVAL = 60
+POLL_INTERVAL = 30
 
 
 class PartialTaskBackgroundService(BaseTaskBackgroundService):

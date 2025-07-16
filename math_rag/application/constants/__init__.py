@@ -1,0 +1,4 @@
+from .paths import DOWNLOADS_DIR_PATH, UPLOADS_DIR_PATH
+
+
+__all__ = ['DOWNLOADS_DIR_PATH', 'UPLOADS_DIR_PATH']
