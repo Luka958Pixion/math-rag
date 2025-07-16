@@ -40,9 +40,7 @@ async def create_math_expression_index(
     else:
         file_path = None
 
-    index_build_details = MathExpressionIndexBuildDetails(
-        file_path=file_path, url=request.url.replace('localhost', 'minio')
-    )
+    index_build_details = MathExpressionIndexBuildDetails(file_path=file_path, url=request.url)
     index = MathExpressionIndex(build_details=index_build_details)
     task = Task(model_id=index.id, model_name=MathExpressionIndex.__name__)
 

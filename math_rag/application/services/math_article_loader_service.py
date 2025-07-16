@@ -2,21 +2,25 @@ from asyncio import gather
 from io import BytesIO
 from logging import getLogger
 from pathlib import Path
-from uuid import UUID
+from uuid import UUID, uuid4
 from zipfile import ZipFile
 
 from arxiv import Result
+from httpx import AsyncClient
 
 from math_rag.application.base.clients import BaseArxivClient, BaseLatexConverterClient
 from math_rag.application.base.repositories.objects import BaseMathArticleRepository
 from math_rag.application.base.services import BaseMathArticleLoaderService
+from math_rag.application.utils import MagicBytesWriterUtil
 from math_rag.core.models import MathArticle, MathExpressionDataset, MathExpressionIndex
 from math_rag.core.types import ArxivCategoryType
 from math_rag.shared.utils import GzipExtractorUtil
 
 
-logger = getLogger(__name__)
 BATCH_SIZE = 5
+DOWNLOADS_DIR_PATH = Path(__file__).parents[3] / '.tmp' / 'downloads'
+
+logger = getLogger(__name__)
 
 
 class MathArticleLoaderService(BaseMathArticleLoaderService):
@@ -120,14 +124,29 @@ class MathArticleLoaderService(BaseMathArticleLoaderService):
         raise ValueError(f'Unexpected file extension {src_name}')
 
     async def load_for_index(self, index: MathExpressionIndex):
+        if index.build_details.url and '/api/v1/download-shared-object' in index.build_details.url:
+            async with AsyncClient() as client:
+                url = index.build_details.url.replace('localhost', 'minio')  # NOTE: not clean
+                response = await client.get(url)
+                response.raise_for_status()
+
+            index.build_details.file_path = await MagicBytesWriterUtil.write(
+                response.content,
+                DOWNLOADS_DIR_PATH,
+                allowed_content_types=self.latex_converter_client.list_content_types(),
+            )
+            index.build_details.url = None
+
         path = index.build_details.file_path
         url = index.build_details.url
 
-        if path.suffix != '.pdf':
+        if (path and path.suffix != '.pdf') or (url and not url.endswith('.pdf')):
             raise ValueError()
 
         tex_zip_bytes = self.latex_converter_client.convert_pdf(file_path=path, url=url)
-        tex_zip = self._extract_tex_zip(tex_zip_bytes, path)
+        id = uuid4()
+        tex_zip_path = DOWNLOADS_DIR_PATH / f'{id.hex}.zip'
+        tex_zip = self._extract_tex_zip(tex_zip_bytes, tex_zip_path)
         tex_file_name, tex_file_bytes = self._read_tex_file(tex_zip)
 
         math_article = MathArticle(

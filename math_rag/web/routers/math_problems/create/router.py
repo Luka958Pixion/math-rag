@@ -43,7 +43,7 @@ async def create_math_problem(
     problem = MathProblem(
         math_expression_index_id=request.math_expression_index_id,
         file_path=file_path,
-        url=request.url.replace('localhost', 'minio'),
+        url=request.url,
     )
     task = Task(model_id=problem.id, model_name=MathProblem.__name__)
 

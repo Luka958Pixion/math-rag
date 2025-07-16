@@ -32,7 +32,7 @@ Solve the given math problem step-by-step by following steps:
 4. if you did not get useful info, increase search limits when calling `search_graph_tool` or rewrite query
 5. call `execute_code_tool` to execute Python code where appropriate
 6. check if the code executed successufully, then see if you need more tool calls or debug
-7. if you haven't solved the problem yet, iterate until you get the solution, order of steps is not 100%% strict
+7. if you haven't solved the problem yet, iterate until you get the solution, order of steps may vary
 8. include all relevant formulas and detailed reasoning in the final answer, but do NOT show any code
 
 Your task:
