@@ -8,4 +8,5 @@ class MathProblemDocument(BaseDocument):
     id: UUID
     math_expression_index_id: UUID
     timestamp: datetime
-    latex: str
+    file_path: str | None
+    url: str | None

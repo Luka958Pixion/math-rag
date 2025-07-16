@@ -8,7 +8,7 @@ from math_rag.application.agents import (
     KatexValidatorAgent,
     MathProblemSolverAgent,
 )
-from math_rag.application.base.clients import BaseJupyterClient
+from math_rag.application.base.clients import BaseJupyterClient, BaseLatexConverterClient
 from math_rag.application.base.services import BaseMathProblemSolverService
 from math_rag.core.models import MathProblem, MathProblemSolution
 
@@ -17,10 +17,17 @@ logger = getLogger(__name__)
 
 
 class MathProblemSolverService(BaseMathProblemSolverService):
-    def __init__(self, jupyter_client: BaseJupyterClient):
+    def __init__(
+        self, jupyter_client: BaseJupyterClient, latex_converter_client: BaseLatexConverterClient
+    ):
         self.jupyter_client = jupyter_client
+        self.latex_converter_client = latex_converter_client
 
     async def solve(self, math_problem: MathProblem) -> MathProblemSolution:
+        latex = self.latex_converter_client.convert_image(
+            file_path=math_problem.file_path, url=math_problem.url
+        )
+
         try:
             await self.jupyter_client.start_session(user_id='0')
 
@@ -31,7 +38,7 @@ class MathProblemSolverService(BaseMathProblemSolverService):
 
             solver_result = await Runner.run(
                 math_problem_solver_agent,
-                input=MATH_PROBLEM_SOLVER_INPUT_TEMPLATE.format(text=math_problem.latex).strip(),
+                input=MATH_PROBLEM_SOLVER_INPUT_TEMPLATE.format(text=latex).strip(),
                 max_turns=15,
             )
             validator_result = await Runner.run(

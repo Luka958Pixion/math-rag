@@ -353,7 +353,11 @@ class ApplicationContainer(DeclarativeContainer):
         MathExpressionSampleLoaderService,
         math_expression_sample_repository=math_expression_sample_repository,
     )
-    math_problem_solver_service = Factory(MathProblemSolverService, jupyter_client=jupyter_client)
+    math_problem_solver_service = Factory(
+        MathProblemSolverService,
+        jupyter_client=jupyter_client,
+        latex_converter_client=latex_converter_client,
+    )
     math_expression_context_loader_service = Factory(
         MathExpressionContextLoaderService,
         math_article_parser_service=math_article_parser_service,
