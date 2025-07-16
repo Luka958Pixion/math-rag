@@ -1,6 +1,8 @@
 from logging import getLogger
+from pathlib import Path
 
 from agents import Runner
+from httpx import AsyncClient
 
 from math_rag.application.agents import (
     KATEX_VALIDATOR_INPUT_TEMPLATE,
@@ -10,8 +12,11 @@ from math_rag.application.agents import (
 )
 from math_rag.application.base.clients import BaseJupyterClient, BaseLatexConverterClient
 from math_rag.application.base.services import BaseMathProblemSolverService
+from math_rag.application.utils import MagicBytesWriterUtil
 from math_rag.core.models import MathProblem, MathProblemSolution
 
+
+DOWNLOADS_DIR_PATH = Path(__file__).parents[3] / '.tmp' / 'downloads'
 
 logger = getLogger(__name__)
 
@@ -24,6 +29,19 @@ class MathProblemSolverService(BaseMathProblemSolverService):
         self.latex_converter_client = latex_converter_client
 
     async def solve(self, math_problem: MathProblem) -> MathProblemSolution:
+        if math_problem.url and '/api/v1/download-shared-object' in math_problem.url:
+            async with AsyncClient() as client:
+                url = math_problem.url.replace('localhost', 'minio')  # NOTE: not clean
+                response = await client.get(url)
+                response.raise_for_status()
+
+            math_problem.file_path = await MagicBytesWriterUtil.write(
+                response.content,
+                DOWNLOADS_DIR_PATH,
+                allowed_content_types=self.latex_converter_client.list_content_types(),
+            )
+            math_problem.url = None
+
         latex = self.latex_converter_client.convert_image(
             file_path=math_problem.file_path, url=math_problem.url
         )
