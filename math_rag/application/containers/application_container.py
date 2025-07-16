@@ -99,6 +99,7 @@ from math_rag.application.services import (
     MathExpressionRelationshipLoaderService,
     MathExpressionRelationshipSerializerService,
     MathExpressionSampleLoaderService,
+    MathProblemSolverService,
     MMSettingsLoaderService,
 )
 from math_rag.application.services.backgrounds import (
@@ -107,6 +108,7 @@ from math_rag.application.services.backgrounds import (
     MathExpressionDatasetBackgroundService,
     MathExpressionDatasetTestBackgroundService,
     MathExpressionIndexBackgroundService,
+    MathProblemBackgroundService,
     PBSProResourcesUsedBackgroundService,
     PrometheusSnapshotBackgroundService,
 )
@@ -351,6 +353,7 @@ class ApplicationContainer(DeclarativeContainer):
         MathExpressionSampleLoaderService,
         math_expression_sample_repository=math_expression_sample_repository,
     )
+    math_problem_solver_service = Factory(MathProblemSolverService, jupyter_client=jupyter_client)
     math_expression_context_loader_service = Factory(
         MathExpressionContextLoaderService,
         math_article_parser_service=math_article_parser_service,
@@ -418,6 +421,13 @@ class ApplicationContainer(DeclarativeContainer):
         math_expression_index_repository=math_expression_index_repository,
         task_repository=task_repository,
     )
+    math_problem_background_service = Singleton(
+        MathProblemBackgroundService,
+        math_problem_solver_service=math_problem_solver_service,
+        math_problem_repository=math_problem_repository,
+        math_problem_solution_repository=math_problem_solution_repository,
+        task_repository=task_repository,
+    )
     math_expression_dataset_background_service = Singleton(
         MathExpressionDatasetBackgroundService,
         math_expression_dataset_builder_service=math_expression_dataset_builder_service,
@@ -443,9 +453,10 @@ class ApplicationContainer(DeclarativeContainer):
     background_services: Provider[list[BaseBackgroundService]] = List(
         fine_tune_job_background_service,
         gpu_stats_background_service,
-        math_expression_index_background_service,
         math_expression_dataset_background_service,
         math_expression_dataset_test_background_service,
+        math_expression_index_background_service,
+        math_problem_background_service,
         pbs_pro_resources_used_background_service,
         # prometheus_snapshot_background_service,   # NOTE: not needed at the moment
     )

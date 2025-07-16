@@ -8,12 +8,16 @@ class MathProblemSolutionMapping(BaseMapping[MathProblemSolution, MathProblemSol
     def to_source(target: MathProblemSolutionDocument) -> MathProblemSolution:
         return MathProblemSolution(
             id=target.id,
+            math_problem_id=target.math_problem_id,
             timestamp=target.timestamp,
+            text=target.text,
         )
 
     @staticmethod
     def to_target(source: MathProblemSolution) -> MathProblemSolutionDocument:
         return MathProblemSolutionDocument(
             id=source.id,
+            math_problem_id=source.math_problem_id,
             timestamp=source.timestamp,
+            text=source.text,
         )

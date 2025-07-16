@@ -1,3 +1,5 @@
+from logging import getLogger
+
 from agents import Runner
 
 from math_rag.application.agents import (
@@ -9,6 +11,9 @@ from math_rag.application.agents import (
 from math_rag.application.base.clients import BaseJupyterClient
 from math_rag.application.base.services import BaseMathProblemSolverService
 from math_rag.core.models import MathProblem, MathProblemSolution
+
+
+logger = getLogger(__name__)
 
 
 class MathProblemSolverService(BaseMathProblemSolverService):
@@ -36,10 +41,16 @@ class MathProblemSolverService(BaseMathProblemSolverService):
                 ).strip(),
                 max_turns=50,
             )
+            return MathProblemSolution(
+                math_problem_id=math_problem.id, text=validator_result.final_output
+            )
+
+        except Exception as e:
+            logger.error(f'Math problem solving failed with: {e}')
+
+            return MathProblemSolution(
+                math_problem_id=math_problem.id, text='Math problem solving failed'
+            )
 
         finally:
             await self.jupyter_client.end_session(user_id='0')
-
-        solution = MathProblemSolution()  # TODO update type, use validator_result.final_output
-        # TODO save to repo
-        return

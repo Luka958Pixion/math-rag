@@ -3,11 +3,11 @@ from uuid import UUID
 
 from agents import Agent
 
-from math_rag.application.agents.tools import execute_code_tool, search_graph_tool
-
 
 class MathProblemSolverAgent(Agent):
     def __init__(self, math_expression_index_id: UUID):
+        from .tools import execute_code_tool, search_graph_tool
+
         search_graph_tool.on_invoke_tool = partial(
             search_graph_tool.on_invoke_tool,
             math_expression_index_id=math_expression_index_id,

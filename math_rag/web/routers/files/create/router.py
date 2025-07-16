@@ -50,11 +50,10 @@ router = APIRouter()
 async def validate_file(data: bytes) -> str:
     header = data[:1024]
     mime_type = magic.from_buffer(header, mime=True)
-    logger.error('here')
-    logger.error(mime_type)
+    logger.info(f'Found {mime_type} mime type')
 
     if mime_type not in CONTENT_TYPES:
-        raise HTTPException(status_code=400, detail=f'Invalid file type: {mime_type}')
+        raise HTTPException(status_code=400, detail=f'Invalid mime type: {mime_type}')
 
     return mime_type
 

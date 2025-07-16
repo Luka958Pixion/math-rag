@@ -48,4 +48,4 @@ async def create_math_problem(
     await problem_repository.insert_one(problem)
     await task_repository.insert_one(task)
 
-    return Response(problem=problem, task=task)
+    return Response(math_problem=problem, task=task)

@@ -1,10 +1,10 @@
 from agents import Agent
 
-from math_rag.application.agents.tools import validate_katex_tool
-
 
 class KatexValidatorAgent(Agent):
     def __init__(self):
+        from .tools import validate_katex_tool
+
         super().__init__(
             name='KatexValidatorAgent',
             model='o4-mini',

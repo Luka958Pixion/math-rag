@@ -5,6 +5,7 @@ from .math_expression_dataset_test_background_service import (
     MathExpressionDatasetTestBackgroundService,
 )
 from .math_expression_index_background_service import MathExpressionIndexBackgroundService
+from .math_problem_background_service import MathProblemBackgroundService
 from .pbs_pro_resources_used_background_service import PBSProResourcesUsedBackgroundService
 from .prometheus_snapshot_background_service import PrometheusSnapshotBackgroundService
 
@@ -12,9 +13,10 @@ from .prometheus_snapshot_background_service import PrometheusSnapshotBackground
 __all__ = [
     'FineTuneJobBackgroundService',
     'GPUStatsBackgroundService',
-    'MathExpressionIndexBackgroundService',
     'MathExpressionDatasetBackgroundService',
     'MathExpressionDatasetTestBackgroundService',
+    'MathExpressionIndexBackgroundService',
+    'MathProblemBackgroundService',
     'PBSProResourcesUsedBackgroundService',
     'PrometheusSnapshotBackgroundService',
 ]

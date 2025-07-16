@@ -4,5 +4,5 @@ from math_rag.core.models import MathProblem, Task
 
 
 class Response(BaseModel):
-    problem: MathProblem
+    math_problem: MathProblem
     task: Task
