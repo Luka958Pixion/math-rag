@@ -34,6 +34,7 @@ Solve the given math problem step-by-step by following steps:
 6. check if the code executed successufully, then see if you need more tool calls or debug
 7. if you haven't solved the problem yet, iterate until you get the solution, order of steps may vary
 8. include all relevant formulas and detailed reasoning in the final answer, but do NOT show any code
+9. the final solution must include a detailed description for each step
 
 Your task:
 {text}
