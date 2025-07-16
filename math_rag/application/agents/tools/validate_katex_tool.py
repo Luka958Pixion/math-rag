@@ -2,16 +2,17 @@ import json
 
 from agents.tool import FunctionTool, ToolContext
 from dependency_injector.wiring import Provide, inject
-from pydantic import BaseModel, ConfigDict, Field
+from pydantic import BaseModel, ConfigDict, Field, TypeAdapter
 
 from math_rag.application.base.clients import BaseKatexClient
 from math_rag.application.containers import ApplicationContainer
+from math_rag.application.models.clients import KatexValidateResult
 
 
 class ValidateKatexParams(BaseModel):
-    katex: str = Field(
+    katex_list: list[str] = Field(
         ...,
-        description='The KaTeX to validate.',
+        description='A list of KaTeX expressions to validate.',
     )
 
     model_config = ConfigDict(extra='forbid')
@@ -25,9 +26,11 @@ async def _invoke_validate_katex(
 ) -> str:
     try:
         params = json.loads(args_json)
-        result = await katex_client.validate(katex=params['katex'])
+        result = await katex_client.validate_many(katexes=params['katex_list'])
 
-        return result.model_dump_json()
+        # return result.model_dump_json()
+        json_bytes = TypeAdapter(list[KatexValidateResult]).dump_json(result)
+        return json_bytes.decode()
 
     # any exception becomes feedback to the LLM
     except Exception as e:
@@ -35,7 +38,7 @@ async def _invoke_validate_katex(
 
 
 TOOL_DESCRIPTION = """
-Validate given KaTeX.
+Validate given KaTeX expressions.
 Returns the validation result with output or error.
 """
 
