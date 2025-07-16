@@ -46,11 +46,9 @@ async def _invoke_search_graph(
             query_limit=params['query_limit'],
             limit=params['limit'],
         )
-        result = await math_expression_relationship_serializer_service.serialize(
+        return await math_expression_relationship_serializer_service.serialize(
             math_expression_relationship_ids
         )
-
-        return result
 
     # any exception becomes feedback to the LLM
     except Exception as e:

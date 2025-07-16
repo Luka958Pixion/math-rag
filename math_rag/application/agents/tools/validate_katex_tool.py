@@ -27,7 +27,7 @@ async def _invoke_validate_katex(
     try:
         params = json.loads(args_json)
         result = await katex_client.validate_many(katexes=params['katex_list'])
-        json_bytes = TypeAdapter(list[KatexValidateResult]).dump_json(result)
+        json_bytes = TypeAdapter(list[KatexValidateResult]).dump_json(result, indent=2)
 
         return json_bytes.decode()
 

@@ -13,7 +13,9 @@ class MathExpressionIndexMapping(BaseMapping[MathExpressionIndex, MathExpression
             id=target.id,
             timestamp=target.timestamp,
             build_stage=MathExpressionIndexBuildStage(target.build_stage),
-            build_details=MathExpressionIndexBuildDetails(file_path=Path(target.file_path)),
+            build_details=MathExpressionIndexBuildDetails(
+                file_path=Path(target.file_path) if target.file_path else None, url=target.url
+            ),
         )
 
     @staticmethod
@@ -22,5 +24,8 @@ class MathExpressionIndexMapping(BaseMapping[MathExpressionIndex, MathExpression
             id=source.id,
             timestamp=source.timestamp,
             build_stage=source.build_stage.value,
-            file_path=str(source.build_details.file_path),
+            file_path=str(source.build_details.file_path)
+            if source.build_details.file_path
+            else None,
+            url=source.build_details.url,
         )

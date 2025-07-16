@@ -26,9 +26,8 @@ async def _invoke_execute_code(
     try:
         params = json.loads(args_json)
         result = await jupyter_client.execute_code(user_id='0', code=params['code'])
-        # result = await _execute_code(params['code'])
 
-        return result.model_dump_json()
+        return result.model_dump_json(indent=2)
 
     # any exception becomes feedback to the LLM
     except Exception as e:

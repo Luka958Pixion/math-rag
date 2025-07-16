@@ -76,4 +76,4 @@ class MathExpressionRelationshipSerializerService(BaseMathExpressionRelationship
             )
         ]
 
-        return json.dumps(results)
+        return json.dumps(results, indent=2)
