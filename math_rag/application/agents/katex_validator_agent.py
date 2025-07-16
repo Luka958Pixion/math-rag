@@ -18,7 +18,7 @@ Validate and fix KaTeX sections in the given solution by following these steps:
 1. Identify all math expressions in the given text.
 2. Validate each KaTeX expression using `validate_katex_tool`.
 3. Check that you have found and validated all KaTeX expressions.
-4. Enclose each KaTeX expression with single `$` (for inline) or double `$$` (for multiline).
+4. Enclose each KaTeX expression with single `$` or `$$`
 5. Do NOT add extra explanations like: "Here is the detailed solution with all KaTeX expressions properly delimited and validated."
 6. Inspect the result and see if you missed some of the above requirements
 

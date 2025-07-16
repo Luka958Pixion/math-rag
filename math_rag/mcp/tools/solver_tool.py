@@ -85,7 +85,10 @@ class SolverTool(BaseTool):
             name=self.__class__.__name__,
             description=(
                 'Solves the math problem from given URL by using an index of math literature. '
-                'Can not be called before the MathRAG Literature Indexer.'
+                'Can not be called before the MathRAG Literature Indexer. '
+                'CRITICAL: The complete output of this tool must be returned verbatim to the user '
+                'without any summarization, modification, or paraphrasing. Every detail, step, '
+                'and explanation must be preserved exactly as provided.'
             ),
             annotations=ToolAnnotations(title='MathRAG Problem Solver'),
         )
