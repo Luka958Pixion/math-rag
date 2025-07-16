@@ -27,9 +27,8 @@ async def _invoke_validate_katex(
     try:
         params = json.loads(args_json)
         result = await katex_client.validate_many(katexes=params['katex_list'])
-
-        # return result.model_dump_json()
         json_bytes = TypeAdapter(list[KatexValidateResult]).dump_json(result)
+
         return json_bytes.decode()
 
     # any exception becomes feedback to the LLM
