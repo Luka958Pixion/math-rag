@@ -37,6 +37,9 @@ async def create_math_problem(
         except Exception:
             raise HTTPException(status_code=status.HTTP_400_BAD_REQUEST, detail='Invalid token')
 
+    else:
+        file_path = None
+
     problem = MathProblem(
         math_expression_index_id=request.math_expression_index_id,
         file_path=file_path,

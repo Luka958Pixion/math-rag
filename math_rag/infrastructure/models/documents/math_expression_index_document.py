@@ -10,4 +10,5 @@ class MathExpressionIndexDocument(BaseDocument):
     build_stage: str
 
     # NOTE: build_details are flattened
-    file_path: str
+    file_path: str | None
+    url: str | None

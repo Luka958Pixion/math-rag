@@ -35,10 +35,11 @@ class MathpixClient(BaseLatexConverterClient):
         self.client = client
 
     def convert_image(self, *, file_path: Path | None = None, url: str | None = None) -> str:
-        image_type = file_path.suffix.removeprefix('.')
+        if file_path:
+            image_type = file_path.suffix.removeprefix('.')
 
-        if image_type not in ALLOWED_IMAGE_TYPES:
-            raise ValueError(f'Image type {image_type} is not allowed')
+            if image_type not in ALLOWED_IMAGE_TYPES:
+                raise ValueError(f'Image type {image_type} is not allowed')
 
         image = self.client.image_new(file_path=file_path, url=url)
         results = image.results()

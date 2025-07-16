@@ -121,16 +121,14 @@ class MathArticleLoaderService(BaseMathArticleLoaderService):
 
     async def load_for_index(self, index: MathExpressionIndex):
         path = index.build_details.file_path
+        url = index.build_details.url
 
-        if path.suffix == '.pdf':
-            tex_zip_bytes = self.latex_converter_client.convert_pdf(file_path=path, url=None)
-            tex_zip = self._extract_tex_zip(tex_zip_bytes, path)
-            tex_file_name, tex_file_bytes = self._read_tex_file(tex_zip)
+        if path.suffix != '.pdf':
+            raise ValueError()
 
-        else:
-            text = self.latex_converter_client.convert_image(file_path=path, url=None)
-            tex_file_name = f'{path.stem}.tex'
-            tex_file_bytes = text.encode('utf-8')
+        tex_zip_bytes = self.latex_converter_client.convert_pdf(file_path=path, url=url)
+        tex_zip = self._extract_tex_zip(tex_zip_bytes, path)
+        tex_file_name, tex_file_bytes = self._read_tex_file(tex_zip)
 
         math_article = MathArticle(
             math_expression_dataset_id=None,
