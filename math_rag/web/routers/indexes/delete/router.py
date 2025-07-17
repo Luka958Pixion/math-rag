@@ -65,10 +65,10 @@ async def delete_math_expression_indexes(
     ),
     # graphs
     math_expression_group_graph_repository: BaseMathExpressionGroupGraphRepository = Depends(
-        Provide[ApplicationContainer.math_expression_repository]
+        Provide[ApplicationContainer.math_expression_group_graph_repository]
     ),
     math_expression_graph_repository: BaseMathExpressionGraphRepository = Depends(
-        Provide[ApplicationContainer.math_expression_repository]
+        Provide[ApplicationContainer.math_expression_graph_repository]
     ),
 ):
     math_expression_indexes = await math_expression_index_repository.find_many(filter=None)
