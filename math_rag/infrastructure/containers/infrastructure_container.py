@@ -1,7 +1,4 @@
-import asyncio
-
 from pathlib import Path
-from typing import Any
 
 from arxiv import Client as _ArxivClient
 from dependency_injector.containers import DeclarativeContainer
@@ -16,6 +13,7 @@ from dependency_injector.providers import (
     Resource,
     Singleton,
 )
+from dotenv import load_dotenv
 from huggingface_hub import HfApi
 from label_studio_sdk.client import AsyncLabelStudio
 from minio import Minio
@@ -169,6 +167,9 @@ from math_rag.infrastructure.services import (
     PBSProResourceListLoaderService,
     PrometheusSnapshotLoaderService,
 )
+
+
+load_dotenv()
 
 
 class InfrastructureContainer(DeclarativeContainer):

@@ -7,6 +7,7 @@ from dependency_injector.providers import (
     Provider,
     Singleton,
 )
+from dotenv import load_dotenv
 
 from math_rag.application.assistants import (
     KatexCorrectorAssistant,
@@ -112,6 +113,9 @@ from math_rag.application.services.backgrounds import (
     PBSProResourcesUsedBackgroundService,
     PrometheusSnapshotBackgroundService,
 )
+
+
+load_dotenv()
 
 
 class ApplicationContainer(DeclarativeContainer):

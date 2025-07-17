@@ -46,6 +46,7 @@ class MathExpressionContextLoaderService(BaseMathExpressionContextLoaderService)
 
         # math expressions
         math_expressions = await self.math_expression_repository.find_many(filter=index_filter)
+        math_expressions.sort(key=lambda x: x.index)
         index_to_katex = {
             math_expression.index: math_expression.katex for math_expression in math_expressions
         }
